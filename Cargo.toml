@@ -1,0 +1,39 @@
+[package]
+name = "shimmy"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[features]
+default = []
+# Enable llama.cpp backend (CPU) when present
+llama = ["dep:llama-cpp-2"]
+
+[dependencies]
+anyhow = "1"
+axum = { version = "0.7", features = ["http1","json","ws"] }
+async-trait = "0.1"
+bytes = "1"
+clap = { version = "4", features = ["derive"] }
+futures-util = "0.3"
+minijinja = { version = "2", features = ["loader"] }
+parking_lot = "0.12"
+safetensors = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sysinfo = "0.30"
+tempfile = "3"
+thiserror = "1"
+tokio = { version = "1", features = ["macros","rt-multi-thread","signal"] }
+tokio-stream = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4"] }
+
+# llama.cpp bindings (optional)
+llama-cpp-2 = { version = "0.1.118", optional = true }
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"

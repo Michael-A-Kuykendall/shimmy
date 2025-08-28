@@ -1,0 +1,56 @@
+# Rust build artifacts
+/target/
+/alt_target/
+**/*.rs.bk
+*.pdb
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local configuration
+.env
+.env.local
+
+# Test outputs
+*.tmp
+*.log
+
+# Model files (can be large)
+*.gguf
+*.ggml
+*.safetensors
+*.bin
+models/
+
+# Development artifacts
+punch_analysis.json
+ollama_test_result.txt
+rustchain.exe
+
+# Internal development documentation (private)
+/docs-internal/
+shimmy_rust_golden_record_implementation_bible.md
+test_*.yaml
+
+# Temporary files and analysis
+*_analysis.json
+*_test_result.txt
+AUTO_DISCOVERY_PLAN.md
+CURRENT_STATE_ANALYSIS.md
+DETAILED_INTEGRATION_PLANS.md
+DISCOVERY_IMPLEMENTATION_ROADMAP.md
+INTEGRATION_ROADMAP.md
+NEXT_PHASE_PLAN.md
