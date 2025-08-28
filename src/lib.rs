@@ -14,6 +14,7 @@ pub mod safetensors_adapter;
 pub mod server;
 pub mod templates;
 pub mod tools;
+// pub mod workflow; // TODO: Fix module import issues
 pub mod util {
     pub mod diag;
 }

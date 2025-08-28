@@ -206,6 +206,7 @@ pub async fn discover_models(State(_state): State<Arc<AppState>>) -> impl IntoRe
 }
 
 use axum::extract::Path;
+use crate::tools::{ToolRegistry, ToolCall};
 
 pub async fn load_model(State(_state): State<Arc<AppState>>, Path(name): Path<String>) -> impl IntoResponse {
     // TODO: Integrate with ModelManager and Registry
@@ -230,5 +231,36 @@ pub async fn model_status(State(_state): State<Arc<AppState>>, Path(name): Path<
         "model": name,
         "status": "unknown",
         "loaded": false
+    }))
+}
+
+pub async fn list_tools(State(_state): State<Arc<AppState>>) -> impl IntoResponse {
+    let registry = ToolRegistry::default();
+    let tools = registry.list_tools();
+    Json(serde_json::json!({
+        "tools": tools
+    }))
+}
+
+pub async fn execute_tool(State(_state): State<Arc<AppState>>, Path(name): Path<String>, Json(arguments): Json<serde_json::Value>) -> impl IntoResponse {
+    let registry = ToolRegistry::default();
+    let tool_call = ToolCall {
+        name,
+        arguments,
+    };
+    
+    match registry.execute_tool(&tool_call) {
+        Ok(result) => Json(serde_json::json!(result)).into_response(),
+        Err(_e) => {
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
+}
+
+pub async fn execute_workflow(State(_state): State<Arc<AppState>>, Json(request): Json<serde_json::Value>) -> impl IntoResponse {
+    // Workflow execution - placeholder for now
+    Json(serde_json::json!({
+        "message": "Workflow execution not yet implemented",
+        "status": "pending"
     }))
 }
