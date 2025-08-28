@@ -1,0 +1,89 @@
+mission:
+  name: "Hot Model Swapping"
+  description: "Runtime model loading/unloading via API without server restart"
+  priority: "HIGH" 
+  estimated_effort: "2-3 days"
+  value_proposition: "Multi-model serving without restart - dynamic model management"
+
+epics:
+  - name: "Model Lifecycle API"
+    description: "Implement API endpoints for loading/unloading models"
+    gates:
+      - "POST /api/models/{id}/load endpoint"
+      - "POST /api/models/{id}/unload endpoint"
+      - "GET /api/models/{id}/status endpoint"
+    steps:
+      - step_type: "command"
+        description: "Add model management routes"
+        command: "sed"
+        args: ["-i", "s|.route(\"/api/generate\", post(api::generate))|.route(\"/api/generate\", post(api::generate))\\n        .route(\"/api/models/:id/load\", post(api::load_model))\\n        .route(\"/api/models/:id/unload\", post(api::unload_model))\\n        .route(\"/api/models/:id/status\", get(api::model_status))|", "src/server.rs"]
+
+  - name: "Dynamic Engine State Management"
+    description: "Modify engine to support loading/unloading models at runtime"
+    dependencies: ["Model Lifecycle API"]
+    gates:
+      - "Engine can load new models without restart"
+      - "Memory properly freed when unloading models"
+      - "Multiple models can be loaded simultaneously"
+    steps:
+      - step_type: "command"
+        description: "Test dynamic loading"
+        command: "cargo"
+        args: ["test", "--features", "llama", "dynamic_loading"]
+
+  - name: "Concurrent Request Handling"
+    description: "Handle requests to multiple loaded models concurrently"
+    dependencies: ["Dynamic Engine State Management"]
+    gates:
+      - "Requests routed to correct loaded model"
+      - "Concurrent requests to different models work"
+      - "Error handling for requests to unloaded models"
+    steps:
+      - step_type: "command"
+        description: "Test concurrent model requests"
+        command: "cargo"
+        args: ["test", "--features", "llama", "concurrent_models"]
+
+  - name: "Memory Management"
+    description: "Implement proper cleanup and memory limits"
+    dependencies: ["Concurrent Request Handling"]
+    gates:
+      - "Memory usage predictable and bounded"
+      - "Unloaded models properly release memory"
+      - "System handles memory pressure gracefully"
+    steps:
+      - step_type: "command"
+        description: "Test memory cleanup"
+        command: "cargo"
+        args: ["test", "--features", "llama", "memory_management"]
+
+verification:
+  build_tests:
+    - "cargo build --features llama"
+    - "cargo test --features llama dynamic"
+  
+  functional_tests:
+    - "Load model via API: POST /api/models/test-model/load"
+    - "Generate with loaded model"
+    - "Unload model via API: POST /api/models/test-model/unload"
+    - "Verify generation fails after unload"
+    - "Load different model and test generation"
+
+  integration_tests:
+    - "Load 2+ models simultaneously"
+    - "Send concurrent requests to different loaded models"
+    - "Test memory usage under various load patterns"
+    - "Test graceful degradation with insufficient memory"
+
+completion_criteria:
+  - "Build passes with no warnings"
+  - "Models can be loaded/unloaded via API"
+  - "Multiple models can be active simultaneously"
+  - "Memory properly cleaned up on unload"
+  - "Existing functionality preserved"
+
+success_metrics:
+  - "Model loading completes in < 10 seconds"
+  - "Memory usage stays within expected bounds"
+  - "Can handle 3+ concurrent models on typical hardware"
+  - "Zero memory leaks during load/unload cycles"
