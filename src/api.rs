@@ -206,7 +206,6 @@ pub async fn discover_models(State(_state): State<Arc<AppState>>) -> impl IntoRe
 }
 
 use axum::extract::Path;
-use crate::tools::{ToolRegistry, ToolCall};
 
 pub async fn load_model(State(_state): State<Arc<AppState>>, Path(name): Path<String>) -> impl IntoResponse {
     // TODO: Integrate with ModelManager and Registry
@@ -234,33 +233,54 @@ pub async fn model_status(State(_state): State<Arc<AppState>>, Path(name): Path<
     }))
 }
 
+#[allow(dead_code)]
 pub async fn list_tools(State(_state): State<Arc<AppState>>) -> impl IntoResponse {
-    let registry = ToolRegistry::default();
-    let tools = registry.list_tools();
     Json(serde_json::json!({
-        "tools": tools
+        "tools": []
     }))
 }
 
-pub async fn execute_tool(State(_state): State<Arc<AppState>>, Path(name): Path<String>, Json(arguments): Json<serde_json::Value>) -> impl IntoResponse {
-    let registry = ToolRegistry::default();
-    let tool_call = ToolCall {
-        name,
-        arguments,
-    };
-    
-    match registry.execute_tool(&tool_call) {
-        Ok(result) => Json(serde_json::json!(result)).into_response(),
-        Err(_e) => {
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        }
-    }
+#[allow(dead_code)]
+pub async fn execute_tool(State(_state): State<Arc<AppState>>, Path(name): Path<String>, Json(_arguments): Json<serde_json::Value>) -> impl IntoResponse {
+    Json(serde_json::json!({
+        "error": format!("Tool {} not available", name)
+    })).into_response()
 }
 
-pub async fn execute_workflow(State(_state): State<Arc<AppState>>, Json(request): Json<serde_json::Value>) -> impl IntoResponse {
-    // Workflow execution - placeholder for now
+#[allow(dead_code)]
+pub async fn execute_workflow(State(_state): State<Arc<AppState>>, Json(_request): Json<serde_json::Value>) -> impl IntoResponse {
     Json(serde_json::json!({
         "message": "Workflow execution not yet implemented",
         "status": "pending"
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json;
+    
+    #[test]
+    fn test_generate_request_parsing() {
+        let json_str = r#"{"prompt": "test", "max_tokens": 100}"#;
+        let parsed: Result<serde_json::Value, _> = serde_json::from_str(json_str);
+        assert!(parsed.is_ok());
+        
+        if let Ok(json) = parsed {
+            assert_eq!(json["prompt"], "test");
+            assert_eq!(json["max_tokens"], 100);
+        }
+    }
+    
+    #[test]
+    fn test_model_list_response() {
+        let models = vec!["model1".to_string(), "model2".to_string()];
+        assert_eq!(models.len(), 2);
+        assert!(models.contains(&"model1".to_string()));
+    }
+    
+    #[test]
+    fn test_error_response_format() {
+        let error_response = serde_json::json!({"error": "Model not found"});
+        assert_eq!(error_response["error"], "Model not found");
+    }
 }

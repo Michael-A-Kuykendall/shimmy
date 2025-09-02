@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use anyhow::{anyhow, Result};
 use safetensors::SafeTensors;
 use std::fs;
@@ -27,13 +29,11 @@ pub fn convert_safetensors_to_gguf(safetensors_path: &Path) -> Result<PathBuf> {
     
     // Look for any .gguf file in the same directory
     if let Ok(entries) = fs::read_dir(safetensors_dir) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                if path.extension().and_then(|s| s.to_str()) == Some("gguf") {
-                    info!(path=%path.display(), "Found GGUF adapter in same directory");
-                    return Ok(path);
-                }
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("gguf") {
+                info!(path=%path.display(), "Found GGUF adapter in same directory");
+                return Ok(path);
             }
         }
     }

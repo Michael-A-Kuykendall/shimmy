@@ -22,6 +22,7 @@ impl Default for GenOptions {
 
 // Universal backend support - true shim architecture
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum ModelBackend {
     // GGUF via llama.cpp (existing)
     LlamaGGUF {
@@ -44,6 +45,7 @@ pub enum ModelBackend {
 }
 
 #[derive(Debug, Clone)]  
+#[allow(dead_code)]
 pub struct UniversalModelSpec {
     pub name: String,
     pub backend: ModelBackend,
@@ -82,11 +84,13 @@ impl From<ModelSpec> for UniversalModelSpec {
 
 // Universal Engine trait - supports any backend
 #[async_trait]
+#[allow(dead_code)]
 pub trait UniversalEngine: Send + Sync {
     async fn load(&self, spec: &UniversalModelSpec) -> Result<Box<dyn UniversalModel>>;
 }
 
 #[async_trait]
+#[allow(dead_code)]
 pub trait UniversalModel: Send + Sync {
     async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String>;
 }
@@ -103,3 +107,9 @@ pub trait LoadedModel: Send + Sync {
 }
 
 pub mod llama;
+
+#[cfg(feature = "llama")]
+pub mod huggingface;
+
+#[cfg(feature = "llama")]
+pub mod universal;

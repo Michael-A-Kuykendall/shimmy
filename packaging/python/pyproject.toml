@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shimmy"
+version = "0.1.0"
+description = "The 5MB alternative to Ollama - local AI inference server with OpenAI API compatibility"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Michael A. Kuykendall", email = "mike@shimmy.dev"}
+]
+maintainers = [
+    {name = "Michael A. Kuykendall", email = "mike@shimmy.dev"}
+]
+keywords = [
+    "ai",
+    "llm",
+    "inference", 
+    "local",
+    "server",
+    "openai",
+    "ollama",
+    "rust"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+requires-python = ">=3.8"
+dependencies = [
+    "requests>=2.25.0",
+    "click>=8.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
+Documentation = "https://github.com/Michael-A-Kuykendall/shimmy/tree/main/docs"
+Repository = "https://github.com/Michael-A-Kuykendall/shimmy.git"
+"Bug Tracker" = "https://github.com/Michael-A-Kuykendall/shimmy/issues"
+Changelog = "https://github.com/Michael-A-Kuykendall/shimmy/blob/main/CHANGELOG.md"
+Funding = "https://github.com/sponsors/Michael-A-Kuykendall"
+
+[project.scripts]
+shimmy = "shimmy:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "black>=22.0",
+    "mypy>=0.900"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["shimmy*"]
+
+[tool.setuptools.package-data]
+shimmy = ["bin/*", "*.md"]

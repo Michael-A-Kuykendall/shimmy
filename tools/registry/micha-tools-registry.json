@@ -1,0 +1,134 @@
+{
+  "version": "1.0",
+  "updated": "2025-01-27T00:00:00Z",
+  "tools": {
+    "punch": {
+      "name": "Punch Discovery",
+      "path": "C:\\Users\\micha\\repos\\punch-discovery",
+      "type": "cli",
+      "description": "Advanced codebase analysis and profiling tool for repository insights",
+      "capabilities": [
+        "repository analysis",
+        "code metrics",
+        "dependency mapping",
+        "architecture insights",
+        "profiling and performance analysis"
+      ],
+      "api_endpoints": [],
+      "cli_commands": [
+        "punch discover [path] - Analyze repository structure and dependencies",
+        "punch analyze [options] - Deep code analysis with metrics",
+        "punch profile [target] - Performance profiling analysis"
+      ],
+      "documentation": "C:\\Users\\micha\\repos\\punch-discovery\\README.md",
+      "status": "active",
+      "last_verified": "2025-01-27T00:00:00Z"
+    },
+    "shimmy": {
+      "name": "Shimmy AI Inference Server",
+      "path": "C:\\Users\\micha\\repos\\shimmy",
+      "type": "server",
+      "description": "Local-first AI inference server with OpenAI API compatibility and tool calling",
+      "capabilities": [
+        "local LLM inference",
+        "OpenAI API compatibility",
+        "model auto-discovery",
+        "hot model swapping",
+        "tool calling framework",
+        "streaming token generation"
+      ],
+      "api_endpoints": [
+        "GET /health - Server health check",
+        "POST /api/generate - Generate text with shimmy native API",
+        "POST /v1/chat/completions - OpenAI compatible chat completions",
+        "GET /api/models - List available models",
+        "POST /api/models/discover - Discover models in filesystem",
+        "POST /api/models/{name}/load - Load model dynamically",
+        "POST /api/models/{name}/unload - Unload model from memory",
+        "GET /api/models/{name}/status - Check model load status",
+        "GET /api/tools - List available tools",
+        "POST /api/tools/{name}/execute - Execute tool with parameters"
+      ],
+      "cli_commands": [
+        "shimmy serve [options] - Start inference server",
+        "shimmy list - List configured models",
+        "shimmy discover [path] - Discover models in directory",
+        "shimmy generate [options] - Generate text via CLI",
+        "shimmy probe [model] - Test model loading and generation"
+      ],
+      "default_port": 11435,
+      "documentation": "C:\\Users\\micha\\repos\\shimmy\\README.md",
+      "status": "active",
+      "github": "https://github.com/Michael-A-Kuykendall/shimmy",
+      "last_verified": "2025-01-27T00:00:00Z"
+    },
+    "rustchain": {
+      "name": "RustChain AI Agent Framework",
+      "path": "C:\\Users\\micha\\repos\\rustchain-community",
+      "type": "framework",
+      "description": "Mission-driven AI agent framework for systematic development and orchestration",
+      "capabilities": [
+        "mission-driven development",
+        "agent orchestration", 
+        "command execution",
+        "verification systems",
+        "gated epic management",
+        "submission handling"
+      ],
+      "api_endpoints": [],
+      "cli_commands": [
+        "rustchain run [mission] - Execute mission from file",
+        "rustchain mission [command] - Mission management operations",
+        "rustchain interactive - Interactive agent session",
+        "rustchain verify [criteria] - Run verification tests"
+      ],
+      "documentation": "C:\\Users\\micha\\repos\\rustchain-community\\README.md",
+      "status": "active",
+      "last_verified": "2025-01-27T00:00:00Z"
+    }
+  },
+  "integrations": {
+    "context_light": {
+      "enabled": false,
+      "database_path": "${project_root}/.context-light/tools.db",
+      "auto_populate": true,
+      "scan_interval_hours": 24
+    },
+    "claude_copilot": {
+      "enabled": true,
+      "instruction_injection": true,
+      "global_context_file": "C:\\Users\\micha\\.micha-tools\\claude-context.md"
+    },
+    "vscode_extension": {
+      "enabled": false,
+      "extension_path": "C:\\Users\\micha\\.vscode\\extensions\\context-light",
+      "auto_sync": true
+    }
+  },
+  "discovery": {
+    "scan_directories": [
+      "C:\\Users\\micha\\repos"
+    ],
+    "file_patterns": [
+      "Cargo.toml",
+      "package.json", 
+      "requirements.txt",
+      "go.mod",
+      "README.md"
+    ],
+    "exclude_directories": [
+      "node_modules",
+      "target",
+      ".git",
+      "dist",
+      "build"
+    ]
+  },
+  "metadata": {
+    "created": "2025-01-27T00:00:00Z",
+    "last_scan": "2025-01-27T00:00:00Z",
+    "tool_count": 3,
+    "auto_discovery": true,
+    "maintenance_schedule": "weekly"
+  }
+}

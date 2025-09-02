@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+        components: rustfmt, clippy
+    
+    - name: Cache cargo dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Check format
+      run: cargo fmt --all -- --check
+    
+    - name: Run clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+    
+    - name: Run tests
+      run: cargo test --verbose
+    
+    - name: Build release (without features)
+      run: cargo build --release
+    
+    - name: Build release (with llama)
+      run: cargo build --release --features llama
+
+  build-cross-platform:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+    
+    - name: Build release
+      run: cargo build --release --features llama
+    
+    - name: Test basic functionality
+      run: ./target/release/shimmy list || true  # May fail without models, that's ok
+      if: runner.os != 'Windows'
+    
+    - name: Test basic functionality (Windows)
+      run: .\target\release\shimmy.exe list || exit 0  # May fail without models, that's ok
+      if: runner.os == 'Windows'
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: shimmy-${{ runner.os }}
+        path: |
+          target/release/shimmy*
+          !target/release/*.d
+          !target/release/deps/

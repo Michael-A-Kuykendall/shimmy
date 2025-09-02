@@ -1,0 +1,62 @@
+{
+  "name": "shimmy",
+  "version": "0.1.0",
+  "description": "The 5MB alternative to Ollama - local AI inference server with OpenAI API compatibility",
+  "keywords": [
+    "ai",
+    "llm", 
+    "inference",
+    "local",
+    "server",
+    "openai",
+    "ollama",
+    "rust"
+  ],
+  "homepage": "https://github.com/Michael-A-Kuykendall/shimmy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Michael-A-Kuykendall/shimmy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Michael-A-Kuykendall/shimmy/issues"
+  },
+  "license": "MIT",
+  "author": "Michael A. Kuykendall (https://github.com/Michael-A-Kuykendall)",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/Michael-A-Kuykendall"
+  },
+  "bin": {
+    "shimmy": "bin/shimmy"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "postinstall": "node lib/install.js",
+    "preuninstall": "node lib/uninstall.js",
+    "test": "node lib/test.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "os": [
+    "win32",
+    "darwin", 
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "dependencies": {
+    "https-proxy-agent": "^7.0.0",
+    "node-fetch": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

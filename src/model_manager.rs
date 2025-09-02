@@ -1,11 +1,13 @@
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use anyhow::Result;
-use crate::engine::{InferenceEngine, ModelSpec};
+use crate::engine::ModelSpec;
 
 pub struct ModelManager {
-    // For now, keep it simple - store the loaded state info rather than the engines themselves
+    // Store loaded model information
     loaded_models: Arc<RwLock<HashMap<String, ModelLoadInfo>>>,
 }
 
@@ -67,5 +69,30 @@ impl ModelManager {
 impl Default for ModelManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[tokio::test]
+    async fn test_model_manager_creation() {
+        let manager = ModelManager::new();
+        let count = manager.model_count().await;
+        assert_eq!(count, 0);
+    }
+    
+    #[tokio::test]
+    async fn test_model_loading_status() {
+        let manager = ModelManager::new();
+        let is_loaded = manager.is_loaded("nonexistent").await;
+        assert!(!is_loaded);
+    }
+    
+    #[test]
+    fn test_model_path_validation() {
+        let path = std::path::Path::new("test.gguf");
+        assert_eq!(path.extension().unwrap(), "gguf");
     }
 }

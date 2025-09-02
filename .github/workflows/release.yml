@@ -1,0 +1,268 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+      platforms:
+        description: 'Platforms to publish (all, crates, npm, docker, pypi)'
+        required: false
+        default: 'all'
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build multi-platform binaries
+        run: |
+          mkdir -p release
+
+          # Install cross for cross-compilation
+          cargo install cross
+
+          # Build for multiple platforms
+          cross build --release --features llama --target x86_64-unknown-linux-gnu
+          cross build --release --features llama --target x86_64-pc-windows-gnu
+          cross build --release --features llama --target x86_64-apple-darwin
+          cross build --release --features llama --target aarch64-apple-darwin
+
+          # Copy binaries to release directory with clean names
+          cp target/x86_64-unknown-linux-gnu/release/shimmy release/shimmy-linux-amd64
+          cp target/x86_64-pc-windows-gnu/release/shimmy.exe release/shimmy-windows-amd64.exe
+          cp target/x86_64-apple-darwin/release/shimmy release/shimmy-darwin-amd64
+          cp target/aarch64-apple-darwin/release/shimmy release/shimmy-darwin-arm64
+
+      - name: Create release archives
+        run: |
+          cd release
+
+          # Create tar.gz for Unix platforms
+          tar -czf shimmy-${{ steps.version.outputs.version }}-linux-amd64.tar.gz shimmy-linux-amd64
+          tar -czf shimmy-${{ steps.version.outputs.version }}-darwin-amd64.tar.gz shimmy-darwin-amd64
+          tar -czf shimmy-${{ steps.version.outputs.version }}-darwin-arm64.tar.gz shimmy-darwin-arm64
+
+          # Create zip for Windows
+          zip shimmy-${{ steps.version.outputs.version }}-windows-amd64.zip shimmy-windows-amd64.exe
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Shimmy ${{ steps.version.outputs.version }}
+          body: |
+            **The 5MB Alternative to Ollama**
+
+            Shimmy ${{ steps.version.outputs.version }} - Zero-config local AI inference server with full OpenAI API compatibility.
+
+            **Features:**
+            - 🚀 5.1MB single binary (vs Ollama's 680MB)
+            - ⚡ <100ms startup time (vs Ollama's 5-10s)
+            - 🧠 <50MB memory overhead (vs Ollama's 200MB+)
+            - 🔌 100% OpenAI API compatibility
+            - 🛠️ Works with VSCode, Cursor, Continue.dev out of the box
+
+            **Quick Start:**
+            1. Download the binary for your platform
+            2. Set `SHIMMY_BASE_GGUF=path/to/your/model.gguf`
+            3. Run `./shimmy serve`
+            4. Point your AI tools to `http://localhost:11435`
+
+            **Installation Methods:**
+            - **Direct Download**: Grab the binary below
+            - **Cargo**: `cargo install shimmy`
+            - **npm**: `npm install -g shimmy`
+            - **Docker**: `docker run ghcr.io/michael-a-kuykendall/shimmy:${{ steps.version.outputs.version }}`
+            - **Python**: `pip install shimmy`
+
+            **Forever Free:** No asterisks. No "free for now." No pivot to paid.
+
+            [🎯 Sponsor Shimmy](https://github.com/sponsors/Michael-A-Kuykendall) | [📖 Documentation](https://github.com/Michael-A-Kuykendall/shimmy/tree/main/docs) | [💬 Community](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
+          draft: false
+          prerelease: false
+          files: |
+            release/*.tar.gz
+            release/*.zip
+
+  publish-crates:
+    runs-on: ubuntu-latest
+    needs: build-and-release
+    if: inputs.platforms == 'all' || contains(inputs.platforms, 'crates') || github.event_name != 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Cargo.toml version
+        run: |
+          sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.version }}"/' Cargo.toml
+
+      - name: Publish to crates.io
+        run: |
+          cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  publish-npm:
+    runs-on: ubuntu-latest
+    needs: build-and-release
+    if: inputs.platforms == 'all' || contains(inputs.platforms, 'npm') || github.event_name != 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Prepare npm package
+        working-directory: packaging/npm
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          npm install
+
+      - name: Publish to npm
+        working-directory: packaging/npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-docker:
+    runs-on: ubuntu-latest
+    needs: build-and-release
+    if: inputs.platforms == 'all' || contains(inputs.platforms, 'docker') || github.event_name != 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packaging/docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/michael-a-kuykendall/shimmy:latest
+            ghcr.io/michael-a-kuykendall/shimmy:${{ steps.version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish-pypi:
+    runs-on: ubuntu-latest
+    needs: build-and-release
+    if: inputs.platforms == 'all' || contains(inputs.platforms, 'pypi') || github.event_name != 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine wheel
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Python package version
+        run: |
+          cd packaging/python
+          sed -i 's/version = ".*"/version = "${{ steps.version.outputs.version }}"/' pyproject.toml
+
+      - name: Build Python package
+        run: |
+          cd packaging/python
+          python -m build
+
+      - name: Publish to PyPI
+        run: |
+          cd packaging/python
+          python -m twine upload dist/* --verbose
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}

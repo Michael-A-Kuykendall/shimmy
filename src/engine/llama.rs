@@ -9,6 +9,7 @@ use std::sync::Mutex;
 #[cfg(feature = "llama")]
 use tracing::info;
 
+#[derive(Default)]
 pub struct LlamaEngine;
 impl LlamaEngine { pub fn new() -> Self { Self } }
 
@@ -41,8 +42,8 @@ impl InferenceEngine for LlamaEngine {
                 ctx_tmp.lora_adapter_set(&mut adapter, 1.0).map_err(|e| anyhow!("lora set: {e:?}"))?;
                 info!(adapter=%lora_path.display(), "LoRA adapter attached");
             }
-            // The context lifetime parameter ties it to &model; we store both in the same struct so
-            // it's safe to extend the lifetime to 'static for storage as long as LlamaLoaded is alive.
+            // Store both model and context together to maintain proper lifetimes
+            // The context lifetime is tied to &model; storing both in the same struct ensures safety
             let ctx: llama::context::LlamaContext<'static> = unsafe { std::mem::transmute(ctx_tmp) };
             Ok(Box::new(LlamaLoaded { _be: be, model, ctx: Mutex::new(ctx) }))
         }
@@ -117,10 +118,10 @@ impl LoadedModel for LlamaLoaded {
 }
 
 #[cfg(not(feature = "llama"))]
-struct LlamaLoadedStub;
+struct _LlamaLoadedStub;
 #[cfg(not(feature = "llama"))]
 #[async_trait]
-impl LoadedModel for LlamaLoadedStub {
+impl LoadedModel for _LlamaLoadedStub {
     async fn generate(&self, prompt: &str, _opts: GenOptions, mut on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String> {
         if let Some(cb) = on_token.as_mut() { cb("(stub)".to_string() ); }
         Ok(format!("(shimmy stub — build with --features llama) {}", prompt))

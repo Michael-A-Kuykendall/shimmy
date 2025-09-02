@@ -1,4 +1,6 @@
 // RustChain compatibility layer
+#![allow(dead_code)]
+
 use axum::{http::StatusCode, response::Json};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +22,7 @@ pub async fn rustchain_generate(
     Json(request): Json<RustChainRequest>,
 ) -> Result<Json<RustChainResponse>, StatusCode> {
     // Convert to shimmy format and generate
-    let shimmy_request = crate::api::GenerateRequest {
+    let _shimmy_request = crate::api::GenerateRequest {
         model: request.model.unwrap_or_default(),
         prompt: Some(request.prompt),
         messages: None,
