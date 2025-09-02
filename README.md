@@ -1,148 +1,171 @@
-# Shimmy
+# Shimmy: Instant LoRA Inference
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
+[![Sponsor](https://img.shields.io/badge/❤️-Sponsor-ea4aaa?logo=github)](https://github.com/sponsors/Michael-A-Kuykendall)
 
-**Shimmy** is a fast, lightweight local LLM inference server that acts as a universal shim between AI tools and local language models. Built in Rust with a focus on offline-first AI workflows.
+**From LoRA training to production API in under 30 seconds.**
 
-## ✨ Key Features
+Shimmy solves the developer pain point: You just trained a useful LoRA adapter with Unsloth/PEFT/Axolotl, now you want to serve it immediately without conversion hassles.
 
-- **🚀 Fast Local Inference**: GGUF model support via llama.cpp integration
-- **🔌 Multiple APIs**: HTTP/JSON, Server-Sent Events (SSE), and WebSocket streaming
-- **⚡ Single Binary**: Zero-dependency deployment, just download and run
-- **🎯 Tool Integration**: Built-in compatibility with punch-discovery, RustChain, and more
-- **🔧 LoRA Support**: Dynamic adapter loading for specialized models
-- **📡 Offline First**: Complete functionality without internet connectivity
+> "No more fighting with conversion scripts. Train your LoRA, point Shimmy at it, done." — Real developer workflow
 
-## 🚀 Quick Start
-
-### Installation
-
-Download the latest release for your platform or build from source:
+## 🎯 The Problem Shimmy Solves
 
 ```bash
-# Clone and build
-git clone https://github.com/yourusername/shimmy.git
-cd shimmy
-cargo build --release --features llama
+# You have this after training:
+my-awesome-coding-lora/
+├── adapter_model.safetensors  ← Your trained LoRA
+├── adapter_config.json
+└── training_results.json
 
-# Or download pre-built binary from releases
-```
-
-### Basic Usage
-
-```bash
-# Set your model path
-export SHIMMY_BASE_GGUF=/path/to/your/model.gguf
-
-# Start the server
-./shimmy serve --bind 127.0.0.1:11435
-
-# Generate text via CLI
-./shimmy generate --prompt "Hello, world!" --max-tokens 50
-
-# Check available models
-./shimmy list
-```
-
-### API Usage
-
-```bash
-# HTTP API
+# You want this:
 curl -X POST http://localhost:11435/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "default",
-    "prompt": "Hello, world!",
-    "max_tokens": 50,
-    "stream": false
-  }'
-
-# Streaming with Server-Sent Events
-curl -X POST http://localhost:11435/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "default", 
-    "prompt": "Hello, world!",
-    "stream": true
-  }'
+  -d '{"model":"phi3-lora","prompt":"def fibonacci(n):"}'
 ```
 
-## 📖 Documentation
+**Before Shimmy:** Convert SafeTensors → GGUF → Configure llama.cpp → Debug APIs  
+**With Shimmy:** Point and serve. Done.
 
-- [API Reference](docs/API.md) - Complete API documentation
-- [Configuration](docs/CONFIGURATION.md) - Setup and configuration options
-- [Integration Guide](docs/INTEGRATION.md) - Using shimmy with other tools
-- [Examples](docs/EXAMPLES.md) - Common usage patterns
+## 🚀 Zero-Friction LoRA Serving
 
-## 🛠️ Configuration
+| Step | Before Shimmy | With Shimmy |
+|------|---------------|-------------|
+| **Convert** | Find llama.cpp scripts, debug formats | Auto-handled |
+| **Configure** | Manual server setup, ports, contexts | Zero-config |
+| **Serve** | Complex llama.cpp command lines | `shimmy serve` |
+| **Test** | Figure out API format | Standard OpenAI API |
+| **Time** | 15-30 minutes, error-prone | **30 seconds** |
 
-### Environment Variables
+## Why Shimmy?
 
-- `SHIMMY_BASE_GGUF`: Path to the base GGUF model file (required)
-- `SHIMMY_LORA_GGUF`: Path to LoRA adapter file (optional)
+**Privacy**: Your code stays on your machine  
+**Cost**: No per-token pricing, unlimited queries  
+**Speed**: Local inference = sub-second responses  
+**Integration**: Works with VSCode, Cursor, Continue.dev out of the box  
 
-### Supported Model Formats
-
-- GGUF files (primary support)
-- LoRA adapters in GGUF format
-
-## 🔌 Integration
-
-Shimmy is designed to work seamlessly with:
-
-- **RustChain**: AI agent mission execution
-- **Punch Discovery**: Codebase analysis and insights
-- **VSCode Extensions**: Any tool expecting OpenAI-compatible APIs
-- **Custom Tools**: Via HTTP API, CLI, or direct integration
-
-## 🏗️ Architecture
-
-Shimmy follows a modular architecture:
-
-```
-┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
-│   HTTP/WS API   │    │   Engine     │    │  llama.cpp      │
-│                 │◄──►│              │◄──►│                 │
-│ • REST          │    │ • Inference  │    │ • GGUF Loading  │
-│ • SSE Streaming │    │ • Templates  │    │ • LoRA Support  │
-│ • WebSocket     │    │ • Threading  │    │ • Optimization  │
-└─────────────────┘    └──────────────┘    └─────────────────┘
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Setup
+## Quick Start (30 seconds)
 
 ```bash
-# Install Rust toolchain
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Install from crates.io
+cargo install shimmy --features llama
 
-# Clone repository
-git clone https://github.com/yourusername/shimmy.git
-cd shimmy
+# Or download pre-built binary
+curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy.exe
 
-# Build with llama feature
-cargo build --features llama
+# Get any GGUF model (example: Phi-3 Mini)
+# Place in ./models/ or set SHIMMY_BASE_GGUF=path/to/model.gguf
 
-# Run tests
-cargo test
+# Start serving  
+./shimmy serve
+
+# Point your AI tools to http://localhost:11435
+# VSCode Copilot, Cursor, Continue.dev all work instantly
 ```
 
-## 📄 License
+[📖 Full quick start guide](docs/quickstart.md)
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Integration Examples
 
-## 🙏 Acknowledgments
+**VSCode Copilot**:
+```json
+// settings.json
+{
+  "github.copilot.advanced": {
+    "serverUrl": "http://localhost:11435"
+  }
+}
+```
 
-- Built on [llama.cpp](https://github.com/ggerganov/llama.cpp) for fast local inference
-- Inspired by the need for reliable offline AI workflows
-- Part of the broader ecosystem including punch-discovery and RustChain
+**Continue.dev**:
+```json
+{
+  "models": [{
+    "title": "Local Shimmy",
+    "provider": "openai", 
+    "model": "your-model-name",
+    "apiBase": "http://localhost:11435/v1"
+  }]
+}
+```
+
+[🔗 See all integrations](docs/integrations.md)
+
+## Why Shimmy Will Always Be Free
+
+I built Shimmy because I was tired of 680MB binaries to run a 4GB model.
+
+**This is my commitment**: Shimmy stays MIT licensed, forever. If you want to support development, [sponsor it](https://github.com/sponsors/Michael-A-Kuykendall). If you don't, just build something cool with it.
+
+> Shimmy saves you time and money. If it's useful, consider sponsoring for $5/month — less than your Netflix subscription, infinitely more useful.
+
+## Performance vs Competition
+
+[📊 See detailed benchmarks](docs/benchmarks.md)
+
+| Tool | Binary | Startup | Memory | OpenAI API |
+|------|--------|---------|--------|------------|
+| **Shimmy** | **5.1MB** | **<100ms** | **50MB** | **100%** |
+| Ollama | 680MB | 5-10s | 200MB+ | Partial |
+| llama.cpp | 89MB | 1-2s | 100MB | None |
+
+## Community & Support
+
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/Michael-A-Kuykendall/shimmy/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
+- **📖 Documentation**: [docs/](docs/)
+- **💝 Sponsorship**: [GitHub Sponsors](https://github.com/sponsors/Michael-A-Kuykendall)
+
+### Weekly Showcase
+
+**What did you build with Shimmy this week?** Share in [Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions) and get featured!
+
+## Sponsors
+
+See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
+
+### Sponsorship Tiers
+
+- **$5/month**: Coffee tier - My eternal gratitude + sponsor badge
+- **$25/month**: Bug prioritizer - Priority support + name in SPONSORS.md  
+- **$100/month**: Corporate backer - Logo on README + monthly office hours
+- **$500/month**: Infrastructure partner - Direct support + roadmap input
+
+**Companies**: Need invoicing? Email [sponsors@shimmy.dev](mailto:sponsors@shimmy.dev)
+
+## Technical Architecture
+
+- **Rust + Tokio**: Memory-safe, async performance
+- **llama.cpp backend**: Industry-standard GGUF inference
+- **OpenAI API compatibility**: Drop-in replacement
+- **Zero-config auto-discovery**: Just works™
+
+### API Endpoints
+- `GET /health` - Health check
+- `POST /v1/chat/completions` - OpenAI-compatible chat
+- `GET /v1/models` - List available models
+- `POST /api/generate` - Shimmy native API
+- `GET /ws/generate` - WebSocket streaming
+
+### CLI Commands
+```bash
+./shimmy serve                    # Start server
+./shimmy list                     # Show available models  
+./shimmy discover                 # Refresh model discovery
+./shimmy generate --name X --prompt "Hi"  # Test generation
+./shimmy probe model-name         # Verify model loads
+```
+
+## License & Philosophy
+
+MIT License - forever and always.
+
+**Philosophy**: Infrastructure should be invisible. Shimmy is infrastructure.
 
 ---
 
-**Status**: Active development | **Stability**: Beta | **Platform**: Cross-platform
+**Forever maintainer**: Michael A. Kuykendall  
+**Promise**: This will never become a paid product  
+**Mission**: Making local AI development frictionless
 
-For questions, issues, or feature requests, please [open an issue](https://github.com/yourusername/shimmy/issues) on GitHub.
+*"The best code is code you don't have to think about."*

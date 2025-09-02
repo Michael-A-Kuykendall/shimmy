@@ -1,0 +1,14 @@
+# Cargo configuration to speed up builds and prevent hangs
+
+[build]
+# Use parallel compilation but limit to prevent hangs
+jobs = 4
+
+# Environment variables for llama.cpp compilation
+[env]
+# Disable CUDA compilation by default to speed up builds
+LLAMA_CUDA = "OFF"
+# Use faster compilation flags
+CMAKE_BUILD_TYPE = "Release"
+# Limit parallel jobs for llama.cpp to prevent hanging
+CMAKE_BUILD_PARALLEL_LEVEL = "4"

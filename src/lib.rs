@@ -4,6 +4,7 @@ pub mod auto_discovery;
 pub mod cli;
 pub mod discovery;
 pub mod engine;
+pub mod error;
 pub mod main_integration;
 pub mod metrics;
 pub mod model_manager;
@@ -14,10 +15,10 @@ pub mod safetensors_adapter;
 pub mod server;
 pub mod templates;
 pub mod tools;
-// pub mod workflow; // TODO: Fix module import issues
 pub mod util {
     pub mod diag;
 }
+pub mod workflow;
 
 pub struct AppState {
     pub engine: Box<dyn engine::InferenceEngine>,

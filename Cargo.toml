@@ -2,7 +2,23 @@
 name = "shimmy"
 version = "0.1.0"
 edition = "2021"
-license = "Apache-2.0"
+license = "MIT"
+description = "Instant LoRA inference server - from training to production API in 30 seconds"
+homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
+repository = "https://github.com/Michael-A-Kuykendall/shimmy"
+readme = "README.md"
+keywords = ["llm", "lora", "inference", "ai", "gguf"]
+categories = ["command-line-utilities", "web-programming::http-server", "science"]
+authors = ["Michael A. Kuykendall <michael@kuykendall.org>"]
+exclude = [
+    "docs-internal/*",
+    "test-models/*",
+    "target/*",
+    ".*",
+    "*.sh",
+    "*.ps1",
+    "*.py"
+]
 
 [features]
 default = []
@@ -24,16 +40,30 @@ serde_json = "1"
 sysinfo = "0.30"
 tempfile = "3"
 thiserror = "1"
-tokio = { version = "1", features = ["macros","rt-multi-thread","signal"] }
+tokio = { version = "1", features = ["macros","rt-multi-thread","signal","process"] }
 tokio-stream = "0.1"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4"] }
 
 # llama.cpp bindings (optional)
-llama-cpp-2 = { version = "0.1.118", optional = true }
+llama-cpp-2 = { version = "0.1.118", optional = true, default-features = false }
+
+[dev-dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+tokio-tungstenite = "0.20"
 
 [profile.release]
 lto = true
 codegen-units = 1
 opt-level = "z"
+
+# Optimize build times for development
+[profile.dev]
+opt-level = 1
+debug = true
+
+# Faster builds for dependencies
+[profile.dev.package."*"]
+opt-level = 2
+debug = false

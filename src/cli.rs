@@ -8,8 +8,10 @@ pub struct Cli { #[command(subcommand)] pub cmd: Command }
 pub enum Command {
     /// Run the HTTP server
     Serve { #[arg(long, default_value_t=String::from("127.0.0.1:11435"))] bind: String },
-    /// List registered models
+    /// List registered and auto-discovered models
     List,
+    /// Refresh auto-discovery and list all available models
+    Discover,
     /// Load a model once (verifies base + optional LoRA)
     Probe { name: String },
     /// Simple throughput benchmark
@@ -18,17 +20,36 @@ pub enum Command {
     Generate { name: String, #[arg(long)] prompt: String, #[arg(long, default_value_t=64)] max_tokens: usize },
 }
 
-pub fn handle_list_command_with_discovery() {
-    use crate::model_registry::ModelRegistry;
-    let registry = ModelRegistry::with_discovery();
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::Parser;
     
-    println!("Discovered Models:");
-    for (name, model) in &registry.discovered_models {
-        println!("  {} - {} ({:?})", name, model.path.display(), model.model_type);
+    #[test]
+    fn test_cli_serve_command() {
+        let cli = Cli::try_parse_from(&["shimmy", "serve"]).unwrap();
+        match cli.cmd {
+            Command::Serve { bind } => assert_eq!(bind, "127.0.0.1:11435"),
+            _ => panic!("Expected Serve command"),
+        }
     }
     
-    if registry.discovered_models.is_empty() {
-        println!("  No models found in search paths");
-        println!("  Set SHIMMY_BASE_GGUF or place models in ~/.cache/huggingface or ~/models");
+    #[test]
+    fn test_cli_list_command() {
+        let cli = Cli::try_parse_from(&["shimmy", "list"]).unwrap();
+        matches!(cli.cmd, Command::List);
+    }
+    
+    #[test]
+    fn test_cli_generate_command() {
+        let cli = Cli::try_parse_from(&["shimmy", "generate", "model", "--prompt", "test", "--max-tokens", "100"]).unwrap();
+        match cli.cmd {
+            Command::Generate { name, prompt, max_tokens } => {
+                assert_eq!(name, "model");
+                assert_eq!(prompt, "test");
+                assert_eq!(max_tokens, 100);
+            },
+            _ => panic!("Expected Generate command"),
+        }
     }
 }

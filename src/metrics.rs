@@ -1,4 +1,6 @@
 // Basic metrics collection
+#![allow(dead_code)]
+
 use axum::response::Json;
 use serde::Serialize;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -57,4 +59,42 @@ pub async fn metrics_handler(
     metrics: Arc<MetricsCollector>,
 ) -> Json<Metrics> {
     Json(metrics.get_metrics())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_metrics_collector_new() {
+        let metrics = MetricsCollector::new();
+        assert_eq!(metrics.requests.load(Ordering::Relaxed), 0);
+        assert_eq!(metrics.errors.load(Ordering::Relaxed), 0);
+    }
+    
+    #[test]
+    fn test_record_request() {
+        let metrics = MetricsCollector::new();
+        metrics.record_request();
+        assert_eq!(metrics.requests.load(Ordering::Relaxed), 1);
+    }
+    
+    #[test]
+    fn test_record_error() {
+        let metrics = MetricsCollector::new();
+        metrics.record_error();
+        assert_eq!(metrics.errors.load(Ordering::Relaxed), 1);
+    }
+    
+    #[test]
+    fn test_get_metrics() {
+        let metrics = MetricsCollector::new();
+        metrics.record_request();
+        metrics.record_error();
+        
+        let result = metrics.get_metrics();
+        assert_eq!(result.requests_total, 1);
+        assert_eq!(result.generation_errors, 1);
+        assert!(result.uptime_seconds < 60);
+    }
 }

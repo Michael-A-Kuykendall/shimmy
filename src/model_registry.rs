@@ -13,7 +13,7 @@ pub struct ModelEntry {
     pub n_threads: Option<i32>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Registry { 
     inner: HashMap<String, ModelEntry>,
     pub discovered_models: HashMap<String, DiscoveredModel>,
@@ -53,7 +53,7 @@ impl Registry {
                 let entry = ModelEntry {
                     name: name.clone(),
                     base_path: discovered.path.clone(),
-                    lora_path: None,
+                    lora_path: discovered.lora_path.clone(),
                     template: Some(self.infer_template(&discovered.model_type)),
                     ctx_len: Some(4096),
                     n_threads: None,
@@ -105,7 +105,7 @@ impl Registry {
             return Some(ModelSpec {
                 name: discovered.name.clone(),
                 base_path: discovered.path.clone(),
-                lora_path: None,
+                lora_path: discovered.lora_path.clone(),
                 template: Some(self.infer_template(&discovered.model_type)),
                 ctx_len: 4096,
                 n_threads: None,
@@ -113,5 +113,58 @@ impl Registry {
         }
         
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_registry_new() {
+        let registry = Registry::new();
+        assert!(registry.inner.is_empty());
+        assert!(registry.discovered_models.is_empty());
+    }
+    
+    #[test]
+    fn test_registry_default() {
+        let registry = Registry::default();
+        assert!(registry.inner.is_empty());
+    }
+    
+    #[test]
+    fn test_register_model() {
+        let mut registry = Registry::new();
+        let entry = ModelEntry {
+            name: "test-model".to_string(),
+            base_path: PathBuf::from("/path/to/model"),
+            lora_path: None,
+            template: Some("chatml".to_string()),
+            ctx_len: Some(4096),
+            n_threads: Some(4),
+        };
+        
+        registry.register(entry.clone());
+        assert_eq!(registry.inner.len(), 1);
+        assert!(registry.get("test-model").is_some());
+    }
+    
+    #[test]
+    fn test_list_models() {
+        let mut registry = Registry::new();
+        let entry = ModelEntry {
+            name: "test".to_string(),
+            base_path: PathBuf::from("/test"),
+            lora_path: None,
+            template: None,
+            ctx_len: None,
+            n_threads: None,
+        };
+        
+        registry.register(entry);
+        let models = registry.list();
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].name, "test");
     }
 }

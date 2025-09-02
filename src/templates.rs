@@ -29,3 +29,37 @@ impl TemplateFamily {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_chatml_render() {
+        let template = TemplateFamily::ChatML;
+        let messages = vec![("user".to_string(), "Hello".to_string())];
+        let result = template.render(None, &messages, None);
+        assert!(result.contains("<|im_start|>user"));
+        assert!(result.contains("Hello"));
+        assert!(result.contains("<|im_end|>"));
+    }
+    
+    #[test]
+    fn test_llama3_render() {
+        let template = TemplateFamily::Llama3;
+        let messages = vec![("user".to_string(), "Test".to_string())];
+        let result = template.render(None, &messages, None);
+        assert!(result.contains("<|start_header_id|>user<|end_header_id|>"));
+        assert!(result.contains("Test"));
+        assert!(result.contains("<|eot_id|>"));
+    }
+    
+    #[test]
+    fn test_openchat_render() {
+        let template = TemplateFamily::OpenChat;
+        let messages = vec![("user".to_string(), "Hi".to_string())];
+        let result = template.render(None, &messages, None);
+        assert!(result.contains("user: Hi"));
+        assert!(result.contains("assistant: "));
+    }
+}

@@ -4,6 +4,15 @@
 **/*.rs.bk
 *.pdb
 
+# Cargo lock for binaries (keep it)
+# Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -13,20 +22,25 @@
 ehthumbs.db
 Thumbs.db
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Internal development documents (NEVER commit)
+docs-internal/
+
+# Copilot instructions (internal only)
+.github/copilot-instructions.md
 
 # Local configuration
 .env
 .env.local
 
-# Test outputs
-*.tmp
+# Test artifacts
 *.log
+*.db
+*.db-*
+
+# Package manager artifacts
+node_modules/
+dist/
+build/
 
 # Model files (can be large)
 *.gguf
@@ -40,12 +54,10 @@ punch_analysis.json
 ollama_test_result.txt
 rustchain.exe
 
-# Internal development documentation (private)
-/docs-internal/
-shimmy_rust_golden_record_implementation_bible.md
-test_*.yaml
-
 # Temporary files and analysis
+*.tmp
+*.temp
+*~
 *_analysis.json
 *_test_result.txt
 AUTO_DISCOVERY_PLAN.md
@@ -54,3 +66,5 @@ DETAILED_INTEGRATION_PLANS.md
 DISCOVERY_IMPLEMENTATION_ROADMAP.md
 INTEGRATION_ROADMAP.md
 NEXT_PHASE_PLAN.md
+shimmy_rust_golden_record_implementation_bible.md
+test_*.yaml
