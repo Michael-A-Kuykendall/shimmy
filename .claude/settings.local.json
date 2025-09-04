@@ -4,7 +4,19 @@
       "Bash(gh auth:*)",
       "Bash(gh repo view:*)",
       "Bash(git push:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(gh workflow run:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:crates.io)",
+      "Bash(cross build:*)",
+      "Bash(rustup target:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh release list:*)",
+      "Bash(gh workflow:*)",
+      "Bash(git add:*)",
+      "Bash(gh run:*)",
+      "Bash(rm:*)",
+      "Bash(cargo build:*)"
     ],
     "deny": [],
     "ask": []

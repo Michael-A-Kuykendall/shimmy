@@ -1,5 +1,5 @@
 #![allow(clippy::too_many_arguments)]
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
