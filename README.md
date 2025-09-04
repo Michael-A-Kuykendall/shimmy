@@ -118,7 +118,7 @@ See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
 - **$100/month**: Corporate backer - Logo on README + monthly office hours
 - **$500/month**: Infrastructure partner - Direct support + roadmap input
 
-**Companies**: Need invoicing? Email [sponsors@shimmy.dev](mailto:sponsors@shimmy.dev)
+**Companies**: Need invoicing? Email [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
 
 ## Technical Architecture
 
