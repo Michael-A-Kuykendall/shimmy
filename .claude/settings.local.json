@@ -3,7 +3,8 @@
     "allow": [
       "Bash(gh auth:*)",
       "Bash(gh repo view:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git tag:*)"
     ],
     "deny": [],
     "ask": []
