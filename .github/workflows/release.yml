@@ -51,11 +51,11 @@ jobs:
           # Install cross for cross-compilation
           cargo install cross
 
-          # Build for multiple platforms
-          cross build --release --features llama --target x86_64-unknown-linux-gnu
-          cross build --release --features llama --target x86_64-pc-windows-gnu
-          cross build --release --features llama --target x86_64-apple-darwin
-          cross build --release --features llama --target aarch64-apple-darwin
+          # Build fast version (default features, no C++ deps)
+          cross build --release --target x86_64-unknown-linux-gnu
+          cross build --release --target x86_64-pc-windows-gnu
+          cross build --release --target x86_64-apple-darwin
+          cross build --release --target aarch64-apple-darwin
 
           # Copy binaries to release directory with clean names
           cp target/x86_64-unknown-linux-gnu/release/shimmy release/shimmy-linux-amd64

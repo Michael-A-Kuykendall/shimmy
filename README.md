@@ -39,8 +39,14 @@ cargo install shimmy --features llama
 # Or download pre-built binary
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy.exe
 
-# Get any GGUF model (example: Phi-3 Mini)
-# Place in ./models/ or set SHIMMY_BASE_GGUF=path/to/model.gguf
+# Get any GGUF model - Shimmy auto-discovers from:
+# • Hugging Face cache: ~/.cache/huggingface/hub/
+# • Local directory: ./models/
+# • Environment: SHIMMY_BASE_GGUF=path/to/model.gguf
+# 
+# Examples that work out of the box:
+# huggingface-cli download microsoft/Phi-3-mini-4k-instruct-gguf --local-dir ./models/
+# huggingface-cli download bartowski/Llama-3.2-1B-Instruct-GGUF --local-dir ./models/
 
 # Start serving (auto-allocates port to avoid conflicts)
 ./shimmy serve
