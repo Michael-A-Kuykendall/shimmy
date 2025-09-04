@@ -1,9 +1,0 @@
-// Fix for LlamaLoaded type - this needs to be added to llama.rs
-// The type seems to be missing from the implementation
-
-// Potential fixes:
-// 1. Define LlamaLoaded type
-// 2. Remove Send/Sync impls if not needed
-// 3. Update imports from llama_cpp_2
-
-// This patch file documents the issue for manual fixing

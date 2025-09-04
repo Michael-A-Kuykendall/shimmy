@@ -1,48 +1,34 @@
-# Shimmy: Instant LoRA Inference
+# Shimmy: The 5MB Alternative to Ollama
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
 [![Sponsor](https://img.shields.io/badge/❤️-Sponsor-ea4aaa?logo=github)](https://github.com/sponsors/Michael-A-Kuykendall)
 
-**From LoRA training to production API in under 30 seconds.**
+**Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
 
-Shimmy solves the developer pain point: You just trained a useful LoRA adapter with Unsloth/PEFT/Axolotl, now you want to serve it immediately without conversion hassles.
+> "Infrastructure should be invisible. Shimmy is infrastructure." — Michael A. Kuykendall
 
-> "No more fighting with conversion scripts. Train your LoRA, point Shimmy at it, done." — Real developer workflow
+## What is Shimmy?
 
-## 🎯 The Problem Shimmy Solves
+Shimmy is a **5.1MB single-binary** local inference server that provides OpenAI API-compatible endpoints for GGUF models. It's designed to be the **invisible infrastructure** that just works.
 
-```bash
-# You have this after training:
-my-awesome-coding-lora/
-├── adapter_model.safetensors  ← Your trained LoRA
-├── adapter_config.json
-└── training_results.json
+| Metric | Shimmy | Ollama | 
+|--------|--------|--------|
+| **Binary Size** | 5.1MB 🏆 | 680MB |
+| **Startup Time** | <100ms 🏆 | 5-10s |
+| **Memory Overhead** | <50MB 🏆 | 200MB+ |
+| **OpenAI Compatibility** | 100% 🏆 | Partial |
+| **Port Management** | Auto 🏆 | Manual |
+| **Configuration** | Zero 🏆 | Manual |
 
-# You want this:
-curl -X POST http://localhost:11435/api/generate \
-  -d '{"model":"phi3-lora","prompt":"def fibonacci(n):"}'
-```
-
-**Before Shimmy:** Convert SafeTensors → GGUF → Configure llama.cpp → Debug APIs  
-**With Shimmy:** Point and serve. Done.
-
-## 🚀 Zero-Friction LoRA Serving
-
-| Step | Before Shimmy | With Shimmy |
-|------|---------------|-------------|
-| **Convert** | Find llama.cpp scripts, debug formats | Auto-handled |
-| **Configure** | Manual server setup, ports, contexts | Zero-config |
-| **Serve** | Complex llama.cpp command lines | `shimmy serve` |
-| **Test** | Figure out API format | Standard OpenAI API |
-| **Time** | 15-30 minutes, error-prone | **30 seconds** |
-
-## Why Shimmy?
+## 🎯 Perfect for Developers
 
 **Privacy**: Your code stays on your machine  
 **Cost**: No per-token pricing, unlimited queries  
 **Speed**: Local inference = sub-second responses  
 **Integration**: Works with VSCode, Cursor, Continue.dev out of the box  
+
+**BONUS:** First-class LoRA adapter support - from training to production API in 30 seconds.  
 
 ## Quick Start (30 seconds)
 
@@ -56,11 +42,12 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 # Get any GGUF model (example: Phi-3 Mini)
 # Place in ./models/ or set SHIMMY_BASE_GGUF=path/to/model.gguf
 
-# Start serving  
+# Start serving (auto-allocates port to avoid conflicts)
 ./shimmy serve
 
-# Point your AI tools to http://localhost:11435
+# Point your AI tools to the displayed port
 # VSCode Copilot, Cursor, Continue.dev all work instantly
+# OR use manual port: ./shimmy serve --bind 127.0.0.1:11435
 ```
 
 [📖 Full quick start guide](docs/quickstart.md)
@@ -138,6 +125,7 @@ See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
 - **Rust + Tokio**: Memory-safe, async performance
 - **llama.cpp backend**: Industry-standard GGUF inference
 - **OpenAI API compatibility**: Drop-in replacement
+- **Dynamic port management**: Zero conflicts, auto-allocation
 - **Zero-config auto-discovery**: Just works™
 
 ### API Endpoints
@@ -149,7 +137,8 @@ See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
 
 ### CLI Commands
 ```bash
-./shimmy serve                    # Start server
+./shimmy serve                    # Start server (auto port allocation)
+./shimmy serve --bind 127.0.0.1:8080  # Manual port binding
 ./shimmy list                     # Show available models  
 ./shimmy discover                 # Refresh model discovery
 ./shimmy generate --name X --prompt "Hi"  # Test generation

@@ -22,7 +22,7 @@ impl Default for GenOptions {
 
 // Universal backend support - true shim architecture
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[cfg(feature = "huggingface")]
 pub enum ModelBackend {
     // GGUF via llama.cpp (existing)
     LlamaGGUF {
@@ -45,7 +45,7 @@ pub enum ModelBackend {
 }
 
 #[derive(Debug, Clone)]  
-#[allow(dead_code)]
+#[cfg(feature = "huggingface")]
 pub struct UniversalModelSpec {
     pub name: String,
     pub backend: ModelBackend,
@@ -66,6 +66,7 @@ pub struct ModelSpec {
     pub n_threads: Option<i32>,
 }
 
+#[cfg(feature = "huggingface")]
 impl From<ModelSpec> for UniversalModelSpec {
     fn from(spec: ModelSpec) -> Self {
         UniversalModelSpec {
@@ -84,13 +85,13 @@ impl From<ModelSpec> for UniversalModelSpec {
 
 // Universal Engine trait - supports any backend
 #[async_trait]
-#[allow(dead_code)]
+#[cfg(feature = "huggingface")]
 pub trait UniversalEngine: Send + Sync {
     async fn load(&self, spec: &UniversalModelSpec) -> Result<Box<dyn UniversalModel>>;
 }
 
 #[async_trait]
-#[allow(dead_code)]
+#[cfg(feature = "huggingface")]
 pub trait UniversalModel: Send + Sync {
     async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String>;
 }
@@ -108,8 +109,10 @@ pub trait LoadedModel: Send + Sync {
 
 pub mod llama;
 
-#[cfg(feature = "llama")]
+#[cfg(feature = "huggingface")]
 pub mod huggingface;
 
-#[cfg(feature = "llama")]
+#[cfg(feature = "huggingface")]  
 pub mod universal;
+
+pub mod adapter;

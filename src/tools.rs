@@ -224,3 +224,81 @@ impl Default for ToolRegistry {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_tool_registry_creation() {
+        let registry = ToolRegistry::new();
+        assert!(registry.tools.len() >= 3);
+    }
+    
+    #[test]
+    fn test_tool_definition_creation() {
+        let def = ToolDefinition {
+            name: "test".to_string(),
+            description: "test tool".to_string(),
+            parameters: serde_json::json!({"test": true}),
+        };
+        assert_eq!(def.name, "test");
+    }
+    
+    #[test]
+    fn test_tool_call_creation() {
+        let call = ToolCall {
+            name: "calc".to_string(),
+            arguments: serde_json::json!({"x": 5, "y": 3}),
+        };
+        assert_eq!(call.name, "calc");
+    }
+    
+    #[test]
+    fn test_tool_result_creation() {
+        let result = ToolResult {
+            success: true,
+            result: serde_json::json!({"answer": 8}),
+            error: None,
+        };
+        assert!(result.success);
+    }
+    
+    #[test]
+    fn test_calculator_tool_definition() {
+        let calc = CalculatorTool;
+        let def = calc.definition();
+        assert_eq!(def.name, "calculator");
+        assert!(def.description.contains("mathematical"));
+    }
+    
+    #[test]
+    fn test_calculator_tool_execution() {
+        let calc = CalculatorTool;
+        let args = serde_json::json!({"expression": "2 + 3"});
+        let result = calc.execute(args).unwrap();
+        assert!(result.success);
+    }
+    
+    #[test]
+    fn test_file_read_tool_definition() {
+        let file_tool = FileReadTool;
+        let def = file_tool.definition();
+        assert_eq!(def.name, "file_read");
+    }
+    
+    #[test]
+    fn test_http_get_tool_definition() {
+        let http_tool = HttpGetTool;
+        let def = http_tool.definition();
+        assert_eq!(def.name, "http_get");
+    }
+    
+    #[test]
+    fn test_tool_registry_register() {
+        let mut registry = ToolRegistry::new();
+        let initial_count = registry.tools.len();
+        registry.register(Box::new(CalculatorTool));
+        assert!(registry.tools.len() >= initial_count);
+    }
+}

@@ -1,0 +1,11 @@
+workspace: shimmy
+languages:
+  - rust
+ignore:
+  - target/
+  - .git/
+  - docs-internal/
+max_depth: 10
+patterns: true
+relationships: true
+docs: true
