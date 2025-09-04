@@ -117,6 +117,56 @@ jobs:
             release/*.tar.gz
             release/*.zip
 
+  build-vscode-extension:
+    runs-on: ubuntu-latest
+    needs: build-and-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update extension version
+        run: |
+          cd vscode-extension
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Install dependencies and build extension
+        run: |
+          cd vscode-extension
+          npm install
+          npm install -g vsce
+          npm run compile
+          vsce package
+
+      - name: Upload VSIX for manual deployment
+        uses: actions/upload-artifact@v3
+        with:
+          name: shimmy-${{ steps.version.outputs.version }}.vsix
+          path: vscode-extension/*.vsix
+
+      # OPTIONAL: Uncomment to enable automatic VS Code marketplace publishing
+      # Requires VSCODE_PAT secret with Personal Access Token from Azure DevOps
+      # - name: Publish to VS Code Marketplace (OPTIONAL)
+      #   run: |
+      #     cd vscode-extension  
+      #     vsce publish --pat ${{ secrets.VSCODE_PAT }}
+      #   if: env.VSCODE_PAT != ''
+      #   env:
+      #     VSCODE_PAT: ${{ secrets.VSCODE_PAT }}
+
   publish-crates:
     runs-on: ubuntu-latest
     needs: build-and-release

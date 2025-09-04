@@ -1,0 +1,46 @@
+name: "Zero Coverage Modules Sweep - Push to 95%"
+description: "Target all 0% coverage modules for quick wins"
+version: "1.0"
+
+steps:
+  - id: "add_error_tests"
+    name: "Add tests for error.rs module"
+    step_type: "llm"
+    parameters:
+      provider: "ollama"
+      model: "phi3:mini"
+      prompt: |
+        Add exactly one test for error.rs module (0% coverage).
+        
+        Requirements:
+        - Test error struct creation
+        - Test error conversion logic
+        - Simple focused test
+        
+        Output ONLY the exact Rust test code to add.
+      temperature: 0.1
+      max_tokens: 120
+    depends_on: []
+    
+  - id: "add_api_errors_tests"
+    name: "Add tests for api_errors.rs module"
+    step_type: "llm"
+    parameters:
+      provider: "ollama"
+      model: "phi3:mini"
+      prompt: |
+        Add exactly one test for api_errors.rs module (0% coverage).
+        
+        Requirements:
+        - Test API error types
+        - Test error response formatting
+        - Simple focused test
+        
+        Output ONLY the exact Rust test code to add.
+      temperature: 0.1
+      max_tokens: 120
+    depends_on: []
+
+outputs:
+  - "add_error_tests"
+  - "add_api_errors_tests"

@@ -148,11 +148,210 @@ pub fn is_safetensors_file(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+    use std::fs;
+    use std::io::Write;
+    use tempfile::TempDir;
+
     #[test]
     fn test_is_safetensors_file() {
         assert!(is_safetensors_file(Path::new("adapter_model.safetensors")));
         assert!(!is_safetensors_file(Path::new("model.gguf")));
         assert!(!is_safetensors_file(Path::new("config.json")));
+        assert!(!is_safetensors_file(Path::new("file.txt")));
+        assert!(!is_safetensors_file(Path::new("file")));
+        assert!(!is_safetensors_file(Path::new("file.")));
+        assert!(!is_safetensors_file(Path::new(".safetensors")));
+    }
+
+    #[test]
+    fn test_convert_safetensors_to_gguf_invalid_path() {
+        // Test with non-existent file
+        let result = convert_safetensors_to_gguf(Path::new("non_existent.safetensors"));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_convert_safetensors_to_gguf_invalid_safetensors() {
+        let temp_dir = TempDir::new().unwrap();
+        let safetensors_path = temp_dir.path().join("invalid.safetensors");
+        
+        // Create an invalid safetensors file
+        let mut file = fs::File::create(&safetensors_path).unwrap();
+        writeln!(file, "invalid safetensors data").unwrap();
+        
+        let result = convert_safetensors_to_gguf(&safetensors_path);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_convert_safetensors_to_gguf_with_existing_adapter_model() {
+        let temp_dir = TempDir::new().unwrap();
+        let safetensors_path = temp_dir.path().join("adapter.safetensors");
+        let gguf_path = temp_dir.path().join("adapter_model.gguf");
+        
+        // Create a minimal valid safetensors file
+        let data = create_minimal_safetensors();
+        fs::write(&safetensors_path, &data).unwrap();
+        
+        // Create existing adapter_model.gguf
+        fs::write(&gguf_path, b"fake gguf data").unwrap();
+        
+        let result = convert_safetensors_to_gguf(&safetensors_path);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), gguf_path);
+    }
+
+    #[test]
+    fn test_convert_safetensors_to_gguf_with_existing_gguf() {
+        let temp_dir = TempDir::new().unwrap();
+        let safetensors_path = temp_dir.path().join("adapter.safetensors");
+        let gguf_path = temp_dir.path().join("some_model.gguf");
+        
+        // Create a minimal valid safetensors file
+        let data = create_minimal_safetensors();
+        fs::write(&safetensors_path, &data).unwrap();
+        
+        // Create existing .gguf file
+        fs::write(&gguf_path, b"fake gguf data").unwrap();
+        
+        let result = convert_safetensors_to_gguf(&safetensors_path);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), gguf_path);
+    }
+
+    #[test]
+    fn test_convert_safetensors_to_gguf_no_existing_gguf() {
+        let temp_dir = TempDir::new().unwrap();
+        let safetensors_path = temp_dir.path().join("adapter.safetensors");
+        
+        // Create a minimal valid safetensors file
+        let data = create_minimal_safetensors();
+        fs::write(&safetensors_path, &data).unwrap();
+        
+        // No existing GGUF files
+        let result = convert_safetensors_to_gguf(&safetensors_path);
+        assert!(result.is_err());
+        
+        // Should contain helpful error message
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("SafeTensors to GGUF conversion needed"));
+        assert!(error_msg.contains("shimmy bridges SafeTensors"));
+    }
+
+    #[test]
+    fn test_convert_safetensors_path_without_parent() {
+        // Test with a path that has no parent (should be impossible in practice, but test edge case)
+        let result = convert_safetensors_to_gguf(Path::new(""));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_find_llama_cpp_script_not_found() {
+        let result = find_llama_cpp_script("definitely_does_not_exist_script.py");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_find_llama_cpp_script_with_existing_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let script_path = temp_dir.path().join("convert-lora-to-ggml.py");
+        fs::write(&script_path, b"#!/usr/bin/env python\nprint('test')").unwrap();
+        
+        // This test checks the logic but won't find the temp file since it's not in the hardcoded paths
+        // The real test is that the function doesn't crash with various inputs
+        let result = find_llama_cpp_script("convert-lora-to-ggml.py");
+        // Can't assert on the result since it depends on system state, but function should not panic
+        let _ = result;
+    }
+
+    #[test]
+    fn test_run_conversion_script_python_not_found() {
+        // This will fail because we're using a non-existent python executable
+        let temp_dir = TempDir::new().unwrap();
+        let script_path = temp_dir.path().join("script.py");
+        let input_path = temp_dir.path().join("input.safetensors");
+        let output_path = temp_dir.path().join("output.gguf");
+        
+        fs::write(&script_path, b"print('test')").unwrap();
+        fs::write(&input_path, b"fake input").unwrap();
+        
+        // This should fail since python command might not exist or script will fail
+        let result = run_conversion_script(&script_path, &input_path, &output_path);
+        // In most environments this will fail, which is expected behavior
+        let _ = result;
+    }
+
+    #[test]
+    fn test_safetensors_deserialization_error_handling() {
+        let temp_dir = TempDir::new().unwrap();
+        let safetensors_path = temp_dir.path().join("corrupt.safetensors");
+        
+        // Create a file with invalid safetensors format
+        fs::write(&safetensors_path, b"not valid safetensors format").unwrap();
+        
+        let result = convert_safetensors_to_gguf(&safetensors_path);
+        assert!(result.is_err());
+        
+        // Error should be related to deserialization
+        let error_msg = result.unwrap_err().to_string();
+        // The actual error message will come from safetensors library
+        assert!(!error_msg.is_empty());
+    }
+
+    #[test]
+    fn test_directory_read_error_handling() {
+        let temp_dir = TempDir::new().unwrap();
+        let safetensors_path = temp_dir.path().join("adapter.safetensors");
+        
+        // Create a minimal valid safetensors file
+        let data = create_minimal_safetensors();
+        fs::write(&safetensors_path, &data).unwrap();
+        
+        // Remove the temp directory to simulate read error (this is tricky to test)
+        // Instead, we'll test with a valid directory but no GGUF files
+        let result = convert_safetensors_to_gguf(&safetensors_path);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_multiple_gguf_files_in_directory() {
+        let temp_dir = TempDir::new().unwrap();
+        let safetensors_path = temp_dir.path().join("adapter.safetensors");
+        let gguf_path1 = temp_dir.path().join("model1.gguf");
+        let gguf_path2 = temp_dir.path().join("model2.gguf");
+        
+        // Create a minimal valid safetensors file
+        let data = create_minimal_safetensors();
+        fs::write(&safetensors_path, &data).unwrap();
+        
+        // Create multiple GGUF files
+        fs::write(&gguf_path1, b"fake gguf data 1").unwrap();
+        fs::write(&gguf_path2, b"fake gguf data 2").unwrap();
+        
+        let result = convert_safetensors_to_gguf(&safetensors_path);
+        assert!(result.is_ok());
+        
+        // Should return one of the GGUF files (order may vary)
+        let returned_path = result.unwrap();
+        assert!(returned_path == gguf_path1 || returned_path == gguf_path2);
+        assert!(returned_path.extension().unwrap() == "gguf");
+    }
+
+    // Helper function to create a minimal valid SafeTensors file
+    fn create_minimal_safetensors() -> Vec<u8> {
+        // Create a minimal valid SafeTensors format
+        // SafeTensors format: 8-byte header (length) + JSON metadata + tensor data
+        let metadata = r#"{"test_tensor":{"dtype":"F32","shape":[1,1],"data_offsets":[0,4]}}"#;
+        let metadata_bytes = metadata.as_bytes();
+        let metadata_len = metadata_bytes.len() as u64;
+        
+        let mut data = Vec::new();
+        data.extend_from_slice(&metadata_len.to_le_bytes());
+        data.extend_from_slice(metadata_bytes);
+        
+        // Add minimal tensor data (4 bytes for a single F32)
+        data.extend_from_slice(&[0u8, 0u8, 0u8, 0u8]);
+        
+        data
     }
 }

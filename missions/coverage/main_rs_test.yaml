@@ -1,0 +1,26 @@
+name: "main.rs Coverage - CLI Args Test"
+description: "Add single CLI argument parsing test to main.rs"
+version: "1.0"
+
+steps:
+  - id: "add_main_test"
+    name: "Add CLI args test"
+    step_type: "llm"
+    parameters:
+      provider: "ollama"
+      model: "phi3:mini"
+      prompt: |
+        Add exactly one test function for CLI argument parsing in main.rs.
+        
+        Requirements:
+        - Test CLI parsing logic
+        - Simple focused test
+        - Use existing imports only
+        
+        Output ONLY the exact Rust code to add.
+      temperature: 0.1
+      max_tokens: 120
+    depends_on: []
+
+outputs:
+  - "add_main_test"

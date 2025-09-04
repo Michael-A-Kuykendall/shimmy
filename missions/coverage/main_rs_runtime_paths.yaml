@@ -1,0 +1,28 @@
+name: "main.rs Runtime Coverage - Push to 95%"
+description: "Ultra-granular mission to hit uncovered runtime execution paths in main.rs"
+version: "1.0"
+
+steps:
+  - id: "add_runtime_tests"
+    name: "Add tests for uncovered main() runtime paths"
+    step_type: "llm"
+    parameters:
+      provider: "ollama"
+      model: "phi3:mini"
+      prompt: |
+        Add exactly one test that exercises the main() function runtime paths not hit by existing tests.
+        
+        Focus on lines 51-84 (enhanced_state creation and auto_register_discovered call).
+        
+        Requirements:
+        - Test the enhanced_state creation path when manual_count <= 1
+        - Test auto_register_discovered() call
+        - Use mocking to avoid side effects
+        
+        Output ONLY the exact Rust test code to add.
+      temperature: 0.1
+      max_tokens: 150
+    depends_on: []
+
+outputs:
+  - "add_runtime_tests"

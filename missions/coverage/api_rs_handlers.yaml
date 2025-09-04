@@ -1,0 +1,28 @@
+name: "api.rs Handler Coverage - Push to 95%"
+description: "Target uncovered API handler execution paths"
+version: "1.0"
+
+steps:
+  - id: "add_api_tests"
+    name: "Add tests for uncovered API handler paths"
+    step_type: "llm"
+    parameters:
+      provider: "ollama"
+      model: "phi3:mini"
+      prompt: |
+        Add exactly one test for API handler execution paths not covered.
+        
+        Focus on error handling and edge cases in generate/models/tools handlers.
+        
+        Requirements:
+        - Test error response paths
+        - Test handler parameter validation
+        - Simple focused test
+        
+        Output ONLY the exact Rust test code to add.
+      temperature: 0.1
+      max_tokens: 150
+    depends_on: []
+
+outputs:
+  - "add_api_tests"

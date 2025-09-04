@@ -10,6 +10,12 @@ pub struct HuggingFaceEngine {
     python_path: String,
 }
 
+impl Default for HuggingFaceEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HuggingFaceEngine {
     pub fn new() -> Self {
         // Use the verified Python path from CLAUDE.md
