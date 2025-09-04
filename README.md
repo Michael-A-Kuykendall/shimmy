@@ -33,10 +33,11 @@ Shimmy is a **5.1MB single-binary** local inference server that provides OpenAI 
 ## Quick Start (30 seconds)
 
 ```bash
-# Install from crates.io
-cargo install shimmy --features llama
+# Install from crates.io (Linux, macOS, Windows)
+cargo install shimmy
 
-# Or download pre-built binary
+# Or download pre-built binary (Windows only)
+# https://github.com/Michael-A-Kuykendall/shimmy/releases/latest
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy.exe
 
 # Get any GGUF model - Shimmy auto-discovers from:
