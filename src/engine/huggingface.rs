@@ -6,6 +6,7 @@ use tokio::process::Command as TokioCommand;
 
 use super::{GenOptions, ModelBackend, UniversalEngine, UniversalModel, UniversalModelSpec};
 
+#[derive(Debug)]
 pub struct HuggingFaceEngine {
     python_path: String,
 }
