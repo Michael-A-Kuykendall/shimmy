@@ -52,6 +52,20 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 
 [📖 Full quick start guide](docs/quickstart.md)
 
+## 📦 Download & Install
+
+### Package Managers
+- **Rust**: [`cargo install shimmy`](https://crates.io/crates/shimmy)
+- **VS Code**: [Shimmy Extension](https://marketplace.visualstudio.com/items?itemName=targetedwebresults.shimmy-vscode)
+- **npm**: [`npm install -g shimmy-js`](https://www.npmjs.com/package/shimmy-js) *(coming soon)*
+- **Python**: [`pip install shimmy`](https://pypi.org/project/shimmy/) *(coming soon)*
+
+### Direct Downloads
+- **GitHub Releases**: [Latest binaries for all platforms](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest)
+- **Docker**: `docker pull shimmy/shimmy:latest` *(coming soon)*
+
+---
+
 ## Integration Examples
 
 **VSCode Copilot**:
