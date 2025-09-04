@@ -9,10 +9,10 @@ description = "The 5MB alternative to Ollama - local AI inference server with Op
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Michael A. Kuykendall", email = "mike@shimmy.dev"}
+    {name = "Michael A. Kuykendall", email = "michaelallenkuykendall@gmail.com"}
 ]
 maintainers = [
-    {name = "Michael A. Kuykendall", email = "mike@shimmy.dev"}
+    {name = "Michael A. Kuykendall", email = "michaelallenkuykendall@gmail.com"}
 ]
 keywords = [
     "ai",

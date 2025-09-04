@@ -9,7 +9,7 @@ repository = "https://github.com/Michael-A-Kuykendall/shimmy"
 readme = "README.md"
 keywords = ["ollama-alternative", "lora", "unsloth", "gguf", "inference", "dynamic-ports", "vscode"]
 categories = ["command-line-utilities", "web-programming::http-server", "science", "development-tools"]
-authors = ["Michael A. Kuykendall <michael@kuykendall.org>"]
+authors = ["Michael A. Kuykendall <michaelallenkuykendall@gmail.com>"]
 exclude = [
     "docs-internal/*",
     "test-models/*",
