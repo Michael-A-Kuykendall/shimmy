@@ -44,22 +44,42 @@ jobs:
             echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build native Linux binary
+      - name: Build multi-platform binaries
         run: |
           mkdir -p release
 
-          # Build natively on Ubuntu (fastest, most reliable)
-          cargo build --release
+          # Install all required targets for cross-compilation
+          rustup target add x86_64-unknown-linux-gnu
+          rustup target add x86_64-pc-windows-gnu
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
 
-          # Copy binary to release directory
-          cp target/release/shimmy release/shimmy-linux-amd64
+          # Install cross for cross-compilation
+          cargo install cross
+
+          # Build fast version (default features, no C++ deps)
+          cross build --release --target x86_64-unknown-linux-gnu
+          cross build --release --target x86_64-pc-windows-gnu
+          cross build --release --target x86_64-apple-darwin
+          cross build --release --target aarch64-apple-darwin
+
+          # Copy binaries to release directory with clean names
+          cp target/x86_64-unknown-linux-gnu/release/shimmy release/shimmy-linux-amd64
+          cp target/x86_64-pc-windows-gnu/release/shimmy.exe release/shimmy-windows-amd64.exe
+          cp target/x86_64-apple-darwin/release/shimmy release/shimmy-darwin-amd64
+          cp target/aarch64-apple-darwin/release/shimmy release/shimmy-darwin-arm64
 
       - name: Create release archives
         run: |
           cd release
 
-          # Create tar.gz for Linux
+          # Create tar.gz for Unix platforms
           tar -czf shimmy-${{ steps.version.outputs.version }}-linux-amd64.tar.gz shimmy-linux-amd64
+          tar -czf shimmy-${{ steps.version.outputs.version }}-darwin-amd64.tar.gz shimmy-darwin-amd64
+          tar -czf shimmy-${{ steps.version.outputs.version }}-darwin-arm64.tar.gz shimmy-darwin-arm64
+
+          # Create zip for Windows
+          zip shimmy-${{ steps.version.outputs.version }}-windows-amd64.zip shimmy-windows-amd64.exe
 
       - name: Create GitHub Release
         id: create_release
