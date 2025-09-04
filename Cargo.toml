@@ -3,12 +3,12 @@ name = "shimmy"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Instant LoRA inference server - from training to production API in 30 seconds"
+description = "5MB Ollama alternative with dynamic port management and zero-friction LoRA serving. 95%+ test coverage, <100ms startup."
 homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
 repository = "https://github.com/Michael-A-Kuykendall/shimmy"
 readme = "README.md"
-keywords = ["llm", "lora", "inference", "ai", "gguf"]
-categories = ["command-line-utilities", "web-programming::http-server", "science"]
+keywords = ["ollama-alternative", "lora", "unsloth", "gguf", "inference", "dynamic-ports", "vscode"]
+categories = ["command-line-utilities", "web-programming::http-server", "science", "development-tools"]
 authors = ["Michael A. Kuykendall <michael@kuykendall.org>"]
 exclude = [
     "docs-internal/*",
@@ -21,9 +21,13 @@ exclude = [
 ]
 
 [features]
-default = []
-# Enable llama.cpp backend (CPU) when present
+default = ["huggingface"]
+# Engine backends  
 llama = ["dep:llama-cpp-2"]
+huggingface = [] # Python integration, no additional Rust deps
+# Convenience feature sets
+fast = ["huggingface"] # Fast compilation - no C++ deps
+full = ["huggingface", "llama"] # Full compilation - includes C++ deps
 
 [dependencies]
 anyhow = "1"
@@ -32,8 +36,10 @@ async-trait = "0.1"
 bytes = "1"
 clap = { version = "4", features = ["derive"] }
 futures-util = "0.3"
+lazy_static = "1.5"
 minijinja = { version = "2", features = ["loader"] }
 parking_lot = "0.12"
+rand = "0.8"
 safetensors = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

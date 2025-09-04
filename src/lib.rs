@@ -10,6 +10,7 @@ pub mod metrics;
 pub mod model_manager;
 pub mod model_registry;
 pub mod openai_compat;
+pub mod port_manager;
 pub mod rustchain_compat;
 pub mod safetensors_adapter;
 pub mod server;

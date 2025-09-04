@@ -1,0 +1,26 @@
+name: "server.rs Coverage - Router Test"
+description: "Add single Router test to server.rs"
+version: "1.0"
+
+steps:
+  - id: "add_server_test"
+    name: "Add Router test"
+    step_type: "llm"
+    parameters:
+      provider: "ollama"
+      model: "phi3:mini"
+      prompt: |
+        Add exactly one test function for Router building in server.rs.
+        
+        Requirements:
+        - Test route creation
+        - Simple focused test
+        - Use existing imports only
+        
+        Output ONLY the exact Rust code to add.
+      temperature: 0.1
+      max_tokens: 120
+    depends_on: []
+
+outputs:
+  - "add_server_test"
