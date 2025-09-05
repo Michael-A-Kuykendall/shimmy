@@ -39,6 +39,9 @@ cargo install shimmy
 # Or download pre-built binary (Windows only)
 # https://github.com/Michael-A-Kuykendall/shimmy/releases/latest
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy.exe
+```
+
+> **⚠️ Windows Security Notice**: Windows Defender may flag the binary as a false positive. This is common with unsigned Rust executables. **Recommended**: Use `cargo install shimmy` instead, or add an exclusion for shimmy.exe in Windows Defender.
 
 # Get any GGUF model - Shimmy auto-discovers from:
 # • Hugging Face cache: ~/.cache/huggingface/hub/
