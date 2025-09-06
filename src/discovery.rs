@@ -52,6 +52,7 @@ impl ModelDiscovery {
         if let Ok(home) = env::var("HOME").or_else(|_| env::var("USERPROFILE")) {
             let home_path = PathBuf::from(home);
             discovery.add_search_path(home_path.join(".cache/huggingface"));
+            discovery.add_search_path(home_path.join(".ollama/models"));
             discovery.add_search_path(home_path.join("models"));
         }
         

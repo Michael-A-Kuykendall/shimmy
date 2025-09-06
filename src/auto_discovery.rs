@@ -36,6 +36,7 @@ impl ModelAutoDiscovery {
         // Add common model directories
         if let Some(home) = std::env::var_os("HOME") {
             search_paths.push(PathBuf::from(home.clone()).join(".cache/huggingface/hub"));
+            search_paths.push(PathBuf::from(home.clone()).join(".ollama/models"));
             search_paths.push(PathBuf::from(home.clone()).join("models"));
             search_paths.push(PathBuf::from(home).join(".local/share/shimmy/models"));
         }
@@ -43,6 +44,7 @@ impl ModelAutoDiscovery {
         if let Some(user_profile) = std::env::var_os("USERPROFILE") {
             // Focus on likely GGUF model locations
             search_paths.push(PathBuf::from(user_profile.clone()).join(".cache\\huggingface\\hub"));
+            search_paths.push(PathBuf::from(user_profile.clone()).join(".ollama\\models"));
             search_paths.push(PathBuf::from(user_profile.clone()).join("models"));
             search_paths.push(PathBuf::from(user_profile.clone()).join("AppData\\Local\\shimmy\\models"));
             search_paths.push(PathBuf::from(user_profile).join("Downloads"));

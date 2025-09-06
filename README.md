@@ -45,6 +45,7 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 
 # Get any GGUF model - Shimmy auto-discovers from:
 # • Hugging Face cache: ~/.cache/huggingface/hub/
+# • Ollama models: ~/.ollama/models/
 # • Local directory: ./models/
 # • Environment: SHIMMY_BASE_GGUF=path/to/model.gguf
 # 
