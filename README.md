@@ -74,6 +74,29 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 - **GitHub Releases**: [Latest binaries for all platforms](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest)
 - **Docker**: `docker pull shimmy/shimmy:latest` *(coming soon)*
 
+### 🍎 macOS Users
+
+**Full compatibility confirmed!** Shimmy works flawlessly on macOS with Metal GPU acceleration.
+
+```bash
+# Install dependencies
+brew install cmake rust
+
+# Build with full features (recommended)
+cargo build --release --features llama
+
+# Or use package manager
+cargo install shimmy
+```
+
+**✅ Verified working:**
+- Intel and Apple Silicon Macs
+- Metal GPU acceleration (automatic)
+- Xcode 17+ compatibility
+- All LoRA adapter features
+
+[📋 Complete macOS testing report](docs/MAC_TESTING_REPORT.md)
+
 ---
 
 ## Integration Examples
