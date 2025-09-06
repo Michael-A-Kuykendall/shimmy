@@ -6,8 +6,6 @@
 
 **Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
 
-> "Infrastructure should be invisible. Shimmy is infrastructure." — Michael A. Kuykendall
-
 ## What is Shimmy?
 
 Shimmy is a **5.1MB single-binary** local inference server that provides OpenAI API-compatible endpoints for GGUF models. It's designed to be the **invisible infrastructure** that just works.
