@@ -23,59 +23,66 @@ Shimmy is a **5.1MB single-binary** local inference server that provides OpenAI 
 
 ## 🎯 Perfect for Developers
 
-**Privacy**: Your code stays on your machine  
-**Cost**: No per-token pricing, unlimited queries  
-**Speed**: Local inference = sub-second responses  
-**Integration**: Works with VSCode, Cursor, Continue.dev out of the box  
+- **Privacy**: Your code stays on your machine  
+- **Cost**: No per-token pricing, unlimited queries  
+- **Speed**: Local inference = sub-second responses  
+- **Integration**: Works with VSCode, Cursor, Continue.dev out of the box  
 
-**BONUS:** First-class LoRA adapter support - from training to production API in 30 seconds.  
+**BONUS:** First-class LoRA adapter support - from training to production API in 30 seconds.
 
 ## Quick Start (30 seconds)
+
+### Installation
 
 ```bash
 # Install from crates.io (Linux, macOS, Windows)
 cargo install shimmy
 
 # Or download pre-built binary (Windows only)
-# https://github.com/Michael-A-Kuykendall/shimmy/releases/latest
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy.exe
 ```
 
 > **⚠️ Windows Security Notice**: Windows Defender may flag the binary as a false positive. This is common with unsigned Rust executables. **Recommended**: Use `cargo install shimmy` instead, or add an exclusion for shimmy.exe in Windows Defender.
 
-# Get any GGUF model - Shimmy auto-discovers from:
-# • Hugging Face cache: ~/.cache/huggingface/hub/
-# • Ollama models: ~/.ollama/models/
-# • Local directory: ./models/
-# • Environment: SHIMMY_BASE_GGUF=path/to/model.gguf
-# 
-# Examples that work out of the box:
-# huggingface-cli download microsoft/Phi-3-mini-4k-instruct-gguf --local-dir ./models/
-# huggingface-cli download bartowski/Llama-3.2-1B-Instruct-GGUF --local-dir ./models/
+### Get Models
 
-# Start serving (auto-allocates port to avoid conflicts)
-./shimmy serve
+Shimmy auto-discovers models from:
+- **Hugging Face cache**: `~/.cache/huggingface/hub/`
+- **Ollama models**: `~/.ollama/models/`
+- **Local directory**: `./models/`
+- **Environment**: `SHIMMY_BASE_GGUF=path/to/model.gguf`
 
-# Point your AI tools to the displayed port
-# VSCode Copilot, Cursor, Continue.dev all work instantly
-# OR use manual port: ./shimmy serve --bind 127.0.0.1:11435
+```bash
+# Download models that work out of the box
+huggingface-cli download microsoft/Phi-3-mini-4k-instruct-gguf --local-dir ./models/
+huggingface-cli download bartowski/Llama-3.2-1B-Instruct-GGUF --local-dir ./models/
 ```
 
-[📖 Full quick start guide](docs/quickstart.md)
+### Start Server
+
+```bash
+# Auto-allocates port to avoid conflicts
+shimmy serve
+
+# Or use manual port
+shimmy serve --bind 127.0.0.1:11435
+```
+
+Point your AI tools to the displayed port - VSCode Copilot, Cursor, Continue.dev all work instantly!
 
 ## 📦 Download & Install
 
 ### Package Managers
 - **Rust**: [`cargo install shimmy`](https://crates.io/crates/shimmy)
 - **VS Code**: [Shimmy Extension](https://marketplace.visualstudio.com/items?itemName=targetedwebresults.shimmy-vscode)
-- **npm**: [`npm install -g shimmy-js`](https://www.npmjs.com/package/shimmy-js) *(coming soon)*
-- **Python**: [`pip install shimmy`](https://pypi.org/project/shimmy/) *(coming soon)*
+- **npm**: `npm install -g shimmy-js` *(coming soon)*
+- **Python**: `pip install shimmy` *(coming soon)*
 
 ### Direct Downloads
-- **GitHub Releases**: [Latest binaries for all platforms](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest)
+- **GitHub Releases**: [Latest binaries](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest)
 - **Docker**: `docker pull shimmy/shimmy:latest` *(coming soon)*
 
-### 🍎 macOS Users
+### 🍎 macOS Support
 
 **Full compatibility confirmed!** Shimmy works flawlessly on macOS with Metal GPU acceleration.
 
@@ -83,10 +90,7 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 # Install dependencies
 brew install cmake rust
 
-# Build with full features (recommended)
-cargo build --release --features llama
-
-# Or use package manager
+# Install shimmy
 cargo install shimmy
 ```
 
@@ -96,15 +100,10 @@ cargo install shimmy
 - Xcode 17+ compatibility
 - All LoRA adapter features
 
-[📋 Complete macOS testing report](docs/MAC_TESTING_REPORT.md)
-
----
-
 ## Integration Examples
 
-**VSCode Copilot**:
+### VSCode Copilot
 ```json
-// settings.json
 {
   "github.copilot.advanced": {
     "serverUrl": "http://localhost:11435"
@@ -112,7 +111,7 @@ cargo install shimmy
 }
 ```
 
-**Continue.dev**:
+### Continue.dev
 ```json
 {
   "models": [{
@@ -124,7 +123,8 @@ cargo install shimmy
 }
 ```
 
-[🔗 See all integrations](docs/integrations.md)
+### Cursor IDE
+Works out of the box - just point to `http://localhost:11435/v1`
 
 ## Why Shimmy Will Always Be Free
 
@@ -134,39 +134,32 @@ I built Shimmy because I was tired of 680MB binaries to run a 4GB model.
 
 > Shimmy saves you time and money. If it's useful, consider sponsoring for $5/month — less than your Netflix subscription, infinitely more useful.
 
-## Performance vs Competition
+## Performance Comparison
 
-[📊 See detailed benchmarks](docs/benchmarks.md)
-
-| Tool | Binary | Startup | Memory | OpenAI API |
-|------|--------|---------|--------|------------|
+| Tool | Binary Size | Startup Time | Memory Usage | OpenAI API |
+|------|-------------|--------------|--------------|------------|
 | **Shimmy** | **5.1MB** | **<100ms** | **50MB** | **100%** |
 | Ollama | 680MB | 5-10s | 200MB+ | Partial |
 | llama.cpp | 89MB | 1-2s | 100MB | None |
 
-## Community & Support
+## API Reference
 
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/Michael-A-Kuykendall/shimmy/issues)
-- **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
-- **📖 Documentation**: [docs/](docs/)
-- **💝 Sponsorship**: [GitHub Sponsors](https://github.com/sponsors/Michael-A-Kuykendall)
+### Endpoints
+- `GET /health` - Health check
+- `POST /v1/chat/completions` - OpenAI-compatible chat
+- `GET /v1/models` - List available models
+- `POST /api/generate` - Shimmy native API
+- `GET /ws/generate` - WebSocket streaming
 
-### Weekly Showcase
-
-**What did you build with Shimmy this week?** Share in [Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions) and get featured!
-
-## Sponsors
-
-See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
-
-### Sponsorship Tiers
-
-- **$5/month**: Coffee tier - My eternal gratitude + sponsor badge
-- **$25/month**: Bug prioritizer - Priority support + name in SPONSORS.md  
-- **$100/month**: Corporate backer - Logo on README + monthly office hours
-- **$500/month**: Infrastructure partner - Direct support + roadmap input
-
-**Companies**: Need invoicing? Email [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
+### CLI Commands
+```bash
+shimmy serve                    # Start server (auto port allocation)
+shimmy serve --bind 127.0.0.1:8080  # Manual port binding
+shimmy list                     # Show available models  
+shimmy discover                 # Refresh model discovery
+shimmy generate --name X --prompt "Hi"  # Test generation
+shimmy probe model-name         # Verify model loads
+```
 
 ## Technical Architecture
 
@@ -176,22 +169,24 @@ See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
 - **Dynamic port management**: Zero conflicts, auto-allocation
 - **Zero-config auto-discovery**: Just works™
 
-### API Endpoints
-- `GET /health` - Health check
-- `POST /v1/chat/completions` - OpenAI-compatible chat
-- `GET /v1/models` - List available models
-- `POST /api/generate` - Shimmy native API
-- `GET /ws/generate` - WebSocket streaming
+## Community & Support
 
-### CLI Commands
-```bash
-./shimmy serve                    # Start server (auto port allocation)
-./shimmy serve --bind 127.0.0.1:8080  # Manual port binding
-./shimmy list                     # Show available models  
-./shimmy discover                 # Refresh model discovery
-./shimmy generate --name X --prompt "Hi"  # Test generation
-./shimmy probe model-name         # Verify model loads
-```
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/Michael-A-Kuykendall/shimmy/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
+- **📖 Documentation**: [docs/](docs/)
+- **💝 Sponsorship**: [GitHub Sponsors](https://github.com/sponsors/Michael-A-Kuykendall)
+
+### Sponsors
+
+See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
+
+**Sponsorship Tiers:**
+- **$5/month**: Coffee tier - My eternal gratitude + sponsor badge
+- **$25/month**: Bug prioritizer - Priority support + name in SPONSORS.md  
+- **$100/month**: Corporate backer - Logo on README + monthly office hours
+- **$500/month**: Infrastructure partner - Direct support + roadmap input
+
+**Companies**: Need invoicing? Email [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
 
 ## License & Philosophy
 
