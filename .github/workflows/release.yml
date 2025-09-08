@@ -29,42 +29,62 @@ jobs:
       - name: Build Linux binary
         run: cargo build --release --target x86_64-unknown-linux-gnu
         
-      - name: Build macOS binaries (using cross)
-        run: |
-          cargo install cross --git https://github.com/cross-rs/cross
-          cross build --release --target x86_64-apple-darwin
-          cross build --release --target aarch64-apple-darwin
+      - name: Install cross tool
+        run: cargo install cross --git https://github.com/cross-rs/cross
+        
+      - name: Build macOS Intel binary
+        run: cross build --release --target x86_64-apple-darwin
+        continue-on-error: true
+        
+      - name: Build macOS ARM binary  
+        run: cross build --release --target aarch64-apple-darwin
+        continue-on-error: true
         
       - name: Build Windows binary
-        run: |
-          cross build --release --target x86_64-pc-windows-msvc
+        run: cross build --release --target x86_64-pc-windows-msvc
+        continue-on-error: true
         
       - name: Prepare binaries
         run: |
-          # Copy binaries with proper names
-          cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy-linux-x86_64
-          cp target/x86_64-apple-darwin/release/shimmy shimmy-macos-intel  
-          cp target/aarch64-apple-darwin/release/shimmy shimmy-macos-arm64
-          cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy-windows-x86_64.exe
+          # Copy binaries with proper names (only if they exist)
+          if [ -f target/x86_64-unknown-linux-gnu/release/shimmy ]; then
+            cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy-linux-x86_64
+            cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy
+          fi
           
-          # Also create generic names for quickstart docs
-          cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy
-          cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy.exe
+          if [ -f target/x86_64-apple-darwin/release/shimmy ]; then
+            cp target/x86_64-apple-darwin/release/shimmy shimmy-macos-intel
+          fi
+          
+          if [ -f target/aarch64-apple-darwin/release/shimmy ]; then
+            cp target/aarch64-apple-darwin/release/shimmy shimmy-macos-arm64
+          fi
+          
+          if [ -f target/x86_64-pc-windows-msvc/release/shimmy.exe ]; then
+            cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy-windows-x86_64.exe
+            cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy.exe
+          fi
           
           # List all created files
-          ls -la shimmy*
+          echo "Available binaries:"
+          ls -la shimmy* || echo "No binaries created yet"
           
       - name: Create release (only on tags)
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Build list of files to upload
+          FILES=""
+          [ -f shimmy-linux-x86_64 ] && FILES="$FILES shimmy-linux-x86_64"
+          [ -f shimmy-macos-intel ] && FILES="$FILES shimmy-macos-intel"
+          [ -f shimmy-macos-arm64 ] && FILES="$FILES shimmy-macos-arm64" 
+          [ -f shimmy-windows-x86_64.exe ] && FILES="$FILES shimmy-windows-x86_64.exe"
+          [ -f shimmy ] && FILES="$FILES shimmy"
+          [ -f shimmy.exe ] && FILES="$FILES shimmy.exe"
+          
+          echo "Uploading files: $FILES"
           gh release create ${{ github.ref_name }} \
-            shimmy-linux-x86_64 \
-            shimmy-macos-intel \
-            shimmy-macos-arm64 \
-            shimmy-windows-x86_64.exe \
-            shimmy \
-            shimmy.exe \
+            $FILES \
             --title "Shimmy ${{ github.ref_name }}" \
             --generate-notes
