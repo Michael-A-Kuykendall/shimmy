@@ -119,7 +119,48 @@ export SHIMMY_MMAP=true
 
 ### GPU Support
 
-Currently, shimmy uses CPU-only inference. GPU support is planned for future releases.
+Shimmy supports GPU acceleration through multiple backends:
+
+#### NVIDIA CUDA Support ✅
+- **Status**: Available with `--features llama` build flag
+- **Requirements**: NVIDIA GPU with CUDA support, CUDA toolkit installed
+- **Automatic Detection**: Models are automatically offloaded to GPU when available
+- **Docker Support**: Use NVIDIA runtime (`--runtime=nvidia` or `--gpus all`)
+
+#### Apple Metal Support ✅  
+- **Status**: Automatic on macOS with Apple Silicon or discrete GPUs
+- **Performance**: Significant acceleration confirmed on M1/M2 and AMD Radeon Pro GPUs
+- **Detection**: Automatic, no configuration required
+
+#### CPU Fallback
+- **Status**: Always available as fallback
+- **Performance**: Multi-threaded CPU inference for systems without GPU support
+
+#### Build Configuration
+
+To enable GPU support, build with:
+```bash
+cargo build --release --features llama
+```
+
+Or install via cargo with GPU features:
+```bash
+cargo install shimmy --features llama
+```
+
+#### Docker GPU Usage
+
+```dockerfile
+# Use NVIDIA runtime
+docker run --runtime=nvidia --gpus all shimmy:latest
+
+# Or with docker-compose
+services:
+  shimmy:
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+```
 
 ## Security Considerations
 

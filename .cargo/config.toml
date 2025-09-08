@@ -6,8 +6,8 @@ jobs = 4
 
 # Environment variables for llama.cpp compilation
 [env]
-# Disable CUDA compilation by default to speed up builds
-LLAMA_CUDA = "OFF"
+# Enable CUDA compilation for GPU support
+LLAMA_CUDA = "ON"
 # Use faster compilation flags
 CMAKE_BUILD_TYPE = "Release"
 # Limit parallel jobs for llama.cpp to prevent hanging

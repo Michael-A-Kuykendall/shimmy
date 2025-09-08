@@ -21,7 +21,10 @@ impl InferenceEngine for LlamaEngine {
             use std::num::NonZeroU32;
             use llama_cpp_2 as llama;
             let be = llama::llama_backend::LlamaBackend::init()?;
-            let model = llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &Default::default())?;
+            // Configure GPU acceleration - use all available GPU layers (99 = auto-detect max)
+            let model_params = llama::model::params::LlamaModelParams::default()
+                .with_n_gpu_layers(99); // Use all available GPU layers
+            let model = llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &model_params)?;
             let ctx_params = llama::context::params::LlamaContextParams::default()
                 .with_n_ctx(NonZeroU32::new(spec.ctx_len as u32))
                 .with_n_batch(2048)

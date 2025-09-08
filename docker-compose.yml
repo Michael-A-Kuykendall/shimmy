@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  shimmy:
+    build: .
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - RUST_LOG=info
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./models:/home/shimmy/models:ro"
+      - "~/.cache/huggingface:/home/shimmy/.cache/huggingface:ro"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # CPU-only version for systems without GPU
+  shimmy-cpu:
+    build: 
+      context: .
+      dockerfile: Dockerfile.cpu
+    environment:
+      - RUST_LOG=info
+    ports:
+      - "3001:3000"
+    volumes:
+      - "./models:/home/shimmy/models:ro"
+      - "~/.cache/huggingface:/home/shimmy/.cache/huggingface:ro"
+    restart: unless-stopped
+    profiles:
+      - cpu

@@ -16,9 +16,45 @@
       "Bash(git add:*)",
       "Bash(gh run:*)",
       "Bash(rm:*)",
-      "Bash(cargo build:*)"
+      "Bash(cargo build:*)",
+      "Bash(cargo publish:*)",
+      "Bash(git commit:*)",
+      "Bash(gh release create:*)",
+      "Bash(vsce publish:*)",
+      "Bash(cargo search:*)",
+      "WebFetch(domain:marketplace.visualstudio.com)",
+      "Bash(vsce list:*)",
+      "Bash(vsce show:*)",
+      "Bash(git log:*)",
+      "Bash(grep:*)",
+      "Bash(gh release view:*)",
+      "Bash(gh release upload:*)",
+      "Bash(cp:*)",
+      "Bash(cargo test:*)",
+      "Bash(git pull:*)",
+      "Bash(gh api:*)",
+      "Bash(gh repo edit:*)",
+      "Bash(mkdir:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr close:*)",
+      "Bash(cargo check:*)",
+      "Bash(nvidia-smi:*)",
+      "Bash(./target/release/shimmy.exe:*)",
+      "Bash(cargo clean:*)",
+      "Bash(cat:*)",
+      "Bash(rg:*)",
+      "Bash(gh issue close:*)",
+      "Bash(sed:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\Users\\micha\\.ollama\\models"
+    ]
   }
 }

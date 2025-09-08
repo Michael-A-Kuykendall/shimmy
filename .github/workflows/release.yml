@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:  # Allow manual testing
+  push:
+    branches:
+      - test-release  # Test on specific branch
 
 jobs:
   release:

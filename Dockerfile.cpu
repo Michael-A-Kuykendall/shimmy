@@ -1,0 +1,41 @@
+# CPU-only build for shimmy
+FROM rust:1.70-slim-bullseye as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy source code
+WORKDIR /app
+COPY . .
+
+# Build shimmy with CPU-only features
+RUN cargo build --release --features llama
+
+# Runtime image
+FROM debian:bullseye-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy binary from builder
+COPY --from=builder /app/target/release/shimmy /usr/local/bin/shimmy
+
+# Create non-root user
+RUN useradd -m -u 1000 shimmy
+USER shimmy
+
+# Set working directory
+WORKDIR /home/shimmy
+
+# Expose default port
+EXPOSE 3000
+
+# Default command
+CMD ["shimmy", "serve", "--bind", "0.0.0.0:3000"]

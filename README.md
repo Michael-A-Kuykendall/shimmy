@@ -98,6 +98,26 @@ cargo install shimmy
 - Xcode 17+ compatibility
 - All LoRA adapter features
 
+## 🚀 GPU Acceleration
+
+### NVIDIA CUDA ✅
+```bash
+# Install with GPU support
+cargo install shimmy --features llama
+
+# Docker with GPU
+docker run --runtime=nvidia --gpus all shimmy:latest
+```
+
+### Apple Metal ✅
+- Automatic acceleration on macOS
+- M1/M2 and discrete GPU support
+- No configuration needed
+
+### CPU Fallback ✅
+- Multi-threaded CPU inference
+- Works on all systems without GPU
+
 ## Integration Examples
 
 ### VSCode Copilot
