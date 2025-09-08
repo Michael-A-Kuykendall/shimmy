@@ -1,0 +1,84 @@
+name: Bug Report
+description: File a bug report to help us improve Shimmy
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - Michael-A-Kuykendall
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much detail as possible.
+
+  - type: input
+    id: shimmy-version
+    attributes:
+      label: Shimmy Version
+      description: What version of Shimmy are you running?
+      placeholder: "v0.1.1 (or output of `shimmy --version`)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Installation Method
+      description: How did you install Shimmy?
+      options:
+        - cargo install shimmy
+        - Downloaded binary from GitHub
+        - Built from source
+        - VS Code extension
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected to happen
+      placeholder: Tell us what you see! Include error messages if any.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide step-by-step instructions
+      placeholder: |
+        1. Start shimmy with `shimmy serve`
+        2. Make request to `http://localhost:11435/v1/chat/completions`
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Please copy and paste any relevant log output
+      render: shell
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS (Intel)
+        - macOS (Apple Silicon)  
+        - Linux (Ubuntu/Debian)
+        - Linux (Other)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

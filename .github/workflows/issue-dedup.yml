@@ -1,0 +1,68 @@
+name: Detect duplicate issues
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  models: read
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  continuous-triage-dedup:
+    if: ${{ github.event.issue.user.type != 'Bot' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for duplicate issues
+        uses: actions/ai-inference@v1
+        id: dedup-check
+        with:
+          prompt: |
+            Analyze if this new GitHub issue is similar to any recent issues in the Shimmy project.
+            
+            New Issue:
+            Title: ${{ github.event.issue.title }}
+            Body: ${{ github.event.issue.body }}
+            
+            If this appears to be a duplicate or very similar to existing issues, respond with:
+            "DUPLICATE: Brief explanation of similarity"
+            
+            If this appears to be a unique issue, respond with:
+            "UNIQUE"
+            
+          model: openai/gpt-4o-mini
+          temperature: 0.2
+          
+      - name: Comment on potential duplicate
+        if: startsWith(steps.dedup-check.outputs.response, 'DUPLICATE')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = `${{ steps.dedup-check.outputs.response }}`;
+            const explanation = response.replace('DUPLICATE: ', '');
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.issue.number }},
+              body: `👋 Hi! This issue might be similar to existing reports.
+              
+              ${explanation}
+              
+              Please search through [existing issues](https://github.com/Michael-A-Kuykendall/shimmy/issues) to see if this has been reported already. If it's indeed a duplicate, feel free to close this issue and add your details to the existing one.
+              
+              If this is unique, please disregard this message!
+              
+              *This is an automated check to help keep our issue tracker organized.*`
+            });
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.issue.number }},
+              labels: ['possible-duplicate']
+            });
