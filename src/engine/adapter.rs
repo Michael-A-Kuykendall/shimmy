@@ -37,20 +37,37 @@ impl InferenceEngineAdapter {
 
     /// Auto-detect best backend for model
     fn select_backend(&self, spec: &ModelSpec) -> BackendChoice {
-        // Check file extension and features to determine optimal backend
+        // Check file extension and path patterns to determine optimal backend
+        let path_str = spec.base_path.to_string_lossy();
+        
+        // Check for GGUF files by extension
         if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
-            match ext {
-                "gguf" => {
-                    #[cfg(feature = "llama")]
-                    { BackendChoice::Llama }
-                    #[cfg(not(feature = "llama"))]
-                    { BackendChoice::HuggingFace }
-                },
-                _ => BackendChoice::HuggingFace,
+            if ext == "gguf" {
+                #[cfg(feature = "llama")]
+                { return BackendChoice::Llama; }
+                #[cfg(not(feature = "llama"))]
+                { return BackendChoice::HuggingFace; }
             }
-        } else {
-            BackendChoice::HuggingFace
         }
+        
+        // Check for Ollama blob files (GGUF files without extension)
+        if path_str.contains("ollama") && path_str.contains("blobs") && path_str.contains("sha256-") {
+            #[cfg(feature = "llama")]
+            { return BackendChoice::Llama; }
+            #[cfg(not(feature = "llama"))]
+            { return BackendChoice::HuggingFace; }
+        }
+        
+        // Check for other patterns that indicate GGUF files
+        if path_str.contains(".gguf") || spec.name.contains("llama") || spec.name.contains("phi") || spec.name.contains("qwen") || spec.name.contains("gemma") || spec.name.contains("mistral") {
+            #[cfg(feature = "llama")]
+            { return BackendChoice::Llama; }
+            #[cfg(not(feature = "llama"))]
+            { return BackendChoice::HuggingFace; }
+        }
+        
+        // Default to HuggingFace for other models
+        BackendChoice::HuggingFace
     }
 }
 
@@ -65,46 +82,21 @@ enum BackendChoice {
 #[async_trait]
 impl InferenceEngine for InferenceEngineAdapter {
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>> {
-        let model_key = format!("{}:{}", spec.name, spec.base_path.display());
-        
-        // Check if already loaded
-        {
-            let models = self.loaded_models.read();
-            if models.contains_key(&model_key) {
-                // Return a reference wrapper since we can't clone trait objects
-                return Ok(Box::new(CachedModelRef {
-                    key: model_key,
-                    models_cache: Arc::clone(&self.loaded_models),
-                }));
-            }
-        }
-
-        // Select backend and load model
+        // Select backend and load model directly (no caching for now to avoid complexity)
         let backend = self.select_backend(spec);
-        let loaded_model: Box<dyn LoadedModel> = match backend {
+        match backend {
             #[cfg(feature = "llama")]
             BackendChoice::Llama => {
-                self.llama_engine.load(spec).await?
+                self.llama_engine.load(spec).await
             },
             #[cfg(feature = "huggingface")]
             BackendChoice::HuggingFace => {
                 // Convert to UniversalModelSpec for huggingface backend
                 let universal_spec = UniversalModelSpec::from(spec.clone());
                 let universal_model = self.huggingface_engine.load(&universal_spec).await?;
-                Box::new(UniversalModelWrapper { model: universal_model })
+                Ok(Box::new(UniversalModelWrapper { model: universal_model }))
             },
-        };
-
-        // Cache the loaded model
-        {
-            let mut models = self.loaded_models.write();
-            models.insert(model_key.clone(), loaded_model);
         }
-
-        Ok(Box::new(CachedModelRef {
-            key: model_key,
-            models_cache: Arc::clone(&self.loaded_models),
-        }))
     }
 }
 
