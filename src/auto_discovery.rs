@@ -14,6 +14,32 @@ pub struct DiscoveredModel {
     pub quantization: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct OllamaManifest {
+    #[serde(rename = "schemaVersion")]
+    schema_version: i32,
+    #[serde(rename = "mediaType")]
+    media_type: String,
+    config: OllamaConfig,
+    layers: Vec<OllamaLayer>,
+}
+
+#[derive(Debug, Deserialize)]
+struct OllamaConfig {
+    #[serde(rename = "mediaType")]
+    media_type: String,
+    digest: String,
+    size: i64,
+}
+
+#[derive(Debug, Deserialize)]
+struct OllamaLayer {
+    #[serde(rename = "mediaType")]
+    media_type: String,
+    digest: String,
+    size: i64,
+}
+
 pub struct ModelAutoDiscovery {
     search_paths: Vec<PathBuf>,
 }
@@ -66,6 +92,9 @@ impl ModelAutoDiscovery {
                 discovered.extend(self.scan_directory(search_path)?);
             }
         }
+        
+        // Discover Ollama models specifically
+        discovered.extend(self.discover_ollama_models()?);
         
         // Remove duplicates based on file hash or path
         discovered.sort_by(|a, b| a.path.cmp(&b.path));
@@ -265,6 +294,96 @@ impl ModelAutoDiscovery {
         name.replace("_", "-")
             .replace(" ", "-")
             .to_lowercase()
+    }
+
+    fn discover_ollama_models(&self) -> Result<Vec<DiscoveredModel>> {
+        let mut models = Vec::new();
+        
+        // Find Ollama models directory
+        let ollama_dir = if let Some(home) = std::env::var_os("HOME") {
+            PathBuf::from(home).join(".ollama/models")
+        } else if let Some(user_profile) = std::env::var_os("USERPROFILE") {
+            PathBuf::from(user_profile).join(".ollama\\models")
+        } else {
+            return Ok(models);
+        };
+
+        if !ollama_dir.exists() {
+            return Ok(models);
+        }
+
+        let manifests_dir = ollama_dir.join("manifests/registry.ollama.ai");
+        let blobs_dir = ollama_dir.join("blobs");
+
+        if !manifests_dir.exists() || !blobs_dir.exists() {
+            return Ok(models);
+        }
+
+        // Scan manifest directories for model names
+        for namespace_entry in fs::read_dir(&manifests_dir).map_err(|_| anyhow::anyhow!("Cannot read manifests directory"))? {
+            let namespace_entry = namespace_entry?;
+            if !namespace_entry.path().is_dir() {
+                continue;
+            }
+
+            for model_entry in fs::read_dir(namespace_entry.path()).map_err(|_| anyhow::anyhow!("Cannot read model directory"))? {
+                let model_entry = model_entry?;
+                if !model_entry.path().is_dir() {
+                    continue;
+                }
+
+                // Get model name from directory structure
+                let namespace = namespace_entry.file_name().to_string_lossy().to_string();
+                let model_name = model_entry.file_name().to_string_lossy().to_string();
+
+                for tag_entry in fs::read_dir(model_entry.path()).map_err(|_| anyhow::anyhow!("Cannot read tag directory"))? {
+                    let tag_entry = tag_entry?;
+                    if tag_entry.path().is_file() {
+                        // Parse the manifest file
+                        if let Ok(manifest_content) = fs::read_to_string(tag_entry.path()) {
+                            if let Ok(manifest) = serde_json::from_str::<OllamaManifest>(&manifest_content) {
+                                // Find the model blob (largest layer that's likely a GGUF)
+                                for layer in &manifest.layers {
+                                    if layer.media_type == "application/vnd.ollama.image.model" {
+                                        if let Some(hash) = layer.digest.strip_prefix("sha256:") {
+                                            let blob_path = blobs_dir.join(format!("sha256-{}", hash));
+                                            if blob_path.exists() && self.is_gguf_blob(&blob_path).unwrap_or(false) {
+                                                let tag = tag_entry.file_name().to_string_lossy().to_string();
+                                                let display_name = if namespace == "library" {
+                                                    format!("{}:{}", model_name, tag)
+                                                } else {
+                                                    format!("{}{}:{}", namespace, model_name, tag)
+                                                };
+
+                                                models.push(DiscoveredModel {
+                                                    name: display_name,
+                                                    path: blob_path.clone(),
+                                                    lora_path: None,
+                                                    size_bytes: layer.size as u64,
+                                                    model_type: "Ollama".to_string(),
+                                                    parameter_count: None,
+                                                    quantization: None,
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(models)
+    }
+
+    fn is_gguf_blob(&self, path: &Path) -> Result<bool> {
+        let mut file = std::fs::File::open(path)?;
+        let mut buffer = [0u8; 4];
+        use std::io::Read;
+        file.read_exact(&mut buffer)?;
+        Ok(&buffer == b"GGUF")
     }
 }
 
