@@ -1,8 +1,12 @@
 {
   "permissions": {
-    "allow": ["*"],
-    "ask": [],
+    "allow": [
+      "*",
+      "Bash(cargo build:*)",
+      "Bash(git add:*)"
+    ],
     "deny": [],
+    "ask": [],
     "defaultMode": "bypassPermissions"
   }
 }

@@ -120,7 +120,25 @@ pub async fn chat_completions(
     let pairs = req.messages.iter()
         .map(|m| (m.role.clone(), m.content.clone()))
         .collect::<Vec<_>>();
-    let prompt = fam.render(None, &pairs, None);
+    
+    // For chat completions, we need to trigger assistant response
+    // Extract the last user message to use as input parameter
+    let last_user_message = req.messages.iter()
+        .filter(|m| m.role == "user")
+        .last()
+        .map(|m| m.content.as_str());
+    
+    // Build conversation history without the last user message
+    let history: Vec<_> = if last_user_message.is_some() {
+        req.messages.iter()
+            .take(req.messages.len().saturating_sub(1))
+            .map(|m| (m.role.clone(), m.content.clone()))
+            .collect()
+    } else {
+        pairs.clone()
+    };
+    
+    let prompt = fam.render(None, &history, last_user_message);
 
     // Set generation options
     let mut opts = crate::engine::GenOptions::default();
