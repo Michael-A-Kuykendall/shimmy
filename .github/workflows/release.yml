@@ -4,58 +4,90 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - test-release  # Test on specific branch
+  workflow_dispatch:  # Allow manual testing
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary-name: shimmy
+            artifact-name: shimmy-linux-x86_64
+            
+          - os: windows-latest  
+            target: x86_64-pc-windows-msvc
+            binary-name: shimmy.exe
+            artifact-name: shimmy-windows-x86_64.exe
+            
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            binary-name: shimmy
+            artifact-name: shimmy-macos-intel
+            
+          - os: macos-latest
+            target: aarch64-apple-darwin 
+            binary-name: shimmy
+            artifact-name: shimmy-macos-arm64
+
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-unknown-linux-gnu,x86_64-apple-darwin,aarch64-apple-darwin,x86_64-pc-windows-msvc
+          targets: ${{ matrix.target }}
           
-      - name: Install cross-compilation tools
+      - name: Build binary
+        run: cargo build --release --target ${{ matrix.target }}
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.binary-name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          
+      - name: Prepare release files
         run: |
-          sudo apt-get update
-          sudo apt-get install -y mingw-w64
+          mkdir -p release-files
           
-      - name: Build Linux binary
-        run: cargo build --release --target x86_64-unknown-linux-gnu
-        
-      - name: Build macOS Intel binary  
-        run: cargo build --release --target x86_64-apple-darwin
-        
-      - name: Build macOS Apple Silicon binary
-        run: cargo build --release --target aarch64-apple-darwin
-        
-      - name: Build Windows binary
-        run: cargo build --release --target x86_64-pc-windows-msvc
-        
+          # Copy and rename artifacts
+          cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
+          cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
+          
+          cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
+          cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name
+          
+          cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
+          cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
+          
+          # List what we're releasing
+          echo "Release files:"
+          ls -la release-files/
+          
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Copy binaries with proper names
-          cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy-linux-x86_64
-          cp target/x86_64-apple-darwin/release/shimmy shimmy-macos-intel  
-          cp target/aarch64-apple-darwin/release/shimmy shimmy-macos-arm64
-          cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy-windows-x86_64.exe
-          
-          # Also create generic names for quickstart docs
-          cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy
-          cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy.exe
-          
-          # Create release with all binaries
           gh release create ${{ github.ref_name }} \
-            shimmy-linux-x86_64 \
-            shimmy-macos-intel \
-            shimmy-macos-arm64 \
-            shimmy-windows-x86_64.exe \
-            shimmy \
-            shimmy.exe \
+            release-files/* \
             --title "Shimmy ${{ github.ref_name }}" \
             --generate-notes
