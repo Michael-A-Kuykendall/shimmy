@@ -1,9 +1,9 @@
+use anyhow::{anyhow, Result};
+use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::net::{SocketAddr, TcpListener};
 use std::sync::Arc;
-use anyhow::{anyhow, Result};
-use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref GLOBAL_PORT_ALLOCATOR: PortAllocator = PortAllocator::new();
@@ -25,7 +25,7 @@ impl PortAllocator {
 
     pub fn find_available_port(&self, service_name: &str) -> Result<u16> {
         let mut allocated = self.allocated_ports.lock();
-        
+
         // Check if already allocated for this service
         if let Some(&existing_port) = allocated.get(service_name) {
             if self.is_port_available(existing_port) {
@@ -44,30 +44,34 @@ impl PortAllocator {
             }
         }
 
-        Err(anyhow!("No available ports in range {}..{}", self.port_range.0, self.port_range.1))
+        Err(anyhow!(
+            "No available ports in range {}..{}",
+            self.port_range.0,
+            self.port_range.1
+        ))
     }
 
+    #[allow(dead_code)]
     pub fn allocate_ephemeral_port(&self, service_name: &str) -> Result<u16> {
         let mut allocated = self.allocated_ports.lock();
-        
+
         // Generate ephemeral port
         let port = self.find_ephemeral_port()?;
         allocated.insert(service_name.to_string(), port);
         Ok(port)
     }
 
+    #[allow(dead_code)]
     pub fn release_port(&self, port: u16) {
         let mut allocated = self.allocated_ports.lock();
         allocated.retain(|_, &mut v| v != port);
     }
 
     fn is_port_available(&self, port: u16) -> bool {
-        match TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], port))) {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], port))).is_ok()
     }
 
+    #[allow(dead_code)]
     fn find_ephemeral_port(&self) -> Result<u16> {
         // Use OS ephemeral port allocation
         let listener = TcpListener::bind("127.0.0.1:0")?;
@@ -76,6 +80,7 @@ impl PortAllocator {
         Ok(port)
     }
 
+    #[allow(dead_code)]
     pub fn get_allocated_ports(&self) -> HashMap<String, u16> {
         self.allocated_ports.lock().clone()
     }
@@ -96,9 +101,9 @@ mod tests {
         let allocator = PortAllocator::new();
         let port1 = allocator.allocate_ephemeral_port("test1").unwrap();
         let port2 = allocator.allocate_ephemeral_port("test2").unwrap();
-        
+
         assert_ne!(port1, port2);
-        
+
         allocator.release_port(port1);
         allocator.release_port(port2);
     }
@@ -108,11 +113,11 @@ mod tests {
         let allocator = PortAllocator::new();
         let port = allocator.find_available_port("test-service").unwrap();
         assert!(port >= 11435);
-        
+
         // Second call should return same port
         let port2 = allocator.find_available_port("test-service").unwrap();
         assert_eq!(port, port2);
-        
+
         allocator.release_port(port);
     }
 }

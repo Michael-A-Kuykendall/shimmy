@@ -24,24 +24,30 @@ impl HuggingFaceEngine {
             python_path: "C:/Python311/python.exe".to_string(),
         }
     }
-    
 }
 
 #[async_trait]
 impl UniversalEngine for HuggingFaceEngine {
     async fn load(&self, spec: &UniversalModelSpec) -> Result<Box<dyn UniversalModel>> {
         match &spec.backend {
-            ModelBackend::HuggingFace { base_model_id, peft_path, use_local } => {
+            ModelBackend::HuggingFace {
+                base_model_id,
+                peft_path,
+                use_local,
+            } => {
                 let model = HuggingFaceModel::load(
                     &self.python_path,
                     base_model_id,
                     peft_path.as_deref(),
                     *use_local,
                     &spec.device,
-                ).await?;
+                )
+                .await?;
                 Ok(Box::new(model))
             }
-            _ => Err(anyhow!("HuggingFaceEngine only supports HuggingFace backend")),
+            _ => Err(anyhow!(
+                "HuggingFaceEngine only supports HuggingFace backend"
+            )),
         }
     }
 }
@@ -109,9 +115,7 @@ except Exception as e:
             ),
         ];
 
-        let verify_output = Command::new(python_path)
-            .args(&verify_cmd)
-            .output()?;
+        let verify_output = Command::new(python_path).args(&verify_cmd).output()?;
 
         if !verify_output.status.success() {
             return Err(anyhow!(
@@ -231,7 +235,7 @@ model = PeftModel.from_pretrained(model, '{}')"#,
 
         let result = String::from_utf8_lossy(&output.stdout);
         let lines: Vec<&str> = result.lines().collect();
-        
+
         // Find the actual generated text (after loading messages)
         let generated_text = lines
             .iter()

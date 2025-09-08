@@ -6,10 +6,10 @@ use std::sync::Arc;
 
 pub fn create_integrated_registry() -> ModelRegistry {
     let registry = ModelRegistry::new();
-    
+
     // Additional setup for production
     println!("Shimmy production registry initialized");
-    
+
     registry
 }
 

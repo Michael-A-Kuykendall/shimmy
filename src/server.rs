@@ -1,11 +1,17 @@
-use axum::{routing::{post, get}, Router};
+use crate::{api, openai_compat, util::diag::diag_handler, AppState};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use std::{net::SocketAddr, sync::Arc};
-use crate::{api, util::diag::diag_handler, openai_compat, AppState};
 
 pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
     let app = Router::new()
-        .route("/health", get(|| async { axum::Json(serde_json::json!({"status":"ok"})) }))
+        .route(
+            "/health",
+            get(|| async { axum::Json(serde_json::json!({"status":"ok"})) }),
+        )
         .route("/diag", get(diag_handler))
         .route("/api/generate", post(api::generate))
         .route("/api/models", get(api::list_models))
@@ -17,7 +23,10 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
         .route("/api/tools/:name/execute", post(api::execute_tool))
         .route("/api/workflows/execute", post(api::execute_workflow))
         .route("/ws/generate", get(api::ws_generate))
-        .route("/v1/chat/completions", post(openai_compat::chat_completions))
+        .route(
+            "/v1/chat/completions",
+            post(openai_compat::chat_completions),
+        )
         .route("/v1/models", get(openai_compat::models))
         .with_state(state);
     axum::serve(listener, app).await?;
@@ -29,61 +38,60 @@ mod tests {
     use super::*;
     use crate::model_registry::Registry;
     use tokio::time::{timeout, Duration};
-    
+
     #[test]
     fn test_health_response_format() {
         let response = serde_json::json!({"status": "ok"});
         assert_eq!(response["status"], "ok");
     }
-    
+
     #[test]
     fn test_app_state_creation() {
         let registry = Registry::default();
         let engine = Box::new(crate::engine::adapter::InferenceEngineAdapter::new());
         let state = Arc::new(AppState { engine, registry });
-        
+
         // Test that state is created successfully
         assert_eq!(state.registry.list().len(), 0);
     }
-    
+
     #[test]
     fn test_socket_addr_parsing() {
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         assert_eq!(addr.port(), 0); // Ephemeral port
         assert!(addr.ip().is_loopback());
     }
-    
+
     #[test]
     fn test_router_route_creation() {
         use axum::{routing::get, Router};
-        let _app: Router<()> = Router::new()
-            .route("/health", get(|| async { "ok" }));
+        let _app: Router<()> = Router::new().route("/health", get(|| async { "ok" }));
         assert!(true);
     }
-    
+
     #[test]
     fn test_health_endpoint_response() {
         let response = serde_json::json!({"status":"ok"});
         assert_eq!(response["status"], "ok");
     }
-    
-    #[tokio::test] 
+
+    #[tokio::test]
     async fn test_tcp_listener_binding() {
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let listener_result = tokio::net::TcpListener::bind(addr).await;
         assert!(listener_result.is_ok());
     }
-    
+
     #[tokio::test]
     async fn test_run_function_creation() {
-        use crate::model_registry::Registry;
         use crate::engine::adapter::InferenceEngineAdapter;
-        
+        use crate::model_registry::Registry;
+
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
         let state = Arc::new(crate::AppState { engine, registry });
-        
+
         // Test that run function can be called (would bind to address)
         // This exercises the run function signature and initial setup
         assert!(addr.port() == 0); // Using 0 for any available port
@@ -92,19 +100,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_function_tcp_binding() {
-        use crate::model_registry::Registry;
         use crate::engine::adapter::InferenceEngineAdapter;
-        
+        use crate::model_registry::Registry;
+
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
         let state = Arc::new(crate::AppState { engine, registry });
-        
+
         // Test that run function exercises TcpListener::bind line (line 6)
-        let result = timeout(Duration::from_millis(100), async {
-            run(addr, state).await
-        }).await;
-        
+        let result = timeout(Duration::from_millis(100), async { run(addr, state).await }).await;
+
         // Should timeout quickly since server would run indefinitely
         // but this exercises the bind() call on line 6
         assert!(result.is_err()); // Timeout expected
@@ -112,44 +118,44 @@ mod tests {
 
     #[tokio::test]
     async fn test_router_construction_with_all_routes() {
-        use crate::model_registry::Registry;
         use crate::engine::adapter::InferenceEngineAdapter;
+        use crate::model_registry::Registry;
         use axum::routing::{get, post};
-        
+
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
         let state = Arc::new(crate::AppState { engine, registry });
-        
+
         // Test that we can construct a router with similar routes as the run function
         // This exercises the router creation pattern used in lines 7-22
         let _router: Router<Arc<AppState>> = Router::new()
             .route("/health", get(|| async { "ok" }))
             .route("/api/test", post(|| async { "test" }))
             .with_state(state);
-        
+
         // Router creation should succeed, this exercises router construction patterns
         assert!(true); // If we get here, router creation succeeded
     }
 
     #[tokio::test]
     async fn test_run_function_router_and_serve_setup() {
-        use crate::model_registry::Registry;
         use crate::engine::adapter::InferenceEngineAdapter;
-        
+        use crate::model_registry::Registry;
+
         // Use ephemeral port to avoid conflicts
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
         let state = Arc::new(crate::AppState { engine, registry });
-        
+
         // Create a future that will exercise the run function
         let run_future = run(addr, state);
-        
+
         // Set a very short timeout to ensure we exercise the setup but don't actually serve
         let result = timeout(Duration::from_millis(50), run_future).await;
-        
+
         // This should timeout, but it exercises lines 5-23:
-        // - Line 5: function signature 
+        // - Line 5: function signature
         // - Line 6: TcpListener::bind()
         // - Lines 7-22: Router construction
         // - Line 23: axum::serve() call
@@ -159,60 +165,58 @@ mod tests {
 
     #[tokio::test]
     async fn test_run_function_complete_flow() {
-        use crate::model_registry::Registry;
         use crate::engine::adapter::InferenceEngineAdapter;
-        
+        use crate::model_registry::Registry;
+
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
         let state = Arc::new(crate::AppState { engine, registry });
-        
+
         // Spawn the server in a background task
-        let server_handle = tokio::spawn(async move {
-            run(addr, state).await
-        });
-        
+        let server_handle = tokio::spawn(async move { run(addr, state).await });
+
         // Give it a tiny amount of time to start
         tokio::time::sleep(Duration::from_millis(10)).await;
-        
+
         // Cancel the server task
         server_handle.abort();
-        
+
         // This exercises the entire run function:
         // Lines 5-6: Function setup and TcpListener bind
-        // Lines 7-22: Router construction with all routes  
+        // Lines 7-22: Router construction with all routes
         // Line 23: axum::serve setup
         // This covers the full execution path through line 23
         assert!(true); // Test passes if no panics occurred
     }
 
-    #[tokio::test]  
+    #[tokio::test]
     async fn test_run_function_direct_call_coverage() {
-        use crate::model_registry::Registry;
         use crate::engine::adapter::InferenceEngineAdapter;
-        
+        use crate::model_registry::Registry;
+
         // This test directly calls the run function to ensure all lines are covered
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
         let state = Arc::new(crate::AppState { engine, registry });
-        
+
         // Start the function and let it bind
         let run_task = tokio::spawn(run(addr, state));
-        
+
         // Let it run long enough to execute all setup lines
         tokio::time::sleep(Duration::from_millis(20)).await;
-        
+
         // Abort to prevent hanging
         run_task.abort();
-        
+
         // This test covers:
         // Line 5: pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()>
         // Line 6: let listener = tokio::net::TcpListener::bind(addr).await?;
         // Lines 7-22: Router construction with all routes
         // Line 23: axum::serve(listener, app).await?;
         // (Line 24: Ok(()) - not reached due to abort)
-        
+
         assert!(true);
     }
 }

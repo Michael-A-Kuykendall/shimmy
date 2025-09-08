@@ -1,7 +1,7 @@
+use crate::tools::{ToolCall, ToolRegistry};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use anyhow::Result;
-use crate::tools::{ToolCall, ToolRegistry};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowStep {
@@ -28,7 +28,7 @@ pub enum WorkflowStepType {
     },
     #[serde(rename = "data_transform")]
     DataTransform {
-        operation: String, // "filter", "map", "reduce", "extract"
+        operation: String,  // "filter", "map", "reduce", "extract"
         expression: String, // JSONPath or simple operations
     },
     #[serde(rename = "conditional")]
@@ -87,7 +87,7 @@ impl WorkflowEngine {
         let start_time = std::time::Instant::now();
         let mut step_results = HashMap::new();
         let mut context = request.context;
-        
+
         // Add workflow inputs to context
         for (key, value) in request.workflow.inputs {
             context.insert(key, value);
@@ -95,9 +95,12 @@ impl WorkflowEngine {
 
         // Execute steps in dependency order
         let execution_order = self.calculate_execution_order(&request.workflow.steps)?;
-        
+
         for step_id in execution_order {
-            let step = request.workflow.steps.iter()
+            let step = request
+                .workflow
+                .steps
+                .iter()
                 .find(|s| s.id == step_id)
                 .ok_or_else(|| anyhow::anyhow!("Step {} not found", step_id))?;
 
@@ -120,7 +123,7 @@ impl WorkflowEngine {
                     result: serde_json::Value::Null,
                     error: Some(e.to_string()),
                     execution_time_ms: step_start.elapsed().as_millis() as u64,
-                }
+                },
             };
 
             step_results.insert(step.id.clone(), step_result);
@@ -142,7 +145,11 @@ impl WorkflowEngine {
             success,
             step_results,
             outputs,
-            error: if success { None } else { Some("One or more steps failed".to_string()) },
+            error: if success {
+                None
+            } else {
+                Some("One or more steps failed".to_string())
+            },
             execution_time_ms: start_time.elapsed().as_millis() as u64,
         })
     }
@@ -152,53 +159,72 @@ impl WorkflowEngine {
         step: &'a WorkflowStep,
         context: &'a HashMap<String, serde_json::Value>,
         step_results: &'a HashMap<String, StepResult>,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<serde_json::Value>> + Send + 'a>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<serde_json::Value>> + Send + 'a>>
+    {
         Box::pin(async move {
             match &step.step_type {
-                WorkflowStepType::LLMGeneration { prompt, model, max_tokens, temperature } => {
+                WorkflowStepType::LLMGeneration {
+                    prompt,
+                    model,
+                    max_tokens,
+                    temperature,
+                } => {
                     // Substitute context variables in prompt
                     let resolved_prompt = self.substitute_variables(prompt, context)?;
-                    
+
                     // Use the existing LLM generation logic
                     // This would integrate with the actual generation engine
-                    let result = self.call_llm(
-                        &resolved_prompt,
-                        model.as_deref().unwrap_or("default"),
-                        max_tokens.unwrap_or(512),
-                        temperature.unwrap_or(0.7),
-                    ).await?;
-                    
+                    let result = self
+                        .call_llm(
+                            &resolved_prompt,
+                            model.as_deref().unwrap_or("default"),
+                            max_tokens.unwrap_or(512),
+                            temperature.unwrap_or(0.7),
+                        )
+                        .await?;
+
                     Ok(serde_json::json!({
                         "text": result,
                         "type": "llm_generation"
                     }))
                 }
-                
-                WorkflowStepType::ToolCall { tool_name, arguments } => {
+
+                WorkflowStepType::ToolCall {
+                    tool_name,
+                    arguments,
+                } => {
                     // Substitute context variables in arguments
                     let resolved_args = self.substitute_variables_in_json(arguments, context)?;
-                    
+
                     let tool_call = ToolCall {
                         name: tool_name.clone(),
                         arguments: resolved_args,
                     };
-                    
+
                     let tool_result = self.tool_registry.execute_tool(&tool_call)?;
-                    
+
                     if tool_result.success {
                         Ok(tool_result.result)
                     } else {
-                        Err(anyhow::anyhow!("Tool execution failed: {:?}", tool_result.error))
+                        Err(anyhow::anyhow!(
+                            "Tool execution failed: {:?}",
+                            tool_result.error
+                        ))
                     }
                 }
-                
-                WorkflowStepType::DataTransform { operation, expression } => {
-                    self.execute_data_transform(operation, expression, context, step_results)
-                }
-                
-                WorkflowStepType::Conditional { condition, if_true, if_false } => {
+
+                WorkflowStepType::DataTransform {
+                    operation,
+                    expression,
+                } => self.execute_data_transform(operation, expression, context, step_results),
+
+                WorkflowStepType::Conditional {
+                    condition,
+                    if_true,
+                    if_false,
+                } => {
                     let condition_result = self.evaluate_condition(condition, context)?;
-                    
+
                     if condition_result {
                         self.execute_step(if_true, context, step_results).await
                     } else if let Some(false_step) = if_false {
@@ -235,7 +261,10 @@ impl WorkflowEngine {
         order: &mut Vec<String>,
     ) -> Result<()> {
         if temp_visited.contains(step_id) {
-            return Err(anyhow::anyhow!("Circular dependency detected involving step {}", step_id));
+            return Err(anyhow::anyhow!(
+                "Circular dependency detected involving step {}",
+                step_id
+            ));
         }
 
         if visited.contains(step_id) {
@@ -244,7 +273,8 @@ impl WorkflowEngine {
 
         temp_visited.insert(step_id.to_string());
 
-        let step = steps.iter()
+        let step = steps
+            .iter()
             .find(|s| s.id == step_id)
             .ok_or_else(|| anyhow::anyhow!("Step {} not found", step_id))?;
 
@@ -259,9 +289,13 @@ impl WorkflowEngine {
         Ok(())
     }
 
-    fn substitute_variables(&self, text: &str, context: &HashMap<String, serde_json::Value>) -> Result<String> {
+    fn substitute_variables(
+        &self,
+        text: &str,
+        context: &HashMap<String, serde_json::Value>,
+    ) -> Result<String> {
         let mut result = text.to_string();
-        
+
         // Simple variable substitution: {{variable_name}}
         for (key, value) in context {
             let placeholder = format!("{{{{{}}}}}", key);
@@ -271,7 +305,7 @@ impl WorkflowEngine {
             };
             result = result.replace(&placeholder, &replacement);
         }
-        
+
         Ok(result)
     }
 
@@ -281,18 +315,22 @@ impl WorkflowEngine {
         context: &HashMap<String, serde_json::Value>,
     ) -> Result<serde_json::Value> {
         match json {
-            serde_json::Value::String(s) => {
-                Ok(serde_json::Value::String(self.substitute_variables(s, context)?))
-            }
+            serde_json::Value::String(s) => Ok(serde_json::Value::String(
+                self.substitute_variables(s, context)?,
+            )),
             serde_json::Value::Object(obj) => {
                 let mut new_obj = serde_json::Map::new();
                 for (key, value) in obj {
-                    new_obj.insert(key.clone(), self.substitute_variables_in_json(value, context)?);
+                    new_obj.insert(
+                        key.clone(),
+                        self.substitute_variables_in_json(value, context)?,
+                    );
                 }
                 Ok(serde_json::Value::Object(new_obj))
             }
             serde_json::Value::Array(arr) => {
-                let new_arr: Result<Vec<_>> = arr.iter()
+                let new_arr: Result<Vec<_>> = arr
+                    .iter()
                     .map(|item| self.substitute_variables_in_json(item, context))
                     .collect();
                 Ok(serde_json::Value::Array(new_arr?))
@@ -329,7 +367,10 @@ impl WorkflowEngine {
                 // Simple filtering - would be expanded with a proper expression evaluator
                 Ok(serde_json::json!({ "filtered": true, "expression": expression }))
             }
-            _ => Err(anyhow::anyhow!("Unsupported data transform operation: {}", operation)),
+            _ => Err(anyhow::anyhow!(
+                "Unsupported data transform operation: {}",
+                operation
+            )),
         }
     }
 
@@ -344,10 +385,10 @@ impl WorkflowEngine {
             if parts.len() == 2 {
                 let left = parts[0].trim();
                 let right = parts[1].trim();
-                
+
                 let left_value = context.get(left);
                 let right_str = right.trim_matches('"');
-                
+
                 match left_value {
                     Some(serde_json::Value::String(s)) => Ok(s == right_str),
                     Some(serde_json::Value::Bool(b)) => Ok(b.to_string() == right_str),
@@ -371,8 +412,10 @@ impl WorkflowEngine {
     ) -> Result<String> {
         // This would integrate with the actual LLM generation system
         // For now, return a placeholder
-        Ok(format!("LLM response to: {} (model: {}, max_tokens: {}, temp: {})", 
-                  prompt, model, max_tokens, temperature))
+        Ok(format!(
+            "LLM response to: {} (model: {}, max_tokens: {}, temp: {})",
+            prompt, model, max_tokens, temperature
+        ))
     }
 }
 
@@ -380,11 +423,11 @@ impl WorkflowEngine {
 mod tests {
     use super::*;
     use crate::tools::ToolRegistry;
-    
+
     fn create_test_tool_registry() -> ToolRegistry {
         ToolRegistry::new()
     }
-    
+
     #[test]
     fn test_workflow_step_creation() {
         let step = WorkflowStep {
@@ -400,7 +443,7 @@ mod tests {
         };
         assert_eq!(step.id, "test");
     }
-    
+
     #[test]
     fn test_workflow_creation() {
         let workflow = Workflow {
@@ -413,7 +456,7 @@ mod tests {
         };
         assert_eq!(workflow.id, "test-workflow");
     }
-    
+
     #[test]
     fn test_tool_call_step_type() {
         let step_type = WorkflowStepType::ToolCall {
@@ -436,11 +479,11 @@ mod tests {
         assert!(std::ptr::addr_of!(engine.tool_registry) as usize > 0);
     }
 
-    #[tokio::test] 
+    #[tokio::test]
     async fn test_execute_workflow_empty_steps() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let workflow = Workflow {
             id: "empty-workflow".to_string(),
             name: "Empty Test".to_string(),
@@ -449,12 +492,12 @@ mod tests {
             inputs: HashMap::new(),
             outputs: vec![],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
         assert_eq!(result.step_results.len(), 0);
@@ -465,10 +508,10 @@ mod tests {
     async fn test_execute_workflow_with_inputs() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut inputs = HashMap::new();
         inputs.insert("input_value".to_string(), serde_json::json!("test_input"));
-        
+
         let workflow = Workflow {
             id: "input-workflow".to_string(),
             name: "Input Test".to_string(),
@@ -477,15 +520,15 @@ mod tests {
             inputs,
             outputs: vec![],
         };
-        
+
         let mut context = HashMap::new();
-        context.insert("context_value".to_string(), serde_json::json!("test_context"));
-        
-        let request = WorkflowRequest {
-            workflow,
-            context,
-        };
-        
+        context.insert(
+            "context_value".to_string(),
+            serde_json::json!("test_context"),
+        );
+
+        let request = WorkflowRequest { workflow, context };
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
         assert_eq!(result.workflow_id, "input-workflow");
@@ -497,7 +540,7 @@ mod tests {
     async fn test_execute_workflow_with_llm_step() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step = WorkflowStep {
             id: "llm_step".to_string(),
             step_type: WorkflowStepType::LLMGeneration {
@@ -509,10 +552,10 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let mut inputs = HashMap::new();
         inputs.insert("input_value".to_string(), serde_json::json!("hello world"));
-        
+
         let workflow = Workflow {
             id: "llm-workflow".to_string(),
             name: "LLM Test".to_string(),
@@ -521,30 +564,31 @@ mod tests {
             inputs,
             outputs: vec!["llm_step".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
         assert_eq!(result.step_results.len(), 1);
         assert!(result.step_results.contains_key("llm_step"));
         assert_eq!(result.outputs.len(), 1);
         assert!(result.outputs.contains_key("llm_step"));
-        
+
         let step_result = result.step_results.get("llm_step").unwrap();
         assert!(step_result.success);
         // Execution time can be 0 in fast tests, just verify it's set
-        assert!(step_result.execution_time_ms == step_result.execution_time_ms); // Verify timing recorded
+        assert!(step_result.execution_time_ms == step_result.execution_time_ms);
+        // Verify timing recorded
     }
 
     #[tokio::test]
     async fn test_execute_workflow_with_tool_step() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step = WorkflowStep {
             id: "tool_step".to_string(),
             step_type: WorkflowStepType::ToolCall {
@@ -556,7 +600,7 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let workflow = Workflow {
             id: "tool-workflow".to_string(),
             name: "Tool Test".to_string(),
@@ -565,16 +609,16 @@ mod tests {
             inputs: HashMap::new(),
             outputs: vec!["tool_step".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
         assert_eq!(result.step_results.len(), 1);
-        
+
         let step_result = result.step_results.get("tool_step").unwrap();
         assert!(step_result.success);
         assert_eq!(step_result.result, serde_json::json!(5.0));
@@ -584,7 +628,7 @@ mod tests {
     async fn test_execute_workflow_with_failed_tool_step() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step = WorkflowStep {
             id: "failed_tool_step".to_string(),
             step_type: WorkflowStepType::ToolCall {
@@ -594,7 +638,7 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let workflow = Workflow {
             id: "failed-tool-workflow".to_string(),
             name: "Failed Tool Test".to_string(),
@@ -603,17 +647,17 @@ mod tests {
             inputs: HashMap::new(),
             outputs: vec!["failed_tool_step".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(!result.success);
         assert!(result.error.is_some());
         assert_eq!(result.error.unwrap(), "One or more steps failed");
-        
+
         let step_result = result.step_results.get("failed_tool_step").unwrap();
         assert!(!step_result.success);
         assert!(step_result.error.is_some());
@@ -623,7 +667,7 @@ mod tests {
     async fn test_execute_workflow_with_data_transform_step() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step = WorkflowStep {
             id: "transform_step".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -633,10 +677,13 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let mut inputs = HashMap::new();
-        inputs.insert("input_data".to_string(), serde_json::json!("extracted_value"));
-        
+        inputs.insert(
+            "input_data".to_string(),
+            serde_json::json!("extracted_value"),
+        );
+
         let workflow = Workflow {
             id: "transform-workflow".to_string(),
             name: "Transform Test".to_string(),
@@ -645,15 +692,15 @@ mod tests {
             inputs,
             outputs: vec!["transform_step".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
-        
+
         let step_result = result.step_results.get("transform_step").unwrap();
         assert!(step_result.success);
         assert_eq!(step_result.result, serde_json::json!("extracted_value"));
@@ -663,7 +710,7 @@ mod tests {
     async fn test_execute_workflow_with_conditional_step_true() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let if_true_step = WorkflowStep {
             id: "true_branch".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -673,7 +720,7 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let step = WorkflowStep {
             id: "conditional_step".to_string(),
             step_type: WorkflowStepType::Conditional {
@@ -684,11 +731,11 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let mut inputs = HashMap::new();
         inputs.insert("test_condition".to_string(), serde_json::json!("true"));
         inputs.insert("true_value".to_string(), serde_json::json!("condition_met"));
-        
+
         let workflow = Workflow {
             id: "conditional-workflow".to_string(),
             name: "Conditional Test".to_string(),
@@ -697,15 +744,15 @@ mod tests {
             inputs,
             outputs: vec!["conditional_step".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
-        
+
         let step_result = result.step_results.get("conditional_step").unwrap();
         assert!(step_result.success);
         assert_eq!(step_result.result, serde_json::json!("condition_met"));
@@ -715,7 +762,7 @@ mod tests {
     async fn test_execute_workflow_with_conditional_step_false() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let if_true_step = WorkflowStep {
             id: "true_branch".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -725,7 +772,7 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let step = WorkflowStep {
             id: "conditional_step".to_string(),
             step_type: WorkflowStepType::Conditional {
@@ -736,10 +783,10 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let mut inputs = HashMap::new();
         inputs.insert("test_condition".to_string(), serde_json::json!("false"));
-        
+
         let workflow = Workflow {
             id: "conditional-false-workflow".to_string(),
             name: "Conditional False Test".to_string(),
@@ -748,15 +795,15 @@ mod tests {
             inputs,
             outputs: vec!["conditional_step".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
-        
+
         let step_result = result.step_results.get("conditional_step").unwrap();
         assert!(step_result.success);
         assert_eq!(step_result.result, serde_json::json!({ "skipped": true }));
@@ -766,7 +813,7 @@ mod tests {
     async fn test_execute_workflow_with_dependencies() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step1 = WorkflowStep {
             id: "step1".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -776,7 +823,7 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let step2 = WorkflowStep {
             id: "step2".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -786,10 +833,13 @@ mod tests {
             depends_on: vec!["step1".to_string()],
             parameters: serde_json::json!({}),
         };
-        
+
         let mut inputs = HashMap::new();
-        inputs.insert("input_value".to_string(), serde_json::json!("first_step_output"));
-        
+        inputs.insert(
+            "input_value".to_string(),
+            serde_json::json!("first_step_output"),
+        );
+
         let workflow = Workflow {
             id: "dependency-workflow".to_string(),
             name: "Dependency Test".to_string(),
@@ -798,20 +848,20 @@ mod tests {
             inputs,
             outputs: vec!["step2".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
         assert_eq!(result.step_results.len(), 2);
-        
+
         let step1_result = result.step_results.get("step1").unwrap();
         assert!(step1_result.success);
         assert_eq!(step1_result.result, serde_json::json!("first_step_output"));
-        
+
         let step2_result = result.step_results.get("step2").unwrap();
         assert!(step2_result.success);
         assert_eq!(step2_result.result, serde_json::json!("first_step_output"));
@@ -821,7 +871,7 @@ mod tests {
     async fn test_execute_workflow_circular_dependency() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step1 = WorkflowStep {
             id: "step1".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -831,7 +881,7 @@ mod tests {
             depends_on: vec!["step2".to_string()],
             parameters: serde_json::json!({}),
         };
-        
+
         let step2 = WorkflowStep {
             id: "step2".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -841,7 +891,7 @@ mod tests {
             depends_on: vec!["step1".to_string()],
             parameters: serde_json::json!({}),
         };
-        
+
         let workflow = Workflow {
             id: "circular-dependency-workflow".to_string(),
             name: "Circular Dependency Test".to_string(),
@@ -850,22 +900,25 @@ mod tests {
             inputs: HashMap::new(),
             outputs: vec![],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Circular dependency"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Circular dependency"));
     }
 
     #[tokio::test]
     async fn test_execute_workflow_missing_step_dependency() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step1 = WorkflowStep {
             id: "step1".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -875,7 +928,7 @@ mod tests {
             depends_on: vec!["nonexistent_step".to_string()],
             parameters: serde_json::json!({}),
         };
-        
+
         let workflow = Workflow {
             id: "missing-dependency-workflow".to_string(),
             name: "Missing Dependency Test".to_string(),
@@ -884,12 +937,12 @@ mod tests {
             inputs: HashMap::new(),
             outputs: vec![],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("not found"));
@@ -899,15 +952,15 @@ mod tests {
     fn test_substitute_variables() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut context = HashMap::new();
         context.insert("name".to_string(), serde_json::json!("World"));
         context.insert("number".to_string(), serde_json::json!(42));
         context.insert("flag".to_string(), serde_json::json!(true));
-        
+
         let template = "Hello {{name}}! The number is {{number}} and flag is {{flag}}.";
         let result = engine.substitute_variables(template, &context).unwrap();
-        
+
         assert_eq!(result, "Hello World! The number is 42 and flag is true.");
     }
 
@@ -915,13 +968,15 @@ mod tests {
     fn test_substitute_variables_in_json_string() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut context = HashMap::new();
         context.insert("value".to_string(), serde_json::json!("test_value"));
-        
+
         let json = serde_json::json!("Hello {{value}}!");
-        let result = engine.substitute_variables_in_json(&json, &context).unwrap();
-        
+        let result = engine
+            .substitute_variables_in_json(&json, &context)
+            .unwrap();
+
         assert_eq!(result, serde_json::json!("Hello test_value!"));
     }
 
@@ -929,26 +984,28 @@ mod tests {
     fn test_substitute_variables_in_json_object() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut context = HashMap::new();
         context.insert("name".to_string(), serde_json::json!("test"));
         context.insert("value".to_string(), serde_json::json!(42));
-        
+
         let json = serde_json::json!({
             "greeting": "Hello {{name}}!",
             "data": {
                 "number": "{{value}}"
             }
         });
-        
-        let result = engine.substitute_variables_in_json(&json, &context).unwrap();
+
+        let result = engine
+            .substitute_variables_in_json(&json, &context)
+            .unwrap();
         let expected = serde_json::json!({
             "greeting": "Hello test!",
             "data": {
                 "number": "42"
             }
         });
-        
+
         assert_eq!(result, expected);
     }
 
@@ -956,14 +1013,16 @@ mod tests {
     fn test_substitute_variables_in_json_array() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut context = HashMap::new();
         context.insert("item1".to_string(), serde_json::json!("first"));
         context.insert("item2".to_string(), serde_json::json!("second"));
-        
+
         let json = serde_json::json!(["{{item1}}", "{{item2}}", "static"]);
-        let result = engine.substitute_variables_in_json(&json, &context).unwrap();
-        
+        let result = engine
+            .substitute_variables_in_json(&json, &context)
+            .unwrap();
+
         assert_eq!(result, serde_json::json!(["first", "second", "static"]));
     }
 
@@ -971,13 +1030,15 @@ mod tests {
     fn test_execute_data_transform_extract_from_context() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut context = HashMap::new();
         context.insert("test_data".to_string(), serde_json::json!("extracted"));
-        
+
         let step_results = HashMap::new();
-        let result = engine.execute_data_transform("extract", "test_data", &context, &step_results).unwrap();
-        
+        let result = engine
+            .execute_data_transform("extract", "test_data", &context, &step_results)
+            .unwrap();
+
         assert_eq!(result, serde_json::json!("extracted"));
     }
 
@@ -985,18 +1046,23 @@ mod tests {
     fn test_execute_data_transform_extract_from_step() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
         let mut step_results = HashMap::new();
-        step_results.insert("previous_step".to_string(), StepResult {
-            step_id: "previous_step".to_string(),
-            success: true,
-            result: serde_json::json!("step_output"),
-            error: None,
-            execution_time_ms: 100,
-        });
-        
-        let result = engine.execute_data_transform("extract", "step_previous_step", &context, &step_results).unwrap();
+        step_results.insert(
+            "previous_step".to_string(),
+            StepResult {
+                step_id: "previous_step".to_string(),
+                success: true,
+                result: serde_json::json!("step_output"),
+                error: None,
+                execution_time_ms: 100,
+            },
+        );
+
+        let result = engine
+            .execute_data_transform("extract", "step_previous_step", &context, &step_results)
+            .unwrap();
         assert_eq!(result, serde_json::json!("step_output"));
     }
 
@@ -1004,11 +1070,12 @@ mod tests {
     fn test_execute_data_transform_extract_missing_variable() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
         let step_results = HashMap::new();
-        let result = engine.execute_data_transform("extract", "nonexistent", &context, &step_results);
-        
+        let result =
+            engine.execute_data_transform("extract", "nonexistent", &context, &step_results);
+
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("not found"));
     }
@@ -1017,36 +1084,47 @@ mod tests {
     fn test_execute_data_transform_filter_operation() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
         let step_results = HashMap::new();
-        let result = engine.execute_data_transform("filter", "test_expression", &context, &step_results).unwrap();
-        
-        assert_eq!(result, serde_json::json!({ "filtered": true, "expression": "test_expression" }));
+        let result = engine
+            .execute_data_transform("filter", "test_expression", &context, &step_results)
+            .unwrap();
+
+        assert_eq!(
+            result,
+            serde_json::json!({ "filtered": true, "expression": "test_expression" })
+        );
     }
 
     #[test]
     fn test_execute_data_transform_unsupported_operation() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
         let step_results = HashMap::new();
-        let result = engine.execute_data_transform("unsupported", "expression", &context, &step_results);
-        
+        let result =
+            engine.execute_data_transform("unsupported", "expression", &context, &step_results);
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Unsupported data transform operation"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Unsupported data transform operation"));
     }
 
     #[test]
     fn test_evaluate_condition_string_equality_true() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut context = HashMap::new();
         context.insert("status".to_string(), serde_json::json!("active"));
-        
-        let result = engine.evaluate_condition("status == \"active\"", &context).unwrap();
+
+        let result = engine
+            .evaluate_condition("status == \"active\"", &context)
+            .unwrap();
         assert!(result);
     }
 
@@ -1054,11 +1132,13 @@ mod tests {
     fn test_evaluate_condition_string_equality_false() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut context = HashMap::new();
         context.insert("status".to_string(), serde_json::json!("inactive"));
-        
-        let result = engine.evaluate_condition("status == \"active\"", &context).unwrap();
+
+        let result = engine
+            .evaluate_condition("status == \"active\"", &context)
+            .unwrap();
         assert!(!result);
     }
 
@@ -1066,11 +1146,13 @@ mod tests {
     fn test_evaluate_condition_bool_equality() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let mut context = HashMap::new();
         context.insert("flag".to_string(), serde_json::json!(true));
-        
-        let result = engine.evaluate_condition("flag == \"true\"", &context).unwrap();
+
+        let result = engine
+            .evaluate_condition("flag == \"true\"", &context)
+            .unwrap();
         assert!(result);
     }
 
@@ -1078,9 +1160,11 @@ mod tests {
     fn test_evaluate_condition_missing_variable() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
-        let result = engine.evaluate_condition("nonexistent == \"value\"", &context).unwrap();
+        let result = engine
+            .evaluate_condition("nonexistent == \"value\"", &context)
+            .unwrap();
         assert!(!result);
     }
 
@@ -1088,9 +1172,11 @@ mod tests {
     fn test_evaluate_condition_invalid_format() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
-        let result = engine.evaluate_condition("invalid condition format", &context).unwrap();
+        let result = engine
+            .evaluate_condition("invalid condition format", &context)
+            .unwrap();
         assert!(result); // Default to true for unsupported conditions
     }
 
@@ -1098,7 +1184,7 @@ mod tests {
     fn test_evaluate_condition_malformed_equality() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
         let result = engine.evaluate_condition("a == b == c", &context).unwrap();
         assert!(!result); // Should return false for malformed equality
@@ -1108,8 +1194,11 @@ mod tests {
     async fn test_call_llm() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
-        let result = engine.call_llm("test prompt", "test-model", 100, 0.5).await.unwrap();
+
+        let result = engine
+            .call_llm("test prompt", "test-model", 100, 0.5)
+            .await
+            .unwrap();
         assert!(result.contains("LLM response to: test prompt"));
         assert!(result.contains("model: test-model"));
         assert!(result.contains("max_tokens: 100"));
@@ -1120,7 +1209,7 @@ mod tests {
     fn test_calculate_execution_order_simple() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let steps = vec![
             WorkflowStep {
                 id: "step1".to_string(),
@@ -1141,7 +1230,7 @@ mod tests {
                 parameters: serde_json::json!({}),
             },
         ];
-        
+
         let order = engine.calculate_execution_order(&steps).unwrap();
         assert_eq!(order, vec!["step1".to_string(), "step2".to_string()]);
     }
@@ -1150,7 +1239,7 @@ mod tests {
     fn test_calculate_execution_order_circular_dependency() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let steps = vec![
             WorkflowStep {
                 id: "step1".to_string(),
@@ -1171,29 +1260,30 @@ mod tests {
                 parameters: serde_json::json!({}),
             },
         ];
-        
+
         let result = engine.calculate_execution_order(&steps);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Circular dependency"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Circular dependency"));
     }
 
     #[test]
     fn test_visit_step_missing_dependency() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
-        let steps = vec![
-            WorkflowStep {
-                id: "step1".to_string(),
-                step_type: WorkflowStepType::DataTransform {
-                    operation: "extract".to_string(),
-                    expression: "input".to_string(),
-                },
-                depends_on: vec!["nonexistent".to_string()],
-                parameters: serde_json::json!({}),
+
+        let steps = vec![WorkflowStep {
+            id: "step1".to_string(),
+            step_type: WorkflowStepType::DataTransform {
+                operation: "extract".to_string(),
+                expression: "input".to_string(),
             },
-        ];
-        
+            depends_on: vec!["nonexistent".to_string()],
+            parameters: serde_json::json!({}),
+        }];
+
         let result = engine.calculate_execution_order(&steps);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("not found"));
@@ -1203,7 +1293,7 @@ mod tests {
     async fn test_execute_workflow_with_data_transform_missing_variable() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step = WorkflowStep {
             id: "transform_step_missing_var".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -1213,7 +1303,7 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let workflow = Workflow {
             id: "data-transform-missing-var-workflow".to_string(),
             name: "Data Transform Missing Variable Test".to_string(),
@@ -1222,18 +1312,21 @@ mod tests {
             inputs: HashMap::new(),
             outputs: vec!["transform_step_missing_var".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         // This should fail because the variable doesn't exist
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(!result.success); // Workflow should fail
         assert!(result.error.is_some());
-        
-        let step_result = result.step_results.get("transform_step_missing_var").unwrap();
+
+        let step_result = result
+            .step_results
+            .get("transform_step_missing_var")
+            .unwrap();
         assert!(!step_result.success);
         assert!(step_result.error.is_some());
     }
@@ -1242,7 +1335,7 @@ mod tests {
     async fn test_execute_workflow_with_conditional_step_with_false_branch() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let if_true_step = WorkflowStep {
             id: "true_branch".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -1252,7 +1345,7 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let if_false_step = WorkflowStep {
             id: "false_branch".to_string(),
             step_type: WorkflowStepType::DataTransform {
@@ -1262,7 +1355,7 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let step = WorkflowStep {
             id: "conditional_step".to_string(),
             step_type: WorkflowStepType::Conditional {
@@ -1273,11 +1366,17 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let mut inputs = HashMap::new();
-        inputs.insert("test_condition".to_string(), serde_json::json!("trigger_false")); // This != "should_be_false"
-        inputs.insert("false_value".to_string(), serde_json::json!("false_branch_executed"));
-        
+        inputs.insert(
+            "test_condition".to_string(),
+            serde_json::json!("trigger_false"),
+        ); // This != "should_be_false"
+        inputs.insert(
+            "false_value".to_string(),
+            serde_json::json!("false_branch_executed"),
+        );
+
         let workflow = Workflow {
             id: "conditional-false-branch-workflow".to_string(),
             name: "Conditional False Branch Test".to_string(),
@@ -1286,34 +1385,39 @@ mod tests {
             inputs,
             outputs: vec!["conditional_step".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
-        
+
         let step_result = result.step_results.get("conditional_step").unwrap();
         assert!(step_result.success);
-        assert_eq!(step_result.result, serde_json::json!("false_branch_executed"));
+        assert_eq!(
+            step_result.result,
+            serde_json::json!("false_branch_executed")
+        );
     }
 
     #[test]
     fn test_substitute_variables_in_json_non_string_values() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
         let json = serde_json::json!({
             "number": 42,
             "boolean": true,
             "null": null
         });
-        
-        let result = engine.substitute_variables_in_json(&json, &context).unwrap();
-        
+
+        let result = engine
+            .substitute_variables_in_json(&json, &context)
+            .unwrap();
+
         // Non-string values should remain unchanged
         assert_eq!(result, json);
     }
@@ -1322,7 +1426,7 @@ mod tests {
     async fn test_execute_workflow_with_tool_step_variable_substitution() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step = WorkflowStep {
             id: "tool_step_with_vars".to_string(),
             step_type: WorkflowStepType::ToolCall {
@@ -1334,11 +1438,11 @@ mod tests {
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let mut inputs = HashMap::new();
         inputs.insert("num1".to_string(), serde_json::json!("5"));
         inputs.insert("num2".to_string(), serde_json::json!("7"));
-        
+
         let workflow = Workflow {
             id: "tool-var-substitution-workflow".to_string(),
             name: "Tool Variable Substitution Test".to_string(),
@@ -1347,15 +1451,15 @@ mod tests {
             inputs,
             outputs: vec!["tool_step_with_vars".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
-        
+
         let step_result = result.step_results.get("tool_step_with_vars").unwrap();
         assert!(step_result.success);
         assert_eq!(step_result.result, serde_json::json!(12.0));
@@ -1365,22 +1469,22 @@ mod tests {
     async fn test_execute_workflow_with_llm_step_variable_substitution() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let step = WorkflowStep {
             id: "llm_step_with_vars".to_string(),
             step_type: WorkflowStepType::LLMGeneration {
                 prompt: "Process this data: {{input_data}}".to_string(),
-                model: None, // Test default model path
-                max_tokens: None, // Test default max_tokens path  
+                model: None,       // Test default model path
+                max_tokens: None,  // Test default max_tokens path
                 temperature: None, // Test default temperature path
             },
             depends_on: vec![],
             parameters: serde_json::json!({}),
         };
-        
+
         let mut inputs = HashMap::new();
         inputs.insert("input_data".to_string(), serde_json::json!("test data"));
-        
+
         let workflow = Workflow {
             id: "llm-var-substitution-workflow".to_string(),
             name: "LLM Variable Substitution Test".to_string(),
@@ -1389,18 +1493,18 @@ mod tests {
             inputs,
             outputs: vec!["llm_step_with_vars".to_string()],
         };
-        
+
         let request = WorkflowRequest {
             workflow,
             context: HashMap::new(),
         };
-        
+
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
-        
+
         let step_result = result.step_results.get("llm_step_with_vars").unwrap();
         assert!(step_result.success);
-        
+
         // Verify the prompt was substituted and defaults were used
         let result_text = step_result.result.get("text").unwrap().as_str().unwrap();
         assert!(result_text.contains("Process this data: test data"));
@@ -1413,11 +1517,16 @@ mod tests {
     fn test_execute_data_transform_extract_from_missing_step() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let context = HashMap::new();
         let step_results = HashMap::new();
-        let result = engine.execute_data_transform("extract", "step_nonexistent_step", &context, &step_results);
-        
+        let result = engine.execute_data_transform(
+            "extract",
+            "step_nonexistent_step",
+            &context,
+            &step_results,
+        );
+
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("not found"));
     }
@@ -1426,7 +1535,7 @@ mod tests {
     fn test_calculate_execution_order_complex_dependencies() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let steps = vec![
             WorkflowStep {
                 id: "step_c".to_string(),
@@ -1456,14 +1565,14 @@ mod tests {
                 parameters: serde_json::json!({}),
             },
         ];
-        
+
         let order = engine.calculate_execution_order(&steps).unwrap();
-        
+
         // step_a should come first, then step_b, then step_c
         let a_pos = order.iter().position(|x| x == "step_a").unwrap();
         let b_pos = order.iter().position(|x| x == "step_b").unwrap();
         let c_pos = order.iter().position(|x| x == "step_c").unwrap();
-        
+
         assert!(a_pos < b_pos);
         assert!(b_pos < c_pos);
         assert!(a_pos < c_pos);
@@ -1473,7 +1582,7 @@ mod tests {
     fn test_visit_step_already_visited() {
         let tool_registry = create_test_tool_registry();
         let engine = WorkflowEngine::new(tool_registry);
-        
+
         let steps = vec![
             WorkflowStep {
                 id: "step1".to_string(),
@@ -1503,14 +1612,14 @@ mod tests {
                 parameters: serde_json::json!({}),
             },
         ];
-        
+
         let order = engine.calculate_execution_order(&steps).unwrap();
         assert_eq!(order.len(), 3);
-        
+
         // step1 should appear first and only once
         let step1_count = order.iter().filter(|&x| x == "step1").count();
         assert_eq!(step1_count, 1);
-        
+
         let step1_pos = order.iter().position(|x| x == "step1").unwrap();
         assert_eq!(step1_pos, 0);
     }

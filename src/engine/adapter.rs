@@ -1,8 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-use parking_lot::RwLock;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
@@ -42,10 +42,14 @@ impl InferenceEngineAdapter {
             match ext {
                 "gguf" => {
                     #[cfg(feature = "llama")]
-                    { BackendChoice::Llama }
+                    {
+                        BackendChoice::Llama
+                    }
                     #[cfg(not(feature = "llama"))]
-                    { BackendChoice::HuggingFace }
-                },
+                    {
+                        BackendChoice::HuggingFace
+                    }
+                }
                 _ => BackendChoice::HuggingFace,
             }
         } else {
@@ -66,7 +70,7 @@ enum BackendChoice {
 impl InferenceEngine for InferenceEngineAdapter {
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>> {
         let model_key = format!("{}:{}", spec.name, spec.base_path.display());
-        
+
         // Check if already loaded
         {
             let models = self.loaded_models.read();
@@ -83,16 +87,16 @@ impl InferenceEngine for InferenceEngineAdapter {
         let backend = self.select_backend(spec);
         let loaded_model: Box<dyn LoadedModel> = match backend {
             #[cfg(feature = "llama")]
-            BackendChoice::Llama => {
-                self.llama_engine.load(spec).await?
-            },
+            BackendChoice::Llama => self.llama_engine.load(spec).await?,
             #[cfg(feature = "huggingface")]
             BackendChoice::HuggingFace => {
                 // Convert to UniversalModelSpec for huggingface backend
                 let universal_spec = UniversalModelSpec::from(spec.clone());
                 let universal_model = self.huggingface_engine.load(&universal_spec).await?;
-                Box::new(UniversalModelWrapper { model: universal_model })
-            },
+                Box::new(UniversalModelWrapper {
+                    model: universal_model,
+                })
+            }
         };
 
         // Cache the loaded model
@@ -117,7 +121,12 @@ struct UniversalModelWrapper {
 #[cfg(feature = "huggingface")]
 #[async_trait]
 impl LoadedModel for UniversalModelWrapper {
-    async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String> {
+    async fn generate(
+        &self,
+        prompt: &str,
+        opts: GenOptions,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<String> {
         self.model.generate(prompt, opts, on_token).await
     }
 }
@@ -130,9 +139,14 @@ struct CachedModelRef {
 
 #[async_trait]
 impl LoadedModel for CachedModelRef {
-    async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String> {
+    async fn generate(
+        &self,
+        _prompt: &str,
+        _opts: GenOptions,
+        _on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<String> {
         let models = self.models_cache.read();
-        if let Some(model) = models.get(&self.key) {
+        if let Some(_model) = models.get(&self.key) {
             // This is a limitation of the current architecture - we can't easily delegate to the cached model
             // For now, return a placeholder response
             // TODO: Refactor to use Arc<dyn LoadedModel> instead of Box<dyn LoadedModel> for sharing

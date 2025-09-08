@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        default: 'v0.1.0'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: shimmy-linux-amd64
+          - target: x86_64-apple-darwin
+            os: macos-13
+            name: shimmy-darwin-amd64
+          - target: aarch64-apple-darwin
+            os: macos-14
+            name: shimmy-darwin-arm64
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            name: shimmy-windows-amd64.exe
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: brew install cmake
+
+    - name: Build
+      run: cargo build --release --target ${{ matrix.target }} --features llama
+
+    - name: Prepare binary (Unix)
+      if: matrix.os != 'windows-latest'
+      run: |
+        cp target/${{ matrix.target }}/release/shimmy ${{ matrix.name }}
+        chmod +x ${{ matrix.name }}
+
+    - name: Prepare binary (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        cp target/${{ matrix.target }}/release/shimmy.exe ${{ matrix.name }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.name }}
+        path: ${{ matrix.name }}
+
+  # Separate job for Linux ARM64 using cross-compilation
+  build-linux-arm64:
+    name: Build Linux ARM64
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: aarch64-unknown-linux-gnu
+
+    - name: Install cross
+      run: cargo install cross --git https://github.com/cross-rs/cross
+
+    - name: Build with cross
+      run: cross build --release --target aarch64-unknown-linux-gnu --features llama
+
+    - name: Prepare binary
+      run: |
+        cp target/aarch64-unknown-linux-gnu/release/shimmy shimmy-linux-arm64
+        chmod +x shimmy-linux-arm64
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: shimmy-linux-arm64
+        path: shimmy-linux-arm64
+
+  release:
+    name: Create Release
+    needs: [build, build-linux-arm64]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name || github.event.inputs.tag }}
+        name: Shimmy ${{ github.ref_name || github.event.inputs.tag }}
+        draft: false
+        prerelease: false
+        files: |
+          artifacts/shimmy-linux-amd64/shimmy-linux-amd64
+          artifacts/shimmy-linux-arm64/shimmy-linux-arm64
+          artifacts/shimmy-darwin-amd64/shimmy-darwin-amd64
+          artifacts/shimmy-darwin-arm64/shimmy-darwin-arm64
+          artifacts/shimmy-windows-amd64.exe/shimmy-windows-amd64.exe
+
+    - name: Create generic binaries for quickstart compatibility
+      run: |
+        # Copy Linux AMD64 as generic "shimmy" for quickstart compatibility
+        cp artifacts/shimmy-linux-amd64/shimmy-linux-amd64 shimmy
+        chmod +x shimmy
+        # Keep Windows .exe as shimmy.exe for quickstart compatibility  
+        cp artifacts/shimmy-windows-amd64.exe/shimmy-windows-amd64.exe shimmy.exe
+
+    - name: Upload generic binaries
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name || github.event.inputs.tag }}
+        files: |
+          shimmy
+          shimmy.exe

@@ -2,16 +2,18 @@ use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 
 use super::{
-    huggingface::HuggingFaceEngine, llama::LlamaEngine, ModelBackend, UniversalEngine,
-    UniversalModel, UniversalModelSpec, InferenceEngine,
+    huggingface::HuggingFaceEngine, llama::LlamaEngine, InferenceEngine, ModelBackend,
+    UniversalEngine, UniversalModel, UniversalModelSpec,
 };
 
 /// Universal engine that routes to appropriate backend
+#[allow(dead_code)]
 pub struct ShimmyUniversalEngine {
     llama_engine: LlamaEngine,
     huggingface_engine: HuggingFaceEngine,
 }
 
+#[allow(dead_code)]
 impl ShimmyUniversalEngine {
     pub fn new() -> Self {
         Self {
@@ -19,7 +21,6 @@ impl ShimmyUniversalEngine {
             huggingface_engine: HuggingFaceEngine::new(),
         }
     }
-
 }
 
 impl Default for ShimmyUniversalEngine {
@@ -38,17 +39,14 @@ impl UniversalEngine for ShimmyUniversalEngine {
                 let loaded = self.llama_engine.load(&legacy_spec).await?;
                 Ok(Box::new(UniversalModelAdapter { model: loaded }))
             }
-            ModelBackend::HuggingFace { .. } => {
-                self.huggingface_engine.load(spec).await
-            }
-            ModelBackend::Candle { .. } => {
-                Err(anyhow!("Candle backend not yet implemented"))
-            }
+            ModelBackend::HuggingFace { .. } => self.huggingface_engine.load(spec).await,
+            ModelBackend::Candle { .. } => Err(anyhow!("Candle backend not yet implemented")),
         }
     }
 }
 
 /// Adapter to make legacy LoadedModel work with UniversalModel
+#[allow(dead_code)]
 struct UniversalModelAdapter {
     model: Box<dyn super::LoadedModel>,
 }
@@ -71,7 +69,10 @@ impl TryFrom<UniversalModelSpec> for super::ModelSpec {
 
     fn try_from(spec: UniversalModelSpec) -> Result<Self> {
         match spec.backend {
-            ModelBackend::LlamaGGUF { base_path, lora_path } => Ok(super::ModelSpec {
+            ModelBackend::LlamaGGUF {
+                base_path,
+                lora_path,
+            } => Ok(super::ModelSpec {
                 name: spec.name,
                 base_path,
                 lora_path,
@@ -79,7 +80,9 @@ impl TryFrom<UniversalModelSpec> for super::ModelSpec {
                 ctx_len: spec.ctx_len,
                 n_threads: spec.n_threads,
             }),
-            _ => Err(anyhow!("Cannot convert non-GGUF backend to legacy ModelSpec")),
+            _ => Err(anyhow!(
+                "Cannot convert non-GGUF backend to legacy ModelSpec"
+            )),
         }
     }
 }

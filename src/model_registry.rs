@@ -1,7 +1,7 @@
-use std::{collections::HashMap, path::PathBuf};
 use super::engine::ModelSpec;
 use crate::auto_discovery::{DiscoveredModel, ModelAutoDiscovery};
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelEntry {
@@ -14,7 +14,7 @@ pub struct ModelEntry {
 }
 
 #[derive(Default, Clone)]
-pub struct Registry { 
+pub struct Registry {
     inner: HashMap<String, ModelEntry>,
     pub discovered_models: HashMap<String, DiscoveredModel>,
 }
@@ -35,7 +35,7 @@ impl Registry {
         registry.refresh_discovered_models();
         registry
     }
-    
+
     pub fn refresh_discovered_models(&mut self) {
         let discovery = ModelAutoDiscovery::new();
         if let Ok(models) = discovery.discover_models() {
@@ -62,7 +62,7 @@ impl Registry {
             }
         }
     }
-    
+
     fn infer_template(&self, model_type: &str) -> String {
         match model_type.to_lowercase().as_str() {
             "llama" => "llama3".to_string(),
@@ -72,12 +72,16 @@ impl Registry {
         }
     }
 
-    pub fn register(&mut self, e: ModelEntry) { self.inner.insert(e.name.clone(), e); }
-    pub fn get(&self, name: &str) -> Option<&ModelEntry> { 
+    pub fn register(&mut self, e: ModelEntry) {
+        self.inner.insert(e.name.clone(), e);
+    }
+    pub fn get(&self, name: &str) -> Option<&ModelEntry> {
         // First check manually registered models, then auto-discovered
         self.inner.get(name)
     }
-    pub fn list(&self) -> Vec<&ModelEntry> { self.inner.values().collect() }
+    pub fn list(&self) -> Vec<&ModelEntry> {
+        self.inner.values().collect()
+    }
     pub fn list_all_available(&self) -> Vec<String> {
         let mut available = Vec::new();
         available.extend(self.inner.keys().cloned());
@@ -86,7 +90,7 @@ impl Registry {
         available.dedup();
         available
     }
-    
+
     pub fn to_spec(&self, name: &str) -> Option<ModelSpec> {
         // Try manually registered first
         if let Some(e) = self.inner.get(name) {
@@ -99,7 +103,7 @@ impl Registry {
                 n_threads: e.n_threads,
             });
         }
-        
+
         // Fall back to discovered models
         if let Some(discovered) = self.discovered_models.get(name) {
             return Some(ModelSpec {
@@ -111,7 +115,7 @@ impl Registry {
                 n_threads: None,
             });
         }
-        
+
         None
     }
 }
@@ -119,20 +123,20 @@ impl Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_registry_new() {
         let registry = Registry::new();
         assert!(registry.inner.is_empty());
         assert!(registry.discovered_models.is_empty());
     }
-    
+
     #[test]
     fn test_registry_default() {
         let registry = Registry::default();
         assert!(registry.inner.is_empty());
     }
-    
+
     #[test]
     fn test_register_model() {
         let mut registry = Registry::new();
@@ -144,12 +148,12 @@ mod tests {
             ctx_len: Some(4096),
             n_threads: Some(4),
         };
-        
+
         registry.register(entry.clone());
         assert_eq!(registry.inner.len(), 1);
         assert!(registry.get("test-model").is_some());
     }
-    
+
     #[test]
     fn test_list_models() {
         let mut registry = Registry::new();
@@ -161,7 +165,7 @@ mod tests {
             ctx_len: None,
             n_threads: None,
         };
-        
+
         registry.register(entry);
         let models = registry.list();
         assert_eq!(models.len(), 1);

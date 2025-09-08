@@ -1,16 +1,23 @@
-use clap::{Parser, Subcommand};
 use crate::port_manager::GLOBAL_PORT_ALLOCATOR;
+use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
-#[command(name = "shimmy", version, about = "Shimmy: single-binary GGUF + LoRA server")] 
-pub struct Cli { #[command(subcommand)] pub cmd: Command }
+#[command(
+    name = "shimmy",
+    version,
+    about = "Shimmy: single-binary GGUF + LoRA server"
+)]
+pub struct Cli {
+    #[command(subcommand)]
+    pub cmd: Command,
+}
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
     /// Run the HTTP server
-    Serve { 
-        #[arg(long, default_value = "auto")] 
-        bind: String 
+    Serve {
+        #[arg(long, default_value = "auto")]
+        bind: String,
     },
     /// List registered and auto-discovered models
     List,
@@ -19,9 +26,19 @@ pub enum Command {
     /// Load a model once (verifies base + optional LoRA)
     Probe { name: String },
     /// Simple throughput benchmark
-    Bench { name: String, #[arg(long, default_value_t=64)] max_tokens: usize },
+    Bench {
+        name: String,
+        #[arg(long, default_value_t = 64)]
+        max_tokens: usize,
+    },
     /// One-off generation (non-streaming) for quick manual testing
-    Generate { name: String, #[arg(long)] prompt: String, #[arg(long, default_value_t=64)] max_tokens: usize },
+    Generate {
+        name: String,
+        #[arg(long)]
+        prompt: String,
+        #[arg(long, default_value_t = 64)]
+        max_tokens: usize,
+    },
 }
 
 impl Command {
@@ -39,7 +56,7 @@ impl Command {
                 } else {
                     bind.clone()
                 }
-            },
+            }
             _ => "127.0.0.1:11435".to_string(), // Default fallback for other commands
         }
     }
@@ -49,7 +66,7 @@ impl Command {
 mod tests {
     use super::*;
     use clap::Parser;
-    
+
     #[test]
     fn test_cli_serve_command_default() {
         let cli = Cli::try_parse_from(&["shimmy", "serve"]).unwrap();
@@ -70,9 +87,11 @@ mod tests {
 
     #[test]
     fn test_get_bind_address_auto() {
-        let command = Command::Serve { bind: "auto".to_string() };
+        let command = Command::Serve {
+            bind: "auto".to_string(),
+        };
         let address = command.get_bind_address();
-        
+
         // Should either be dynamic port or fallback
         assert!(address.starts_with("127.0.0.1:"));
         let port_part = address.split(':').nth(1).unwrap();
@@ -82,37 +101,52 @@ mod tests {
 
     #[test]
     fn test_get_bind_address_manual() {
-        let command = Command::Serve { bind: "192.168.1.100:9000".to_string() };
+        let command = Command::Serve {
+            bind: "192.168.1.100:9000".to_string(),
+        };
         let address = command.get_bind_address();
-        
+
         assert_eq!(address, "192.168.1.100:9000");
     }
-    
+
     #[test]
     fn test_cli_list_command() {
         let cli = Cli::try_parse_from(&["shimmy", "list"]).unwrap();
         matches!(cli.cmd, Command::List);
     }
-    
+
     #[test]
     fn test_cli_generate_command() {
-        let cli = Cli::try_parse_from(&["shimmy", "generate", "model", "--prompt", "test", "--max-tokens", "100"]).unwrap();
+        let cli = Cli::try_parse_from(&[
+            "shimmy",
+            "generate",
+            "model",
+            "--prompt",
+            "test",
+            "--max-tokens",
+            "100",
+        ])
+        .unwrap();
         match cli.cmd {
-            Command::Generate { name, prompt, max_tokens } => {
+            Command::Generate {
+                name,
+                prompt,
+                max_tokens,
+            } => {
                 assert_eq!(name, "model");
                 assert_eq!(prompt, "test");
                 assert_eq!(max_tokens, 100);
-            },
+            }
             _ => panic!("Expected Generate command"),
         }
     }
-    
+
     #[test]
     fn test_cli_discover_command() {
         let cli = Cli::try_parse_from(&["shimmy", "discover"]).unwrap();
         matches!(cli.cmd, Command::Discover);
     }
-    
+
     #[test]
     fn test_cli_probe_command() {
         let cli = Cli::try_parse_from(&["shimmy", "probe", "test-model"]).unwrap();
@@ -121,19 +155,20 @@ mod tests {
             _ => panic!("Expected Probe command"),
         }
     }
-    
+
     #[test]
     fn test_cli_bench_command() {
-        let cli = Cli::try_parse_from(&["shimmy", "bench", "test-model", "--max-tokens", "128"]).unwrap();
+        let cli =
+            Cli::try_parse_from(&["shimmy", "bench", "test-model", "--max-tokens", "128"]).unwrap();
         match cli.cmd {
             Command::Bench { name, max_tokens } => {
                 assert_eq!(name, "test-model");
                 assert_eq!(max_tokens, 128);
-            },
+            }
             _ => panic!("Expected Bench command"),
         }
     }
-    
+
     #[test]
     fn test_cli_bench_command_default_tokens() {
         let cli = Cli::try_parse_from(&["shimmy", "bench", "test-model"]).unwrap();
@@ -141,7 +176,7 @@ mod tests {
             Command::Bench { name, max_tokens } => {
                 assert_eq!(name, "test-model");
                 assert_eq!(max_tokens, 64); // Default value
-            },
+            }
             _ => panic!("Expected Bench command"),
         }
     }
