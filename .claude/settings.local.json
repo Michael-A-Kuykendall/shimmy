@@ -1,30 +1,8 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(gh auth:*)",
-      "Bash(gh repo view:*)",
-      "Bash(git push:*)",
-      "Bash(git tag:*)",
-      "Bash(gh workflow run:*)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:crates.io)",
-      "Bash(cross build:*)",
-      "Bash(rustup target:*)",
-      "Bash(gh run view:*)",
-      "Bash(gh release list:*)",
-      "Bash(gh workflow:*)",
-      "Bash(git add:*)",
-      "Bash(gh run:*)",
-      "Bash(rm:*)",
-      "Bash(cargo build:*)",
-      "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(.shimmy-test.exe --help)",
-      "Bash(./shimmy-test.exe:*)",
-      "Bash(./shimmy-generic-test.exe --version)",
-      "Bash(ollama list:*)",
-      "Bash(ollama pull:*)"
-    ],
+    "allow": ["*"],
+    "ask": [],
     "deny": [],
-    "ask": []
+    "defaultMode": "bypassPermissions"
   }
 }
