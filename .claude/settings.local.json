@@ -16,7 +16,13 @@
       "Bash(git add:*)",
       "Bash(gh run:*)",
       "Bash(rm:*)",
-      "Bash(cargo build:*)"
+      "Bash(cargo build:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(.shimmy-test.exe --help)",
+      "Bash(./shimmy-test.exe:*)",
+      "Bash(./shimmy-generic-test.exe --version)",
+      "Bash(ollama list:*)",
+      "Bash(ollama pull:*)"
     ],
     "deny": [],
     "ask": []

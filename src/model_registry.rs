@@ -54,7 +54,7 @@ impl Registry {
                     name: name.clone(),
                     base_path: discovered.path.clone(),
                     lora_path: discovered.lora_path.clone(),
-                    template: Some(self.infer_template(&discovered.model_type)),
+                    template: Some(self.infer_template(name)),
                     ctx_len: Some(4096),
                     n_threads: None,
                 };
@@ -63,12 +63,22 @@ impl Registry {
         }
     }
     
-    fn infer_template(&self, model_type: &str) -> String {
-        match model_type.to_lowercase().as_str() {
-            "llama" => "llama3".to_string(),
-            "phi" => "chatml".to_string(),
-            "mistral" => "chatml".to_string(),
-            _ => "chatml".to_string(),
+    fn infer_template(&self, model_name: &str) -> String {
+        let name_lower = model_name.to_lowercase();
+        
+        // Check model name patterns for better template detection
+        if name_lower.contains("llama") {
+            "llama3".to_string()
+        } else if name_lower.contains("phi") {
+            "chatml".to_string()
+        } else if name_lower.contains("mistral") {
+            "chatml".to_string()
+        } else if name_lower.contains("qwen") {
+            "chatml".to_string()
+        } else if name_lower.contains("gemma") {
+            "chatml".to_string()
+        } else {
+            "chatml".to_string() // Default to chatml for most models
         }
     }
 
@@ -106,7 +116,7 @@ impl Registry {
                 name: discovered.name.clone(),
                 base_path: discovered.path.clone(),
                 lora_path: discovered.lora_path.clone(),
-                template: Some(self.infer_template(&discovered.model_type)),
+                template: Some(self.infer_template(&discovered.name)),
                 ctx_len: 4096,
                 n_threads: None,
             });
