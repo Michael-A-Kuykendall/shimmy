@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu,x86_64-apple-darwin,aarch64-apple-darwin,x86_64-pc-windows-msvc
+          
+      - name: Install cross-compilation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64
+          
+      - name: Build Linux binary
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+        
+      - name: Build macOS Intel binary  
+        run: cargo build --release --target x86_64-apple-darwin
+        
+      - name: Build macOS Apple Silicon binary
+        run: cargo build --release --target aarch64-apple-darwin
+        
+      - name: Build Windows binary
+        run: cargo build --release --target x86_64-pc-windows-msvc
+        
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Copy binaries with proper names
+          cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy-linux-x86_64
+          cp target/x86_64-apple-darwin/release/shimmy shimmy-macos-intel  
+          cp target/aarch64-apple-darwin/release/shimmy shimmy-macos-arm64
+          cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy-windows-x86_64.exe
+          
+          # Also create generic names for quickstart docs
+          cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy
+          cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy.exe
+          
+          # Create release with all binaries
+          gh release create ${{ github.ref_name }} \
+            shimmy-linux-x86_64 \
+            shimmy-macos-intel \
+            shimmy-macos-arm64 \
+            shimmy-windows-x86_64.exe \
+            shimmy \
+            shimmy.exe \
+            --title "Shimmy ${{ github.ref_name }}" \
+            --generate-notes
