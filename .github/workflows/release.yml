@@ -25,23 +25,22 @@ jobs:
       - name: Install cross-compilation tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y mingw-w64
+          sudo apt-get install -y gcc-mingw-w64 clang
           
       - name: Build Linux binary
         run: cargo build --release --target x86_64-unknown-linux-gnu
         
-      - name: Build macOS Intel binary  
-        run: cargo build --release --target x86_64-apple-darwin
-        
-      - name: Build macOS Apple Silicon binary
-        run: cargo build --release --target aarch64-apple-darwin
+      - name: Build macOS binaries (using cross)
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+          cross build --release --target x86_64-apple-darwin
+          cross build --release --target aarch64-apple-darwin
         
       - name: Build Windows binary
-        run: cargo build --release --target x86_64-pc-windows-msvc
+        run: |
+          cross build --release --target x86_64-pc-windows-msvc
         
-      - name: Create release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare binaries
         run: |
           # Copy binaries with proper names
           cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy-linux-x86_64
@@ -53,7 +52,14 @@ jobs:
           cp target/x86_64-unknown-linux-gnu/release/shimmy shimmy
           cp target/x86_64-pc-windows-msvc/release/shimmy.exe shimmy.exe
           
-          # Create release with all binaries
+          # List all created files
+          ls -la shimmy*
+          
+      - name: Create release (only on tags)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           gh release create ${{ github.ref_name }} \
             shimmy-linux-x86_64 \
             shimmy-macos-intel \

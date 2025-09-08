@@ -54,7 +54,8 @@
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "C:\\Users\\micha\\.ollama\\models"
+      "C:\\Users\\micha\\.ollama\\models",
+      "C:\\Users\\micha\\repos"
     ]
   }
 }
