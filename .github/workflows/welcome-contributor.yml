@@ -1,0 +1,48 @@
+name: Welcome New Contributors
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  models: read
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
+    steps:
+      - name: Generate welcome message
+        uses: actions/ai-inference@v1
+        id: ai
+        with:
+          prompt: |
+            Write a friendly, encouraging welcome message for a first-time contributor to the Shimmy project.
+            
+            Shimmy is a lightweight (5MB), zero-config, OpenAI-compatible inference server.
+            
+            Include:
+            1. Thank them for their first PR
+            2. Mention checking CONTRIBUTING.md for guidelines
+            3. Highlight Shimmy's philosophy: lightweight, zero-config, invisible infrastructure
+            4. Offer help if they have questions
+            5. Mention that binary size impact should be noted in PR description
+            
+            Keep it brief (2-3 paragraphs), welcoming, and professional.
+            
+          model: openai/gpt-4o-mini
+          temperature: 0.7
+          
+      - name: Post welcome comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const message = `${{ steps.ai.outputs.response }}`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.pull_request.number }},
+              body: message
+            });
