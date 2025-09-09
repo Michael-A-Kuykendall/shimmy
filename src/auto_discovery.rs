@@ -17,9 +17,12 @@ pub struct DiscoveredModel {
 #[derive(Debug, Deserialize)]
 struct OllamaManifest {
     #[serde(rename = "schemaVersion")]
+    #[allow(dead_code)]
     schema_version: i32,
     #[serde(rename = "mediaType")]
+    #[allow(dead_code)]
     media_type: String,
+    #[allow(dead_code)]
     config: OllamaConfig,
     layers: Vec<OllamaLayer>,
 }
@@ -27,8 +30,11 @@ struct OllamaManifest {
 #[derive(Debug, Deserialize)]
 struct OllamaConfig {
     #[serde(rename = "mediaType")]
+    #[allow(dead_code)]
     media_type: String,
+    #[allow(dead_code)]
     digest: String,
+    #[allow(dead_code)]
     size: i64,
 }
 
