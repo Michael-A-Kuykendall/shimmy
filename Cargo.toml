@@ -1,13 +1,13 @@
 [package]
 name = "shimmy"
-version = "1.0.1"
+version = "1.1.0"
 edition = "2021"
 license = "MIT"
-description = "5MB Ollama alternative with dynamic port management and zero-friction LoRA serving. 95%+ test coverage, <100ms startup."
+description = "5MB Ollama alternative with revolutionary PPT + Invariant Testing framework. 95%+ coverage, semantic integrity, <100ms startup."
 homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
 repository = "https://github.com/Michael-A-Kuykendall/shimmy"
 readme = "README.md"
-keywords = ["llm", "local-ai", "inference", "gguf", "lora"]
+keywords = ["llm", "local-ai", "inference", "testing", "ppt"]
 categories = ["command-line-utilities", "web-programming::http-server", "science", "development-tools"]
 authors = ["Michael A. Kuykendall <michaelallenkuykendall@gmail.com>"]
 exclude = [
