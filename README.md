@@ -1,8 +1,13 @@
-# Shimmy: The 5MB Alternative to Ollama
+<div align="center">
+  <img src="assets/shimmy-logo.png" alt="Shimmy Logo" width="300" height="auto" />
+  
+  # The 5MB Alternative to Ollama
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
-[![Sponsor](https://img.shields.io/badge/❤️-Sponsor-ea4aaa?logo=github)](https://github.com/sponsors/Michael-A-Kuykendall)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
+  [![CI](https://github.com/Michael-A-Kuykendall/shimmy/workflows/CI/badge.svg)](https://github.com/Michael-A-Kuykendall/shimmy/actions)
+  [![Sponsor](https://img.shields.io/badge/❤️-Sponsor-ea4aaa?logo=github)](https://github.com/sponsors/Michael-A-Kuykendall)
+</div>
 
 **Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
 
