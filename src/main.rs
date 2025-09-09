@@ -130,11 +130,11 @@ async fn main() -> anyhow::Result<()> {
             let discovered = registry.discovered_models.clone();
             if discovered.is_empty() {
                 println!("❌ No models found in search paths:");
-                println!("   • ./models/");
-                println!("   • ~/.cache/huggingface/hub/");
-                println!("   • ~/models/");
-                println!("   • ~/Downloads/");
-                println!("   • Current directory");
+                let discovery = crate::auto_discovery::ModelAutoDiscovery::new();
+                for path in &discovery.search_paths {
+                    println!("   • {:?}", path);
+                }
+                println!("   • Ollama models (if installed)");
                 println!("\n💡 Try downloading a GGUF model or setting SHIMMY_BASE_GGUF");
             } else {
                 println!("✅ Found {} models:", discovered.len());

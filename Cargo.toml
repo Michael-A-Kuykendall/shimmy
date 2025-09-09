@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 description = "5MB Ollama alternative with dynamic port management and zero-friction LoRA serving. 95%+ test coverage, <100ms startup."
@@ -28,6 +28,7 @@ huggingface = [] # Python integration, no additional Rust deps
 # Convenience feature sets
 fast = ["huggingface"] # Fast compilation - no C++ deps
 full = ["huggingface", "llama"] # Full compilation - includes C++ deps
+coverage = ["huggingface"] # Coverage testing - minimal deps for faster builds
 
 [dependencies]
 anyhow = "1"
@@ -60,6 +61,10 @@ llama-cpp-2 = { version = "0.1.118", optional = true, default-features = false }
 [dev-dependencies]
 reqwest = { version = "0.11", features = ["json"] }
 tokio-tungstenite = "0.20"
+# Additional dependencies for mock testing infrastructure
+tempfile = "3"  # For creating temporary test directories
+rand = "0.8"    # For randomized testing scenarios (already in main deps)
+# Note: tempfile is already in main dependencies, rand is already in main dependencies
 
 [profile.release]
 lto = true

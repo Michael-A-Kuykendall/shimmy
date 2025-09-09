@@ -41,7 +41,7 @@ struct OllamaLayer {
 }
 
 pub struct ModelAutoDiscovery {
-    search_paths: Vec<PathBuf>,
+    pub search_paths: Vec<PathBuf>,
 }
 
 impl ModelAutoDiscovery {
@@ -303,7 +303,7 @@ impl ModelAutoDiscovery {
         let ollama_dir = if let Some(home) = std::env::var_os("HOME") {
             PathBuf::from(home).join(".ollama/models")
         } else if let Some(user_profile) = std::env::var_os("USERPROFILE") {
-            PathBuf::from(user_profile).join(".ollama\\models")
+            PathBuf::from(user_profile).join(".ollama").join("models")
         } else {
             return Ok(models);
         };
@@ -312,7 +312,7 @@ impl ModelAutoDiscovery {
             return Ok(models);
         }
 
-        let manifests_dir = ollama_dir.join("manifests/registry.ollama.ai");
+        let manifests_dir = ollama_dir.join("manifests").join("registry.ollama.ai");
         let blobs_dir = ollama_dir.join("blobs");
 
         if !manifests_dir.exists() || !blobs_dir.exists() {
@@ -355,15 +355,16 @@ impl ModelAutoDiscovery {
                                                     format!("{}{}:{}", namespace, model_name, tag)
                                                 };
 
-                                                models.push(DiscoveredModel {
-                                                    name: display_name,
+                                                let discovered = DiscoveredModel {
+                                                    name: display_name.clone(),
                                                     path: blob_path.clone(),
                                                     lora_path: None,
                                                     size_bytes: layer.size as u64,
                                                     model_type: "Ollama".to_string(),
                                                     parameter_count: None,
                                                     quantization: None,
-                                                });
+                                                };
+                                                models.push(discovered);
                                             }
                                         }
                                     }
