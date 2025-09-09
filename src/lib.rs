@@ -21,6 +21,9 @@ pub mod util {
 }
 pub mod workflow;
 
+#[cfg(test)]
+pub mod mocks;
+
 pub struct AppState {
     pub engine: Box<dyn engine::InferenceEngine>,
     pub registry: model_registry::Registry,
