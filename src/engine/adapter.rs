@@ -54,7 +54,12 @@ impl InferenceEngineAdapter {
             #[cfg(feature = "llama")]
             { return BackendChoice::Llama; }
             #[cfg(not(feature = "llama"))]
-            { return BackendChoice::HuggingFace; }
+            { 
+                #[cfg(feature = "huggingface")]
+                { return BackendChoice::HuggingFace; }
+                #[cfg(not(feature = "huggingface"))]
+                { panic!("Ollama blob detected but no backend enabled"); }
+            }
         }
         
         // Check for other patterns that indicate GGUF files
@@ -62,11 +67,24 @@ impl InferenceEngineAdapter {
             #[cfg(feature = "llama")]
             { return BackendChoice::Llama; }
             #[cfg(not(feature = "llama"))]
-            { return BackendChoice::HuggingFace; }
+            { 
+                #[cfg(feature = "huggingface")]
+                { return BackendChoice::HuggingFace; }
+                #[cfg(not(feature = "huggingface"))]
+                { panic!("GGUF model detected but no backend enabled"); }
+            }
         }
         
         // Default to HuggingFace for other models
-        BackendChoice::HuggingFace
+        #[cfg(feature = "huggingface")]
+        { BackendChoice::HuggingFace }
+        #[cfg(not(feature = "huggingface"))]
+        { 
+            #[cfg(feature = "llama")]
+            { BackendChoice::Llama }
+            #[cfg(not(feature = "llama"))]
+            { panic!("No backend features enabled. Please compile with --features llama or --features huggingface"); }
+        }
     }
 }
 
