@@ -250,3 +250,159 @@ model = PeftModel.from_pretrained(model, '{}')"#,
         Ok(generated_text)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::engine::{ModelBackend, UniversalModelSpec, GenOptions};
+
+    #[test]
+    fn test_default_creates_new_instance() {
+        let engine = HuggingFaceEngine::default();
+        assert_eq!(engine.python_path, "C:/Python311/python.exe");
+    }
+
+    #[test]
+    fn test_new_creates_with_correct_python_path() {
+        let engine = HuggingFaceEngine::new();
+        assert_eq!(engine.python_path, "C:/Python311/python.exe");
+    }
+
+    #[tokio::test]
+    async fn test_load_with_invalid_backend_returns_error() {
+        let engine = HuggingFaceEngine::new();
+        let spec = UniversalModelSpec {
+            name: "test_model".to_string(),
+            backend: ModelBackend::LlamaGGUF {
+                base_path: std::path::PathBuf::from("test.gguf"),
+                lora_path: None,
+            },
+            device: "cpu".to_string(),
+            template: None,
+            ctx_len: 4096,
+            n_threads: None,
+        };
+
+        let result = engine.load(&spec).await;
+        assert!(result.is_err());
+        if let Err(e) = result {
+            let error_str = format!("{}", e);
+            assert!(error_str.contains("HuggingFaceEngine only supports HuggingFace backend"));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_load_with_valid_backend_structure() {
+        let engine = HuggingFaceEngine::new();
+        let spec = UniversalModelSpec {
+            name: "test_model".to_string(),
+            backend: ModelBackend::HuggingFace {
+                base_model_id: "microsoft/DialoGPT-medium".to_string(),
+                peft_path: None,
+                use_local: true,
+            },
+            device: "cpu".to_string(),
+            template: None,
+            ctx_len: 4096,
+            n_threads: None,
+        };
+
+        // This will fail if Python isn't available, but tests the error path
+        let result = engine.load(&spec).await;
+        // Either succeeds or fails with Python dependency error
+        if let Err(e) = result {
+            let error_msg = format!("{}", e);
+            assert!(error_msg.contains("Python dependencies") || error_msg.contains("Failed to load HuggingFace model"));
+        }
+    }
+
+    #[test]
+    fn test_huggingface_model_struct_creation() {
+        let model = HuggingFaceModel {
+            python_path: "python".to_string(),
+            base_model_id: "test_model".to_string(),
+            peft_path: Some("/path/to/adapter".to_string()),
+            device: "cuda".to_string(),
+        };
+
+        assert_eq!(model.python_path, "python");
+        assert_eq!(model.base_model_id, "test_model");
+        assert_eq!(model.peft_path, Some("/path/to/adapter".to_string()));
+        assert_eq!(model.device, "cuda");
+    }
+
+    #[tokio::test]
+    async fn test_huggingface_model_load_invalid_python_path() {
+        let result = HuggingFaceModel::load(
+            "/invalid/python/path",
+            "microsoft/DialoGPT-medium",
+            None,
+            true,
+            "cpu",
+        ).await;
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_generate_options_handling() {
+        // Test that GenOptions are properly structured for use
+        let opts = GenOptions {
+            max_tokens: 100,
+            temperature: 0.7,
+            top_p: 0.9,
+            top_k: 40,
+            repeat_penalty: 1.1,
+            seed: Some(42),
+            stream: false,
+        };
+
+        assert_eq!(opts.max_tokens, 100);
+        assert_eq!(opts.temperature, 0.7);
+        assert_eq!(opts.top_p, 0.9);
+        assert_eq!(opts.top_k, 40);
+        assert_eq!(opts.repeat_penalty, 1.1);
+        assert_eq!(opts.seed, Some(42));
+        assert!(!opts.stream);
+    }
+
+    // Integration test for error cases that would require actual Python/model access
+    #[tokio::test]
+    async fn test_full_workflow_error_cases() {
+        let engine = HuggingFaceEngine::new();
+        
+        // Test 1: Unsupported backend
+        let wrong_backend_spec = UniversalModelSpec {
+            name: "test_model".to_string(),
+            backend: ModelBackend::Candle {
+                model_path: std::path::PathBuf::from("test.safetensors"),
+                adapter_path: None,
+            },
+            device: "cpu".to_string(),
+            template: None,
+            ctx_len: 4096,
+            n_threads: None,
+        };
+        
+        let result = engine.load(&wrong_backend_spec).await;
+        assert!(result.is_err());
+
+        // Test 2: Valid backend structure but will fail on Python dependencies
+        let valid_spec = UniversalModelSpec {
+            name: "nonexistent_model".to_string(),
+            backend: ModelBackend::HuggingFace {
+                base_model_id: "nonexistent/model".to_string(),
+                peft_path: None,
+                use_local: true,
+            },
+            device: "cpu".to_string(),
+            template: None,
+            ctx_len: 4096,
+            n_threads: None,
+        };
+        
+        let result = engine.load(&valid_spec).await;
+        // Should error due to missing Python deps or invalid model
+        assert!(result.is_err());
+    }
+}
