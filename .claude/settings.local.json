@@ -3,7 +3,14 @@
     "allow": [
       "*",
       "Bash(cargo build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(gh api:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(./target/release/shimmy.exe serve:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": [],
