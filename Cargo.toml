@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "0.1.1"
+version = "1.0.1"
 edition = "2021"
 license = "MIT"
 description = "5MB Ollama alternative with dynamic port management and zero-friction LoRA serving. 95%+ test coverage, <100ms startup."
