@@ -40,13 +40,16 @@ impl InferenceEngineAdapter {
         // Check file extension and path patterns to determine optimal backend
         let path_str = spec.base_path.to_string_lossy();
         
-        // Check for GGUF files by extension
+        // Check for GGUF files by extension - these should ALWAYS use LlamaEngine
         if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
             if ext == "gguf" {
                 #[cfg(feature = "llama")]
                 { return BackendChoice::Llama; }
                 #[cfg(not(feature = "llama"))]
-                { return BackendChoice::HuggingFace; }
+                { 
+                    // This shouldn't happen with default features, but handle gracefully
+                    panic!("GGUF file detected but llama feature not enabled. Please install with --features llama");
+                }
             }
         }
         
@@ -91,8 +94,19 @@ impl InferenceEngine for InferenceEngineAdapter {
             },
             #[cfg(feature = "huggingface")]
             BackendChoice::HuggingFace => {
-                // Convert to UniversalModelSpec for huggingface backend
-                let universal_spec = UniversalModelSpec::from(spec.clone());
+                // Convert to UniversalModelSpec for huggingface backend (for HF model IDs)
+                let universal_spec = UniversalModelSpec {
+                    name: spec.name.clone(),
+                    backend: super::ModelBackend::HuggingFace {
+                        base_model_id: spec.base_path.to_string_lossy().to_string(),
+                        peft_path: spec.lora_path.as_ref().map(|p| p.to_path_buf()),
+                        use_local: true,
+                    },
+                    template: spec.template.clone(),
+                    ctx_len: spec.ctx_len,
+                    device: "cpu".to_string(),
+                    n_threads: spec.n_threads,
+                };
                 let universal_model = self.huggingface_engine.load(&universal_spec).await?;
                 Ok(Box::new(UniversalModelWrapper { model: universal_model }))
             },
