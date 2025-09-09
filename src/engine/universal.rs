@@ -7,12 +7,14 @@ use super::{
 };
 
 /// Universal engine that routes to appropriate backend
+#[allow(dead_code)]
 pub struct ShimmyUniversalEngine {
     llama_engine: LlamaEngine,
     huggingface_engine: HuggingFaceEngine,
 }
 
 impl ShimmyUniversalEngine {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             llama_engine: LlamaEngine::new(),
@@ -49,6 +51,7 @@ impl UniversalEngine for ShimmyUniversalEngine {
 }
 
 /// Adapter to make legacy LoadedModel work with UniversalModel
+#[allow(dead_code)]
 struct UniversalModelAdapter {
     model: Box<dyn super::LoadedModel>,
 }

@@ -1,8 +1,5 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use std::collections::HashMap;
-use std::sync::Arc;
-use parking_lot::RwLock;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
@@ -15,7 +12,7 @@ pub struct InferenceEngineAdapter {
     huggingface_engine: super::huggingface::HuggingFaceEngine,
     #[cfg(feature = "llama")]
     llama_engine: super::llama::LlamaEngine,
-    loaded_models: Arc<RwLock<HashMap<String, Box<dyn LoadedModel>>>>,
+    // Note: loaded_models removed as caching is not currently implemented
 }
 
 impl Default for InferenceEngineAdapter {
@@ -31,7 +28,6 @@ impl InferenceEngineAdapter {
             huggingface_engine: super::huggingface::HuggingFaceEngine::new(),
             #[cfg(feature = "llama")]
             llama_engine: super::llama::LlamaEngine::new(),
-            loaded_models: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -128,23 +124,5 @@ impl LoadedModel for UniversalModelWrapper {
     }
 }
 
-/// Reference to a cached model
-struct CachedModelRef {
-    key: String,
-    models_cache: Arc<RwLock<HashMap<String, Box<dyn LoadedModel>>>>,
-}
-
-#[async_trait]
-impl LoadedModel for CachedModelRef {
-    async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String> {
-        let models = self.models_cache.read();
-        if let Some(model) = models.get(&self.key) {
-            // This is a limitation of the current architecture - we can't easily delegate to the cached model
-            // For now, return a placeholder response
-            // TODO: Refactor to use Arc<dyn LoadedModel> instead of Box<dyn LoadedModel> for sharing
-            Ok("Model reference - use direct engine access".to_string())
-        } else {
-            Err(anyhow::anyhow!("Model {} no longer cached", self.key))
-        }
-    }
-}
+// Note: Cached model references removed as they were unused placeholder code.
+// Future implementation should use Arc<dyn LoadedModel> for proper model sharing.

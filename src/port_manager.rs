@@ -47,6 +47,7 @@ impl PortAllocator {
         Err(anyhow!("No available ports in range {}..{}", self.port_range.0, self.port_range.1))
     }
 
+    #[allow(dead_code)]
     pub fn allocate_ephemeral_port(&self, service_name: &str) -> Result<u16> {
         let mut allocated = self.allocated_ports.lock();
         
@@ -56,6 +57,7 @@ impl PortAllocator {
         Ok(port)
     }
 
+    #[allow(dead_code)]
     pub fn release_port(&self, port: u16) {
         let mut allocated = self.allocated_ports.lock();
         allocated.retain(|_, &mut v| v != port);
@@ -68,6 +70,7 @@ impl PortAllocator {
         }
     }
 
+    #[allow(dead_code)]
     fn find_ephemeral_port(&self) -> Result<u16> {
         // Use OS ephemeral port allocation
         let listener = TcpListener::bind("127.0.0.1:0")?;
@@ -76,6 +79,7 @@ impl PortAllocator {
         Ok(port)
     }
 
+    #[allow(dead_code)]
     pub fn get_allocated_ports(&self) -> HashMap<String, u16> {
         self.allocated_ports.lock().clone()
     }
