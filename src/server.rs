@@ -1,11 +1,89 @@
-use axum::{routing::{post, get}, Router};
+use axum::{routing::{post, get}, Router, Json, extract::State};
 use std::{net::SocketAddr, sync::Arc};
+use serde_json::{json, Value};
 use crate::{api, util::diag::diag_handler, openai_compat, AppState};
+
+/// Enhanced health check endpoint for production use
+async fn health_check(State(state): State<Arc<AppState>>) -> Json<Value> {
+    let models = state.registry.list_all_available();
+    let discovered = state.registry.discovered_models.len();
+    let manual = state.registry.list().len();
+    
+    Json(json!({
+        "status": "ok",
+        "service": "shimmy",
+        "version": env!("CARGO_PKG_VERSION"),
+        "models": {
+            "total": models.len(),
+            "discovered": discovered,
+            "manual": manual
+        },
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "uptime_seconds": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+    }))
+}
+
+/// Metrics endpoint for monitoring and performance tracking
+async fn metrics_endpoint(State(state): State<Arc<AppState>>) -> Json<Value> {
+    let models = state.registry.list_all_available();
+    let discovered_models = state.registry.discovered_models.clone();
+    
+    // Calculate total model sizes
+    let total_size_mb: u64 = discovered_models
+        .values()
+        .map(|m| m.size_bytes / (1024 * 1024))
+        .sum();
+        
+    let memory_info = sys_info::mem_info().unwrap_or(sys_info::MemInfo {
+        total: 0,
+        free: 0,
+        avail: 0,
+        buffers: 0,
+        cached: 0,
+        swap_total: 0,
+        swap_free: 0,
+    });
+    
+    Json(json!({
+        "service": "shimmy",
+        "version": env!("CARGO_PKG_VERSION"),
+        "models": {
+            "total_count": models.len(),
+            "total_size_mb": total_size_mb,
+            "by_type": {
+                "discovered": state.registry.discovered_models.len(),
+                "manual": state.registry.list().len()
+            }
+        },
+        "system": {
+            "memory_total_mb": memory_info.total / 1024,
+            "memory_free_mb": memory_info.free / 1024,
+            "memory_available_mb": memory_info.avail / 1024
+        },
+        "features": {
+            "llama": cfg!(feature = "llama"),
+            "huggingface": cfg!(feature = "huggingface")
+        },
+        "endpoints": [
+            "/health",
+            "/metrics", 
+            "/v1/chat/completions",
+            "/v1/models",
+            "/api/generate",
+            "/api/models"
+        ],
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }))
+}
 
 pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
     let app = Router::new()
-        .route("/health", get(|| async { axum::Json(serde_json::json!({"status":"ok"})) }))
+        .route("/health", get(health_check))
+        .route("/metrics", get(metrics_endpoint))
         .route("/diag", get(diag_handler))
         .route("/api/generate", post(api::generate))
         .route("/api/models", get(api::list_models))
