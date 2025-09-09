@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shimmy"
-version = "0.1.0"
-description = "The 5MB alternative to Ollama - local AI inference server with OpenAI API compatibility"
+version = "1.1.0"
+description = "Lightweight 5MB Ollama alternative for local AI inference. Fast startup, reliable inference engine."
 readme = "README.md"
 license = {text = "MIT"}
 authors = [

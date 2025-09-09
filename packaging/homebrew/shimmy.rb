@@ -1,5 +1,5 @@
 class Shimmy < Formula
-  desc "The 5MB alternative to Ollama - local AI inference server"
+  desc "Lightweight 5MB Ollama alternative for local AI inference"
   homepage "https://github.com/Michael-A-Kuykendall/shimmy"
   url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/vVERSION_PLACEHOLDER/shimmy-VERSION_PLACEHOLDER-darwin-amd64.tar.gz"
   sha256 "SHA256_AMD64_PLACEHOLDER"
