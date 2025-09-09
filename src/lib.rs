@@ -20,9 +20,13 @@ pub mod util {
     pub mod diag;
 }
 pub mod workflow;
+pub mod invariant_ppt;
 
 #[cfg(test)]
-pub mod mocks;
+pub mod tests;
+
+// Note: Mock infrastructure removed - use real testing with local models
+// PPT + Invariant Testing System ensures semantic integrity under high-visibility development
 
 pub struct AppState {
     pub engine: Box<dyn engine::InferenceEngine>,
