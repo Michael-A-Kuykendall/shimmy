@@ -95,12 +95,22 @@ impl ModelAutoDiscovery {
         
         for search_path in &self.search_paths {
             if search_path.exists() && search_path.is_dir() {
-                discovered.extend(self.scan_directory(search_path)?);
+                // Add error handling to prevent one bad directory from killing discovery
+                match self.scan_directory(search_path) {
+                    Ok(models) => discovered.extend(models),
+                    Err(e) => {
+                        eprintln!("Warning: Failed to scan {}: {}", search_path.display(), e);
+                        continue; // Skip problematic directories instead of failing
+                    }
+                }
             }
         }
         
         // Discover Ollama models specifically
-        discovered.extend(self.discover_ollama_models()?);
+        match self.discover_ollama_models() {
+            Ok(ollama_models) => discovered.extend(ollama_models),
+            Err(e) => eprintln!("Warning: Failed to discover Ollama models: {}", e),
+        }
         
         // Remove duplicates based on file hash or path
         discovered.sort_by(|a, b| a.path.cmp(&b.path));
@@ -110,10 +120,35 @@ impl ModelAutoDiscovery {
     }
     
     fn scan_directory(&self, dir: &Path) -> Result<Vec<DiscoveredModel>> {
+        self.scan_directory_with_depth(dir, 0)
+    }
+    
+    fn scan_directory_with_depth(&self, dir: &Path, depth: usize) -> Result<Vec<DiscoveredModel>> {
+        // Prevent infinite recursion - limit depth to 8 levels
+        if depth >= 8 {
+            return Ok(Vec::new());
+        }
+        
+        // Skip system directories that cause problems on macOS
+        if let Some(dir_name) = dir.file_name().and_then(|n| n.to_str()) {
+            if dir_name.starts_with('.') && dir_name != ".cache" && dir_name != ".ollama" && dir_name != ".local" {
+                return Ok(Vec::new());
+            }
+        }
+        
         let mut models = Vec::new();
         
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
+        // Use error handling for read_dir to handle permission issues
+        let entries = match fs::read_dir(dir) {
+            Ok(entries) => entries,
+            Err(_) => return Ok(Vec::new()), // Skip directories we can't read
+        };
+        
+        for entry in entries {
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(_) => continue, // Skip problematic entries
+            };
             let path = entry.path();
             
             // Skip build and cache directories
@@ -137,8 +172,8 @@ impl ModelAutoDiscovery {
                         continue;
                     }
                 }
-                // Recursively scan subdirectories
-                models.extend(self.scan_directory(&path)?);
+                // Recursively scan subdirectories with depth tracking
+                models.extend(self.scan_directory_with_depth(&path, depth + 1)?);
             } else if self.is_model_file(&path) {
                 if let Ok(model) = self.analyze_model_file(&path) {
                     models.push(model);
