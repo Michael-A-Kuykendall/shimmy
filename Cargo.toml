@@ -1,9 +1,9 @@
 [package]
 name = "shimmy"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2021"
 license = "MIT"
-description = "Lightweight 5MB Ollama alternative for local AI inference. Fast startup, reliable inference engine."
+description = "Lightweight 5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading."
 homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
 repository = "https://github.com/Michael-A-Kuykendall/shimmy"
 readme = "README.md"
