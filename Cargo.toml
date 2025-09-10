@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "1.2.0"
+version = "1.3.0"
 edition = "2021"
 license = "MIT"
 description = "Lightweight 5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading."
