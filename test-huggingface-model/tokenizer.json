@@ -1,0 +1,31 @@
+{
+  "model": {
+    "type": "WordPiece",
+    "vocab": {
+      "[PAD]": 0,
+      "[UNK]": 100,
+      "[CLS]": 101,
+      "[SEP]": 102,
+      "[MASK]": 103,
+      "hello": 7592,
+      "world": 2088,
+      "the": 1996,
+      "a": 1037,
+      "an": 2019,
+      "and": 1998,
+      "or": 2030,
+      "test": 3231,
+      "model": 2944,
+      "this": 2023,
+      "is": 2003,
+      "for": 2005,
+      "testing": 7667
+    }
+  },
+  "normalizer": {
+    "type": "BertNormalizer"
+  },
+  "pre_tokenizer": {
+    "type": "BertPreTokenizer"
+  }
+}
