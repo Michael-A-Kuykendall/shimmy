@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shimmy API Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8fafc;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .playground {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .panel h2 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .response-area {
+            min-height: 200px;
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            border: 2px solid #2d3748;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 0.5rem;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-secondary {
+            background: #718096;
+        }
+
+        .status {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .status.loading {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+
+        .examples {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            margin-bottom: 2rem;
+        }
+
+        .example-button {
+            background: #edf2f7;
+            color: #4a5568;
+            border: 1px solid #cbd5e0;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            margin: 0.25rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .example-button:hover {
+            background: #e2e8f0;
+            border-color: #a0aec0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .playground {
+                grid-template-columns: 1fr;
+            }
+            
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .endpoint-info {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .streaming-output {
+            border-left: 4px solid #667eea;
+            padding-left: 1rem;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Shimmy API Playground</h1>
+            <p>Interactive testing environment for the Shimmy LLM inference API</p>
+        </div>
+
+        <div class="examples">
+            <h2>Quick Examples</h2>
+            <p style="margin-bottom: 1rem;">Click any example to load it into the playground:</p>
+            
+            <button class="example-button" onclick="loadExample('simple')">Simple Generation</button>
+            <button class="example-button" onclick="loadExample('streaming')">Streaming Response</button>
+            <button class="example-button" onclick="loadExample('chat')">Chat Completion</button>
+            <button class="example-button" onclick="loadExample('custom')">Custom Parameters</button>
+            <button class="example-button" onclick="loadExample('models')">List Models</button>
+        </div>
+
+        <div class="playground">
+            <div class="panel">
+                <h2>API Request</h2>
+                
+                <div class="form-group">
+                    <label for="endpoint">Endpoint URL</label>
+                    <input type="text" id="endpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
+                </div>
+
+                <div class="form-group">
+                    <label for="method">HTTP Method</label>
+                    <select id="method">
+                        <option value="POST">POST</option>
+                        <option value="GET">GET</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="path">API Path</label>
+                    <select id="path">
+                        <option value="/api/generate">Generate Text (/api/generate)</option>
+                        <option value="/api/chat">Chat Completion (/api/chat)</option>
+                        <option value="/api/tags">List Models (/api/tags)</option>
+                        <option value="/api/show">Show Model (/api/show)</option>
+                        <option value="/health">Health Check (/health)</option>
+                    </select>
+                </div>
+
+                <div class="endpoint-info">
+                    <strong>Full URL:</strong> <span id="fullUrl">http://localhost:11434/api/generate</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="payload">Request Body (JSON)</label>
+                    <textarea id="payload" placeholder="Enter JSON payload here...">{
+  "model": "default",
+  "prompt": "Explain what Shimmy is in one sentence.",
+  "max_tokens": 100,
+  "temperature": 0.7
+}</textarea>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="streaming">Streaming</label>
+                        <select id="streaming">
+                            <option value="false">Disabled</option>
+                            <option value="true">Enabled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeout">Timeout (seconds)</label>
+                        <input type="number" id="timeout" value="30" min="5" max="300">
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <button class="button" onclick="sendRequest()">Send Request</button>
+                    <button class="button button-secondary" onclick="clearResponse()">Clear</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>API Response</h2>
+                
+                <div id="status"></div>
+                
+                <div class="response-area" id="response">Ready to send your first request! 🚀
+
+Try the examples above or customize your own request.
+
+Shimmy supports:
+• Text generation (/api/generate)
+• Chat completions (/api/chat)
+• Model listing (/api/tags)
+• Health checks (/health)
+• Streaming responses
+• Native SafeTensors models</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>API Documentation</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                
+                <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                    <h3 style="color: #667eea; margin-bottom: 0.5rem;">Text Generation</h3>
+                    <code style="font-size: 0.8rem; color: #4a5568;">POST /api/generate</code>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Generate text with any loaded model. Supports streaming and custom parameters.</p>
+                </div>
+
+                <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                    <h3 style="color: #667eea; margin-bottom: 0.5rem;">Chat Completion</h3>
+                    <code style="font-size: 0.8rem; color: #4a5568;">POST /api/chat</code>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Chat-style completions with conversation history and system prompts.</p>
+                </div>
+
+                <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                    <h3 style="color: #667eea; margin-bottom: 0.5rem;">List Models</h3>
+                    <code style="font-size: 0.8rem; color: #4a5568;">GET /api/tags</code>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Get all available models and their metadata.</p>
+                </div>
+
+                <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                    <h3 style="color: #667eea; margin-bottom: 0.5rem;">Health Check</h3>
+                    <code style="font-size: 0.8rem; color: #4a5568;">GET /health</code>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Check if the Shimmy server is running and healthy.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update full URL when endpoint or path changes
+        function updateFullUrl() {
+            const endpoint = document.getElementById('endpoint').value;
+            const path = document.getElementById('path').value;
+            const fullUrl = endpoint.replace(/\/$/, '') + path;
+            document.getElementById('fullUrl').textContent = fullUrl;
+        }
+
+        // Event listeners for URL updates
+        document.getElementById('endpoint').addEventListener('input', updateFullUrl);
+        document.getElementById('path').addEventListener('change', updateFullUrl);
+
+        // Initialize
+        updateFullUrl();
+
+        // Load example requests
+        function loadExample(type) {
+            const examples = {
+                simple: {
+                    method: 'POST',
+                    path: '/api/generate',
+                    payload: {
+                        model: 'default',
+                        prompt: 'Explain what Shimmy is in one sentence.',
+                        max_tokens: 50,
+                        temperature: 0.7
+                    }
+                },
+                streaming: {
+                    method: 'POST', 
+                    path: '/api/generate',
+                    payload: {
+                        model: 'default',
+                        prompt: 'Write a short story about a robot learning to paint.',
+                        max_tokens: 200,
+                        temperature: 0.8,
+                        stream: true
+                    }
+                },
+                chat: {
+                    method: 'POST',
+                    path: '/api/chat',
+                    payload: {
+                        model: 'default',
+                        messages: [
+                            {role: 'system', content: 'You are a helpful AI assistant.'},
+                            {role: 'user', content: 'What are the benefits of using SafeTensors format?'}
+                        ],
+                        max_tokens: 150
+                    }
+                },
+                custom: {
+                    method: 'POST',
+                    path: '/api/generate',
+                    payload: {
+                        model: 'default',
+                        prompt: 'Explain quantum computing:',
+                        max_tokens: 100,
+                        temperature: 0.3,
+                        top_p: 0.9,
+                        frequency_penalty: 0.1
+                    }
+                },
+                models: {
+                    method: 'GET',
+                    path: '/api/tags',
+                    payload: {}
+                }
+            };
+
+            const example = examples[type];
+            if (!example) return;
+
+            document.getElementById('method').value = example.method;
+            document.getElementById('path').value = example.path;
+            document.getElementById('payload').value = JSON.stringify(example.payload, null, 2);
+            
+            updateFullUrl();
+        }
+
+        // Send API request
+        async function sendRequest() {
+            const button = event.target;
+            const status = document.getElementById('status');
+            const response = document.getElementById('response');
+            
+            // Get form values
+            const endpoint = document.getElementById('endpoint').value;
+            const method = document.getElementById('method').value;
+            const path = document.getElementById('path').value;
+            const payload = document.getElementById('payload').value;
+            const timeout = parseInt(document.getElementById('timeout').value) * 1000;
+            
+            const url = endpoint.replace(/\/$/, '') + path;
+            
+            // Update UI
+            button.disabled = true;
+            status.innerHTML = '<div class="status loading">Sending request...</div>';
+            response.textContent = '';
+
+            try {
+                // Parse payload if it's a POST request
+                let requestBody = null;
+                let headers = {};
+                
+                if (method === 'POST' && payload.trim()) {
+                    try {
+                        requestBody = JSON.parse(payload);
+                        headers['Content-Type'] = 'application/json';
+                    } catch (e) {
+                        throw new Error('Invalid JSON in request body: ' + e.message);
+                    }
+                }
+
+                // Check if streaming is requested
+                const isStreaming = requestBody && requestBody.stream === true;
+
+                const startTime = Date.now();
+
+                if (isStreaming) {
+                    // Handle streaming response
+                    const response_fetch = await fetch(url, {
+                        method,
+                        headers,
+                        body: requestBody ? JSON.stringify(requestBody) : null,
+                        signal: AbortSignal.timeout(timeout)
+                    });
+
+                    if (!response_fetch.ok) {
+                        throw new Error(`HTTP ${response_fetch.status}: ${response_fetch.statusText}`);
+                    }
+
+                    const reader = response_fetch.body.getReader();
+                    const decoder = new TextDecoder();
+                    
+                    status.innerHTML = '<div class="status loading">Streaming response...</div>';
+                    response.innerHTML = '<div class="streaming-output">Streaming response:\n\n</div>';
+                    
+                    let streamContent = '';
+                    
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        
+                        for (const line of lines) {
+                            if (line.trim()) {
+                                try {
+                                    const data = JSON.parse(line);
+                                    if (data.response) {
+                                        streamContent += data.response;
+                                        response.innerHTML = `<div class="streaming-output">Streaming response:\n\n${streamContent}</div>`;
+                                    }
+                                } catch (e) {
+                                    // Ignore JSON parse errors for partial chunks
+                                }
+                            }
+                        }
+                    }
+                    
+                    const endTime = Date.now();
+                    status.innerHTML = `<div class="status success">Stream completed in ${endTime - startTime}ms</div>`;
+                    
+                } else {
+                    // Handle regular response
+                    const response_fetch = await fetch(url, {
+                        method,
+                        headers,
+                        body: requestBody ? JSON.stringify(requestBody) : null,
+                        signal: AbortSignal.timeout(timeout)
+                    });
+
+                    const endTime = Date.now();
+                    const responseText = await response_fetch.text();
+                    
+                    // Try to format as JSON
+                    let formattedResponse;
+                    try {
+                        const jsonResponse = JSON.parse(responseText);
+                        formattedResponse = JSON.stringify(jsonResponse, null, 2);
+                    } catch {
+                        formattedResponse = responseText;
+                    }
+                    
+                    response.textContent = formattedResponse;
+                    
+                    if (response_fetch.ok) {
+                        status.innerHTML = `<div class="status success">Success (${response_fetch.status}) - ${endTime - startTime}ms</div>`;
+                    } else {
+                        status.innerHTML = `<div class="status error">Error ${response_fetch.status}: ${response_fetch.statusText}</div>`;
+                    }
+                }
+                
+            } catch (error) {
+                status.innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+                response.textContent = `Request failed: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        // Clear response
+        function clearResponse() {
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('response').textContent = 'Response cleared. Ready for next request.';
+        }
+
+        // Update streaming option when path changes
+        document.getElementById('path').addEventListener('change', function() {
+            const streaming = document.getElementById('streaming');
+            if (this.value === '/api/tags' || this.value === '/health') {
+                streaming.value = 'false';
+                streaming.disabled = true;
+            } else {
+                streaming.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

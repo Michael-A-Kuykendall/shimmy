@@ -1,0 +1,13 @@
+# Render.com deployment configuration for Shimmy
+services:
+  - type: web
+    name: shimmy
+    env: docker
+    dockerfilePath: ./deploy/Dockerfile
+    envVars:
+      - key: RUST_LOG
+        value: info
+      - key: PORT
+        value: 11434
+    healthCheckPath: /health
+    autoDeploy: false
