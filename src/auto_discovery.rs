@@ -187,9 +187,15 @@ impl ModelAutoDiscovery {
     fn is_model_file(&self, path: &Path) -> bool {
         if let Some(extension) = path.extension() {
             let ext = extension.to_string_lossy().to_lowercase();
-            // Only accept GGUF files for now, as they are the primary format
+            // Accept GGUF files (primary format)
             if ext == "gguf" {
                 return true;
+            }
+            // Accept SafeTensors files (native Rust support - no Python needed!)
+            if ext == "safetensors" {
+                let path_str = path.to_string_lossy().to_lowercase();
+                // Only include obvious model files, skip tokenizer/config files
+                return !path_str.contains("tokenizer") && !path_str.contains("config");
             }
             // Be very selective with .bin files - only include obvious model files
             if ext == "bin" {

@@ -1,0 +1,7 @@
+{
+  "model_type": "test_model",
+  "vocab_size": 1000,
+  "hidden_size": 64,
+  "num_hidden_layers": 2,
+  "max_position_embeddings": 128
+}
