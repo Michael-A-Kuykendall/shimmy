@@ -7,13 +7,18 @@ use safetensors::SafeTensors;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::RwLock;
 use tracing::{info, debug, warn};
+
+use super::super::cache::{ModelCache, ModelMetadata};
+use super::super::cache::model_cache;
 
 use super::{GenOptions, LoadedModel, ModelSpec, InferenceEngine};
 
 #[derive(Debug)]
 pub struct SafeTensorsEngine {
     // Pure Rust implementation - no external dependencies
+    cache: RwLock<ModelCache>,
 }
 
 impl Default for SafeTensorsEngine {
@@ -24,7 +29,13 @@ impl Default for SafeTensorsEngine {
 
 impl SafeTensorsEngine {
     pub fn new() -> Self {
-        Self {}
+        let cache = ModelCache::new().unwrap_or_else(|e| {
+            warn!("Failed to initialize model cache: {}. Running without cache.", e);
+            ModelCache::default()
+        });
+        Self {
+            cache: RwLock::new(cache),
+        }
     }
     
     /// Check if a model file is SafeTensors format
@@ -75,7 +86,21 @@ impl InferenceEngine for SafeTensorsEngine {
             return Err(anyhow!("File is not in SafeTensors format: {}", spec.base_path.display()));
         }
         
-        let model = SafeTensorsModel::load(spec).await?;
+        // Check cache first with read lock
+        let cached_metadata = {
+            let cache = self.cache.read().unwrap();
+            cache.get(&spec.base_path).cloned()
+        };
+        
+        let model = if let Some(metadata) = cached_metadata {
+            info!("Found cached metadata for {}", spec.base_path.display());
+            SafeTensorsModel::load_from_cached_metadata(spec, &metadata).await?
+        } else {
+            info!("No cache found, loading and parsing model file");
+            // Load model and cache metadata
+            let model = SafeTensorsModel::load_and_cache(spec, &self.cache).await?;
+            model
+        };
         Ok(Box::new(model))
     }
 }
@@ -107,7 +132,8 @@ struct SimpleTokenizer {
 }
 
 impl SafeTensorsModel {
-    async fn load(spec: &ModelSpec) -> Result<Self> {
+    /// Load model and cache metadata (for new models not in cache)
+    async fn load_and_cache(spec: &ModelSpec, cache: &RwLock<ModelCache>) -> Result<Self> {
         info!("Reading SafeTensors file: {}", spec.base_path.display());
         
         // Read the entire file into memory
@@ -118,24 +144,130 @@ impl SafeTensorsModel {
         
         debug!("SafeTensors loaded with {} tensors", tensors.len());
         
-        // Print tensor names for debugging
-        for name in tensors.names() {
-            if let Ok(tensor) = tensors.tensor(name) {
-                debug!("Tensor '{}': shape {:?}, dtype {:?}", name, tensor.shape(), tensor.dtype());
+        // Extract metadata for caching
+        let metadata = model_cache::extract_safetensors_metadata(&spec.base_path)?;
+        
+        // Cache the metadata for future loads
+        {
+            let mut cache_guard = cache.write().unwrap();
+            if let Err(e) = cache_guard.set(metadata.clone()) {
+                warn!("Failed to cache metadata: {}", e);
             }
-        }
+        } // Drop the lock before async operations
         
-        // Load configuration from tensors or companion files
-        let config = Self::load_config(&spec.base_path, &tensors).await?;
+        // Load configuration from cached metadata if available, otherwise parse
+        let config = if let Some(config_data) = &metadata.config {
+            Self::parse_config_from_json(config_data)?
+        } else {
+            Self::load_config(&spec.base_path, &tensors).await?
+        };
         
-        // Load or create tokenizer
-        let tokenizer = Self::load_tokenizer(&spec.base_path).await?;
+        // Load tokenizer from cached metadata if available, otherwise parse
+        let tokenizer = if let Some(tokenizer_data) = &metadata.tokenizer {
+            Self::parse_tokenizer_from_json(tokenizer_data)?
+        } else {
+            Self::load_tokenizer(&spec.base_path).await?
+        };
         
         Ok(SafeTensorsModel {
             name: spec.name.clone(),
             model_data, // Keep data alive - we'll deserialize when needed
             config,
             tokenizer,
+        })
+    }
+    
+    /// Load model from cached metadata (much faster)
+    async fn load_from_cached_metadata(spec: &ModelSpec, metadata: &ModelMetadata) -> Result<Self> {
+        info!("Loading model from cached metadata");
+        
+        // Still need to read the model data for actual inference
+        // But we skip parsing config.json and tokenizer.json
+        let model_data = fs::read(&spec.base_path)?;
+        
+        // Parse config from cached metadata
+        let config = if let Some(config_data) = &metadata.config {
+            Self::parse_config_from_json(config_data)?
+        } else {
+            // Fallback to file-based loading if not in cache
+            let tensors = SafeTensors::deserialize(&model_data)?;
+            Self::load_config(&spec.base_path, &tensors).await?
+        };
+        
+        // Parse tokenizer from cached metadata
+        let tokenizer = if let Some(tokenizer_data) = &metadata.tokenizer {
+            Self::parse_tokenizer_from_json(tokenizer_data)?
+        } else {
+            // Fallback to file-based loading if not in cache
+            Self::load_tokenizer(&spec.base_path).await?
+        };
+        
+        debug!("Model loaded from cache with {} cached tensors", metadata.tensors.len());
+        
+        Ok(SafeTensorsModel {
+            name: spec.name.clone(),
+            model_data,
+            config,
+            tokenizer,
+        })
+    }
+    
+    /// Parse configuration from cached JSON data
+    fn parse_config_from_json(config_data: &serde_json::Value) -> Result<ModelConfig> {
+        let vocab_size = config_data.get("vocab_size")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(32000) as usize;
+            
+        let hidden_size = config_data.get("hidden_size")
+            .or_else(|| config_data.get("hidden_dim"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(4096) as usize;
+            
+        let num_layers = config_data.get("num_hidden_layers")
+            .or_else(|| config_data.get("num_layers"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(32) as usize;
+            
+        let max_sequence_length = config_data.get("max_position_embeddings")
+            .or_else(|| config_data.get("max_seq_len"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(2048) as usize;
+        
+        Ok(ModelConfig {
+            vocab_size,
+            hidden_size,
+            num_layers,
+            max_sequence_length,
+        })
+    }
+    
+    /// Parse tokenizer from cached JSON data
+    fn parse_tokenizer_from_json(tokenizer_data: &serde_json::Value) -> Result<SimpleTokenizer> {
+        let mut vocab = HashMap::new();
+        let mut reverse_vocab = HashMap::new();
+        
+        // Parse vocab from tokenizer JSON
+        if let Some(vocab_obj) = tokenizer_data.get("model").and_then(|m| m.get("vocab")) {
+            if let Some(vocab_map) = vocab_obj.as_object() {
+                for (token, id) in vocab_map {
+                    if let Some(token_id) = id.as_u64() {
+                        let token_id = token_id as u32;
+                        vocab.insert(token.clone(), token_id);
+                        reverse_vocab.insert(token_id, token.clone());
+                    }
+                }
+            }
+        }
+        
+        // Default special tokens
+        let bos_token = vocab.get("<s>").copied().unwrap_or(1);
+        let eos_token = vocab.get("</s>").copied().unwrap_or(2);
+        
+        Ok(SimpleTokenizer {
+            vocab,
+            reverse_vocab,
+            bos_token,
+            eos_token,
         })
     }
     
