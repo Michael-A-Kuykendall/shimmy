@@ -13,25 +13,39 @@ jobs:
     strategy:
       matrix:
         include:
+          # Linux builds
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             binary-name: shimmy
             artifact-name: shimmy-linux-x86_64
+            features: "huggingface,llama"
             
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            binary-name: shimmy
+            artifact-name: shimmy-linux-arm64
+            features: "huggingface"  # Skip llama for ARM to avoid C++ issues
+            cross: true
+            
+          # Windows builds
           - os: windows-latest  
             target: x86_64-pc-windows-msvc
             binary-name: shimmy.exe
             artifact-name: shimmy-windows-x86_64.exe
+            features: "huggingface,llama"
             
+          # macOS builds
           - os: macos-latest
             target: x86_64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-intel
+            features: "huggingface,llama"
             
           - os: macos-latest
             target: aarch64-apple-darwin 
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
+            features: "huggingface,llama"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -41,7 +55,12 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake
+          sudo apt-get install -y build-essential cmake pkg-config
+          
+      - name: Install system dependencies (Linux ARM64)
+        if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
       
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
@@ -54,8 +73,21 @@ jobs:
         with:
           targets: ${{ matrix.target }}
           
-      - name: Build binary
-        run: cargo build --release --target ${{ matrix.target }} --no-default-features --features huggingface
+      - name: Install cross (for ARM64 Linux)
+        if: matrix.cross == true
+        run: cargo install cross --git https://github.com/cross-rs/cross
+          
+      - name: Build binary (native)
+        if: matrix.cross != true
+        run: cargo build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
+        
+      - name: Build binary (cross-compiled)
+        if: matrix.cross == true
+        run: cross build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
+        
+      - name: Strip binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: strip target/${{ matrix.target }}/release/${{ matrix.binary-name }}
         
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -81,19 +113,39 @@ jobs:
         run: |
           mkdir -p release-files
           
-          # Copy and rename artifacts
+          # Copy and rename artifacts with size info
+          echo "Preparing release files with size information..."
+          
+          # Linux x86_64
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
           
+          # Linux ARM64  
+          cp artifacts/shimmy-linux-arm64/shimmy release-files/shimmy-linux-arm64
+          
+          # Windows x86_64
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name
           
+          # macOS Intel
           cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
+          
+          # macOS ARM64
           cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
           
-          # List what we're releasing
-          echo "Release files:"
-          ls -la release-files/
+          # Make binaries executable
+          chmod +x release-files/shimmy*
+          
+          # Show file sizes and info
+          echo "Release files with sizes:"
+          ls -lah release-files/
+          
+          echo "Binary feature sets:"
+          echo "  shimmy-linux-x86_64: SafeTensors + llama.cpp"
+          echo "  shimmy-linux-arm64: SafeTensors only (fast compilation)"
+          echo "  shimmy-windows-x86_64.exe: SafeTensors + llama.cpp"  
+          echo "  shimmy-macos-intel: SafeTensors + llama.cpp"
+          echo "  shimmy-macos-arm64: SafeTensors + llama.cpp"
           
       - name: Create release
         env:
@@ -102,4 +154,25 @@ jobs:
           gh release create ${{ github.ref_name }} \
             release-files/* \
             --title "Shimmy ${{ github.ref_name }}" \
-            --generate-notes
+            --notes "Cross-platform binaries with SafeTensors support:
+            
+            **Download the right binary for your platform:**
+            - **Linux x86_64**: \`shimmy-linux-x86_64\` (SafeTensors + llama.cpp)
+            - **Linux ARM64**: \`shimmy-linux-arm64\` (SafeTensors only, faster compilation)
+            - **Windows x86_64**: \`shimmy-windows-x86_64.exe\` (SafeTensors + llama.cpp)
+            - **macOS Intel**: \`shimmy-macos-intel\` (SafeTensors + llama.cpp)
+            - **macOS Apple Silicon**: \`shimmy-macos-arm64\` (SafeTensors + llama.cpp)
+            
+            All binaries include native SafeTensors support with zero Python dependencies.
+            
+            **Quick Start:**
+            \`\`\`bash
+            # Make executable (Linux/macOS)
+            chmod +x shimmy-*
+            
+            # Test the binary
+            ./shimmy-* --version
+            
+            # Start server
+            ./shimmy-* serve --bind 0.0.0.0:11434
+            \`\`\`"

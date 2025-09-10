@@ -1,35 +1,21 @@
-name: Feature Request
-description: Suggest an idea for Shimmy
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for Shimmy
 title: "[Feature]: "
-labels: ["enhancement"]
-assignees:
-  - Michael-A-Kuykendall
+labels: ["enhancement", "needs-triage"]
+assignees: ["Michael-A-Kuykendall"]
 
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for suggesting a feature! Please check our [ROADMAP.md](../ROADMAP.md) first to see if it's already planned.
-
-  - type: checkboxes
-    id: alignment
-    attributes:
-      label: Feature Alignment
-      description: Does this feature align with Shimmy's philosophy?
-      options:
-        - label: This feature maintains the lightweight (~5MB) binary target
-          required: true
-        - label: This feature supports zero-config, invisible infrastructure
-          required: true
-        - label: This feature enhances OpenAI API compatibility
-          required: true
+        Thanks for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
 
   - type: textarea
     id: problem
     attributes:
-      label: Problem Description
-      description: What problem does this feature solve?
-      placeholder: Describe the pain point this would address
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
     validations:
       required: true
 
@@ -37,8 +23,8 @@ body:
     id: solution
     attributes:
       label: Proposed Solution
-      description: Describe your ideal solution
-      placeholder: What would you like to happen?
+      description: Describe the solution you'd like
+      placeholder: A clear and concise description of what you want to happen.
     validations:
       required: true
 
@@ -46,25 +32,96 @@ body:
     id: alternatives
     attributes:
       label: Alternatives Considered
-      description: What other approaches have you considered?
+      description: Describe alternatives you've considered
+      placeholder: A clear and concise description of any alternative solutions or features you've considered.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What category does this feature fall into?
+      options:
+        - API functionality
+        - Model support (new formats, engines)
+        - Performance optimization
+        - Developer experience
+        - Documentation
+        - Deployment/infrastructure
+        - CLI interface
+        - Configuration/settings
+        - Other (specify in description)
     validations:
-      required: false
+      required: true
 
   - type: dropdown
     id: priority
     attributes:
       label: Priority
-      description: How important is this to you?
+      description: How important is this feature to you?
       options:
-        - Nice to have
-        - Would be helpful
-        - Important for my use case
-        - Critical/blocking
+        - Low - Nice to have
+        - Medium - Would improve workflow
+        - High - Blocking current use case
+        - Critical - Cannot use Shimmy without this
     validations:
       required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe your specific use case for this feature
+      placeholder: |
+        Explain how you would use this feature in practice:
+        - What are you trying to accomplish?
+        - What is your current workflow?
+        - How would this feature improve it?
+
+  - type: textarea
+    id: technical-details
+    attributes:
+      label: Technical Details (optional)
+      description: Any technical implementation details or constraints
+      placeholder: |
+        If you have technical knowledge, please share:
+        - API design suggestions
+        - Implementation approaches
+        - Performance considerations
+        - Compatibility requirements
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples
+      description: Provide examples of how this feature would work
+      placeholder: |
+        Show what the feature would look like:
+        - API endpoints and payloads
+        - Command line usage
+        - Configuration options
+        - Code examples
+      render: json
+
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: Implementation
+      description: Are you willing to help implement this feature?
+      options:
+        - label: I am willing to submit a pull request for this feature
+          required: false
+        - label: I can help with testing this feature
+          required: false
+        - label: I can help with documentation for this feature
+          required: false
 
   - type: textarea
     id: additional-context
     attributes:
       label: Additional Context
-      description: Add any other context, screenshots, or examples
+      description: Add any other context or screenshots about the feature request here
+      placeholder: |
+        - Links to similar features in other tools
+        - References to specifications or standards
+        - Screenshots or mockups
+        - Related discussions or issues
