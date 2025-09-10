@@ -116,3 +116,4 @@ pub mod huggingface;
 pub mod universal;
 
 pub mod adapter;
+pub mod safetensors_native;
