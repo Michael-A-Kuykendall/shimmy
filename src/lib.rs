@@ -1,6 +1,7 @@
 pub mod api;
 pub mod api_errors;
 pub mod auto_discovery;
+pub mod cache;
 pub mod cli;
 pub mod discovery;
 pub mod engine;
