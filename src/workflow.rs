@@ -2,46 +2,64 @@
 // Generated at: 2025-09-10 14:29:22
 // Rules matched: 4 test patterns
 
-package src
+use crate::workflow::{execute_workflow, calculate_execution_order, substitute_variables};
 
-import (
-	"testing"
-)
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-// Rule: rust_result_err - Functions returning Result need Err case tests
-#[test]
-fn execute_workflow_error_case() {
-	// Test error case handling
-	let result = execute_workflow( /* TODO: add params that return Err */ );
-	assert!(result.is_err(), "Function should return Err for invalid input");
+    // Rule: rust_result_err - Functions returning Result need Err case tests
+    #[test]
+    fn execute_workflow_error_case() {
+        // Test error case handling with invalid workflow
+        let empty_workflow = vec![];
+        let result = execute_workflow(&empty_workflow);
+        assert!(result.is_err(), "Function should return Err for empty workflow");
+    }
+
+    // Rule: rust_result_err - Functions returning Result need Err case tests
+    #[test]
+    fn calculate_execution_order_error_case() {
+        // Test error case handling with circular dependencies
+        let circular_deps = vec![
+            ("step1".to_string(), vec!["step2".to_string()]),
+            ("step2".to_string(), vec!["step1".to_string()]),
+        ];
+        let result = calculate_execution_order(&circular_deps);
+        assert!(result.is_err(), "Function should return Err for circular dependencies");
+    }
+
+    // Rule: rust_result_err - Functions returning Result need Err case tests
+    #[test]
+    fn substitute_variables_error_case() {
+        // Test error case handling with undefined variables
+        let template = "Hello ${undefined_var}";
+        let variables = std::collections::HashMap::new();
+        let result = substitute_variables(template, &variables);
+        assert!(result.is_err(), "Function should return Err for undefined variables");
+    }
+
+    // Rule: rust_empty_str - Functions accepting &str need empty string tests
+    #[test]
+    fn substitute_variables_empty_template() {
+        // Test empty string template case
+        let variables = std::collections::HashMap::new();
+        let result = substitute_variables("", &variables);
+        match result {
+            Ok(output) => assert_eq!(output, "", "Empty template should return empty string"),
+            Err(_) => panic!("Empty template should not fail"),
+        }
+    }
+
+    #[test]
+    fn substitute_variables_no_variables() {
+        // Test template with no variable placeholders
+        let variables = std::collections::HashMap::new();
+        let template = "Hello World";
+        let result = substitute_variables(template, &variables);
+        match result {
+            Ok(output) => assert_eq!(output, "Hello World", "Template without variables should pass through"),
+            Err(_) => panic!("Template without variables should not fail"),
+        }
+    }
 }
-
-
-// Rule: rust_result_err - Functions returning Result need Err case tests
-#[test]
-fn calculate_execution_order_error_case() {
-	// Test error case handling
-	let result = calculate_execution_order( /* TODO: add params that return Err */ );
-	assert!(result.is_err(), "Function should return Err for invalid input");
-}
-
-
-// Rule: rust_result_err - Functions returning Result need Err case tests
-#[test]
-fn substitute_variables_error_case() {
-	// Test error case handling
-	let result = substitute_variables( /* TODO: add params that return Err */ );
-	assert!(result.is_err(), "Function should return Err for invalid input");
-}
-
-
-// Rule: rust_empty_str - Functions accepting &str need empty string tests
-// Generated test for rule: rust_empty_str
-// Functions accepting &str need empty string tests
-func Testsubstitute_variables_edge_cases(t *testing.T) {
-	// TODO: Implement test logic for substitute_variables
-	// Rule: Functions accepting &str need empty string tests
-	// Generated at: 2025-09-10 14:29:22
-}
-
-

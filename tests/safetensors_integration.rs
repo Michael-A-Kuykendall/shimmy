@@ -2,28 +2,39 @@
 // Generated at: 2025-09-10 14:29:22
 // Rules matched: 2 test patterns
 
-package tests
+use std::path::Path;
+use crate::test_utils::create_test_safetensors;
 
-import (
-	"testing"
-)
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-// Rule: rust_result_err - Functions returning Result need Err case tests
-#[test]
-fn create_test_safetensors_error_case() {
-	// Test error case handling
-	let result = create_test_safetensors( /* TODO: add params that return Err */ );
-	assert!(result.is_err(), "Function should return Err for invalid input");
+    // Rule: rust_result_err - Functions returning Result need Err case tests
+    #[test]
+    fn create_test_safetensors_error_case() {
+        // Test error case handling with invalid path
+        let result = create_test_safetensors("/nonexistent/path/test.safetensors", &[]);
+        assert!(result.is_err(), "Function should return Err for invalid path");
+    }
+
+    // Rule: rust_empty_str - Functions accepting &str need empty string tests
+    #[test]
+    fn create_test_safetensors_empty_path() {
+        // Test empty string path case
+        let result = create_test_safetensors("", &[]);
+        assert!(result.is_err(), "Function should return Err for empty path");
+    }
+
+    #[test]
+    fn create_test_safetensors_empty_data() {
+        // Test with empty data array
+        let temp_path = "/tmp/test_empty.safetensors";
+        let result = create_test_safetensors(temp_path, &[]);
+        // This might succeed or fail depending on implementation
+        // The test ensures the function handles empty data gracefully
+        match result {
+            Ok(_) => println!("Empty data handled successfully"),
+            Err(e) => println!("Empty data rejected with error: {}", e),
+        }
+    }
 }
-
-
-// Rule: rust_empty_str - Functions accepting &str need empty string tests
-// Generated test for rule: rust_empty_str
-// Functions accepting &str need empty string tests
-func Testcreate_test_safetensors_edge_cases(t *testing.T) {
-	// TODO: Implement test logic for create_test_safetensors
-	// Rule: Functions accepting &str need empty string tests
-	// Generated at: 2025-09-10 14:29:22
-}
-
-
