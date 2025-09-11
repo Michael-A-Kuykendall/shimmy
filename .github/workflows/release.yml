@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false  # Don't cancel other jobs if one fails
       matrix:
         include:
           # Linux builds
