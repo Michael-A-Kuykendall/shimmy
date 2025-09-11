@@ -21,7 +21,7 @@ exclude = [
 ]
 
 [features]
-default = ["huggingface", "llama"]
+default = ["huggingface"]  # llama removed from default due to macOS ARM64 i8mm issues
 # Engine backends  
 llama = ["dep:llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
