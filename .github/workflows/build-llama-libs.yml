@@ -1,0 +1,100 @@
+name: Build LLAMA.cpp Libraries
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  push:
+    paths:
+      - '.github/workflows/build-llama-libs.yml'  # Only run when this file changes
+
+jobs:
+  build-libs:
+    strategy:
+      matrix:
+        include:
+          # Linux builds
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact-name: libllama-linux-x86_64.a
+            
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact-name: libllama-linux-arm64.a
+            cross: true
+            
+          # macOS builds  
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact-name: libllama-macos-intel.a
+            
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact-name: libllama-macos-arm64.a
+            
+          # Windows builds
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact-name: llama-windows-x86_64.lib
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkg-config
+          
+      - name: Install system dependencies (Linux ARM64)
+        if: runner.os == 'Linux' && matrix.cross
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+          
+      - name: Install cross (for ARM64 Linux)
+        if: matrix.cross
+        run: cargo install cross
+        
+      - name: Build with llama feature (native)
+        if: '!matrix.cross'
+        run: cargo build --release --target ${{ matrix.target }} --features llama
+        env:
+          CARGO_INCREMENTAL: 0
+          CARGO_TERM_COLOR: always
+          
+      - name: Build with llama feature (cross-compiled)
+        if: matrix.cross
+        run: cross build --release --target ${{ matrix.target }} --features llama
+        env:
+          CARGO_INCREMENTAL: 0
+          CARGO_TERM_COLOR: always
+          
+      - name: Extract built library (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          # Find the built llama library
+          find target/${{ matrix.target }}/release/build -name "libllama.a" -exec cp {} ${{ matrix.artifact-name }} \;
+          ls -la ${{ matrix.artifact-name }}
+          
+      - name: Extract built library (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Find the built llama library  
+          Get-ChildItem -Path "target/${{ matrix.target }}/release/build" -Recurse -Name "llama.lib" | ForEach-Object { Copy-Item "target/${{ matrix.target }}/release/build/$_" "${{ matrix.artifact-name }}" }
+          Get-Item "${{ matrix.artifact-name }}"
+          
+      - name: Upload library artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-name }}
+          retention-days: 90
