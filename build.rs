@@ -31,8 +31,10 @@ fn main() {
             println!("cargo:rustc-link-search=native={}", lib_dir);
             println!("cargo:rustc-link-lib=static=llama");
             
-            // Set environment variable to tell llama-cpp-sys-2 to skip building
+            // Set environment variables to tell llama-cpp-sys-2 to skip building
             println!("cargo:rustc-env=LLAMA_CPP_PREBUILT=1");
+            println!("cargo:rustc-env=LLAMA_CPP_LIB_DIR={}", lib_dir);
+            println!("cargo:rustc-env=LLAMA_CPP_SKIP_BUILD=1");
         } else {
             println!("cargo:warning=Pre-built library not found: {}, falling back to compilation", lib_path.display());
         }
