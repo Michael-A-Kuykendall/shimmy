@@ -57,18 +57,18 @@ impl ModelCache {
     pub fn new() -> Result<Self> {
         let cache_dir = Self::get_cache_dir()?;
         fs::create_dir_all(&cache_dir)?;
-        
+
         let mut cache = Self {
             cache_dir,
             cache: HashMap::new(),
         };
-        
+
         // Load existing cache entries
         cache.load_cache()?;
-        
+
         Ok(cache)
     }
-    
+
     /// Get the cache directory path
     fn get_cache_dir() -> Result<PathBuf> {
         // Use platform-appropriate cache directory
@@ -78,17 +78,17 @@ impl ModelCache {
                 .map_err(|_| anyhow!("APPDATA environment variable not found"))?;
             PathBuf::from(appdata).join("shimmy").join("cache")
         };
-        
+
         #[cfg(not(target_os = "windows"))]
         let cache_dir = {
             let home = std::env::var("HOME")
                 .map_err(|_| anyhow!("HOME environment variable not found"))?;
             PathBuf::from(home).join(".cache").join("shimmy")
         };
-        
+
         Ok(cache_dir)
     }
-    
+
     /// Get cached metadata for a model, if valid
     pub fn get(&self, model_path: &Path) -> Option<&ModelMetadata> {
         if let Some(metadata) = self.cache.get(model_path) {
@@ -99,21 +99,21 @@ impl ModelCache {
         }
         None
     }
-    
+
     /// Store metadata in cache
     pub fn set(&mut self, metadata: ModelMetadata) -> Result<()> {
         let cache_file = self.get_cache_file_path(&metadata.model_path);
-        
+
         // Serialize and save to disk
         let cache_data = serde_json::to_string_pretty(&metadata)?;
         fs::write(&cache_file, cache_data)?;
-        
+
         // Update in-memory cache
         self.cache.insert(metadata.model_path.clone(), metadata);
-        
+
         Ok(())
     }
-    
+
     /// Check if cached metadata is still valid
     fn is_cache_valid(&self, model_path: &Path, metadata: &ModelMetadata) -> bool {
         if let Ok(file_metadata) = fs::metadata(model_path) {
@@ -123,7 +123,7 @@ impl ModelCache {
                     let cached_modified = metadata.modified_time;
                     let cached_size = metadata.file_size;
                     let current_size = file_metadata.len();
-                    
+
                     // Cache is valid if file size and modification time match
                     return current_modified == cached_modified && current_size == cached_size;
                 }
@@ -131,17 +131,17 @@ impl ModelCache {
         }
         false
     }
-    
+
     /// Load cache entries from disk
     fn load_cache(&mut self) -> Result<()> {
         if !self.cache_dir.exists() {
             return Ok(());
         }
-        
+
         for entry in fs::read_dir(&self.cache_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 if let Ok(cache_data) = fs::read_to_string(&path) {
                     if let Ok(metadata) = serde_json::from_str::<ModelMetadata>(&cache_data) {
@@ -156,24 +156,24 @@ impl ModelCache {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Get cache file path for a model
     fn get_cache_file_path(&self, model_path: &Path) -> PathBuf {
         // Create a safe filename from the model path
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         model_path.hash(&mut hasher);
         let hash = hasher.finish();
-        
+
         self.cache_dir.join(format!("model_{:x}.json", hash))
     }
-    
+
     /// Clear all cached metadata
     pub fn clear(&mut self) -> Result<()> {
         self.cache.clear();
-        
+
         if self.cache_dir.exists() {
             for entry in fs::read_dir(&self.cache_dir)? {
                 let entry = entry?;
@@ -182,10 +182,10 @@ impl ModelCache {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Get cache statistics
     pub fn stats(&self) -> CacheStats {
         CacheStats {
