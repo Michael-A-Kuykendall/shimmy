@@ -211,7 +211,7 @@ impl WorkflowEngine {
         })
     }
 
-    fn calculate_execution_order(&self, steps: &[WorkflowStep]) -> Result<Vec<String>> {
+    pub fn calculate_execution_order(&self, steps: &[WorkflowStep]) -> Result<Vec<String>> {
         let mut order = Vec::new();
         let mut visited = std::collections::HashSet::new();
         let mut temp_visited = std::collections::HashSet::new();
@@ -258,7 +258,7 @@ impl WorkflowEngine {
         Ok(())
     }
 
-    fn substitute_variables(&self, text: &str, context: &HashMap<String, serde_json::Value>) -> Result<String> {
+    pub fn substitute_variables(&self, text: &str, context: &HashMap<String, serde_json::Value>) -> Result<String> {
         let mut result = text.to_string();
         
         // Simple variable substitution: {{variable_name}}

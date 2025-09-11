@@ -524,7 +524,7 @@ mod tests {
         let mut registry = Registry::default();
         registry.register(ModelEntry {
             name: "stream-test".to_string(),
-            base_path: "./test.gguf".into(),
+            base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("chatml".into()),
             ctx_len: Some(2048),
@@ -559,7 +559,7 @@ mod tests {
         let mut registry = Registry::default();
         registry.register(ModelEntry {
             name: "messages-test".to_string(),
-            base_path: "./test.gguf".into(),
+            base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("llama3".into()),
             ctx_len: Some(2048),
@@ -666,7 +666,7 @@ mod tests {
         let mut registry = Registry::default();
         registry.register(ModelEntry {
             name: "ws-test".to_string(),
-            base_path: "./test.gguf".into(),
+            base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("chatml".into()),
             ctx_len: Some(2048),
