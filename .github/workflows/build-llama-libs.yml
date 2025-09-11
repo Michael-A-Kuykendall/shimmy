@@ -53,11 +53,11 @@ jobs:
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          # Check if cmake is already installed
-          if ! command -v cmake &> /dev/null; then
-            brew install cmake
+          # Handle cmake installation conflicts
+          if command -v cmake &> /dev/null; then
+            echo "cmake already installed at: $(which cmake)"
           else
-            echo "cmake already installed"
+            brew install cmake
           fi
           
       - name: Install Rust
