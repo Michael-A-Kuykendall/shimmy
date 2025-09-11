@@ -24,24 +24,30 @@ impl HuggingFaceEngine {
             python_path: "C:/Python311/python.exe".to_string(),
         }
     }
-    
 }
 
 #[async_trait]
 impl UniversalEngine for HuggingFaceEngine {
     async fn load(&self, spec: &UniversalModelSpec) -> Result<Box<dyn UniversalModel>> {
         match &spec.backend {
-            ModelBackend::HuggingFace { base_model_id, peft_path, use_local } => {
+            ModelBackend::HuggingFace {
+                base_model_id,
+                peft_path,
+                use_local,
+            } => {
                 let model = HuggingFaceModel::load(
                     &self.python_path,
                     base_model_id,
                     peft_path.as_deref(),
                     *use_local,
                     &spec.device,
-                ).await?;
+                )
+                .await?;
                 Ok(Box::new(model))
             }
-            _ => Err(anyhow!("HuggingFaceEngine only supports HuggingFace backend")),
+            _ => Err(anyhow!(
+                "HuggingFaceEngine only supports HuggingFace backend"
+            )),
         }
     }
 }
@@ -109,9 +115,7 @@ except Exception as e:
             ),
         ];
 
-        let verify_output = Command::new(python_path)
-            .args(&verify_cmd)
-            .output()?;
+        let verify_output = Command::new(python_path).args(&verify_cmd).output()?;
 
         if !verify_output.status.success() {
             return Err(anyhow!(
@@ -231,7 +235,7 @@ model = PeftModel.from_pretrained(model, '{}')"#,
 
         let result = String::from_utf8_lossy(&output.stdout);
         let lines: Vec<&str> = result.lines().collect();
-        
+
         // Find the actual generated text (after loading messages)
         let generated_text = lines
             .iter()
@@ -254,7 +258,7 @@ model = PeftModel.from_pretrained(model, '{}')"#,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engine::{ModelBackend, UniversalModelSpec, GenOptions};
+    use crate::engine::{GenOptions, ModelBackend, UniversalModelSpec};
 
     #[test]
     fn test_default_creates_new_instance() {
@@ -312,7 +316,10 @@ mod tests {
         // Either succeeds or fails with Python dependency error
         if let Err(e) = result {
             let error_msg = format!("{}", e);
-            assert!(error_msg.contains("Python dependencies") || error_msg.contains("Failed to load HuggingFace model"));
+            assert!(
+                error_msg.contains("Python dependencies")
+                    || error_msg.contains("Failed to load HuggingFace model")
+            );
         }
     }
 
@@ -339,7 +346,8 @@ mod tests {
             None,
             true,
             "cpu",
-        ).await;
+        )
+        .await;
 
         assert!(result.is_err());
     }
@@ -370,7 +378,7 @@ mod tests {
     #[tokio::test]
     async fn test_full_workflow_error_cases() {
         let engine = HuggingFaceEngine::new();
-        
+
         // Test 1: Unsupported backend
         let wrong_backend_spec = UniversalModelSpec {
             name: "test_model".to_string(),
@@ -383,7 +391,7 @@ mod tests {
             ctx_len: 4096,
             n_threads: None,
         };
-        
+
         let result = engine.load(&wrong_backend_spec).await;
         assert!(result.is_err());
 
@@ -400,7 +408,7 @@ mod tests {
             ctx_len: 4096,
             n_threads: None,
         };
-        
+
         let result = engine.load(&valid_spec).await;
         // Should error due to missing Python deps or invalid model
         assert!(result.is_err());
