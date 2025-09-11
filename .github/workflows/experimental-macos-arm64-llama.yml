@@ -1,0 +1,30 @@
+name: Experimental macOS ARM64 llama.cpp
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  
+jobs:
+  # Experimental job - not required for releases
+  macos-arm64-llama-experimental:
+    runs-on: macos-14  # Explicit Apple Silicon runner
+    continue-on-error: true  # Don't fail workflow if this fails
+    env:
+      # Forward individual CMAKE_* vars that build.rs actually processes
+      CMAKE_C_FLAGS: "-mno-i8mm"
+      CMAKE_CXX_FLAGS: "-mno-i8mm" 
+      CMAKE_OSX_ARCHITECTURES: "arm64"
+      # Keep LTO off to avoid inline conflicts
+      CARGO_PROFILE_RELEASE_LTO: "off"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+      - name: Test experimental llama build
+        run: cargo build --release --target aarch64-apple-darwin --no-default-features --features huggingface,llama
+      - name: Verify binary if successful
+        if: success()
+        run: |
+          ls -la target/aarch64-apple-darwin/release/
+          file target/aarch64-apple-darwin/release/shimmy
+          echo "SUCCESS: macOS ARM64 llama.cpp compilation worked with -mno-i8mm flags"

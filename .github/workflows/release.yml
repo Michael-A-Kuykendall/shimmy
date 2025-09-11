@@ -46,8 +46,7 @@ jobs:
             target: aarch64-apple-darwin 
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
-            features: "huggingface,llama"
-            cmake_args: "-DGGML_NATIVE=OFF -DGGML_CPU_ARM_ARCH=apple-m1 -DGGML_METAL=ON"
+            features: "huggingface"  # llama disabled due to i8mm compilation issues
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -79,11 +78,7 @@ jobs:
         if: matrix.cross == true
         run: cargo install cross --git https://github.com/cross-rs/cross
           
-      - name: Set CMAKE args for macOS ARM64
-        if: matrix.cmake_args
-        run: |
-          echo "CMAKE_ARGS=${{ matrix.cmake_args }}" >> $GITHUB_ENV
-          echo "FORCE_CMAKE=1" >> $GITHUB_ENV
+# CMAKE args no longer needed - macOS ARM64 uses SafeTensors only
         
       - name: Build binary (native)
         if: matrix.cross != true
