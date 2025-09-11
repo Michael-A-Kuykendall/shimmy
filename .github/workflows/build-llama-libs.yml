@@ -53,7 +53,12 @@ jobs:
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake
+          # Check if cmake is already installed
+          if ! command -v cmake &> /dev/null; then
+            brew install cmake
+          else
+            echo "cmake already installed"
+          fi
           
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
