@@ -1061,7 +1061,7 @@ checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 [[package]]
 name = "llama-cpp-2"
 version = "0.1.122"
-source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-macos-arm64-i8mm#0426747d7f9d86a9bf570fa9ca9531fa9d34f11c"
+source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-macos-arm64-i8mm#15d76c5c7b5e14b32cfd9a7935a02fbf3531e083"
 dependencies = [
  "enumflags2",
  "llama-cpp-sys-2",
@@ -1073,7 +1073,7 @@ dependencies = [
 [[package]]
 name = "llama-cpp-sys-2"
 version = "0.1.122"
-source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-macos-arm64-i8mm#0426747d7f9d86a9bf570fa9ca9531fa9d34f11c"
+source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-macos-arm64-i8mm#15d76c5c7b5e14b32cfd9a7935a02fbf3531e083"
 dependencies = [
  "bindgen",
  "cc",
