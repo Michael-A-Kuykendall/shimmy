@@ -377,7 +377,7 @@ mod tests {
         // Add a test model to get past the model not found check (line 106)
         registry.register(ModelEntry {
             name: "test-streaming".to_string(),
-            base_path: "./test.gguf".into(),
+            base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("chatml".into()),
             ctx_len: Some(2048),
@@ -412,7 +412,7 @@ mod tests {
         // Add a test model to get past the model not found check
         registry.register(ModelEntry {
             name: "test-non-streaming".to_string(),
-            base_path: "./test.gguf".into(),
+            base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("llama3".into()),
             ctx_len: Some(2048),
@@ -453,7 +453,7 @@ mod tests {
         // Test ChatML template selection
         let spec_chatml = crate::engine::ModelSpec {
             name: "test-chatml".to_string(),
-            base_path: "./test.gguf".into(),
+            base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("chatml".to_string()),
             ctx_len: 2048,
@@ -470,7 +470,7 @@ mod tests {
         // Test Llama3 template selection
         let spec_llama3 = crate::engine::ModelSpec {
             name: "test-llama3".to_string(),
-            base_path: "./test.gguf".into(),
+            base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("llama3".to_string()),
             ctx_len: 2048,
@@ -487,7 +487,7 @@ mod tests {
         // Test default template selection
         let spec_default = crate::engine::ModelSpec {
             name: "test-default".to_string(),
-            base_path: "./test.gguf".into(),
+            base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("unknown".to_string()),
             ctx_len: 2048,
