@@ -11,7 +11,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(./target/release/shimmy.exe serve:*)",
       "Bash(curl:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cargo check:*)"
     ],
     "deny": [],
     "ask": [],
