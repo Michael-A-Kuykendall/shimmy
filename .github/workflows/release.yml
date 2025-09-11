@@ -46,7 +46,7 @@ jobs:
             target: aarch64-apple-darwin 
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
-            features: "huggingface"  # llama disabled due to i8mm compilation issues
+            features: "huggingface,llama"  # i8mm issues fixed via forked llama-cpp-2
 
     runs-on: ${{ matrix.os }}
     steps:

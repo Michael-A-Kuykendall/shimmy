@@ -21,7 +21,7 @@ exclude = [
 ]
 
 [features]
-default = ["huggingface"]  # llama removed from default due to macOS ARM64 i8mm issues
+default = ["huggingface", "llama"]  # macOS ARM64 i8mm issues fixed via forked llama-cpp-2
 # Engine backends  
 llama = ["dep:llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
@@ -56,8 +56,12 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4"] }
 
-# llama.cpp bindings (optional)
+# llama.cpp bindings (optional) - using forked version with macOS ARM64 i8mm fix
 llama-cpp-2 = { version = "0.1.118", optional = true, default-features = false }
+
+# Use forked llama-cpp-2 with macOS ARM64 i8mm compatibility fix
+[patch.crates-io]
+llama-cpp-2 = { git = "https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git", branch = "fix-macos-arm64-i8mm", package = "llama-cpp-2" }
 
 [dev-dependencies]
 reqwest = { version = "0.11", features = ["json"] }
