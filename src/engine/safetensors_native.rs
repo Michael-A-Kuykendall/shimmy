@@ -10,8 +10,8 @@ use std::path::{Path, PathBuf};
 use std::sync::RwLock;
 use tracing::{info, debug, warn};
 
-use super::super::cache::{ModelCache, ModelMetadata};
-use super::super::cache::model_cache;
+// use crate::cache::{ModelCache, ModelMetadata};
+// use crate::cache::model_cache;
 
 use super::{GenOptions, LoadedModel, ModelSpec, InferenceEngine};
 
@@ -21,7 +21,7 @@ use memmap2::MmapOptions;
 #[derive(Debug)]
 pub struct SafeTensorsEngine {
     // Pure Rust implementation - no external dependencies
-    cache: RwLock<ModelCache>,
+    // cache: RwLock<ModelCache>,
     use_mmap: bool, // Enable memory-mapped loading for large models
 }
 
@@ -33,12 +33,12 @@ impl Default for SafeTensorsEngine {
 
 impl SafeTensorsEngine {
     pub fn new() -> Self {
-        let cache = ModelCache::new().unwrap_or_else(|e| {
-            warn!("Failed to initialize model cache: {}. Running without cache.", e);
-            ModelCache::default()
-        });
+        // let cache = ModelCache::new().unwrap_or_else(|e| {
+        //     warn!("Failed to initialize model cache: {}. Running without cache.", e);
+        //     ModelCache::default()
+        // });
         Self {
-            cache: RwLock::new(cache),
+            // cache: RwLock::new(cache),
             use_mmap: true, // Enable memory-mapped loading by default
         }
     }
@@ -98,17 +98,18 @@ impl InferenceEngine for SafeTensorsEngine {
         
         // Check cache first with read lock
         let cached_metadata = {
-            let cache = self.cache.read().unwrap();
-            cache.get(&spec.base_path).cloned()
+            // let cache = self.cache.read().unwrap();
+            // cache.get(&spec.base_path).cloned()
+            None::<()> // Temporarily disable cache
         };
         
-        let model = if let Some(metadata) = cached_metadata {
+        let model = /* if let Some(metadata) = cached_metadata {
             info!("Found cached metadata for {}", spec.base_path.display());
             SafeTensorsModel::load_from_cached_metadata(spec, &metadata, self.use_mmap).await?
-        } else {
-            info!("No cache found, loading and parsing model file");
+        } else */ {
+            info!("Loading model file directly (cache disabled)");
             // Load model and cache metadata
-            let model = SafeTensorsModel::load_and_cache(spec, &self.cache, self.use_mmap).await?;
+            let model = SafeTensorsModel::load_and_cache(spec, self.use_mmap).await?;
             model
         };
         Ok(Box::new(model))
@@ -158,7 +159,7 @@ struct SimpleTokenizer {
 
 impl SafeTensorsModel {
     /// Load model and cache metadata (for new models not in cache)
-    async fn load_and_cache(spec: &ModelSpec, cache: &RwLock<ModelCache>, use_mmap: bool) -> Result<Self> {
+    async fn load_and_cache(spec: &ModelSpec, /* cache: &RwLock<ModelCache>, */ use_mmap: bool) -> Result<Self> {
         info!("Reading SafeTensors file: {}", spec.base_path.display());
         
         // Choose loading strategy based on file size and mmap setting
@@ -182,27 +183,27 @@ impl SafeTensorsModel {
         debug!("SafeTensors loaded with {} tensors", tensors.len());
         
         // Extract metadata for caching
-        let metadata = model_cache::extract_safetensors_metadata(&spec.base_path)?;
+        // let metadata = model_cache::extract_safetensors_metadata(&spec.base_path)?;
         
         // Cache the metadata for future loads
-        {
-            let mut cache_guard = cache.write().unwrap();
-            if let Err(e) = cache_guard.set(metadata.clone()) {
-                warn!("Failed to cache metadata: {}", e);
-            }
-        } // Drop the lock before async operations
+        // {
+        //     let mut cache_guard = cache.write().unwrap();
+        //     if let Err(e) = cache_guard.set(metadata.clone()) {
+        //         warn!("Failed to cache metadata: {}", e);
+        //     }
+        // } // Drop the lock before async operations
         
         // Load configuration from cached metadata if available, otherwise parse
-        let config = if let Some(config_data) = &metadata.config {
+        let config = /* if let Some(config_data) = &metadata.config {
             Self::parse_config_from_json(config_data)?
-        } else {
+        } else */ {
             Self::load_config(&spec.base_path, &tensors).await?
         };
         
         // Load tokenizer from cached metadata if available, otherwise parse
-        let tokenizer = if let Some(tokenizer_data) = &metadata.tokenizer {
+        let tokenizer = /* if let Some(tokenizer_data) = &metadata.tokenizer {
             Self::parse_tokenizer_from_json(tokenizer_data)?
-        } else {
+        } else */ {
             Self::load_tokenizer(&spec.base_path).await?
         };
         
@@ -215,7 +216,7 @@ impl SafeTensorsModel {
     }
     
     /// Load model from cached metadata (much faster)
-    async fn load_from_cached_metadata(spec: &ModelSpec, metadata: &ModelMetadata, use_mmap: bool) -> Result<Self> {
+    /* async fn load_from_cached_metadata(spec: &ModelSpec, metadata: &ModelMetadata, use_mmap: bool) -> Result<Self> {
         info!("Loading model from cached metadata");
         
         // Choose loading strategy based on file size and mmap setting
@@ -258,7 +259,7 @@ impl SafeTensorsModel {
             config,
             tokenizer,
         })
-    }
+    } */
     
     /// Parse configuration from cached JSON data
     fn parse_config_from_json(config_data: &serde_json::Value) -> Result<ModelConfig> {
