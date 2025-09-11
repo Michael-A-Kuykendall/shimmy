@@ -1,6 +1,6 @@
 // PUNCH-generated tests for workflow module
-use shimmy::workflow::{WorkflowEngine, WorkflowStep, WorkflowStepType};
 use shimmy::tools::ToolRegistry;
+use shimmy::workflow::{WorkflowEngine, WorkflowStep, WorkflowStepType};
 use std::collections::HashMap;
 
 #[cfg(test)]
@@ -10,7 +10,7 @@ mod tests {
     // Rule: rust_result_err - Functions returning Result need Err case tests
     #[test]
     fn execute_workflow_error_case() {
-        // Test error case handling with invalid workflow  
+        // Test error case handling with invalid workflow
         let engine = WorkflowEngine::new(ToolRegistry::new());
         let request = shimmy::workflow::WorkflowRequest {
             workflow: shimmy::workflow::Workflow {
@@ -23,17 +23,20 @@ mod tests {
             },
             context: HashMap::new(),
         };
-        
+
         let rt = tokio::runtime::Runtime::new().unwrap();
         let result = rt.block_on(engine.execute_workflow(request));
         // Empty workflow might succeed but requesting output from non-existent step should fail
         if result.is_ok() {
             let workflow_result = result.unwrap();
-            assert!(!workflow_result.success, "Workflow should fail with non-existent output step");
+            assert!(
+                !workflow_result.success,
+                "Workflow should fail with non-existent output step"
+            );
         }
     }
 
-    // Rule: rust_result_err - Functions returning Result need Err case tests  
+    // Rule: rust_result_err - Functions returning Result need Err case tests
     #[test]
     fn calculate_execution_order_error_case() {
         let engine = WorkflowEngine::new(ToolRegistry::new());
@@ -59,7 +62,10 @@ mod tests {
             },
         ];
         let result = engine.calculate_execution_order(&steps);
-        assert!(result.is_err(), "Function should return Err for circular dependencies");
+        assert!(
+            result.is_err(),
+            "Function should return Err for circular dependencies"
+        );
     }
 
     // Rule: rust_result_err - Functions returning Result need Err case tests
@@ -72,9 +78,15 @@ mod tests {
         let variables = HashMap::new();
         let result = engine.substitute_variables(template, &variables);
         // Current implementation just leaves undefined variables as-is
-        assert!(result.is_ok(), "Current implementation handles undefined variables gracefully");
+        assert!(
+            result.is_ok(),
+            "Current implementation handles undefined variables gracefully"
+        );
         let output = result.unwrap();
-        assert!(output.contains("{{undefined_var}}"), "Undefined variables should remain in output");
+        assert!(
+            output.contains("{{undefined_var}}"),
+            "Undefined variables should remain in output"
+        );
     }
 
     // Rule: rust_empty_str - Functions accepting &str need empty string tests
@@ -96,7 +108,10 @@ mod tests {
         let template = "Hello World";
         let result = engine.substitute_variables(template, &variables);
         match result {
-            Ok(output) => assert_eq!(output, "Hello World", "Template without variables should pass through"),
+            Ok(output) => assert_eq!(
+                output, "Hello World",
+                "Template without variables should pass through"
+            ),
             Err(_) => panic!("Template without variables should not fail"),
         }
     }

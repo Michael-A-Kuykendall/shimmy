@@ -37,62 +37,89 @@ impl InferenceEngineAdapter {
     fn select_backend(&self, spec: &ModelSpec) -> BackendChoice {
         // Check file extension and path patterns to determine optimal backend
         let path_str = spec.base_path.to_string_lossy();
-        
+
         // Check for SafeTensors files FIRST - native Rust implementation
         if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
             if ext == "safetensors" {
                 return BackendChoice::SafeTensors;
             }
         }
-        
+
         // Check for GGUF files by extension - these should use LlamaEngine
         if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
             if ext == "gguf" {
                 #[cfg(feature = "llama")]
-                { return BackendChoice::Llama; }
+                {
+                    return BackendChoice::Llama;
+                }
                 #[cfg(not(feature = "llama"))]
-                { 
+                {
                     // This shouldn't happen with default features, but handle gracefully
                     panic!("GGUF file detected but llama feature not enabled. Please install with --features llama");
                 }
             }
         }
-        
+
         // Check for Ollama blob files (GGUF files without extension)
-        if path_str.contains("ollama") && path_str.contains("blobs") && path_str.contains("sha256-") {
+        if path_str.contains("ollama") && path_str.contains("blobs") && path_str.contains("sha256-")
+        {
             #[cfg(feature = "llama")]
-            { return BackendChoice::Llama; }
+            {
+                return BackendChoice::Llama;
+            }
             #[cfg(not(feature = "llama"))]
-            { 
+            {
                 #[cfg(feature = "huggingface")]
-                { return BackendChoice::HuggingFace; }
+                {
+                    return BackendChoice::HuggingFace;
+                }
                 #[cfg(not(feature = "huggingface"))]
-                { panic!("Ollama blob detected but no backend enabled"); }
+                {
+                    panic!("Ollama blob detected but no backend enabled");
+                }
             }
         }
-        
+
         // Check for other patterns that indicate GGUF files
-        if path_str.contains(".gguf") || spec.name.contains("llama") || spec.name.contains("phi") || spec.name.contains("qwen") || spec.name.contains("gemma") || spec.name.contains("mistral") {
+        if path_str.contains(".gguf")
+            || spec.name.contains("llama")
+            || spec.name.contains("phi")
+            || spec.name.contains("qwen")
+            || spec.name.contains("gemma")
+            || spec.name.contains("mistral")
+        {
             #[cfg(feature = "llama")]
-            { return BackendChoice::Llama; }
+            {
+                return BackendChoice::Llama;
+            }
             #[cfg(not(feature = "llama"))]
-            { 
+            {
                 #[cfg(feature = "huggingface")]
-                { return BackendChoice::HuggingFace; }
+                {
+                    return BackendChoice::HuggingFace;
+                }
                 #[cfg(not(feature = "huggingface"))]
-                { panic!("GGUF model detected but no backend enabled"); }
+                {
+                    panic!("GGUF model detected but no backend enabled");
+                }
             }
         }
-        
+
         // Default to HuggingFace for other models
         #[cfg(feature = "huggingface")]
-        { BackendChoice::HuggingFace }
+        {
+            BackendChoice::HuggingFace
+        }
         #[cfg(not(feature = "huggingface"))]
-        { 
+        {
             #[cfg(feature = "llama")]
-            { BackendChoice::Llama }
+            {
+                BackendChoice::Llama
+            }
             #[cfg(not(feature = "llama"))]
-            { panic!("No backend features enabled. Please compile with --features llama or --features huggingface"); }
+            {
+                panic!("No backend features enabled. Please compile with --features llama or --features huggingface");
+            }
         }
     }
 }
@@ -115,11 +142,9 @@ impl InferenceEngine for InferenceEngineAdapter {
             BackendChoice::SafeTensors => {
                 // Use native SafeTensors engine - NO Python dependency!
                 self.safetensors_engine.load(spec).await
-            },
+            }
             #[cfg(feature = "llama")]
-            BackendChoice::Llama => {
-                self.llama_engine.load(spec).await
-            },
+            BackendChoice::Llama => self.llama_engine.load(spec).await,
             #[cfg(feature = "huggingface")]
             BackendChoice::HuggingFace => {
                 // Convert to UniversalModelSpec for huggingface backend (for HF model IDs)
@@ -136,8 +161,10 @@ impl InferenceEngine for InferenceEngineAdapter {
                     n_threads: spec.n_threads,
                 };
                 let universal_model = self.huggingface_engine.load(&universal_spec).await?;
-                Ok(Box::new(UniversalModelWrapper { model: universal_model }))
-            },
+                Ok(Box::new(UniversalModelWrapper {
+                    model: universal_model,
+                }))
+            }
         }
     }
 }
@@ -151,7 +178,12 @@ struct UniversalModelWrapper {
 #[cfg(feature = "huggingface")]
 #[async_trait]
 impl LoadedModel for UniversalModelWrapper {
-    async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String> {
+    async fn generate(
+        &self,
+        prompt: &str,
+        opts: GenOptions,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<String> {
         self.model.generate(prompt, opts, on_token).await
     }
 }

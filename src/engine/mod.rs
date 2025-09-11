@@ -16,7 +16,15 @@ pub struct GenOptions {
 
 impl Default for GenOptions {
     fn default() -> Self {
-        Self { max_tokens: 256, temperature: 0.7, top_p: 0.9, top_k: 40, repeat_penalty: 1.1, seed: None, stream: true }
+        Self {
+            max_tokens: 256,
+            temperature: 0.7,
+            top_p: 0.9,
+            top_k: 40,
+            repeat_penalty: 1.1,
+            seed: None,
+            stream: true,
+        }
     }
 }
 
@@ -29,14 +37,14 @@ pub enum ModelBackend {
         base_path: PathBuf,
         lora_path: Option<PathBuf>,
     },
-    
+
     // HuggingFace + PEFT (your personal models!)
     HuggingFace {
-        base_model_id: String,           // "microsoft/Phi-3-mini-4k-instruct"
-        peft_path: Option<PathBuf>,      // "./phi3-personal-h100-cloud"
-        use_local: bool,                 // Use cached vs download
+        base_model_id: String,      // "microsoft/Phi-3-mini-4k-instruct"
+        peft_path: Option<PathBuf>, // "./phi3-personal-h100-cloud"
+        use_local: bool,            // Use cached vs download
     },
-    
+
     // Pure Rust Candle (future)
     Candle {
         model_path: PathBuf,
@@ -44,14 +52,14 @@ pub enum ModelBackend {
     },
 }
 
-#[derive(Debug, Clone)]  
+#[derive(Debug, Clone)]
 #[cfg(feature = "huggingface")]
 pub struct UniversalModelSpec {
     pub name: String,
     pub backend: ModelBackend,
     pub template: Option<String>,
     pub ctx_len: usize,
-    pub device: String,                  // "cpu", "cuda", "metal"
+    pub device: String, // "cpu", "cuda", "metal"
     pub n_threads: Option<i32>,
 }
 
@@ -93,7 +101,12 @@ pub trait UniversalEngine: Send + Sync {
 #[async_trait]
 #[cfg(feature = "huggingface")]
 pub trait UniversalModel: Send + Sync {
-    async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String>;
+    async fn generate(
+        &self,
+        prompt: &str,
+        opts: GenOptions,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<String>;
 }
 
 // Legacy trait for backward compatibility
@@ -104,7 +117,12 @@ pub trait InferenceEngine: Send + Sync {
 
 #[async_trait]
 pub trait LoadedModel: Send + Sync {
-    async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String>;
+    async fn generate(
+        &self,
+        prompt: &str,
+        opts: GenOptions,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<String>;
 }
 
 pub mod llama;
@@ -112,7 +130,7 @@ pub mod llama;
 #[cfg(feature = "huggingface")]
 pub mod huggingface;
 
-#[cfg(feature = "huggingface")]  
+#[cfg(feature = "huggingface")]
 pub mod universal;
 
 pub mod adapter;

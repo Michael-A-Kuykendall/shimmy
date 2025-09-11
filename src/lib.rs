@@ -20,8 +20,8 @@ pub mod tools;
 pub mod util {
     pub mod diag;
 }
-pub mod workflow;
 pub mod invariant_ppt;
+pub mod workflow;
 
 #[cfg(test)]
 pub mod tests;

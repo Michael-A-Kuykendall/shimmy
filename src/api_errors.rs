@@ -1,6 +1,6 @@
 // Improved API error handling
 use axum::{http::StatusCode, response::Json};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct ErrorResponse {
@@ -29,10 +29,9 @@ impl From<ApiError> for (StatusCode, Json<ErrorResponse>) {
                     error: format!("Generation failed: {}", msg),
                 }),
             ),
-            ApiError::InvalidRequest(msg) => (
-                StatusCode::BAD_REQUEST,
-                Json(ErrorResponse { error: msg }),
-            ),
+            ApiError::InvalidRequest(msg) => {
+                (StatusCode::BAD_REQUEST, Json(ErrorResponse { error: msg }))
+            }
         }
     }
 }
@@ -48,7 +47,7 @@ mod tests {
         let response = ErrorResponse {
             error: "Test error message".to_string(),
         };
-        
+
         assert_eq!(response.error, "Test error message");
     }
 
@@ -57,10 +56,10 @@ mod tests {
         let response = ErrorResponse {
             error: "Serialization test".to_string(),
         };
-        
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("Serialization test"));
-        
+
         let parsed: ErrorResponse = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.error, "Serialization test");
     }
@@ -69,7 +68,7 @@ mod tests {
     fn test_api_error_model_not_found() {
         let error = ApiError::ModelNotFound("test-model".to_string());
         let (status, json_response) = <(StatusCode, Json<ErrorResponse>)>::from(error);
-        
+
         assert_eq!(status, StatusCode::NOT_FOUND);
         assert_eq!(json_response.0.error, "Model 'test-model' not found");
     }
@@ -78,7 +77,7 @@ mod tests {
     fn test_api_error_generation_failed() {
         let error = ApiError::GenerationFailed("Out of memory".to_string());
         let (status, json_response) = <(StatusCode, Json<ErrorResponse>)>::from(error);
-        
+
         assert_eq!(status, StatusCode::BAD_GATEWAY);
         assert_eq!(json_response.0.error, "Generation failed: Out of memory");
     }
@@ -87,7 +86,7 @@ mod tests {
     fn test_api_error_invalid_request() {
         let error = ApiError::InvalidRequest("Missing required field".to_string());
         let (status, json_response) = <(StatusCode, Json<ErrorResponse>)>::from(error);
-        
+
         assert_eq!(status, StatusCode::BAD_REQUEST);
         assert_eq!(json_response.0.error, "Missing required field");
     }
@@ -96,7 +95,7 @@ mod tests {
     fn test_api_error_empty_model_name() {
         let error = ApiError::ModelNotFound("".to_string());
         let (status, json_response) = <(StatusCode, Json<ErrorResponse>)>::from(error);
-        
+
         assert_eq!(status, StatusCode::NOT_FOUND);
         assert_eq!(json_response.0.error, "Model '' not found");
     }
@@ -105,7 +104,7 @@ mod tests {
     fn test_api_error_special_characters() {
         let error = ApiError::ModelNotFound("model/with/slashes".to_string());
         let (status, json_response) = <(StatusCode, Json<ErrorResponse>)>::from(error);
-        
+
         assert_eq!(status, StatusCode::NOT_FOUND);
         assert!(json_response.0.error.contains("model/with/slashes"));
     }
@@ -114,7 +113,7 @@ mod tests {
     fn test_api_error_unicode_content() {
         let error = ApiError::GenerationFailed("Erreur Unicode: éñ¡".to_string());
         let (status, json_response) = <(StatusCode, Json<ErrorResponse>)>::from(error);
-        
+
         assert_eq!(status, StatusCode::BAD_GATEWAY);
         assert!(json_response.0.error.contains("éñ¡"));
     }
@@ -124,7 +123,7 @@ mod tests {
         let long_message = "A".repeat(1000);
         let error = ApiError::InvalidRequest(long_message.clone());
         let (status, json_response) = <(StatusCode, Json<ErrorResponse>)>::from(error);
-        
+
         assert_eq!(status, StatusCode::BAD_REQUEST);
         assert_eq!(json_response.0.error, long_message);
     }
@@ -134,11 +133,11 @@ mod tests {
         let error1 = ApiError::ModelNotFound("test".to_string());
         let error2 = ApiError::GenerationFailed("test".to_string());
         let error3 = ApiError::InvalidRequest("test".to_string());
-        
+
         let debug1 = format!("{:?}", error1);
         let debug2 = format!("{:?}", error2);
         let debug3 = format!("{:?}", error3);
-        
+
         assert!(debug1.contains("ModelNotFound"));
         assert!(debug2.contains("GenerationFailed"));
         assert!(debug3.contains("InvalidRequest"));
@@ -151,7 +150,7 @@ mod tests {
     fn test_error_response_json_structure() {
         let error = ApiError::ModelNotFound("my-model".to_string());
         let (_, json_response) = <(StatusCode, Json<ErrorResponse>)>::from(error);
-        
+
         // Test that the structure can be serialized correctly
         let serialized = serde_json::to_value(&json_response.0).unwrap();
         assert!(serialized.is_object());
@@ -167,12 +166,12 @@ mod tests {
             ApiError::InvalidRequest("Bad JSON".to_string()),
             ApiError::ModelNotFound("model2".to_string()),
         ];
-        
+
         let responses: Vec<(StatusCode, Json<ErrorResponse>)> = errors
             .into_iter()
             .map(|e| <(StatusCode, Json<ErrorResponse>)>::from(e))
             .collect();
-        
+
         assert_eq!(responses.len(), 4);
         assert_eq!(responses[0].0, StatusCode::NOT_FOUND);
         assert_eq!(responses[1].0, StatusCode::BAD_GATEWAY);
@@ -185,7 +184,7 @@ mod tests {
         let response = ErrorResponse {
             error: "Test".to_string(),
         };
-        
+
         // Verify the struct has only the expected fields
         let json = serde_json::to_value(&response).unwrap();
         let obj = json.as_object().unwrap();

@@ -51,7 +51,7 @@ mod tests {
     fn test_rustchain_request_deserialization_minimal() {
         let json = r#"{"prompt":"Hello world"}"#;
         let request: RustChainRequest = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(request.prompt, "Hello world");
         assert!(request.model.is_none());
         assert!(request.max_tokens.is_none());
@@ -60,9 +60,10 @@ mod tests {
 
     #[test]
     fn test_rustchain_request_deserialization_full() {
-        let json = r#"{"prompt":"Test prompt","model":"llama2","max_tokens":100,"temperature":0.7}"#;
+        let json =
+            r#"{"prompt":"Test prompt","model":"llama2","max_tokens":100,"temperature":0.7}"#;
         let request: RustChainRequest = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(request.prompt, "Test prompt");
         assert_eq!(request.model, Some("llama2".to_string()));
         assert_eq!(request.max_tokens, Some(100));
@@ -73,7 +74,7 @@ mod tests {
     fn test_rustchain_request_deserialization_partial() {
         let json = r#"{"prompt":"Partial test","model":"gpt-3.5"}"#;
         let request: RustChainRequest = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(request.prompt, "Partial test");
         assert_eq!(request.model, Some("gpt-3.5".to_string()));
         assert!(request.max_tokens.is_none());
@@ -84,7 +85,7 @@ mod tests {
     fn test_rustchain_request_deserialization_empty_prompt() {
         let json = r#"{"prompt":""}"#;
         let request: RustChainRequest = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(request.prompt, "");
         assert!(request.model.is_none());
     }
@@ -93,7 +94,7 @@ mod tests {
     fn test_rustchain_request_deserialization_edge_values() {
         let json = r#"{"prompt":"Edge case","max_tokens":1,"temperature":0.0}"#;
         let request: RustChainRequest = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(request.prompt, "Edge case");
         assert_eq!(request.max_tokens, Some(1));
         assert_eq!(request.temperature, Some(0.0));
@@ -103,7 +104,7 @@ mod tests {
     fn test_rustchain_request_deserialization_large_values() {
         let json = r#"{"prompt":"Large values test","max_tokens":4096,"temperature":2.0}"#;
         let request: RustChainRequest = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(request.prompt, "Large values test");
         assert_eq!(request.max_tokens, Some(4096));
         assert_eq!(request.temperature, Some(2.0));
@@ -115,7 +116,7 @@ mod tests {
             text: "Hello".to_string(),
             tokens_used: None,
         };
-        
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains(r#""text":"Hello""#));
         assert!(json.contains(r#""tokens_used":null"#));
@@ -127,7 +128,7 @@ mod tests {
             text: "Response with tokens".to_string(),
             tokens_used: Some(42),
         };
-        
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains(r#""text":"Response with tokens""#));
         assert!(json.contains(r#""tokens_used":42"#));
@@ -139,7 +140,7 @@ mod tests {
             text: "".to_string(),
             tokens_used: Some(0),
         };
-        
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains(r#""text":"""#));
         assert!(json.contains(r#""tokens_used":0"#));
@@ -153,12 +154,15 @@ mod tests {
             max_tokens: None,
             temperature: None,
         };
-        
+
         let result = rustchain_generate(Json(request)).await;
-        
+
         assert!(result.is_ok());
         let Json(response) = result.unwrap();
-        assert_eq!(response.text, "RustChain compatibility endpoint - integration needed");
+        assert_eq!(
+            response.text,
+            "RustChain compatibility endpoint - integration needed"
+        );
         assert_eq!(response.tokens_used, Some(0));
     }
 
@@ -170,12 +174,15 @@ mod tests {
             max_tokens: Some(150),
             temperature: Some(0.8),
         };
-        
+
         let result = rustchain_generate(Json(request)).await;
-        
+
         assert!(result.is_ok());
         let Json(response) = result.unwrap();
-        assert_eq!(response.text, "RustChain compatibility endpoint - integration needed");
+        assert_eq!(
+            response.text,
+            "RustChain compatibility endpoint - integration needed"
+        );
         assert_eq!(response.tokens_used, Some(0));
     }
 
@@ -187,9 +194,9 @@ mod tests {
             max_tokens: Some(1),
             temperature: Some(0.1),
         };
-        
+
         let result = rustchain_generate(Json(request)).await;
-        
+
         assert!(result.is_ok());
         let Json(response) = result.unwrap();
         assert!(!response.text.is_empty());
@@ -204,7 +211,7 @@ mod tests {
             max_tokens: Some(200),
             temperature: Some(1.5),
         };
-        
+
         // This tests the internal conversion logic that creates the shimmy request
         // We can't directly access the _shimmy_request, but we can ensure the function
         // processes the conversion without errors
@@ -221,7 +228,7 @@ mod tests {
             max_tokens: Some(u32::MAX), // Test edge case conversion
             temperature: None,
         };
-        
+
         let result = rustchain_generate(Json(request)).await;
         assert!(result.is_ok());
     }
@@ -235,13 +242,13 @@ mod tests {
             max_tokens: None,
             temperature: None,
         };
-        
+
         let result = rustchain_generate(Json(request)).await;
         assert!(result.is_ok());
         // This tests that the unwrap_or_default() works correctly for model field
     }
 
-    #[tokio::test] 
+    #[tokio::test]
     async fn test_rustchain_generate_extreme_values() {
         let request = RustChainRequest {
             prompt: "Extreme values test with very long prompt that might test buffer limits and edge cases in string handling".repeat(100),
@@ -249,7 +256,7 @@ mod tests {
             max_tokens: Some(4_294_967_295), // u32::MAX
             temperature: Some(f32::MAX),
         };
-        
+
         let result = rustchain_generate(Json(request)).await;
         assert!(result.is_ok());
     }
@@ -274,10 +281,10 @@ mod tests {
             text: "Roundtrip test".to_string(),
             tokens_used: Some(123),
         };
-        
+
         let json = serde_json::to_string(&original).unwrap();
         let deserialized: RustChainResponse = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(original.text, deserialized.text);
         assert_eq!(original.tokens_used, deserialized.tokens_used);
     }
@@ -285,13 +292,14 @@ mod tests {
     #[test]
     fn test_rustchain_response_with_special_characters() {
         let response = RustChainResponse {
-            text: "Special chars: \"quotes\", 'apostrophes', \n newlines, \t tabs, 🦀 emojis".to_string(),
+            text: "Special chars: \"quotes\", 'apostrophes', \n newlines, \t tabs, 🦀 emojis"
+                .to_string(),
             tokens_used: Some(50),
         };
-        
+
         let json = serde_json::to_string(&response).unwrap();
         let deserialized: RustChainResponse = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(response.text, deserialized.text);
         assert_eq!(response.tokens_used, deserialized.tokens_used);
     }

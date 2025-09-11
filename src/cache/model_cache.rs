@@ -17,11 +17,11 @@ pub fn extract_safetensors_metadata(model_path: &Path) -> Result<ModelMetadata> 
         .modified()?
         .duration_since(SystemTime::UNIX_EPOCH)?
         .as_secs();
-    
+
     // Read only the header portion first (much faster than full file read)
     let model_data = fs::read(model_path)?;
     let tensors = SafeTensors::deserialize(&model_data)?;
-    
+
     // Extract tensor information without loading the actual data
     let mut tensor_infos = Vec::new();
     for name in tensors.names() {
@@ -35,13 +35,13 @@ pub fn extract_safetensors_metadata(model_path: &Path) -> Result<ModelMetadata> 
             });
         }
     }
-    
+
     // Load config.json if it exists
     let config = load_companion_json(model_path, "config.json")?;
-    
+
     // Load tokenizer.json if it exists
     let tokenizer = load_companion_json(model_path, "tokenizer.json")?;
-    
+
     Ok(ModelMetadata {
         model_path: model_path.to_path_buf(),
         file_size,
@@ -61,7 +61,7 @@ pub fn extract_gguf_metadata(model_path: &Path) -> Result<ModelMetadata> {
         .modified()?
         .duration_since(SystemTime::UNIX_EPOCH)?
         .as_secs();
-    
+
     // TODO: Implement GGUF header parsing
     // For now, return minimal metadata
     Ok(ModelMetadata {
@@ -78,7 +78,7 @@ pub fn extract_gguf_metadata(model_path: &Path) -> Result<ModelMetadata> {
 /// Load companion JSON file (config.json, tokenizer.json, etc.)
 fn load_companion_json(model_path: &Path, filename: &str) -> Result<Option<serde_json::Value>> {
     let json_path = model_path.with_file_name(filename);
-    
+
     if json_path.exists() {
         let json_data = fs::read_to_string(&json_path)?;
         let parsed: serde_json::Value = serde_json::from_str(&json_data)?;
@@ -106,7 +106,7 @@ pub fn fast_extract_metadata(model_path: &Path) -> Result<ModelMetadata> {
 mod tests {
     use super::*;
     use std::path::PathBuf;
-    
+
     #[test]
     fn test_load_companion_json() {
         // This would need actual test files to run
