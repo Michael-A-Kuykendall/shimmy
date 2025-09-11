@@ -47,6 +47,7 @@ jobs:
             artifact-name: shimmy-macos-arm64
             features: "huggingface,llama"
             cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_APPLE_SILICON_PROCESSOR=arm64 -DGGML_METAL=on"
+            fallback_features: "huggingface"  # Fallback if llama fails
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -80,7 +81,11 @@ jobs:
           
       - name: Set CMAKE args for macOS ARM64
         if: matrix.cmake_args
-        run: echo "CMAKE_ARGS=${{ matrix.cmake_args }}" >> $GITHUB_ENV
+        run: |
+          echo "CMAKE_ARGS=${{ matrix.cmake_args }}" >> $GITHUB_ENV
+          echo "GGML_NO_I8MM=1" >> $GITHUB_ENV
+          echo "CC_aarch64-apple-darwin=clang" >> $GITHUB_ENV
+          echo "CXX_aarch64-apple-darwin=clang++" >> $GITHUB_ENV
         
       - name: Build binary (native)
         if: matrix.cross != true
