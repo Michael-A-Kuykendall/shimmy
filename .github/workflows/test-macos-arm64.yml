@@ -1,0 +1,31 @@
+name: Test macOS ARM64 llama compilation
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  test-macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install system dependencies (macOS)
+        run: which cmake || brew install cmake
+        
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+          
+      - name: Set CMAKE args for macOS ARM64
+        run: |
+          echo "CMAKE_ARGS=-DGGML_NATIVE=OFF -DGGML_CPU_ARM_ARCH=apple-m1 -DGGML_METAL=ON" >> $GITHUB_ENV
+          echo "FORCE_CMAKE=1" >> $GITHUB_ENV
+        
+      - name: Test build binary
+        run: cargo build --release --target aarch64-apple-darwin --no-default-features --features huggingface,llama
+        
+      - name: Verify binary created
+        run: |
+          ls -la target/aarch64-apple-darwin/release/
+          file target/aarch64-apple-darwin/release/shimmy
