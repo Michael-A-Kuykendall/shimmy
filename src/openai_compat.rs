@@ -125,7 +125,9 @@ pub async fn chat_completions(
         Some("llama3") | Some("llama-3") => crate::templates::TemplateFamily::Llama3,
         _ => {
             // Auto-detect template based on model name
-            if req.model.to_lowercase().contains("qwen") || req.model.to_lowercase().contains("chatglm") {
+            if req.model.to_lowercase().contains("qwen")
+                || req.model.to_lowercase().contains("chatglm")
+            {
                 crate::templates::TemplateFamily::ChatML
             } else if req.model.to_lowercase().contains("llama") {
                 crate::templates::TemplateFamily::Llama3
@@ -278,7 +280,11 @@ pub async fn chat_completions(
         // Handle non-streaming response
         match loaded.generate(&prompt, opts, None).await {
             Ok(content) => {
-                tracing::debug!("Generated response for model '{}': {} chars", req.model, content.len());
+                tracing::debug!(
+                    "Generated response for model '{}': {} chars",
+                    req.model,
+                    content.len()
+                );
                 let response = ChatCompletionResponse {
                     id: format!("chatcmpl-{}", uuid::Uuid::new_v4().simple()),
                     object: "chat.completion".to_string(),
@@ -304,9 +310,13 @@ pub async fn chat_completions(
                 Json(response).into_response()
             }
             Err(e) => {
-                tracing::error!("Failed to generate response for model '{}': {:?}", req.model, e);
+                tracing::error!(
+                    "Failed to generate response for model '{}': {:?}",
+                    req.model,
+                    e
+                );
                 StatusCode::BAD_GATEWAY.into_response()
-            },
+            }
         }
     }
 }

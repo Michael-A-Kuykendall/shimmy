@@ -72,8 +72,9 @@ impl ModelDiscovery {
         #[cfg(windows)]
         {
             for drive in &["C:", "D:", "E:", "F:"] {
-                let ollama_path = PathBuf::from(format!("{}\\Users\\{}\\AppData\\Local\\Ollama\\models", 
-                    drive, 
+                let ollama_path = PathBuf::from(format!(
+                    "{}\\Users\\{}\\AppData\\Local\\Ollama\\models",
+                    drive,
                     env::var("USERNAME").unwrap_or_default()
                 ));
                 discovery.add_search_path(ollama_path);

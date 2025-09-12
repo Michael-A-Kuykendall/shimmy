@@ -10,9 +10,13 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub cmd: Command,
-    
+
     /// Additional directories to search for models (semicolon-separated)
-    #[arg(long, global = true, help = "Additional model directories to search (e.g., --model-dirs 'D:\\models;E:\\ollama\\models')")]
+    #[arg(
+        long,
+        global = true,
+        help = "Additional model directories to search (e.g., --model-dirs 'D:\\models;E:\\ollama\\models')"
+    )]
     pub model_dirs: Option<String>,
 }
 

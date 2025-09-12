@@ -97,14 +97,16 @@ impl ModelAutoDiscovery {
         {
             if let Ok(username) = std::env::var("USERNAME") {
                 for drive in &["C:", "D:", "E:", "F:"] {
-                    let ollama_path = PathBuf::from(format!("{}\\Users\\{}\\AppData\\Local\\Ollama\\models", 
-                        drive, username));
+                    let ollama_path = PathBuf::from(format!(
+                        "{}\\Users\\{}\\AppData\\Local\\Ollama\\models",
+                        drive, username
+                    ));
                     search_paths.push(ollama_path);
 
                     // Also check alternate Ollama paths
                     let alt_ollama = PathBuf::from(format!("{}\\Ollama\\models", drive));
                     search_paths.push(alt_ollama);
-                    
+
                     // Check common model storage locations
                     let models_path = PathBuf::from(format!("{}\\models", drive));
                     search_paths.push(models_path);
