@@ -29,12 +29,17 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
-    
+
     // Platform capability notice
     #[cfg(all(target_arch = "aarch64", target_os = "macos", not(feature = "llama")))]
     info!("llama.cpp temporarily disabled on macOS ARM64 due to upstream i8mm build incompatibility; using SafeTensors backend");
-    
+
     let cli = cli::Cli::parse();
+
+    // Add custom model directories from command line to environment
+    if let Some(model_dirs) = &cli.model_dirs {
+        std::env::set_var("SHIMMY_MODEL_PATHS", model_dirs);
+    }
 
     // Initialize registry with auto-discovery
     let mut reg = Registry::with_discovery();

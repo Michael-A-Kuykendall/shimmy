@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2025-09-12
+
+### 🐛 Bug Fixes
+
+**Issue #13: VSCode Integration with Qwen Models**
+- Fixed VSCode extension compatibility with Qwen3-4B-Instruct and other Qwen models
+- Enhanced automatic template detection for Qwen models (now uses ChatML template)
+- Added better error logging for model loading failures in OpenAI-compatible API
+- Improved error handling with detailed diagnostics for troubleshooting
+
+**Issue #12: Custom Model Directory Detection** 
+- Added support for custom model directories via `SHIMMY_MODEL_PATHS` environment variable
+- Added support for `OLLAMA_MODELS` environment variable for Ollama model directories
+- Added `--model-dirs` global command-line option for specifying custom directories
+- Enhanced Windows multi-drive search for Ollama installations (C:, D:, E:, F: drives)
+- Improved model auto-discovery to handle Ollama installs on different drives
+
+### ✨ Enhancements
+
+- **Multi-Drive Support**: Automatic scanning of common Ollama paths across multiple Windows drives
+- **Template Detection**: Enhanced model template inference with better support for:
+  - Qwen models → ChatML template
+  - ChatGLM models → ChatML template  
+  - Llama models → Llama3 template
+  - Improved fallback to OpenChat template
+- **Error Handling**: Added comprehensive error logging for debugging model loading issues
+- **CLI Improvements**: New global `--model-dirs` option works with all commands
+
+### 🛠️ Developer Experience
+
+- Added comprehensive regression testing suite
+- Fixed missing `discover_models_from_directory` function for benchmarking
+- Enhanced error messages with model-specific context
+- Improved code documentation and examples
+
+### 📖 Documentation
+
+**Issue #15: Homebrew Formula Improvements**
+- Created improved Homebrew formula using pre-built binaries instead of source compilation  
+- Generated installation script for faster Homebrew installations
+- Provided migration path from source-based to binary-based Homebrew formula
+
+### 🎯 Usage Examples
+
+**Custom Model Directories:**
+```bash
+# Environment variables
+export SHIMMY_MODEL_PATHS="D:\models;E:\ollama\models"
+export OLLAMA_MODELS="F:\MyOllama\models"
+
+# Command line options
+shimmy --model-dirs "D:\models;E:\ollama\models" serve
+shimmy --model-dirs "/path/to/models" list
+```
+
+**VSCode Integration:**
+- Qwen3-4B-Instruct models now work seamlessly with VSCode extensions
+- Improved error reporting for troubleshooting integration issues
+
+### 🔧 Technical Details
+
+- Enhanced `ModelDiscovery` and `ModelAutoDiscovery` systems
+- Improved OpenAI API compatibility layer
+- Better template selection algorithm  
+- Comprehensive Windows drive scanning
+- Added regression testing infrastructure
+
 ## [0.1.0] - 2025-09-02
 
 ### Added

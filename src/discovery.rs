@@ -48,12 +48,40 @@ impl ModelDiscovery {
             }
         }
 
+        // Add custom model directories from environment variable
+        if let Ok(custom_dirs) = env::var("SHIMMY_MODEL_PATHS") {
+            for dir in custom_dirs.split(';').filter(|s| !s.is_empty()) {
+                discovery.add_search_path(PathBuf::from(dir));
+            }
+        }
+
+        // Add OLLAMA_MODELS environment variable if set
+        if let Ok(ollama_models) = env::var("OLLAMA_MODELS") {
+            discovery.add_search_path(PathBuf::from(ollama_models));
+        }
+
         // Add common model directories
         if let Ok(home) = env::var("HOME").or_else(|_| env::var("USERPROFILE")) {
             let home_path = PathBuf::from(home);
             discovery.add_search_path(home_path.join(".cache/huggingface"));
             discovery.add_search_path(home_path.join(".ollama/models"));
             discovery.add_search_path(home_path.join("models"));
+        }
+
+        // Search common Ollama installation paths on different drives
+        #[cfg(windows)]
+        {
+            for drive in &["C:", "D:", "E:", "F:"] {
+                let ollama_path = PathBuf::from(format!("{}\\Users\\{}\\AppData\\Local\\Ollama\\models", 
+                    drive, 
+                    env::var("USERNAME").unwrap_or_default()
+                ));
+                discovery.add_search_path(ollama_path);
+
+                // Also check alternate Ollama paths
+                let alt_ollama = PathBuf::from(format!("{}\\Ollama\\models", drive));
+                discovery.add_search_path(alt_ollama);
+            }
         }
 
         discovery
@@ -121,6 +149,13 @@ impl ModelDiscovery {
             size_bytes,
         })
     }
+}
+
+/// Simple wrapper function for benchmarking - discovers models in a single directory
+pub fn discover_models_from_directory(path: &Path) -> Result<Vec<DiscoveredModel>> {
+    let mut discovery = ModelDiscovery::new();
+    discovery.add_search_path(path.to_path_buf());
+    discovery.discover_models()
 }
 
 #[cfg(test)]

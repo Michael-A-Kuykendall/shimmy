@@ -106,18 +106,33 @@ pub async fn chat_completions(
 
     // Load and validate model
     let Some(spec) = state.registry.to_spec(&req.model) else {
+        tracing::warn!("Model '{}' not found in registry", req.model);
         return StatusCode::NOT_FOUND.into_response();
     };
+    tracing::debug!("Found model spec for '{}': {:?}", req.model, spec);
     let engine = &state.engine;
-    let Ok(loaded) = engine.load(&spec).await else {
-        return StatusCode::BAD_GATEWAY.into_response();
+    let loaded = match engine.load(&spec).await {
+        Ok(loaded) => loaded,
+        Err(e) => {
+            tracing::error!("Failed to load model '{}': {:?}", req.model, e);
+            return StatusCode::BAD_GATEWAY.into_response();
+        }
     };
 
     // Construct prompt from messages
     let fam = match spec.template.as_deref() {
         Some("chatml") => crate::templates::TemplateFamily::ChatML,
         Some("llama3") | Some("llama-3") => crate::templates::TemplateFamily::Llama3,
-        _ => crate::templates::TemplateFamily::OpenChat,
+        _ => {
+            // Auto-detect template based on model name
+            if req.model.to_lowercase().contains("qwen") || req.model.to_lowercase().contains("chatglm") {
+                crate::templates::TemplateFamily::ChatML
+            } else if req.model.to_lowercase().contains("llama") {
+                crate::templates::TemplateFamily::Llama3
+            } else {
+                crate::templates::TemplateFamily::OpenChat
+            }
+        }
     };
     let pairs = req
         .messages
@@ -263,6 +278,7 @@ pub async fn chat_completions(
         // Handle non-streaming response
         match loaded.generate(&prompt, opts, None).await {
             Ok(content) => {
+                tracing::debug!("Generated response for model '{}': {} chars", req.model, content.len());
                 let response = ChatCompletionResponse {
                     id: format!("chatcmpl-{}", uuid::Uuid::new_v4().simple()),
                     object: "chat.completion".to_string(),
@@ -287,7 +303,10 @@ pub async fn chat_completions(
                 };
                 Json(response).into_response()
             }
-            Err(_) => StatusCode::BAD_GATEWAY.into_response(),
+            Err(e) => {
+                tracing::error!("Failed to generate response for model '{}': {:?}", req.model, e);
+                StatusCode::BAD_GATEWAY.into_response()
+            },
         }
     }
 }
