@@ -260,9 +260,9 @@ checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
 name = "cc"
-version = "1.2.36"
+version = "1.2.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5252b3d2648e5eedbc1a6f501e3c795e07025c1e93bbf8bbdd6eef7f447a6d54"
+checksum = "65193589c6404eb80b450d618eaf9a2cafaaafd57ecce47370519ef674a7bd44"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -1061,7 +1061,7 @@ checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 [[package]]
 name = "llama-cpp-2"
 version = "0.1.122"
-source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-macos-arm64-i8mm#ca70e59831a3de48ecb25f9be8b8412822214ea1"
+source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-macos-arm64-i8mm#5066492a156fa138e4e81210a48dd1d2099dbace"
 dependencies = [
  "enumflags2",
  "llama-cpp-sys-2",
@@ -1073,7 +1073,7 @@ dependencies = [
 [[package]]
 name = "llama-cpp-sys-2"
 version = "0.1.122"
-source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-macos-arm64-i8mm#ca70e59831a3de48ecb25f9be8b8412822214ea1"
+source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-macos-arm64-i8mm#5066492a156fa138e4e81210a48dd1d2099dbace"
 dependencies = [
  "bindgen",
  "cc",

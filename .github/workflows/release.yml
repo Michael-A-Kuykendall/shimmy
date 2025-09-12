@@ -46,7 +46,7 @@ jobs:
             target: aarch64-apple-darwin 
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
-            features: "huggingface"  # llama.cpp disabled due to i8mm compilation issues
+            features: "huggingface,llama"  # i8mm mixed-ISA issue resolved via production-grade fix
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -148,7 +148,7 @@ jobs:
           echo "  shimmy-linux-arm64: SafeTensors + llama.cpp"
           echo "  shimmy-windows-x86_64.exe: SafeTensors + llama.cpp"  
           echo "  shimmy-macos-intel: SafeTensors + llama.cpp"
-          echo "  shimmy-macos-arm64: SafeTensors only (llama.cpp disabled due to compilation issues)"
+          echo "  shimmy-macos-arm64: SafeTensors + llama.cpp (i8mm mixed-ISA issue resolved)"
           
       - name: Create release
         env:
@@ -164,7 +164,7 @@ jobs:
             - **Linux ARM64**: \`shimmy-linux-arm64\` (SafeTensors + llama.cpp)
             - **Windows x86_64**: \`shimmy-windows-x86_64.exe\` (SafeTensors + llama.cpp)
             - **macOS Intel**: \`shimmy-macos-intel\` (SafeTensors + llama.cpp)
-            - **macOS Apple Silicon**: \`shimmy-macos-arm64\` (SafeTensors only)
+            - **macOS Apple Silicon**: \`shimmy-macos-arm64\` (SafeTensors + llama.cpp)
             
             All binaries include native SafeTensors support with zero Python dependencies.
             
