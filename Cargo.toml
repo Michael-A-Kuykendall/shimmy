@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "1.3.1"
+version = "1.3.2"
 edition = "2021"
 license = "MIT"
 description = "Lightweight 5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading."
@@ -66,6 +66,7 @@ llama-cpp-2 = { git = "https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git"
 [dev-dependencies]
 reqwest = { version = "0.11", features = ["json"] }
 tokio-tungstenite = "0.20"
+criterion = { version = "0.5", features = ["html_reports"] }
 # Additional dependencies for mock testing infrastructure
 tempfile = "3"  # For creating temporary test directories
 rand = "0.8"    # For randomized testing scenarios (already in main deps)
@@ -85,3 +86,12 @@ debug = true
 [profile.dev.package."*"]
 opt-level = 2
 debug = false
+
+# Benchmark configuration  
+[[bench]]
+name = "model_loading"
+harness = false
+
+[[bench]]
+name = "generation_performance"
+harness = false

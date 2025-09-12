@@ -62,6 +62,18 @@ impl ModelAutoDiscovery {
             }
         }
 
+        // Add custom model directories from environment variable
+        if let Ok(custom_dirs) = std::env::var("SHIMMY_MODEL_PATHS") {
+            for dir in custom_dirs.split(';').filter(|s| !s.is_empty()) {
+                search_paths.push(PathBuf::from(dir));
+            }
+        }
+
+        // Add OLLAMA_MODELS environment variable if set
+        if let Ok(ollama_models) = std::env::var("OLLAMA_MODELS") {
+            search_paths.push(PathBuf::from(ollama_models));
+        }
+
         // Add common model directories
         if let Some(home) = std::env::var_os("HOME") {
             search_paths.push(PathBuf::from(home.clone()).join(".cache/huggingface/hub"));
@@ -78,6 +90,26 @@ impl ModelAutoDiscovery {
             search_paths
                 .push(PathBuf::from(user_profile.clone()).join("AppData\\Local\\shimmy\\models"));
             search_paths.push(PathBuf::from(user_profile).join("Downloads"));
+        }
+
+        // Search common Ollama installation paths on different drives (Windows)
+        #[cfg(windows)]
+        {
+            if let Ok(username) = std::env::var("USERNAME") {
+                for drive in &["C:", "D:", "E:", "F:"] {
+                    let ollama_path = PathBuf::from(format!("{}\\Users\\{}\\AppData\\Local\\Ollama\\models", 
+                        drive, username));
+                    search_paths.push(ollama_path);
+
+                    // Also check alternate Ollama paths
+                    let alt_ollama = PathBuf::from(format!("{}\\Ollama\\models", drive));
+                    search_paths.push(alt_ollama);
+                    
+                    // Check common model storage locations
+                    let models_path = PathBuf::from(format!("{}\\models", drive));
+                    search_paths.push(models_path);
+                }
+            }
         }
 
         Self { search_paths }
