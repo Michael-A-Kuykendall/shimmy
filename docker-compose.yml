@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  shimmy:
+    image: ghcr.io/michael-a-kuykendall/shimmy:latest
+    container_name: shimmy-server
+    ports:
+      - "11434:11434"  # Shimmy server port
+    volumes:
+      - ./models:/app/models              # Mount your models directory
+      - shimmy-cache:/root/.cache         # Persistent cache for downloads
+    environment:
+      - SHIMMY_BASE_GGUF=/app/models      # Point to mounted models
+      - SHIMMY_PORT=11434                 # Server port
+      - SHIMMY_HOST=0.0.0.0              # Listen on all interfaces
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia              # GPU support (optional)
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  shimmy-cache:
+    driver: local
