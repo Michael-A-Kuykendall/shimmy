@@ -41,15 +41,28 @@ Shimmy is a **5.1MB single-binary** local inference server that provides OpenAI 
 
 ### Installation
 
+#### **🪟 Windows**
 ```bash
-# Install from crates.io (Linux, macOS, Windows)
-cargo install shimmy
+# RECOMMENDED: Use pre-built binary (no build dependencies required)
+curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy.exe -o shimmy.exe
 
-# Or download pre-built binary (Windows only)
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy.exe
+# OR: Install from source (requires LLVM/Clang)
+# First install build dependencies:
+winget install LLVM.LLVM
+# Then install shimmy:
+cargo install shimmy --features huggingface
 ```
 
-> **⚠️ Windows Security Notice**: Windows Defender may flag the binary as a false positive. This is common with unsigned Rust executables. **Recommended**: Use `cargo install shimmy` instead, or add an exclusion for shimmy.exe in Windows Defender.
+> **⚠️ Windows Notes**: 
+> - **Pre-built binary recommended** to avoid build dependency issues
+> - If Windows Defender flags the binary, add an exclusion or use `cargo install`
+> - For `cargo install`: Install [LLVM](https://releases.llvm.org/download.html) first to resolve `libclang.dll` errors
+
+#### **🍎 macOS / 🐧 Linux**
+```bash
+# Install from crates.io
+cargo install shimmy --features huggingface
+```
 
 ### Get Models
 
