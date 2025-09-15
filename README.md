@@ -1,9 +1,12 @@
 <div align="center">
   <img src="assets/shimmy-logo.png" alt="Shimmy Logo" width="300" height="auto" />
   
-  # The 5MB Alternative to Ollama
+  # The Privacy-First Alternative to Ollama
+  
+  ### 🔒 Local AI Without the Lock-in 🚀
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Security](https://img.shields.io/badge/Security-Audited-green)](https://github.com/Michael-A-Kuykendall/shimmy/security)
   [![Crates.io](https://img.shields.io/crates/v/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Downloads](https://img.shields.io/crates/d/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
@@ -16,13 +19,6 @@
 ## Drop-in OpenAI API Replacement for Local LLMs
 
 Shimmy is a **5.1MB single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
-
-```bash
-# Install and run in 30 seconds
-cargo install shimmy --features huggingface
-shimmy serve
-# → Running on http://localhost:11435
-```
 
 ### Try it in 30 seconds
 
@@ -215,19 +211,11 @@ Works out of the box - just point to `http://localhost:11435/v1`
 
 ## Why Shimmy Will Always Be Free
 
-I built Shimmy because I was tired of 680MB binaries to run a 4GB model.
+I built Shimmy to retain privacy-first control on my AI development and keep things local and lean.
 
 **This is my commitment**: Shimmy stays MIT licensed, forever. If you want to support development, [sponsor it](https://github.com/sponsors/Michael-A-Kuykendall). If you don't, just build something cool with it.
 
 > Shimmy saves you time and money. If it's useful, consider sponsoring for $5/month — less than your Netflix subscription, infinitely more useful.
-
-## Performance Comparison
-
-| Tool | Binary Size | Startup Time | Memory Usage | OpenAI API |
-|------|-------------|--------------|--------------|------------|
-| **Shimmy** | **5.1MB** | **<100ms** | **50MB** | **100%** |
-| Ollama | 680MB | 5-10s | 200MB+ | Partial |
-| llama.cpp | 89MB | 1-2s | 100MB | None |
 
 ## API Reference
 
@@ -267,9 +255,20 @@ shimmy probe model-name         # Verify model loads
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Michael-A-Kuykendall/shimmy&type=Date)](https://star-history.com/#Michael-A-Kuykendall/shimmy&Date)
 
-### Sponsors
+### 🚀 Momentum Snapshot
 
-See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
+📦 **5 MB single binary**  
+🌟 **Featured on Hacker News**  
+⏱ **<1s startup**  
+🦀 **100% Rust, no Python**
+
+### 📰 As Featured On
+
+🔥 [**Hacker News**](https://news.ycombinator.com/item?id=45130322) • [**Front Page Again**](https://news.ycombinator.com/item?id=45199898) • [**IPE Newsletter**](https://ipenewsletter.substack.com/p/the-strange-new-side-hustles-of-openai)
+
+### 💝 Support Shimmy's Growth
+
+🚀 **If Shimmy helps you, consider sponsoring — 100% of support goes to keeping it free forever.**
 
 **Sponsorship Tiers:**
 - **$5/month**: Coffee tier - My eternal gratitude + sponsor badge
@@ -277,7 +276,17 @@ See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
 - **$100/month**: Corporate backer - Logo on README + monthly office hours
 - **$500/month**: Infrastructure partner - Direct support + roadmap input
 
+[**🎯 Become a Sponsor**](https://github.com/sponsors/Michael-A-Kuykendall) | See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
+
 **Companies**: Need invoicing? Email [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
+
+## ⚡ Performance Comparison
+
+| Tool | Binary Size | Startup Time | Memory Usage | OpenAI API |
+|------|-------------|--------------|--------------|------------|
+| **Shimmy** | **5.1MB** | **<100ms** | **50MB** | **100%** |
+| Ollama | 680MB | 5-10s | 200MB+ | Partial |
+| llama.cpp | 89MB | 1-2s | 100MB | None |
 
 ## Quality & Reliability
 
