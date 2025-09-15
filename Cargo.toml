@@ -56,7 +56,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "5.0"
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
 
 # llama.cpp bindings (optional) - using forked version with macOS ARM64 i8mm fix
 llama-cpp-2 = { version = "0.1.118", optional = true, default-features = false }
