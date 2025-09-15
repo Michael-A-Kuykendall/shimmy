@@ -86,6 +86,9 @@ jobs:
         
       - name: Build binary (cross-compiled)
         if: matrix.cross == true
+        env:
+          OPENSSL_STATIC: 1  # Force static linking for cross-compilation
+          OPENSSL_VENDOR: 1  # Use vendored OpenSSL
         run: cross build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
         
       - name: Strip binary (Linux/macOS)
