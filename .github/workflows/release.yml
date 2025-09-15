@@ -25,7 +25,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             binary-name: shimmy
             artifact-name: shimmy-linux-arm64
-            features: "huggingface,llama"  # Skip llama for ARM to avoid C++ issues
+            features: "huggingface"  # Skip llama for ARM64 to avoid C++ cross-compilation issues
             cross: true
             
           # Windows builds
@@ -148,7 +148,7 @@ jobs:
           
           echo "Binary feature sets:"
           echo "  shimmy-linux-x86_64: SafeTensors + llama.cpp"
-          echo "  shimmy-linux-arm64: SafeTensors + llama.cpp"
+          echo "  shimmy-linux-arm64: SafeTensors only (llama.cpp requires C++ cross-compiler)"
           echo "  shimmy-windows-x86_64.exe: SafeTensors + llama.cpp"  
           echo "  shimmy-macos-intel: SafeTensors + llama.cpp"
           echo "  shimmy-macos-arm64: SafeTensors + llama.cpp (i8mm mixed-ISA issue resolved)"
@@ -164,7 +164,7 @@ jobs:
             
             **Download the right binary for your platform:**
             - **Linux x86_64**: \`shimmy-linux-x86_64\` (SafeTensors + llama.cpp)
-            - **Linux ARM64**: \`shimmy-linux-arm64\` (SafeTensors + llama.cpp)
+            - **Linux ARM64**: \`shimmy-linux-arm64\` (SafeTensors only)
             - **Windows x86_64**: \`shimmy-windows-x86_64.exe\` (SafeTensors + llama.cpp)
             - **macOS Intel**: \`shimmy-macos-intel\` (SafeTensors + llama.cpp)
             - **macOS Apple Silicon**: \`shimmy-macos-arm64\` (SafeTensors + llama.cpp)
