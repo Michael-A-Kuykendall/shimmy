@@ -1,0 +1,13 @@
+# Canonical identity
+# "New Name <new@email>"  "Old Name <old@email>"
+# The name-only form maps any commit using that name regardless of email.
+
+# Canonical author/committer for this repo
+Michael Kuykendall <michaelallenkuykendall@gmail.com>  Michael A. Kuykendall <michaelallenkuykendall@gmail.com>
+Michael Kuykendall <michaelallenkuykendall@gmail.com>  Mike Kuykendall <michaelallenkuykendall@gmail.com>
+
+# Map Copilot bot commits to canonical identity
+Michael Kuykendall <michaelallenkuykendall@gmail.com>  Copilot <198982749+Copilot@users.noreply.github.com>
+
+# Preemptively map old corporate alias (if it ever appears)
+Michael Kuykendall <michaelallenkuykendall@gmail.com>  VMLYR-MikeKuykendall
