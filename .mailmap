@@ -11,3 +11,11 @@ Michael Kuykendall <michaelallenkuykendall@gmail.com>  Copilot <198982749+Copilo
 
 # Preemptively map old corporate alias (if it ever appears)
 Michael Kuykendall <michaelallenkuykendall@gmail.com>  VMLYR-MikeKuykendall
+
+# Map other common AI/tool identities by name so any email maps to you
+Michael Kuykendall <michaelallenkuykendall@gmail.com>  Claude
+Michael Kuykendall <michaelallenkuykendall@gmail.com>  Claude Code
+Michael Kuykendall <michaelallenkuykendall@gmail.com>  Anthropic
+
+# Normalize GitHub UI merge commit committer identity as well
+Michael Kuykendall <michaelallenkuykendall@gmail.com>  GitHub <noreply@github.com>
