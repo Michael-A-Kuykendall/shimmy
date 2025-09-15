@@ -21,12 +21,13 @@ jobs:
             artifact-name: shimmy-linux-x86_64
             features: "huggingface,llama"
             
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            binary-name: shimmy
-            artifact-name: shimmy-linux-arm64
-            features: "huggingface"  # Skip llama for ARM64 to avoid C++ cross-compilation issues
-            cross: true
+# Temporarily disabled due to cross-compilation complexity          
+          # - os: ubuntu-latest
+          #   target: aarch64-unknown-linux-gnu
+          #   binary-name: shimmy
+          #   artifact-name: shimmy-linux-arm64
+          #   features: "huggingface"  # Skip llama for ARM64 to avoid C++ cross-compilation issues
+          #   cross: true
             
           # Windows builds
           - os: windows-latest  
@@ -126,8 +127,8 @@ jobs:
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
           
-          # Linux ARM64  
-          cp artifacts/shimmy-linux-arm64/shimmy release-files/shimmy-linux-arm64
+          # Linux ARM64 (temporarily disabled)
+          # cp artifacts/shimmy-linux-arm64/shimmy release-files/shimmy-linux-arm64
           
           # Windows x86_64
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
@@ -148,7 +149,7 @@ jobs:
           
           echo "Binary feature sets:"
           echo "  shimmy-linux-x86_64: SafeTensors + llama.cpp"
-          echo "  shimmy-linux-arm64: SafeTensors only (llama.cpp requires C++ cross-compiler)"
+          # echo "  shimmy-linux-arm64: SafeTensors only (llama.cpp requires C++ cross-compiler)"
           echo "  shimmy-windows-x86_64.exe: SafeTensors + llama.cpp"  
           echo "  shimmy-macos-intel: SafeTensors + llama.cpp"
           echo "  shimmy-macos-arm64: SafeTensors + llama.cpp (i8mm mixed-ISA issue resolved)"
@@ -164,7 +165,7 @@ jobs:
             
             **Download the right binary for your platform:**
             - **Linux x86_64**: \`shimmy-linux-x86_64\` (SafeTensors + llama.cpp)
-            - **Linux ARM64**: \`shimmy-linux-arm64\` (SafeTensors only)
+            - **Linux ARM64**: Coming soon (cross-compilation issues)
             - **Windows x86_64**: \`shimmy-windows-x86_64.exe\` (SafeTensors + llama.cpp)
             - **macOS Intel**: \`shimmy-macos-intel\` (SafeTensors + llama.cpp)
             - **macOS Apple Silicon**: \`shimmy-macos-arm64\` (SafeTensors + llama.cpp)
