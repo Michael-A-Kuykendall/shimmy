@@ -48,15 +48,18 @@ body:
       label: 🎯 Component
       description: Which component would this enhancement affect?
       options:
-        - HTTP API endpoints
-        - Model inference engine
-        - Configuration system
-        - CLI interface
-        - Error handling/logging
-        - Docker/deployment
-        - Documentation
-        - Build system
-        - Dependencies
+        - HTTP API endpoints (/api/generate, etc.)
+        - WebSocket streaming (/ws/generate)
+        - Model inference engine (llama.cpp integration)
+        - Configuration system (env vars, CLI args)
+        - CLI interface (serve, generate, probe, etc.)
+        - Error handling & logging
+        - Docker & deployment setup
+        - Documentation & examples
+        - Build system & dependencies
+        - Performance & optimization
+        - Security & authentication
+        - Testing & CI/CD
         - Other (specify below)
     validations:
       required: true

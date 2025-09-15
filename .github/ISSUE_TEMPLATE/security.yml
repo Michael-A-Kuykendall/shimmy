@@ -1,0 +1,52 @@
+name: 🔒 Security Issue
+description: Report a security vulnerability (will redirect to private reporting)
+title: "[Security]: Please use private reporting"
+labels: ["security"]
+assignees: ["Michael-A-Kuykendall"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # ⚠️ STOP - Do NOT report security issues here!
+        
+        **Security vulnerabilities should NOT be reported via public GitHub issues.**
+        
+        ## 🔒 Report Security Issues Privately
+        
+        Please use GitHub's private vulnerability reporting feature:
+        
+        **👉 [Report Security Vulnerability](https://github.com/Michael-A-Kuykendall/shimmy/security/advisories/new)**
+        
+        ## 📧 Alternative Contact
+        
+        If you cannot use the private reporting feature, email us directly:
+        **security@shimmy-ai.dev**
+        
+        ## 🛡️ Why Private Reporting?
+        
+        - Protects users while we develop a fix
+        - Follows responsible disclosure practices
+        - Allows us to coordinate patches safely
+        - Prevents exploitation of the vulnerability
+        
+        ## 🚨 If You Posted Here by Mistake
+        
+        1. **Delete this issue immediately**
+        2. Use the private reporting link above instead
+        3. Do not include vulnerability details in public
+        
+        Thank you for helping keep Shimmy secure! 🙏
+
+  - type: checkboxes
+    id: acknowledgment
+    attributes:
+      label: ✅ Security Reporting Acknowledgment
+      description: Please confirm you understand how to report security issues
+      options:
+        - label: I understand security issues should be reported privately
+          required: true
+        - label: I will use the private vulnerability reporting feature or email
+          required: true
+        - label: I will not post security details in public issues
+          required: true
