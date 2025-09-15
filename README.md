@@ -196,6 +196,10 @@ shimmy probe model-name         # Verify model loads
 - **📖 Documentation**: [docs/](docs/)
 - **💝 Sponsorship**: [GitHub Sponsors](https://github.com/sponsors/Michael-A-Kuykendall)
 
+### Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Michael-A-Kuykendall/shimmy&type=Date)](https://star-history.com/#Michael-A-Kuykendall/shimmy&Date)
+
 ### Sponsors
 
 See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
