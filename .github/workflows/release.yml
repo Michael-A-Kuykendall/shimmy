@@ -21,13 +21,13 @@ jobs:
             artifact-name: shimmy-linux-x86_64
             features: "huggingface,llama"
             
-# Temporarily disabled due to cross-compilation complexity          
-          # - os: ubuntu-latest
-          #   target: aarch64-unknown-linux-gnu
-          #   binary-name: shimmy
-          #   artifact-name: shimmy-linux-arm64
-          #   features: "huggingface"  # Skip llama for ARM64 to avoid C++ cross-compilation issues
-          #   cross: true
+# ARM64 Linux via Docker QEMU emulation
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            binary-name: shimmy
+            artifact-name: shimmy-linux-arm64
+            features: "huggingface"
+            docker-build: true
             
           # Windows builds
           - os: windows-latest  
@@ -75,22 +75,17 @@ jobs:
         with:
           targets: ${{ matrix.target }}
           
-      - name: Install cross (for ARM64 Linux)
-        if: matrix.cross == true
-        run: cargo install cross --git https://github.com/cross-rs/cross
-          
-# CMAKE args no longer needed - macOS ARM64 uses SafeTensors only
-        
       - name: Build binary (native)
-        if: matrix.cross != true
+        if: matrix.docker-build != true
         run: cargo build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
         
-      - name: Build binary (cross-compiled)
-        if: matrix.cross == true
-        env:
-          OPENSSL_STATIC: 1  # Force static linking for cross-compilation
-          OPENSSL_VENDOR: 1  # Use vendored OpenSSL
-        run: cross build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
+      - name: Build binary (Docker ARM64)
+        if: matrix.docker-build == true
+        run: |
+          docker run --rm --platform linux/arm64 \
+            -v ${{ github.workspace }}:/workspace \
+            rust:1.89 \
+            bash -c "cd /workspace && cargo build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}"
         
       - name: Strip binary (Linux/macOS)
         if: runner.os != 'Windows'
@@ -154,32 +149,75 @@ jobs:
           echo "  shimmy-macos-intel: SafeTensors + llama.cpp"
           echo "  shimmy-macos-arm64: SafeTensors + llama.cpp (i8mm mixed-ISA issue resolved)"
           
+      - name: Generate changelog entry
+        id: changelog
+        run: |
+          # Get previous tag for changelog generation
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          CURRENT_TAG=${{ github.ref_name }}
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "Generating changelog from $PREVIOUS_TAG to $CURRENT_TAG"
+            
+            # Generate changelog content
+            CHANGELOG_CONTENT=$(cat << 'EOF'
+          ## [$CURRENT_TAG] - $(date +%Y-%m-%d)
+          
+          ### Changes
+          $(git log --oneline --pretty=format:"- %s" ${PREVIOUS_TAG}..${CURRENT_TAG} | head -10)
+          
+          ### Full Changelog
+          See the [complete changelog](https://github.com/Michael-A-Kuykendall/shimmy/blob/main/CHANGELOG.md) for detailed release notes.
+          EOF
+          )
+            
+            # Replace variables in changelog content
+            CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed "s/\$CURRENT_TAG/$CURRENT_TAG/g")
+            
+            echo "changelog-content<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "No previous tag found, using default changelog"
+            echo "changelog-content=Automatic release for $CURRENT_TAG" >> $GITHUB_OUTPUT
+          fi
+          
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Create release notes combining changelog and platform info
+          RELEASE_NOTES=$(cat << 'EOF'
+          ${{ steps.changelog.outputs.changelog-content }}
+          
+          ---
+          
+          **Cross-platform binaries with SafeTensors support:**
+          
+          **Download the right binary for your platform:**
+          - **Linux x86_64**: `shimmy-linux-x86_64` (SafeTensors + llama.cpp)
+          - **Linux ARM64**: `shimmy-linux-arm64` (SafeTensors + Docker QEMU build)
+          - **Windows x86_64**: `shimmy-windows-x86_64.exe` (SafeTensors + llama.cpp)
+          - **macOS Intel**: `shimmy-macos-intel` (SafeTensors + llama.cpp)
+          - **macOS Apple Silicon**: `shimmy-macos-arm64` (SafeTensors + llama.cpp)
+          
+          All binaries include native SafeTensors support with zero Python dependencies.
+          
+          **Quick Start:**
+          ```bash
+          # Make executable (Linux/macOS)
+          chmod +x shimmy-*
+          
+          # Test the binary
+          ./shimmy-* --version
+          
+          # Start server
+          ./shimmy-* serve --bind 0.0.0.0:11434
+          ```
+          EOF
+          )
+          
           gh release create ${{ github.ref_name }} \
             release-files/* \
             --title "Shimmy ${{ github.ref_name }}" \
-            --notes "Cross-platform binaries with SafeTensors support:
-            
-            **Download the right binary for your platform:**
-            - **Linux x86_64**: \`shimmy-linux-x86_64\` (SafeTensors + llama.cpp)
-            - **Linux ARM64**: Coming soon (cross-compilation issues)
-            - **Windows x86_64**: \`shimmy-windows-x86_64.exe\` (SafeTensors + llama.cpp)
-            - **macOS Intel**: \`shimmy-macos-intel\` (SafeTensors + llama.cpp)
-            - **macOS Apple Silicon**: \`shimmy-macos-arm64\` (SafeTensors + llama.cpp)
-            
-            All binaries include native SafeTensors support with zero Python dependencies.
-            
-            **Quick Start:**
-            \`\`\`bash
-            # Make executable (Linux/macOS)
-            chmod +x shimmy-*
-            
-            # Test the binary
-            ./shimmy-* --version
-            
-            # Start server
-            ./shimmy-* serve --bind 0.0.0.0:11434
-            \`\`\`"
+            --notes "$RELEASE_NOTES"

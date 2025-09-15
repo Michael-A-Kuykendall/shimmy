@@ -21,6 +21,11 @@ Brief description of changes and motivation.
 - [ ] I have run `cargo clippy` with no warnings
 - [ ] I have run `cargo fmt`
 
+## Legal Compliance
+- [ ] All commits are signed off with DCO (`git commit -s`)
+- [ ] I have the right to contribute this code under the project license
+- [ ] If this includes third-party code, it's properly attributed and licensed
+
 ## Binary Size Impact
 Current binary size: ___ MB
 New binary size: ___ MB

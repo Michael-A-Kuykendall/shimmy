@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🗣️ General Discussion
+    url: https://github.com/Michael-A-Kuykendall/shimmy/discussions
+    about: Ask questions, share ideas, or discuss Shimmy with the community
+  - name: 🔒 Security Issues
+    url: https://github.com/Michael-A-Kuykendall/shimmy/security/advisories/new
+    about: Report security vulnerabilities privately (DO NOT use public issues)
+  - name: 📧 Direct Contact
+    url: mailto:hello@shimmy-ai.dev
+    about: Contact the maintainers directly for other inquiries
