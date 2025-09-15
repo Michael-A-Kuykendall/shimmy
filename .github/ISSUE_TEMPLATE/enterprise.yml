@@ -1,0 +1,87 @@
+name: 🏢 Enterprise Inquiry
+description: Partnership, integration, or enterprise support discussion
+labels: ["enterprise", "partnership"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Enterprise & Partnership Inquiries**
+        
+        Thank you for your interest in Shimmy for enterprise use. This template helps us understand your needs and provide the best possible support.
+        
+        **For immediate enterprise support:** Contact [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
+
+  - type: dropdown
+    id: inquiry_type
+    attributes:
+      label: 🎯 Inquiry Type
+      description: What type of enterprise discussion is this?
+      options:
+        - Partnership/Integration Opportunity
+        - Enterprise License Discussion
+        - Custom Development Request
+        - Technical Due Diligence
+        - Compliance/Security Audit
+        - Volume Deployment Support
+        - Other Enterprise Need
+    validations:
+      required: true
+
+  - type: textarea
+    id: organization
+    attributes:
+      label: 🏢 Organization Information
+      description: Tell us about your organization (optional but helpful)
+      placeholder: |
+        - Company name and size
+        - Industry/sector
+        - Current AI/ML infrastructure
+        - Team size that would use Shimmy
+    validations:
+      required: false
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: 🎯 Use Case & Requirements
+      description: Describe your intended use of Shimmy
+      placeholder: |
+        - Primary use case (local development, edge deployment, etc.)
+        - Scale requirements (requests/day, models, etc.)
+        - Integration needs
+        - Compliance requirements
+    validations:
+      required: true
+
+  - type: textarea
+    id: timeline
+    attributes:
+      label: ⏰ Timeline & Next Steps
+      description: What's your timeline and what support do you need?
+      placeholder: |
+        - Project timeline
+        - Preferred next steps
+        - Decision-making process
+        - Key stakeholders involved
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contact_preference
+    attributes:
+      label: 📞 Contact Preferences
+      description: How would you prefer to continue this conversation?
+      options:
+        - label: Email discussion is fine for now
+        - label: I'd prefer a video call to discuss details
+        - label: We need an NDA before detailed discussions
+        - label: This requires executive-level conversation
+
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: 📋 Additional Information
+      description: Anything else that would help us understand your needs?
+      placeholder: Any additional context, constraints, or questions
+    validations:
+      required: false

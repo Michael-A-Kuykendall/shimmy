@@ -1,7 +1,24 @@
-# Shimmy Roadmap
+# Shimmy Roadmap 🚀
 
-Shimmy is a 5MB, zero-config, OpenAI-compatible inference server.
-Its mission is **invisible infrastructure**: drop it in, it works.
+**Vision:** The privacy-first local AI infrastructure that replaces cloud dependencies
+
+Shimmy is a 5MB, zero-config, OpenAI-compatible inference server targeting the **$50B+ AI inference market**. Its mission is **invisible infrastructure**: drop it in, it works.
+
+## 🆓 Forever Free Commitment
+
+**Shimmy Core will always remain completely free and open-source.** This is not a "free tier" or "community edition" - it's a permanent commitment to the developer community.
+
+- ✅ **No feature limitations** - Full functionality, forever
+- ✅ **No usage limits** - Use it commercially, personally, anywhere
+- ✅ **No forced upgrades** - Current version will always work
+- ✅ **Community first** - Built for developers, by developers
+
+**Premium offerings (Console/Cloud) are separate products** that extend Shimmy's capabilities but never replace or limit the core experience.
+
+## 📊 Market Position
+- **Target Market**: 127M+ developers worldwide running AI workloads
+- **Problem**: Cloud AI costs $0.002-0.06/token, vendor lock-in, privacy concerns
+- **Solution**: 100% local, 100% private, 100% free, drop-in OpenAI replacement
 
 ## Current Milestones
 - ✅ Basic server skeleton with OpenAI-compatible endpoints
@@ -13,20 +30,44 @@ Its mission is **invisible infrastructure**: drop it in, it works.
 - ✅ WebSocket streaming support
 - ✅ LoRA adapter foundation
 
-## Next Goals
-- [ ] `/v1/embeddings` endpoint (minimal stub, then model-backed)
-- [ ] Micro-benchmarking of startup time and request latency
-- [ ] Model discovery improvements (config-free)
-- [ ] Enhanced test suite for API compatibility
-- [ ] Docker packaging and multi-platform binaries
-- [ ] Performance optimization for <100ms startup target
+## 🎯 Q4 2025 Milestones
+- [ ] **Enterprise Embeddings** - `/v1/embeddings` endpoint (targeting RAG workloads)
+- [ ] **Sub-50ms Startup** - Micro-benchmarking and optimization 
+- [ ] **Model Marketplace** - Discovery improvements with popularity rankings
+- [ ] **Container-First** - Docker packaging and multi-platform binaries
+- [ ] **Enterprise Analytics** - Optional usage metrics and monitoring hooks
+- [ ] **10,000 User Milestone** - Community growth and feedback integration
 
-## Long-Term Vision
-- Full OpenAI API coverage (completions, embeddings, chat, models)
-- Maintain <5MB binary target (currently 5.1MB)
-- Zero external configuration, portable deployment
-- Optional acceleration via SIMD/GPU if footprint remains small
-- Enterprise-grade reliability with consumer-grade simplicity
+## 🚀 2026 Strategic Initiatives  
+- [ ] **Shimmy Console** - Terminal UI frontend with retro aesthetics and advanced controls
+- [ ] **Proprietary Integration** - Enhanced inference capabilities via custom Rust toolchain
+- [ ] **Developer Experience Suite** - Integrated development environment for AI workflows
+- [ ] **Multi-Model Orchestration** - Load balancing across multiple models
+- [ ] **Shimmy Cloud** - Enterprise cloud deployment and management platform
+- [ ] **Fortune 500 Adoption** - Target enterprise development teams
+
+## 🌟 Long-Term Vision (2027+)
+
+### Technical Excellence
+- **100% OpenAI API Parity** - Complete feature compatibility
+- **Sub-5MB Binary** - Maintain lightweight footprint (current: 5.1MB)
+- **Universal Deployment** - Zero configuration, runs anywhere
+- **Hardware Optimization** - SIMD/GPU acceleration within size constraints
+- **Enterprise Reliability** - 99.99% uptime, consumer simplicity
+
+### Market Expansion  
+- **1M+ Active Developers** - Become the standard for local AI
+- **Product Suite Leadership** - Shimmy Console and Cloud ecosystem dominance
+- **Enterprise Standard** - Default choice for privacy-conscious organizations
+- **Ecosystem Platform** - Hub for local AI development tools
+- **Global Infrastructure** - Enable offline AI development worldwide
+- **Revenue Diversification** - Free core + premium products (not freemium limitations)
+
+### Industry Impact
+- **Privacy Leadership** - Set standards for local-first AI development
+- **Cost Reduction** - Save developers billions in cloud AI costs
+- **Innovation Catalyst** - Enable new categories of privacy-first AI applications
+- **Trust Building** - Demonstrate sustainable open-source without bait-and-switch tactics
 
 ## Non-Goals
 - UI/dashboard (invisible infrastructure philosophy)

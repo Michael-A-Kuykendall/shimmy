@@ -29,6 +29,19 @@ Brief description of changes and motivation.
 ## Binary Size Impact
 Current binary size: ___ MB
 New binary size: ___ MB
+Change: ___ MB (increase/decrease)
+
+## Enterprise Considerations
+- [ ] This change maintains backward compatibility
+- [ ] Performance impact has been measured and documented
+- [ ] Documentation has been updated where applicable
+- [ ] Change aligns with roadmap priorities
+
+## Community Impact
+- [ ] This change benefits the broader Shimmy community
+- [ ] Breaking changes are clearly documented and justified
+- [ ] Migration path is provided for breaking changes
+New binary size: ___ MB
 Change: ± ___ MB
 
 ## Checklist
