@@ -253,12 +253,12 @@ shimmy probe model-name         # Verify model loads
 
 ### Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Michael-A-Kuykendall/shimmy&type=Date)](https://star-history.com/#Michael-A-Kuykendall/shimmy&Date)
+[![Star History Chart](https://starchart.cc/Michael-A-Kuykendall/shimmy.svg)](https://starchart.cc/Michael-A-Kuykendall/shimmy)
 
 ### 🚀 Momentum Snapshot
 
 📦 **5 MB single binary**  
-🌟 **Featured on Hacker News**  
+🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**  
 ⏱ **<1s startup**  
 🦀 **100% Rust, no Python**
 
