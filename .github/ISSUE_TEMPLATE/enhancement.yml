@@ -1,0 +1,115 @@
+name: 🛠️ Enhancement
+description: Suggest an improvement to existing functionality
+title: "[Enhancement]: "
+labels: ["enhancement", "improvement", "needs-triage"]
+assignees: ["Michael-A-Kuykendall"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an enhancement! This template is for improving existing features rather than adding entirely new ones.
+
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: 📋 Current Behavior
+      description: Describe how the current feature works
+      placeholder: What does the existing functionality do right now?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_improvement
+    attributes:
+      label: 🚀 Proposed Enhancement
+      description: Describe how you'd like to improve it
+      placeholder: What specific improvements would you like to see?
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: ✅ Benefits
+      description: What benefits would this enhancement provide?
+      placeholder: |
+        - Performance improvement
+        - Better user experience  
+        - Easier configuration
+        - More intuitive API
+        etc.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 🎯 Component
+      description: Which component would this enhancement affect?
+      options:
+        - HTTP API endpoints
+        - Model inference engine
+        - Configuration system
+        - CLI interface
+        - Error handling/logging
+        - Docker/deployment
+        - Documentation
+        - Build system
+        - Dependencies
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: 📊 Impact Level
+      description: What level of change would this require?
+      options:
+        - Minor - Small code changes, no breaking changes
+        - Moderate - Some refactoring, backward compatible
+        - Major - Significant changes, may affect API
+        - Breaking - Would require version bump and migration
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: 📝 Examples
+      description: Provide before/after examples if applicable
+      placeholder: |
+        **Current:**
+        ```
+        Current command/API/behavior
+        ```
+        
+        **Enhanced:**  
+        ```
+        Improved command/API/behavior
+        ```
+      render: markdown
+
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: 🔄 Compatibility Considerations
+      description: What compatibility aspects should be considered?
+      options:
+        - label: This change should be backward compatible
+        - label: This change may require configuration updates
+        - label: This change may affect existing integrations
+        - label: This change requires documentation updates
+        - label: This change affects Docker/deployment
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: 📎 Additional Context
+      description: Any other relevant information
+      placeholder: |
+        - Links to relevant discussions
+        - Performance benchmarks
+        - User feedback or requests
+        - Related issues or PRs

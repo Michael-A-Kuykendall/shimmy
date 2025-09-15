@@ -1,0 +1,81 @@
+{
+  "timestamp": "2025-09-14T15:46:25-05:00",
+  "hostname": "MikesPC",
+  "os": "MINGW64_NT-10.0-26100",
+  "arch": "x86_64",
+  "cpu_cores": 24,
+  "gpu_name": "NVIDIA GeForce RTX 3060",
+  "gpu_memory_mb": 12288,
+  "shimmy_url": "http://localhost:11434",
+  "model_name": "qwen2.5:1.5b"
+  "benchmark_results": 🧪 Running performance test...
+[
+Request 1/20... ✅ 0s
+    {"request": 1, "time": 0, "success": true, "tokens": 16}
+Request 2/20... ✅ 0s
+,
+    {"request": 2, "time": 0, "success": true, "tokens": 23}
+Request 3/20... ✅ 0s
+,
+    {"request": 3, "time": 0, "success": true, "tokens": 19}
+Request 4/20... ✅ 0s
+,
+    {"request": 4, "time": 0, "success": true, "tokens": 19}
+Request 5/20... ✅ 0s
+,
+    {"request": 5, "time": 0, "success": true, "tokens": 4}
+Request 6/20... ✅ 0s
+,
+    {"request": 6, "time": 0, "success": true, "tokens": 10}
+Request 7/20... ✅ 0s
+,
+    {"request": 7, "time": 0, "success": true, "tokens": 8}
+Request 8/20... ✅ 0s
+,
+    {"request": 8, "time": 0, "success": true, "tokens": 11}
+Request 9/20... ✅ 0s
+,
+    {"request": 9, "time": 0, "success": true, "tokens": 16}
+Request 10/20... ✅ 0s
+,
+    {"request": 10, "time": 0, "success": true, "tokens": 11}
+Request 11/20... ✅ 0s
+,
+    {"request": 11, "time": 0, "success": true, "tokens": 12}
+Request 12/20... ✅ 0s
+,
+    {"request": 12, "time": 0, "success": true, "tokens": 18}
+Request 13/20... ✅ 0s
+,
+    {"request": 13, "time": 0, "success": true, "tokens": 20}
+Request 14/20... ✅ 0s
+,
+    {"request": 14, "time": 0, "success": true, "tokens": 14}
+Request 15/20... ✅ 0s
+,
+    {"request": 15, "time": 0, "success": true, "tokens": 18}
+Request 16/20... ✅ 0s
+,
+    {"request": 16, "time": 0, "success": true, "tokens": 11}
+Request 17/20... ✅ 0s
+,
+    {"request": 17, "time": 0, "success": true, "tokens": 14}
+Request 18/20... ✅ 0s
+,
+    {"request": 18, "time": 0, "success": true, "tokens": 8}
+Request 19/20... ✅ 0s
+,
+    {"request": 19, "time": 0, "success": true, "tokens": 13}
+Request 20/20... ✅ 0s
+,
+    {"request": 20, "time": 0, "success": true, "tokens": 14}
+]
+
+📊 Results:
+  Success Rate: 0%
+  Avg Response Time: 0s
+  Tokens/sec: 0
+  Total Requests: 20
+  Successful: 20
+  Failed: 0
+}

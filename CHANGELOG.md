@@ -31,6 +31,299 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Metrics Transparency**: Complete disclosure of business intelligence collection
 - **Contributing Guidelines**: Clear maintainer process and legal requirements
 
+## [1.3.3] - 2025-09-15
+
+### ✨ Features
+
+**Docker Compose Deployment Support**
+- Added complete Docker Compose configuration for production deployments
+- Includes Nginx reverse proxy and health checks
+- Railway, Render, and Fly.io deployment configurations
+- Production-ready containerization
+
+### 🐛 Bug Fixes
+
+**Issue #22: Windows EXE Availability**  
+- Fixed missing Windows executable in GitHub releases
+- Added `shimmy-windows-x86_64.exe` to all releases for direct download
+- Improved Windows installation documentation for libclang.dll dependency
+
+**ARM64 Linux Cross-Compilation Issues**
+- Resolved OpenSSL cross-compilation failures for ARM64 Linux builds
+- Switched to rustls for better cross-compilation compatibility
+- Added Docker-based ARM64 Linux build process using QEMU emulation
+- Temporarily excluded ARM64 Linux from CI/CD to ship 4-platform release
+
+### 🚀 Enhancements
+
+**Multi-Platform Release Automation**
+- Automated 4-platform binary generation: Linux x86_64, Windows x86_64, macOS Intel, macOS ARM64
+- Enhanced GitHub Actions workflow with improved error handling
+- Added Docker-based cross-compilation for future ARM64 Linux support
+
+**Cross-Compilation Documentation**
+- Added comprehensive cross-compilation guide (`docs/CROSS_COMPILATION.md`)
+- Documented Docker QEMU emulation process for ARM64 builds
+- Updated internal documentation with proven ARM64 build methods
+
+### 🔧 Technical Improvements
+
+**Security Dependencies**
+- Migrated from OpenSSL to rustls for better cross-platform compatibility
+- Reduced C++ dependency complexity in cross-compilation builds
+- Enhanced static linking for standalone binaries
+
+**Release Process**
+- Streamlined release workflow to prevent CI/CD failures
+- Added fallback strategies for platform-specific build issues
+- Improved artifact naming consistency across platforms
+
+### 📦 Platform Support
+
+**Current Release Platforms:**
+- ✅ Linux x86_64 (native build)
+- ✅ Windows x86_64 (native build) 
+- ✅ macOS Intel (native build)
+- ✅ macOS ARM64 (native build)
+- 🔄 Linux ARM64 (Docker QEMU build - documented process available)
+
+**Binary Downloads:**
+- All platforms available via GitHub Releases
+- Windows users: Download `shimmy-windows-x86_64.exe` directly
+- Linux ARM64: Docker build process documented for manual compilation
+
+### 🛠️ Developer Experience
+
+**Build Infrastructure**
+- Enhanced CI/CD pipeline reliability
+- Added Docker-based cross-compilation for complex targets
+- Improved error reporting and debugging for build failures
+- Added comprehensive build documentation
+
+### 📖 Documentation
+
+**Deployment Guides**
+- Docker Compose setup for production deployments
+- Cloud platform deployment instructions (Railway, Render, Fly.io)
+- Cross-compilation guide for ARM64 Linux builds
+- Windows installation troubleshooting guide
+
+## [1.3.1] - 2025-09-12
+
+### ✨ Features
+
+**Full llama.cpp Support on All Platforms**
+- Enabled complete llama.cpp support across Linux, Windows, macOS Intel, and macOS ARM64
+- Resolved macOS ARM64 compilation issues with forked llama-cpp dependency
+- Added ARM64-specific compiler capability detection and optimizations
+
+**Enhanced Build System**
+- Improved cross-platform compilation with specialized ARM64 handling
+- Added comprehensive testing for macOS ARM64 llama.cpp integration
+- Streamlined release workflow configuration for stable deployments
+
+### 🐛 Bug Fixes
+
+**macOS ARM64 Compilation Issues**
+- Fixed GGML_ARM_I8MM compilation conflicts on Apple Silicon
+- Resolved mixed-ISA build problems with targeted compiler flags
+- Added proper target detection for ARM64 optimization features
+
+**Release Workflow Stability**
+- Enhanced release pipeline reliability across all supported platforms
+- Fixed deployment configuration issues for stable v1.3.1 releases
+- Improved error handling and fallback strategies
+
+### 🔧 Technical Improvements
+
+**Cross-Platform Compatibility**
+- Updated llama-cpp dependency to specialized fork with ARM64 fixes
+- Enhanced build.rs with platform-specific compilation logic
+- Added comprehensive CMAKE configuration for different architectures
+
+**Testing Infrastructure**
+- Added isolated macOS ARM64 llama compilation testing
+- Enhanced platform-specific build validation
+- Improved error reporting for architecture-specific issues
+
+## [1.2.0] - 2025-09-10
+
+### ✨ Features
+
+**Native SafeTensors Support**
+- Implemented native SafeTensors inference engine with zero Python dependencies
+- Added complete SafeTensors model format support alongside GGUF
+- Enhanced model detection and loading for SafeTensors files
+
+**Enhanced Build System**
+- Updated release workflow with comprehensive system dependencies
+- Added support for all-features builds across platforms
+- Improved cross-platform compilation reliability
+
+### 🐛 Bug Fixes
+
+**Build and Deployment Issues**
+- Fixed release binary generation to exclude problematic llama.cpp dependencies
+- Resolved macOS runner cmake installation conflicts
+- Enhanced GitHub Actions workflow with proper dependency management
+
+**Model Discovery Improvements**
+- Fixed infinite recursion issues in model discovery on macOS
+- Enhanced model loading robustness across different file formats
+- Improved error handling for corrupted or incomplete model files
+
+### 🚀 Enhancements
+
+**Performance Optimizations**
+- Native SafeTensors processing for faster model loading
+- Reduced memory footprint with optimized inference pipeline
+- Enhanced startup performance with efficient model detection
+
+**Developer Experience**
+- Comprehensive testing suite for SafeTensors functionality
+- Improved documentation for multi-format model support
+- Enhanced debugging and error reporting capabilities
+
+## [1.1.0] - 2025-09-09
+
+### ✨ Features
+
+**Revolutionary Testing Framework**
+- Implemented PPT (Property-based Testing) framework for comprehensive coverage
+- Added invariant testing system for robust quality assurance
+- Enhanced testing excellence with automated property verification
+
+**Code Quality Improvements**
+- Eliminated all compiler warnings for clean, professional builds
+- Implemented comprehensive linting and formatting standards
+- Enhanced code documentation and maintainability
+
+### 🔧 Technical Improvements
+
+**Testing Infrastructure**
+- Advanced property-based testing with automated edge case discovery
+- Invariant checking system for critical functionality validation
+- Comprehensive test coverage across all major components
+
+**Build System Enhancements**
+- Clean compilation with zero warnings across all platforms
+- Enhanced build performance and reliability
+- Improved development workflow with better error reporting
+
+## [1.0.1] - 2025-09-08
+
+### 🐛 Bug Fixes
+
+**Critical Issues Resolved**
+- **Issue #6**: Fixed model discovery and loading failures
+- **Issue #7**: Resolved OpenAI API compatibility problems
+- **Issue #5**: Fixed chat completions hanging during generation
+
+**Performance Improvements**
+- Enhanced health and metrics endpoints for production monitoring
+- Improved error handling and recovery mechanisms
+- Optimized model loading and inference pipeline
+
+### ✨ Features
+
+**Enhanced Monitoring**
+- Added comprehensive health check endpoints
+- Implemented detailed metrics collection for performance tracking
+- Enhanced production readiness with robust monitoring capabilities
+
+**User Experience**
+- Added shimmy logo and improved visual branding
+- Enhanced error messages and user feedback
+- Improved CLI interface responsiveness
+
+### 🔧 Technical Improvements
+
+**Backend Reliability**
+- Improved backend selection logic for model compatibility
+- Enhanced error recovery and graceful degradation
+- Better handling of edge cases in model loading
+
+**Development Tools**
+- Configured Claude Code integration for improved development workflow
+- Enhanced debugging capabilities and error reporting
+- Improved development environment setup
+
+## [1.0.0] - 2025-09-08
+
+### ✨ Features
+
+**Production Release**
+- First stable release with comprehensive cross-platform support
+- Mature OpenAI API compatibility layer
+- Production-ready inference engine with robust error handling
+
+**Enhanced Model Discovery**
+- Improved Ollama model discovery with proper manifest parsing
+- Cross-platform model detection and loading
+- Enhanced compatibility with existing Ollama installations
+
+**Automated Release Infrastructure**
+- Complete cross-platform build automation via GitHub Actions
+- Automated binary generation for all supported platforms
+- Comprehensive governance and contribution guidelines
+
+### 🚀 Enhancements
+
+**Build System Maturity**
+- Replaced experimental cross-compilation with stable native builds
+- Enhanced release workflow reliability and consistency
+- Improved artifact generation and distribution
+
+**Community Infrastructure**
+- Added comprehensive GitHub automation and governance
+- Implemented professional contribution guidelines
+- Enhanced project documentation and developer resources
+
+### 🔧 Technical Improvements
+
+**Stability and Reliability**
+- Production-grade error handling and recovery
+- Enhanced performance optimization across platforms
+- Comprehensive testing and validation framework
+
+## [0.1.1] - 2025-09-06
+
+### ✨ Features
+
+**Native Ollama Integration**
+- Added comprehensive Ollama model discovery support
+- Enhanced compatibility with existing Ollama installations
+- Improved model detection and loading from Ollama directories
+
+**Community Support**
+- Added multiple sponsorship options: Buy Me a Coffee, Ko-fi, Open Collective
+- Enhanced funding infrastructure for sustainable development
+- Improved community engagement and support channels
+
+### 📖 Documentation
+
+**Platform Compatibility**
+- Added comprehensive macOS compatibility documentation
+- Enhanced Windows installation instructions with security notes
+- Improved platform-specific guidance and troubleshooting
+
+**User Experience**
+- Added Windows Defender false positive warnings and solutions
+- Enhanced installation clarity for new users
+- Improved discoverability with better crates.io keywords
+
+### 🐛 Bug Fixes
+
+**Build and Distribution**
+- Fixed cross-compilation issues and CI/CD pipeline stability
+- Resolved dependency conflicts in GitHub Actions
+- Enhanced build reliability across different environments
+
+**Code Quality**
+- Cleaned up README markdown formatting for better readability
+- Fixed unused import warnings and code quality issues
+- Enhanced overall code organization and maintainability
+
 ## [1.3.2] - 2025-09-12
 
 ### 🐛 Bug Fixes

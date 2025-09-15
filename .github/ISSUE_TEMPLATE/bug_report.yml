@@ -1,166 +1,113 @@
 name: 🐛 Bug Report
-description: Report a bug or unexpected behavior in Shimmy
-title: "[Bug]: "
-labels: ["bug", "needs-triage"]
-assignees: ["Michael-A-Kuykendall"]
-
+description: Report a bug or unexpected behavior
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug! Please fill out the sections below to help us debug the issue.
+        Thanks for taking the time to report a bug! Please fill out the information below to help us reproduce and fix the issue.
 
   - type: textarea
     id: description
     attributes:
-      label: Bug Description
-      description: A clear and concise description of what the bug is.
-      placeholder: Describe what happened and what you expected to happen.
+      label: 🐛 Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened and what you expected to happen
     validations:
       required: true
 
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
-      description: Steps to reproduce the behavior
+      label: 🔄 Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
       placeholder: |
-        1. Start shimmy with command `shimmy serve --bind 0.0.0.0:11434`
-        2. Send request to `/api/generate` with payload: {...}
-        3. Observe error: ...
+        1. Run command '...'
+        2. Send API request '...'
+        3. See error
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: Expected Behavior
+      label: ✅ Expected Behavior
       description: What you expected to happen
-      placeholder: Describe the expected behavior
     validations:
       required: true
 
   - type: textarea
     id: actual
     attributes:
-      label: Actual Behavior
-      description: What actually happened
-      placeholder: Describe what actually happened instead
+      label: ❌ Actual Behavior
+      description: What actually happened instead
     validations:
       required: true
 
   - type: dropdown
     id: version
     attributes:
-      label: Shimmy Version
-      description: What version of Shimmy are you running?
+      label: 📦 Shimmy Version
+      description: Which version of Shimmy are you using?
       options:
-        - v1.2.0 (latest)
+        - v1.3.2 (latest)
+        - v1.3.1
+        - v1.3.0
+        - v1.2.0
         - v1.1.0
-        - v1.0.0
-        - main/development branch
-        - Other (specify in description)
+        - Other (specify in additional context)
     validations:
       required: true
 
   - type: dropdown
     id: os
     attributes:
-      label: Operating System
-      description: What operating system are you using?
+      label: 💻 Operating System
+      description: What operating system are you running?
       options:
-        - Linux (x86_64)
-        - Linux (ARM64)
-        - macOS (Intel)
-        - macOS (Apple Silicon)
-        - Windows (x86_64)
+        - Windows
+        - macOS
+        - Linux (Ubuntu)
+        - Linux (other)
         - Docker
-        - Other (specify in description)
+        - Other (specify below)
     validations:
       required: true
 
   - type: dropdown
     id: installation
     attributes:
-      label: Installation Method
+      label: 📥 Installation Method
       description: How did you install Shimmy?
       options:
-        - Pre-built binary from GitHub releases
-        - Built from source with cargo
-        - Docker image
-        - Cloud deployment (Railway, Render, etc.)
-        - Package manager
-        - Other (specify in description)
+        - cargo install
+        - Pre-built binary
+        - Built from source
+        - Docker/Docker Compose
+        - Package manager (winget, brew, etc.)
     validations:
       required: true
 
   - type: textarea
-    id: model-info
+    id: environment
     attributes:
-      label: Model Information
-      description: If the issue is model-related, provide details about the model
+      label: 🌍 Environment Details
+      description: Additional environment information
       placeholder: |
-        Model format: SafeTensors/GGUF/Other
-        Model size: e.g., 7B parameters, 13GB file size
-        Model source: HuggingFace, local file, etc.
-        Model path: /path/to/model (if relevant)
-
-  - type: textarea
-    id: config
-    attributes:
-      label: Configuration
-      description: Relevant configuration details
-      placeholder: |
-        Command line arguments: shimmy serve --bind 0.0.0.0:11434
-        Environment variables: RUST_LOG=debug
-        Feature flags: --features llama,huggingface
-        Other relevant config
+        - Rust version (if applicable): 
+        - Model being used:
+        - Hardware specs:
+        - Any relevant configuration:
 
   - type: textarea
     id: logs
     attributes:
-      label: Error Logs
-      description: |
-        Relevant error logs. For more detailed logs, run with `RUST_LOG=debug`.
-        Please include the full error message and stack trace if available.
-      placeholder: Paste error logs here
+      label: 📋 Logs/Error Messages
+      description: Include relevant logs, error messages, or stack traces
       render: text
 
   - type: textarea
-    id: request-details
+    id: additional
     attributes:
-      label: API Request Details (if applicable)
-      description: If this is an API-related issue, include request details
-      placeholder: |
-        HTTP method: POST
-        Endpoint: /api/generate
-        Request body: {"model": "default", "prompt": "test", ...}
-        Response status: 500
-        Response body: {...}
-      render: json
-
-  - type: checkboxes
-    id: checklist
-    attributes:
-      label: Checklist
-      description: Please confirm the following
-      options:
-        - label: I have searched existing issues to make sure this is not a duplicate
-          required: true
-        - label: I have provided all the requested information above
-          required: true
-        - label: I can reproduce this issue consistently
-          required: false
-        - label: I am willing to help test a fix for this issue
-          required: false
-
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: Additional Context
-      description: Add any other context about the problem here
-      placeholder: |
-        - Screenshots or videos
-        - Related issues or discussions
-        - Potential workarounds you've tried
-        - Any other relevant information
+      label: 📝 Additional Context
+      description: Any other context, screenshots, or information that might help

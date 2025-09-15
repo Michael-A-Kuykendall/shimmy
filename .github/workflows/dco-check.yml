@@ -1,0 +1,14 @@
+name: DCO Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  dco_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: DCO Check
+        uses: sobolevn/dco-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

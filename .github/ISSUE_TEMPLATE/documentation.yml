@@ -1,0 +1,115 @@
+name: 📚 Documentation
+description: Request documentation improvements or additions
+title: "[Docs]: "
+labels: ["documentation", "needs-triage"]
+assignees: ["Michael-A-Kuykendall"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation! Clear docs make Shimmy better for everyone.
+
+  - type: dropdown
+    id: doc_type
+    attributes:
+      label: 📖 Documentation Type
+      description: What type of documentation is needed?
+      options:
+        - Missing documentation
+        - Incorrect/outdated information  
+        - Unclear/confusing content
+        - New feature documentation
+        - API reference improvements
+        - Tutorial/guide needed
+        - Examples needed
+        - Installation/setup help
+        - Configuration documentation
+        - Troubleshooting guide
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_issue
+    attributes:
+      label: 🎯 Current Issue
+      description: What documentation problem are you facing?
+      placeholder: |
+        - What were you trying to do?
+        - What documentation did you check?
+        - What was unclear or missing?
+        - Where did you get stuck?
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: 📍 Location
+      description: Where should this documentation be added or fixed?
+      placeholder: |
+        - README.md
+        - docs/installation.md
+        - API endpoints section
+        - Docker deployment guide
+        - New file needed: docs/xyz.md
+        - Code comments
+        - etc.
+
+  - type: textarea
+    id: proposed_content
+    attributes:
+      label: ✏️ Proposed Content
+      description: If you have suggestions for the documentation content
+      placeholder: |
+        Share any ideas for:
+        - Specific information to include
+        - Better explanations
+        - Helpful examples
+        - Step-by-step instructions
+        - Code snippets
+      render: markdown
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: 👥 Target Audience
+      description: Who is the primary audience for this documentation?
+      options:
+        - New users getting started
+        - Developers integrating with Shimmy
+        - System administrators deploying
+        - Contributors to the project
+        - Advanced users/power users
+        - API consumers
+        - Docker users
+        - All users
+
+  - type: checkboxes
+    id: content_needed
+    attributes:
+      label: 📋 Content Needed
+      description: What type of content would be most helpful? (Select all that apply)
+      options:
+        - label: Step-by-step instructions
+        - label: Code examples  
+        - label: Configuration samples
+        - label: Command-line examples
+        - label: API request/response examples
+        - label: Troubleshooting steps
+        - label: Best practices
+        - label: Performance tips
+        - label: Security considerations
+        - label: Screenshots/diagrams
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 🔍 Additional Context
+      description: Any other helpful information
+      placeholder: |
+        - Your experience level with Shimmy
+        - What you were trying to accomplish
+        - Other tools/docs you found helpful
+        - Links to related discussions
+        - Common questions you've seen
