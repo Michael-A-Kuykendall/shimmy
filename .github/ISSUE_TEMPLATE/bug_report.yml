@@ -6,6 +6,8 @@ body:
     attributes:
       value: |
         Thanks for taking the time to report a bug! Please fill out the information below to help us reproduce and fix the issue.
+        
+        **⚠️ Important:** For security vulnerabilities, please use [private reporting](https://github.com/Michael-A-Kuykendall/shimmy/security/advisories/new) instead of public issues.
 
   - type: textarea
     id: description
@@ -48,14 +50,15 @@ body:
     id: version
     attributes:
       label: 📦 Shimmy Version
-      description: Which version of Shimmy are you using?
+      description: Which version of Shimmy are you using? Run `shimmy --version` to check.
       options:
-        - v1.3.2 (latest)
-        - v1.3.1
-        - v1.3.0
-        - v1.2.0
-        - v1.1.0
-        - Other (specify in additional context)
+        - Latest (main branch)
+        - v1.4.0 or newer
+        - v1.3.x
+        - v1.2.x  
+        - v1.1.x
+        - v1.0.x
+        - Other/Unknown (specify in additional context)
     validations:
       required: true
 
@@ -80,11 +83,12 @@ body:
       label: 📥 Installation Method
       description: How did you install Shimmy?
       options:
-        - cargo install
-        - Pre-built binary
-        - Built from source
+        - cargo install shimmy
+        - Pre-built binary from releases
+        - Built from source (cargo build)
         - Docker/Docker Compose
-        - Package manager (winget, brew, etc.)
+        - Package manager (winget, brew, apt, etc.)
+        - Other (specify below)
     validations:
       required: true
 

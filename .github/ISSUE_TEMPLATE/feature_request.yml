@@ -9,6 +9,8 @@ body:
     attributes:
       value: |
         Thanks for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+        
+        **💡 Tip:** Check existing issues and our [roadmap](https://github.com/Michael-A-Kuykendall/shimmy/blob/main/ROADMAP.md) to see if this is already planned.
 
   - type: textarea
     id: problem
@@ -38,17 +40,20 @@ body:
   - type: dropdown
     id: category
     attributes:
-      label: Feature Category
+      label: 🎨 Feature Category
       description: What category does this feature fall into?
       options:
-        - API functionality
-        - Model support (new formats, engines)
+        - API functionality (new endpoints, parameters)
+        - Model support (new formats, engines, LoRA)
         - Performance optimization
-        - Developer experience
-        - Documentation
-        - Deployment/infrastructure
-        - CLI interface
-        - Configuration/settings
+        - Developer experience (CLI, tooling)
+        - Documentation & examples
+        - Deployment & infrastructure (Docker, packaging)
+        - Configuration & settings
+        - Streaming & real-time features
+        - Integration & compatibility
+        - Security & authentication
+        - Monitoring & observability
         - Other (specify in description)
     validations:
       required: true

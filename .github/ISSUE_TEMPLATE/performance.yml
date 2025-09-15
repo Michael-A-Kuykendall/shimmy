@@ -1,0 +1,180 @@
+name: ⚡ Performance Issue
+description: Report performance problems, slowness, or optimization suggestions
+title: "[Performance]: "
+labels: ["performance", "needs-triage"]
+assignees: ["Michael-A-Kuykendall"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a performance issue! Performance is crucial for Shimmy's local-first philosophy.
+        
+        Please provide detailed information to help us identify and optimize the bottleneck.
+
+  - type: dropdown
+    id: performance_type
+    attributes:
+      label: 🎯 Performance Issue Type
+      description: What type of performance problem are you experiencing?
+      options:
+        - Slow model loading/initialization
+        - Slow inference/generation speed
+        - High memory usage
+        - High CPU usage
+        - Long startup time
+        - API response latency
+        - Streaming performance
+        - Memory leaks
+        - Binary size concerns
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📊 Performance Problem Description
+      description: Describe the performance issue you're experiencing
+      placeholder: |
+        What specific performance problem are you seeing?
+        - What operation is slow?
+        - How long does it take vs. what you'd expect?
+        - When did you first notice this issue?
+    validations:
+      required: true
+
+  - type: textarea
+    id: measurements
+    attributes:
+      label: 📈 Performance Measurements
+      description: Provide specific measurements and benchmarks
+      placeholder: |
+        Please include actual numbers:
+        - Response times (ms/seconds)
+        - Memory usage (MB/GB)
+        - CPU usage percentages
+        - Model loading times
+        - Tokens per second
+        - Binary size (if relevant)
+        
+        Use tools like `time`, `htop`, or browser dev tools for measurements.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 🖥️ System Environment
+      description: Hardware and system details
+      placeholder: |
+        - Shimmy version:
+        - Operating System:
+        - CPU (cores, architecture):
+        - RAM available:
+        - Storage type (SSD/HDD):
+        - Model file size and format:
+        - Installation method:
+    validations:
+      required: true
+
+  - type: textarea
+    id: model_details
+    attributes:
+      label: 🤖 Model Information
+      description: Details about the model causing performance issues
+      placeholder: |
+        - Model name/source:
+        - Model size (parameters):
+        - GGUF quantization level:
+        - LoRA adapter (if applicable):
+        - Context length setting:
+        - Batch size settings:
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: ⚙️ Shimmy Configuration
+      description: Relevant configuration that might affect performance
+      placeholder: |
+        Include relevant configuration:
+        - Command line arguments used
+        - Environment variables set
+        - API request parameters
+        - Any custom settings
+      render: yaml
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Detailed steps to reproduce the performance issue
+      placeholder: |
+        1. Start Shimmy with: `shimmy serve --model ...`
+        2. Send request: `curl -X POST ...`
+        3. Measure time using: `time curl ...`
+        4. Observe slow response/high resource usage
+    validations:
+      required: true
+
+  - type: textarea
+    id: comparison
+    attributes:
+      label: 📊 Performance Comparison
+      description: How does this compare to expected performance or other setups?
+      placeholder: |
+        - Expected performance:
+        - Performance with different models:
+        - Performance on different hardware:
+        - Comparison with similar tools:
+        - Performance regression (was it faster before?):
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 💥 Impact Assessment
+      description: How does this performance issue affect your use case?
+      placeholder: |
+        - Does this block your workflow?
+        - How many users are affected?
+        - Is there a workaround you're using?
+        - Business/project impact?
+
+  - type: checkboxes
+    id: troubleshooting
+    attributes:
+      label: 🔍 Troubleshooting Done
+      description: What troubleshooting have you already tried?
+      options:
+        - label: Tested with different model sizes/quantizations
+        - label: Monitored system resources during the issue
+        - label: Tested on different hardware (if available)
+        - label: Compared performance across multiple runs
+        - label: Checked for other running processes affecting performance
+        - label: Reviewed Shimmy logs for errors or warnings
+        - label: Tested with minimal configuration
+
+  - type: textarea
+    id: logs_metrics
+    attributes:
+      label: 📋 Logs and Metrics
+      description: Include relevant logs, metrics, or profiling data
+      placeholder: |
+        Include any relevant:
+        - Shimmy server logs
+        - System monitoring output (htop, Activity Monitor)
+        - Profiling data
+        - Network timing (if API-related)
+        - Memory allocation traces
+      render: text
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: 📝 Additional Context
+      description: Any other information that might help optimize performance
+      placeholder: |
+        - Similar issues you've found
+        - Performance expectations based on hardware
+        - Suggestions for optimization
+        - Willingness to test fixes
