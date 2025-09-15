@@ -7,8 +7,7 @@
   [![Crates.io](https://img.shields.io/crates/v/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Downloads](https://img.shields.io/crates/d/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
-  [![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen)](https://github.com/Michael-A-Kuykendall/shimmy/actions)
-  [![Quality](https://img.shields.io/badge/Quality-Assured-success)](https://github.com/Michael-A-Kuykendall/shimmy/actions)
+  [![GitHub Stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=social)](https://github.com/Michael-A-Kuykendall/shimmy/stargazers)
   [![Sponsor](https://img.shields.io/badge/❤️-Sponsor-ea4aaa?logo=github)](https://github.com/sponsors/Michael-A-Kuykendall)
 </div>
 
@@ -16,13 +15,33 @@
 
 ## Drop-in OpenAI API Replacement for Local LLMs
 
-Shimmy is a **5.1MB single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work - locally, privately, and free.
+Shimmy is a **5.1MB single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
 
 ```bash
 # Install and run in 30 seconds
 cargo install shimmy --features huggingface
 shimmy serve
 # → Running on http://localhost:11435
+```
+
+### Try it in 30 seconds
+
+```bash
+# 1) Install + run
+cargo install shimmy --features huggingface
+shimmy serve &
+
+# 2) See models and pick one
+shimmy list
+
+# 3) Smoke test the OpenAI API
+curl -s http://127.0.0.1:11435/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "model":"REPLACE_WITH_MODEL_FROM_list",
+        "messages":[{"role":"user","content":"Say hi in 5 words."}],
+        "max_tokens":32
+      }' | jq -r '.choices[0].message.content'
 ```
 
 ## 🚀 Works with Your Existing Tools
@@ -33,6 +52,43 @@ shimmy serve
 - **Cursor Editor**: Built-in OpenAI compatibility  
 - **Continue.dev**: Drop-in model provider
 - **Any OpenAI client**: Python, Node.js, curl, etc.
+
+### Use with OpenAI SDKs
+
+- Node.js (openai v4)
+
+```ts
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  baseURL: "http://127.0.0.1:11435/v1",
+  apiKey: "sk-local", // placeholder, Shimmy ignores it
+});
+
+const resp = await openai.chat.completions.create({
+  model: "REPLACE_WITH_MODEL",
+  messages: [{ role: "user", content: "Say hi in 5 words." }],
+  max_tokens: 32,
+});
+
+console.log(resp.choices[0].message?.content);
+```
+
+- Python (openai>=1.0.0)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://127.0.0.1:11435/v1", api_key="sk-local")
+
+resp = client.chat.completions.create(
+    model="REPLACE_WITH_MODEL",
+    messages=[{"role": "user", "content": "Say hi in 5 words."}],
+    max_tokens=32,
+)
+
+print(resp.choices[0].message.content)
+```
 
 ## ⚡ Zero Configuration Required
 
@@ -99,7 +155,7 @@ shimmy serve
 shimmy serve --bind 127.0.0.1:11435
 ```
 
-Point your AI tools to the displayed port - VSCode Copilot, Cursor, Continue.dev all work instantly!
+Point your AI tools to the displayed port — VSCode Copilot, Cursor, Continue.dev all work instantly.
 
 ## 📦 Download & Install
 
