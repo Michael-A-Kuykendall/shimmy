@@ -1,0 +1,84 @@
+name: ❓ Question & Help
+description: Get help with using Shimmy or ask questions about functionality
+title: "[Question]: "
+labels: ["question", "help-wanted"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking a question! We're here to help you get the most out of Shimmy.
+        
+        **💡 Tip:** Check our [documentation](https://github.com/Michael-A-Kuykendall/shimmy/tree/main/docs) and [discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions) first to see if your question has been answered.
+
+  - type: dropdown
+    id: question_type
+    attributes:
+      label: 🎯 Question Type
+      description: What type of help do you need?
+      options:
+        - Installation & Setup
+        - Configuration & Usage
+        - API Integration
+        - Model Compatibility
+        - Performance & Optimization
+        - Docker Deployment
+        - Troubleshooting
+        - Best Practices
+        - Feature Clarification
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: ❓ Your Question
+      description: What would you like to know about Shimmy?
+      placeholder: Please be as specific as possible to help us provide the best answer
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 📋 Context & What You've Tried
+      description: Provide context about your use case and what you've already attempted
+      placeholder: |
+        - What are you trying to accomplish?
+        - What have you already tried?
+        - What documentation have you consulted?
+        - What specific challenges are you facing?
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 🌍 Environment (if relevant)
+      description: Your setup details (only fill if relevant to your question)
+      placeholder: |
+        - Shimmy version:
+        - Operating System:
+        - Installation method:
+        - Model being used:
+        - Relevant configuration:
+
+  - type: textarea
+    id: expected_outcome
+    attributes:
+      label: 🎯 Expected Outcome
+      description: What would you like to achieve or what behavior do you expect?
+      placeholder: Describe what success looks like for your use case
+
+  - type: checkboxes
+    id: acknowledgments
+    attributes:
+      label: ✅ Checklist
+      description: Please confirm you've done the following
+      options:
+        - label: I have searched existing issues and discussions for similar questions
+          required: true
+        - label: I have reviewed the relevant documentation
+          required: true
+        - label: I have provided sufficient context for others to understand my question
+          required: true

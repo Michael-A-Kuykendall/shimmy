@@ -77,13 +77,16 @@ body:
       description: Who is the primary audience for this documentation?
       options:
         - New users getting started
-        - Developers integrating with Shimmy
-        - System administrators deploying
+        - Developers integrating Shimmy APIs
+        - System administrators & DevOps
+        - Docker & container users
         - Contributors to the project
-        - Advanced users/power users
-        - API consumers
-        - Docker users
-        - All users
+        - Advanced users & power users
+        - Model researchers & ML engineers
+        - Troubleshooting & support users
+        - All users (general documentation)
+    validations:
+      required: true
 
   - type: checkboxes
     id: content_needed
