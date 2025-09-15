@@ -4,8 +4,9 @@
   # The 5MB Alternative to Ollama
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Crates.io](https://img.shields.io/crates/v/shimmy.svg)](https://crates.io/crates/shimmy)
+  [![Downloads](https://img.shields.io/crates/d/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
-  [![CI](https://github.com/Michael-A-Kuykendall/shimmy/workflows/CI/badge.svg)](https://github.com/Michael-A-Kuykendall/shimmy/actions)
   [![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen)](https://github.com/Michael-A-Kuykendall/shimmy/actions)
   [![Quality](https://img.shields.io/badge/Quality-Assured-success)](https://github.com/Michael-A-Kuykendall/shimmy/actions)
   [![Sponsor](https://img.shields.io/badge/❤️-Sponsor-ea4aaa?logo=github)](https://github.com/sponsors/Michael-A-Kuykendall)
@@ -13,29 +14,39 @@
 
 **Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
 
-**Fast, reliable local AI inference.** Shimmy provides OpenAI-compatible endpoints for GGUF models with comprehensive testing and automated quality assurance.
+## Drop-in OpenAI API Replacement for Local LLMs
 
-## What is Shimmy?
+Shimmy is a **5.1MB single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work - locally, privately, and free.
 
-Shimmy is a **5.1MB single-binary** local inference server that provides OpenAI API-compatible endpoints for GGUF models. It's designed to be the **invisible infrastructure** that just works.
+```bash
+# Install and run in 30 seconds
+cargo install shimmy --features huggingface
+shimmy serve
+# → Running on http://localhost:11435
+```
 
-| Metric | Shimmy | Ollama | 
-|--------|--------|--------|
-| **Binary Size** | 5.1MB 🏆 | 680MB |
-| **Startup Time** | <100ms 🏆 | 5-10s |
-| **Memory Overhead** | <50MB 🏆 | 200MB+ |
-| **OpenAI Compatibility** | 100% 🏆 | Partial |
-| **Port Management** | Auto 🏆 | Manual |
-| **Configuration** | Zero 🏆 | Manual |
+## 🚀 Works with Your Existing Tools
 
-## 🎯 Perfect for Developers
+**No code changes needed** - just change the API endpoint:
 
-- **Privacy**: Your code stays on your machine  
-- **Cost**: No per-token pricing, unlimited queries  
-- **Speed**: Local inference = sub-second responses  
-- **Integration**: Works with VSCode, Cursor, Continue.dev out of the box  
+- **VSCode Extensions**: Point to `http://localhost:11435`
+- **Cursor Editor**: Built-in OpenAI compatibility  
+- **Continue.dev**: Drop-in model provider
+- **Any OpenAI client**: Python, Node.js, curl, etc.
 
-**BONUS:** First-class LoRA adapter support - from training to production API in 30 seconds.
+## ⚡ Zero Configuration Required
+
+- **Auto-discovers models** from Hugging Face cache, Ollama, local dirs
+- **Auto-allocates ports** to avoid conflicts
+- **Auto-detects LoRA adapters** for specialized models
+- **Just works** - no config files, no setup wizards
+
+## 🎯 Perfect for Local Development
+
+- **Privacy**: Your code never leaves your machine
+- **Cost**: No API keys, no per-token billing  
+- **Speed**: Local inference, sub-second responses
+- **Reliability**: No rate limits, no downtime
 
 ## Quick Start (30 seconds)
 
@@ -238,6 +249,3 @@ MIT License - forever and always.
 **Forever maintainer**: Michael A. Kuykendall  
 **Promise**: This will never become a paid product  
 **Mission**: Making local AI development frictionless
-
-*"The best code is code you don't have to think about."*  
-*"The best tests are properties you can't break."*
