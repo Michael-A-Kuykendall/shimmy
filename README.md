@@ -11,10 +11,24 @@
   [![Downloads](https://img.shields.io/crates/d/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
   [![GitHub Stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=social)](https://github.com/Michael-A-Kuykendall/shimmy/stargazers)
-  [![Sponsor](https://img.shields.io/badge/❤️-Sponsor-ea4aaa?logo=github)](https://github.com/sponsors/Michael-A-Kuykendall)
+  
+  [![💝 Sponsor this project](https://img.shields.io/badge/💝_Sponsor_this_project-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/Michael-A-Kuykendall)
 </div>
 
 **Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
+
+### 💝 Support Shimmy's Growth
+
+🚀 **If Shimmy helps you, consider [sponsoring](https://github.com/sponsors/Michael-A-Kuykendall) — 100% of support goes to keeping it free forever.**
+
+- **$5/month**: Coffee tier ☕ - Eternal gratitude + sponsor badge  
+- **$25/month**: Bug prioritizer 🐛 - Priority support + name in [SPONSORS.md](SPONSORS.md)
+- **$100/month**: Corporate backer 🏢 - Logo placement + monthly office hours  
+- **$500/month**: Infrastructure partner 🚀 - Direct support + roadmap input
+
+[**🎯 Become a Sponsor**](https://github.com/sponsors/Michael-A-Kuykendall) | See our amazing [sponsors](SPONSORS.md) 🙏
+
+---
 
 ## Drop-in OpenAI API Replacement for Local LLMs
 
@@ -215,7 +229,7 @@ I built Shimmy to retain privacy-first control on my AI development and keep thi
 
 **This is my commitment**: Shimmy stays MIT licensed, forever. If you want to support development, [sponsor it](https://github.com/sponsors/Michael-A-Kuykendall). If you don't, just build something cool with it.
 
-> Shimmy saves you time and money. If it's useful, consider sponsoring for $5/month — less than your Netflix subscription, infinitely more useful.
+> 💡 **Shimmy saves you time and money. If it's useful, consider [sponsoring for $5/month](https://github.com/sponsors/Michael-A-Kuykendall) — less than your Netflix subscription, infinitely more useful for developers.**
 
 ## API Reference
 
@@ -265,18 +279,6 @@ shimmy probe model-name         # Verify model loads
 ### 📰 As Featured On
 
 🔥 [**Hacker News**](https://news.ycombinator.com/item?id=45130322) • [**Front Page Again**](https://news.ycombinator.com/item?id=45199898) • [**IPE Newsletter**](https://ipenewsletter.substack.com/p/the-strange-new-side-hustles-of-openai)
-
-### 💝 Support Shimmy's Growth
-
-🚀 **If Shimmy helps you, consider sponsoring — 100% of support goes to keeping it free forever.**
-
-**Sponsorship Tiers:**
-- **$5/month**: Coffee tier - My eternal gratitude + sponsor badge
-- **$25/month**: Bug prioritizer - Priority support + name in SPONSORS.md  
-- **$100/month**: Corporate backer - Logo on README + monthly office hours
-- **$500/month**: Infrastructure partner - Direct support + roadmap input
-
-[**🎯 Become a Sponsor**](https://github.com/sponsors/Michael-A-Kuykendall) | See our amazing [sponsors](SPONSORS.md) who make Shimmy possible! 🙏
 
 **Companies**: Need invoicing? Email [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
 
