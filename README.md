@@ -267,7 +267,7 @@ shimmy probe model-name         # Verify model loads
 
 ### Star History
 
-[![Star History Chart](https://starchart.cc/Michael-A-Kuykendall/shimmy.svg)](https://starchart.cc/Michael-A-Kuykendall/shimmy)
+[![Star History Chart](https://api.star-history.com/svg?repos=Michael-A-Kuykendall/shimmy&type=Timeline)](https://www.star-history.com/#Michael-A-Kuykendall/shimmy&Timeline)
 
 ### 🚀 Momentum Snapshot
 
