@@ -7,7 +7,7 @@
 *Your logo could be here*
 
 ## Individual Heroes ($5+/month)
-*Matthias Zepper*first sponsor!*
+*Matthias Zepper*. First sponsor!*
 
 ---
 
