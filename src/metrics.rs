@@ -378,7 +378,23 @@ impl TelemetryCollector {
     }
 
     fn detect_gpu() -> bool {
-        // Simple GPU detection
+        // Multi-vendor GPU detection
+        Self::detect_nvidia() || Self::detect_amd() || Self::detect_intel()
+    }
+
+    fn get_gpu_vendor() -> Option<String> {
+        if Self::detect_nvidia() {
+            Some("nvidia".to_string())
+        } else if Self::detect_amd() {
+            Some("amd".to_string())
+        } else if Self::detect_intel() {
+            Some("intel".to_string())
+        } else {
+            None
+        }
+    }
+
+    fn detect_nvidia() -> bool {
         std::process::Command::new("nvidia-smi")
             .arg("--version")
             .output()
@@ -386,16 +402,61 @@ impl TelemetryCollector {
             .unwrap_or(false)
     }
 
-    fn get_gpu_vendor() -> Option<String> {
-        if std::process::Command::new("nvidia-smi")
+    fn detect_amd() -> bool {
+        // Check for ROCm tools on AMD GPUs
+        std::process::Command::new("rocm-smi")
             .arg("--version")
             .output()
             .map(|o| o.status.success())
-            .unwrap_or(false)
-        {
-            Some("nvidia".to_string())
+            .unwrap_or_else(|_| {
+                // Fallback: check for AMD GPU via rocminfo
+                std::process::Command::new("rocminfo")
+                    .output()
+                    .map(|o| o.status.success())
+                    .unwrap_or_else(|_| {
+                        // Windows fallback: check for AMD GPU via wmic
+                        if cfg!(windows) {
+                            std::process::Command::new("wmic")
+                                .args(&["path", "win32_VideoController", "get", "name"])
+                                .output()
+                                .map(|o| {
+                                    String::from_utf8_lossy(&o.stdout)
+                                        .to_lowercase()
+                                        .contains("amd") || 
+                                    String::from_utf8_lossy(&o.stdout)
+                                        .to_lowercase()
+                                        .contains("radeon")
+                                })
+                                .unwrap_or(false)
+                        } else {
+                            false
+                        }
+                    })
+            })
+    }
+
+    fn detect_intel() -> bool {
+        // Check for Intel GPU tools
+        if cfg!(windows) {
+            std::process::Command::new("wmic")
+                .args(&["path", "win32_VideoController", "get", "name"])
+                .output()
+                .map(|o| {
+                    String::from_utf8_lossy(&o.stdout)
+                        .to_lowercase()
+                        .contains("intel")
+                })
+                .unwrap_or(false)
         } else {
-            None
+            // Linux: check for Intel GPU via lspci or other methods
+            std::process::Command::new("lspci")
+                .output()
+                .map(|o| {
+                    String::from_utf8_lossy(&o.stdout)
+                        .to_lowercase()
+                        .contains("intel")
+                })
+                .unwrap_or(false)
         }
     }
 

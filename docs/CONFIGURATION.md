@@ -119,7 +119,28 @@ export SHIMMY_MMAP=true
 
 ### GPU Support
 
-Currently, shimmy uses CPU-only inference. GPU support is planned for future releases.
+Shimmy automatically detects and supports GPU acceleration through llama.cpp:
+
+**Supported GPU Vendors:**
+- **NVIDIA**: CUDA acceleration (automatic detection via `nvidia-smi`)
+- **AMD**: ROCm acceleration (detection via `rocm-smi`, `rocminfo`, or Windows device enumeration)  
+- **Intel**: GPU acceleration via Intel GPU drivers
+- **Apple**: Metal acceleration (automatic on macOS with supported GPUs)
+
+**Requirements:**
+- **NVIDIA**: CUDA drivers and toolkit installed
+- **AMD**: ROCm toolkit for Linux, or compatible Windows drivers for Radeon GPUs
+- **Intel**: Latest Intel GPU drivers
+
+**Configuration:**
+No manual configuration required - GPU acceleration is automatically enabled when compatible hardware and drivers are detected. Falls back to CPU inference if GPU is unavailable.
+
+**Verification:**
+Check if your GPU is detected:
+```bash
+shimmy serve --bind 127.0.0.1:11435 --verbose
+# Look for GPU initialization messages in the output
+```
 
 ## Security Considerations
 
