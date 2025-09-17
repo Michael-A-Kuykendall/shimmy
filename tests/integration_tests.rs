@@ -92,7 +92,7 @@ fn test_cli_parsing() {
     // Test list command
     let args = vec!["shimmy", "list"];
     let cli = Cli::try_parse_from(args).unwrap();
-    matches!(cli.cmd, Command::List);
+    matches!(cli.cmd, Command::List { short: false });
 
     // Test serve command
     let args = vec!["shimmy", "serve", "--bind", "0.0.0.0:8080"];

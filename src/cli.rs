@@ -28,7 +28,11 @@ pub enum Command {
         bind: String,
     },
     /// List registered and auto-discovered models
-    List,
+    List {
+        /// Output short list format (model names only)
+        #[arg(short, long)]
+        short: bool,
+    },
     /// Refresh auto-discovery and list all available models
     Discover,
     /// Load a model once (verifies base + optional LoRA)
@@ -120,7 +124,16 @@ mod tests {
     #[test]
     fn test_cli_list_command() {
         let cli = Cli::try_parse_from(&["shimmy", "list"]).unwrap();
-        matches!(cli.cmd, Command::List);
+        matches!(cli.cmd, Command::List { short: false });
+    }
+
+    #[test]
+    fn test_cli_list_short_command() {
+        let cli = Cli::try_parse_from(&["shimmy", "list", "--short"]).unwrap();
+        matches!(cli.cmd, Command::List { short: true });
+        
+        let cli = Cli::try_parse_from(&["shimmy", "list", "-s"]).unwrap();
+        matches!(cli.cmd, Command::List { short: true });
     }
 
     #[test]
