@@ -27,6 +27,7 @@ exclude = [
     "*.exe",
     ".github/*",
     ".claude/*",
+    ".internal/*",
     "deployment_failures.log",
     "shimmy-tui-*/*",
     "SHIMMY_TUI_*",
@@ -40,7 +41,15 @@ exclude = [
     "SPONSORS.md",
     "assets/*",
     "benches/*",
-    "docs/*"
+    "docs/*",
+    "shimmy-*/*",
+    "shimmy-*.exe",
+    "shimmy",
+    "shimmy.exe",
+    "spec-kit-env/*",
+    "specs/*",
+    "memory/*",
+    "templates/*"
 ]
 
 [features]

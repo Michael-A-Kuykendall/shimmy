@@ -42,6 +42,15 @@ impl InferenceEngineAdapter {
         // Check file extension and path patterns to determine optimal backend
         let path_str = spec.base_path.to_string_lossy();
 
+        // FIRST: Check for HuggingFace model IDs (format: "org/model-name")
+        #[cfg(feature = "huggingface")]
+        {
+            if path_str.contains('/') && !path_str.contains('\\') && !path_str.contains('.') {
+                // Looks like a HuggingFace model ID (has slash, no backslash, no file extension)
+                return BackendChoice::HuggingFace;
+            }
+        }
+
         // Check for MLX files FIRST on Apple Silicon - best performance
         #[cfg(feature = "mlx")]
         {
@@ -222,3 +231,57 @@ impl LoadedModel for UniversalModelWrapper {
 
 // Note: Cached model references removed as they were unused placeholder code.
 // Future implementation should use Arc<dyn LoadedModel> for proper model sharing.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn create_test_spec(name: &str, path: &str) -> ModelSpec {
+        ModelSpec {
+            name: name.to_string(),
+            base_path: PathBuf::from(path),
+            lora_path: None,
+            template: None,
+            ctx_len: 2048,
+            n_threads: None,
+        }
+    }
+
+    #[test]
+    fn test_huggingface_model_id_detection() {
+        let adapter = InferenceEngineAdapter::new();
+        
+        // Test HuggingFace model IDs
+        let hf_spec = create_test_spec("qwen", "Qwen/Qwen3-Next-80B-A3B-Instruct");
+        let backend = adapter.select_backend(&hf_spec);
+        #[cfg(feature = "huggingface")]
+        assert_eq!(backend, BackendChoice::HuggingFace);
+        
+        let hf_spec2 = create_test_spec("llama", "meta-llama/Llama-2-7b-chat-hf");
+        let backend2 = adapter.select_backend(&hf_spec2);
+        #[cfg(feature = "huggingface")]
+        assert_eq!(backend2, BackendChoice::HuggingFace);
+    }
+    
+    #[test]
+    fn test_local_file_detection() {
+        let adapter = InferenceEngineAdapter::new();
+        
+        // Test local files still work
+        let gguf_spec = create_test_spec("local", "model.gguf");
+        let backend = adapter.select_backend(&gguf_spec);
+        #[cfg(feature = "llama")]
+        assert_eq!(backend, BackendChoice::Llama);
+        
+        let safetensors_spec = create_test_spec("local", "model.safetensors");
+        let backend2 = adapter.select_backend(&safetensors_spec);
+        assert_eq!(backend2, BackendChoice::SafeTensors);
+        
+        // Test Windows paths (should not be treated as HF model IDs)
+        let windows_spec = create_test_spec("local", "C:\\path\\to\\model.gguf");
+        let backend3 = adapter.select_backend(&windows_spec);
+        #[cfg(feature = "llama")]
+        assert_eq!(backend3, BackendChoice::Llama);
+    }
+}
