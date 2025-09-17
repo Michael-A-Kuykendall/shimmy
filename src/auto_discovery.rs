@@ -403,8 +403,10 @@ impl ModelAutoDiscovery {
     fn discover_ollama_models(&self) -> Result<Vec<DiscoveredModel>> {
         let mut models = Vec::new();
 
-        // Find Ollama models directory
-        let ollama_dir = if let Some(home) = std::env::var_os("HOME") {
+        // Find Ollama models directory - check OLLAMA_MODELS env var first
+        let ollama_dir = if let Ok(ollama_models) = std::env::var("OLLAMA_MODELS") {
+            PathBuf::from(ollama_models)
+        } else if let Some(home) = std::env::var_os("HOME") {
             PathBuf::from(home).join(".ollama/models")
         } else if let Some(user_profile) = std::env::var_os("USERPROFILE") {
             PathBuf::from(user_profile).join(".ollama").join("models")
@@ -419,12 +421,23 @@ impl ModelAutoDiscovery {
         let manifests_dir = ollama_dir.join("manifests").join("registry.ollama.ai");
         let blobs_dir = ollama_dir.join("blobs");
 
-        if !manifests_dir.exists() || !blobs_dir.exists() {
-            return Ok(models);
+        // Try new manifest/blob format first
+        if manifests_dir.exists() && blobs_dir.exists() {
+            models.extend(self.discover_ollama_manifest_models(&manifests_dir, &blobs_dir)?);
         }
 
+        // Fallback: scan for GGUF files directly in ollama directory structure
+        // This handles legacy Ollama installations and custom directory layouts
+        models.extend(self.discover_ollama_direct_models(&ollama_dir)?);
+
+        Ok(models)
+    }
+
+    fn discover_ollama_manifest_models(&self, manifests_dir: &Path, blobs_dir: &Path) -> Result<Vec<DiscoveredModel>> {
+        let mut models = Vec::new();
+
         // Scan manifest directories for model names
-        for namespace_entry in fs::read_dir(&manifests_dir)
+        for namespace_entry in fs::read_dir(manifests_dir)
             .map_err(|_| anyhow::anyhow!("Cannot read manifests directory"))?
         {
             let namespace_entry = namespace_entry?;
@@ -489,6 +502,86 @@ impl ModelAutoDiscovery {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        Ok(models)
+    }
+
+    fn discover_ollama_direct_models(&self, ollama_dir: &Path) -> Result<Vec<DiscoveredModel>> {
+        let mut models = Vec::new();
+
+        // Skip manifest and blob directories to avoid duplicate detection
+        let skip_dirs = ["manifests", "blobs"];
+        
+        // Recursively scan ollama directory for GGUF files
+        if let Ok(entries) = fs::read_dir(ollama_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let dir_name = path.file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("");
+                    
+                    // Skip manifest/blob dirs and hidden dirs
+                    if skip_dirs.contains(&dir_name) || dir_name.starts_with('.') {
+                        continue;
+                    }
+                    
+                    // Recursively scan subdirectories
+                    models.extend(self.discover_ollama_direct_models_recursive(&path, 0)?);
+                } else if self.is_model_file(&path) {
+                    // Found a model file directly in ollama directory
+                    if let Ok(mut model) = self.analyze_model_file(&path) {
+                        // Prefix with ollama: to distinguish from other sources
+                        model.name = format!("ollama:{}", model.name);
+                        model.model_type = "Ollama".to_string();
+                        models.push(model);
+                    }
+                }
+            }
+        }
+
+        Ok(models)
+    }
+
+    fn discover_ollama_direct_models_recursive(&self, dir: &Path, depth: usize) -> Result<Vec<DiscoveredModel>> {
+        let mut models = Vec::new();
+        
+        // Limit recursion depth to prevent infinite loops
+        if depth >= 5 {
+            return Ok(models);
+        }
+
+        if let Ok(entries) = fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let dir_name = path.file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("");
+                    
+                    // Skip hidden directories and common non-model dirs
+                    if dir_name.starts_with('.') || dir_name == "tmp" || dir_name == "cache" {
+                        continue;
+                    }
+                    
+                    models.extend(self.discover_ollama_direct_models_recursive(&path, depth + 1)?);
+                } else if self.is_model_file(&path) {
+                    if let Ok(mut model) = self.analyze_model_file(&path) {
+                        // Extract model name from directory structure for better naming
+                        let relative_path = path.strip_prefix(dir.ancestors().nth(depth).unwrap_or(dir))
+                            .unwrap_or(&path);
+                        let parent_name = relative_path.parent()
+                            .and_then(|p| p.file_name())
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("unknown");
+                        
+                        model.name = format!("ollama:{}", parent_name);
+                        model.model_type = "Ollama".to_string();
+                        models.push(model);
                     }
                 }
             }
