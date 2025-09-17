@@ -1,7 +1,5 @@
 #![allow(clippy::too_many_arguments)]
 use anyhow::Result;
-#[cfg(feature = "llama")]
-use anyhow::anyhow;
 use async_trait::async_trait;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
@@ -24,6 +22,7 @@ impl InferenceEngine for LlamaEngine {
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>> {
         #[cfg(feature = "llama")]
         {
+            use anyhow::anyhow;
             use llama_cpp_2 as llama;
             use std::num::NonZeroU32;
             let be = llama::llama_backend::LlamaBackend::init()?;
