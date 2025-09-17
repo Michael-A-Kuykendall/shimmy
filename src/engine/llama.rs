@@ -1,5 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 use anyhow::Result;
+#[cfg(feature = "llama")]
+use anyhow::anyhow;
 use async_trait::async_trait;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
