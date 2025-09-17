@@ -1,9 +1,9 @@
 [package]
 name = "shimmy"
-version = "1.3.5"
+version = "1.4.0"
 edition = "2021"
 license = "MIT"
-description = "Lightweight 5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading."
+description = "Lightweight 5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading. Now with GitHub Spec-Kit integration for systematic development."
 homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
 repository = "https://github.com/Michael-A-Kuykendall/shimmy"
 readme = "README.md"
@@ -48,9 +48,11 @@ default = ["huggingface", "llama"]  # macOS ARM64 i8mm issues fixed via forked l
 # Engine backends  
 llama = ["dep:llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
+mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
 # Convenience feature sets
 fast = ["huggingface"] # Fast compilation - no C++ deps
-full = ["huggingface", "llama"] # Full compilation - includes C++ deps
+full = ["huggingface", "llama", "mlx"] # Full compilation - includes all backends
+apple = ["huggingface", "mlx"] # Apple Silicon optimized - MLX + HuggingFace
 coverage = ["huggingface"] # Coverage testing - minimal deps for faster builds
 
 [dependencies]

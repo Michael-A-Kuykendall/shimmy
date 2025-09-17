@@ -12,6 +12,8 @@ pub struct InferenceEngineAdapter {
     huggingface_engine: super::huggingface::HuggingFaceEngine,
     #[cfg(feature = "llama")]
     llama_engine: super::llama::LlamaEngine,
+    #[cfg(feature = "mlx")]
+    mlx_engine: super::mlx::MLXEngine,
     safetensors_engine: super::safetensors_native::SafeTensorsEngine,
     // Note: loaded_models removed as caching is not currently implemented
 }
@@ -29,6 +31,8 @@ impl InferenceEngineAdapter {
             huggingface_engine: super::huggingface::HuggingFaceEngine::new(),
             #[cfg(feature = "llama")]
             llama_engine: super::llama::LlamaEngine::new(),
+            #[cfg(feature = "mlx")]
+            mlx_engine: super::mlx::MLXEngine::new(),
             safetensors_engine: super::safetensors_native::SafeTensorsEngine::new(),
         }
     }
@@ -38,7 +42,28 @@ impl InferenceEngineAdapter {
         // Check file extension and path patterns to determine optimal backend
         let path_str = spec.base_path.to_string_lossy();
 
-        // Check for SafeTensors files FIRST - native Rust implementation
+        // Check for MLX files FIRST on Apple Silicon - best performance
+        #[cfg(feature = "mlx")]
+        {
+            if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
+                if ext == "npz" || ext == "mlx" {
+                    // MLX native format
+                    return BackendChoice::MLX;
+                }
+            }
+            
+            // Check if we're on Apple Silicon and model is MLX-compatible
+            if cfg!(target_os = "macos") && std::env::consts::ARCH == "aarch64" {
+                let model_name = spec.name.to_lowercase();
+                if model_name.contains("llama") || model_name.contains("mistral") 
+                    || model_name.contains("phi") || model_name.contains("qwen") {
+                    // Prefer MLX for known compatible models on Apple Silicon
+                    return BackendChoice::MLX;
+                }
+            }
+        }
+
+        // Check for SafeTensors files SECOND - native Rust implementation
         if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
             if ext == "safetensors" {
                 return BackendChoice::SafeTensors;
@@ -130,6 +155,8 @@ enum BackendChoice {
     Llama,
     #[cfg(feature = "huggingface")]
     HuggingFace,
+    #[cfg(feature = "mlx")]
+    MLX,
     SafeTensors,
 }
 
@@ -142,6 +169,11 @@ impl InferenceEngine for InferenceEngineAdapter {
             BackendChoice::SafeTensors => {
                 // Use native SafeTensors engine - NO Python dependency!
                 self.safetensors_engine.load(spec).await
+            }
+            #[cfg(feature = "mlx")]
+            BackendChoice::MLX => {
+                // Use MLX engine for Apple Silicon Metal GPU acceleration
+                self.mlx_engine.load(spec).await
             }
             #[cfg(feature = "llama")]
             BackendChoice::Llama => self.llama_engine.load(spec).await,
