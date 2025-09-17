@@ -34,6 +34,27 @@
 
 Shimmy is a **5.1MB single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
 
+## 🤔 What are you building with Shimmy?
+
+**New developer tools and specifications included!** Whether you're forking Shimmy for your application or integrating it as a service, we now provide:
+
+- **🔧 Integration Templates**: Copy-paste guidance for embedding Shimmy in your projects
+- **📋 Development Specifications**: GitHub Spec-Kit methodology for planning Shimmy-based features
+- **🛡️ Architectural Guarantees**: Constitutional principles ensuring Shimmy stays reliable and lightweight
+- **📖 Complete Documentation**: Everything you need to build on Shimmy's foundation
+
+**Building something cool with Shimmy?** These tools help you do it systematically and reliably.
+
+### 🚀 **GitHub Spec-Kit Integration**
+Shimmy now includes [GitHub's brand-new Spec-Kit methodology](https://github.com/github/spec-kit) – specification-driven development that just launched in September 2025! Get professional-grade development workflows:
+
+- **🏗️ Systematic Development**: `/specify` → `/plan` → `/tasks` → implement
+- **🤖 AI-Native Workflow**: Works with Claude Code, GitHub Copilot, and other AI assistants  
+- **📋 Professional Templates**: Complete specification and planning frameworks
+- **🛡️ Constitutional Protection**: Built-in governance and architectural validation
+
+[**📖 Complete Developer Guide →**](DEVELOPERS.md) • [**🛠️ Learn GitHub Spec-Kit →**](https://github.com/github/spec-kit)
+
 ### Try it in 30 seconds
 
 ```bash

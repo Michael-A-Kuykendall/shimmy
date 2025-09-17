@@ -133,5 +133,8 @@ pub mod huggingface;
 #[cfg(feature = "huggingface")]
 pub mod universal;
 
+#[cfg(feature = "mlx")]
+pub mod mlx;
+
 pub mod adapter;
 pub mod safetensors_native;
