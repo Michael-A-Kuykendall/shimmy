@@ -12,12 +12,18 @@ categories = ["command-line-utilities", "web-programming::http-server"]
 authors = ["Michael A. Kuykendall <michaelallenkuykendall@gmail.com>"]
 exclude = [
     "docs-internal/*",
-    "test-models/*",
+    "test-models/*", 
     "target/*",
     ".*",
     "*.sh",
     "*.ps1",
-    "*.py"
+    "*.py",
+    "*.log",
+    "*.bat",
+    "deployment_failures.log",
+    "shimmy-tui-*/*",
+    "SHIMMY_TUI_*",
+    "shimmy-tui-*"
 ]
 
 [features]
