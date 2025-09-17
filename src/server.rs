@@ -1,7 +1,7 @@
 use crate::{api, openai_compat, util::diag::diag_handler, AppState};
 use axum::{
     extract::State,
-    http::{HeaderMap, HeaderValue, Method},
+    http::{HeaderValue, Method},
     middleware::{self, Next},
     response::Response,
     routing::{get, post},

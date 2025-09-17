@@ -1,7 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
+use super::{InferenceEngine, LoadedModel, ModelSpec};
 
 #[cfg(feature = "huggingface")]
 use super::{UniversalEngine, UniversalModel, UniversalModelSpec};

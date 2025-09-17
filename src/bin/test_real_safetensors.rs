@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn test_small_model(test_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn test_small_model(_test_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📦 Testing with small real model...");
 
     // Try to find existing SafeTensors models in cache
