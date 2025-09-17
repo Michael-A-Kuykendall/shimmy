@@ -1,11 +1,34 @@
 use crate::{api, openai_compat, util::diag::diag_handler, AppState};
 use axum::{
     extract::State,
+    http::{HeaderMap, HeaderValue, Method},
+    middleware::{self, Next},
+    response::Response,
     routing::{get, post},
     Json, Router,
 };
+use axum::extract::Request;
 use serde_json::{json, Value};
 use std::{net::SocketAddr, sync::Arc};
+
+/// CORS middleware for better client compatibility
+async fn cors_layer(req: Request, next: Next) -> Response {
+    let method = req.method().clone();
+    let mut response = next.run(req).await;
+    
+    let headers = response.headers_mut();
+    headers.insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
+    headers.insert("Access-Control-Allow-Methods", HeaderValue::from_static("GET, POST, OPTIONS"));
+    headers.insert("Access-Control-Allow-Headers", HeaderValue::from_static("Content-Type, Authorization"));
+    headers.insert("Access-Control-Max-Age", HeaderValue::from_static("86400"));
+    
+    // Handle preflight OPTIONS requests
+    if method == Method::OPTIONS {
+        *response.status_mut() = axum::http::StatusCode::OK;
+    }
+    
+    response
+}
 
 /// Enhanced health check endpoint for production use
 async fn health_check(State(state): State<Arc<AppState>>) -> Json<Value> {
@@ -21,6 +44,16 @@ async fn health_check(State(state): State<Arc<AppState>>) -> Json<Value> {
             "total": models.len(),
             "discovered": discovered,
             "manual": manual
+        },
+        "endpoints": {
+            "health": "/health",
+            "models": "/v1/models",
+            "chat": "/v1/chat/completions",
+            "generate": "/api/generate"
+        },
+        "compatibility": {
+            "openai": true,
+            "cors": true
         },
         "timestamp": chrono::Utc::now().to_rfc3339(),
         "uptime_seconds": std::time::SystemTime::now()
@@ -104,6 +137,7 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
             post(openai_compat::chat_completions),
         )
         .route("/v1/models", get(openai_compat::models))
+        .layer(middleware::from_fn(cors_layer))
         .with_state(state);
     axum::serve(listener, app).await?;
     Ok(())
