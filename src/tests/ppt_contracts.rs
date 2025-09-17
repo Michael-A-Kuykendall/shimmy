@@ -1,12 +1,8 @@
 // PPT Contract Tests for Shimmy
 // These tests ensure that critical invariants are always checked during execution
 
-use crate::discovery::*;
-use crate::engine::*;
 use crate::invariant_ppt::shimmy_invariants::*;
 use crate::invariant_ppt::*;
-use crate::model_registry::*;
-use std::path::PathBuf;
 
 #[cfg(test)]
 mod contract_tests {

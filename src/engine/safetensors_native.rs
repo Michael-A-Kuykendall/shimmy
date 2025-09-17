@@ -6,8 +6,9 @@ use async_trait::async_trait;
 use safetensors::SafeTensors;
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::path::{Path, PathBuf};
-use std::sync::RwLock;
+use std::path::Path;
+#[cfg(test)]
+use std::path::PathBuf;
 use tracing::{debug, info, warn};
 
 // use crate::cache::{ModelCache, ModelMetadata};
@@ -43,6 +44,7 @@ impl SafeTensorsEngine {
         }
     }
 
+    #[cfg(test)]
     pub fn with_mmap(mut self, use_mmap: bool) -> Self {
         self.use_mmap = use_mmap;
         self
@@ -66,6 +68,7 @@ impl SafeTensorsEngine {
     }
 
     /// Discover SafeTensors models in a directory
+    #[cfg(test)]
     pub fn discover_safetensors_models(dir: &Path) -> Result<Vec<PathBuf>> {
         let mut models = Vec::new();
 
@@ -100,7 +103,7 @@ impl InferenceEngine for SafeTensorsEngine {
         }
 
         // Check cache first with read lock
-        let cached_metadata = {
+        let _cached_metadata = {
             // let cache = self.cache.read().unwrap();
             // cache.get(&spec.base_path).cloned()
             None::<()> // Temporarily disable cache
@@ -145,8 +148,10 @@ struct SafeTensorsModel {
 #[derive(Debug, Clone)]
 struct ModelConfig {
     vocab_size: usize,
+    #[allow(dead_code)]
     hidden_size: usize,
     num_layers: usize,
+    #[allow(dead_code)]
     max_sequence_length: usize,
     // Add more config fields as needed
 }
@@ -155,8 +160,10 @@ struct ModelConfig {
 struct SimpleTokenizer {
     // Simple tokenizer implementation
     vocab: HashMap<String, u32>,
+    #[allow(dead_code)]
     reverse_vocab: HashMap<u32, String>,
     bos_token: u32,
+    #[allow(dead_code)]
     eos_token: u32,
 }
 
@@ -274,6 +281,7 @@ impl SafeTensorsModel {
     } */
 
     /// Parse configuration from cached JSON data
+    #[allow(dead_code)]
     fn parse_config_from_json(config_data: &serde_json::Value) -> Result<ModelConfig> {
         let vocab_size = config_data
             .get("vocab_size")
@@ -307,6 +315,7 @@ impl SafeTensorsModel {
     }
 
     /// Parse tokenizer from cached JSON data
+    #[allow(dead_code)]
     fn parse_tokenizer_from_json(tokenizer_data: &serde_json::Value) -> Result<SimpleTokenizer> {
         let mut vocab = HashMap::new();
         let mut reverse_vocab = HashMap::new();
@@ -498,6 +507,7 @@ impl SimpleTokenizer {
         tokens
     }
 
+    #[allow(dead_code)]
     fn decode(&self, tokens: &[u32]) -> String {
         let mut text = String::new();
 

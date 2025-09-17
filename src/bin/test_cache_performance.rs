@@ -2,7 +2,6 @@
 // Compares first load vs cached load times
 
 use anyhow::Result;
-use std::path::Path;
 use std::time::Instant;
 use tokio;
 
