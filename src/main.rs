@@ -108,51 +108,60 @@ async fn main() -> anyhow::Result<()> {
             info!(%addr, models=%available_models.len(), "shimmy serving with {} available models", available_models.len());
             server::run(addr, state).await?;
         }
-        cli::Command::List => {
-            // Show manually registered models
-            let manual_models = state.registry.list();
-            if !manual_models.is_empty() {
-                println!("📋 Registered Models:");
-                for e in &manual_models {
-                    println!("  {} => {:?}", e.name, e.base_path);
+        cli::Command::List { short } => {
+            if short {
+                // Short format: just model names for programmatic use
+                let all_available = state.registry.list_all_available();
+                for model_name in all_available {
+                    println!("{}", model_name);
                 }
-            }
-
-            // Show auto-discovered models
-            let auto_discovered = state.registry.discovered_models.clone();
-            if !auto_discovered.is_empty() {
-                if !manual_models.is_empty() {
-                    println!();
-                }
-                println!("🔍 Auto-Discovered Models:");
-                for (name, model) in auto_discovered {
-                    let size_mb = model.size_bytes / (1024 * 1024);
-                    let type_info = match (&model.parameter_count, &model.quantization) {
-                        (Some(params), Some(quant)) => format!(" ({}·{})", params, quant),
-                        (Some(params), None) => format!(" ({})", params),
-                        (None, Some(quant)) => format!(" ({})", quant),
-                        _ => String::new(),
-                    };
-                    let lora_info = if model.lora_path.is_some() {
-                        " + LoRA"
-                    } else {
-                        ""
-                    };
-                    println!(
-                        "  {} => {:?} [{}MB{}{}]",
-                        name, model.path, size_mb, type_info, lora_info
-                    );
-                }
-            }
-
-            // Show total available models
-            let all_available = state.registry.list_all_available();
-            if all_available.is_empty() {
-                println!(
-                    "❌ No models found. Set SHIMMY_BASE_GGUF or place .gguf files in ./models/"
-                );
             } else {
-                println!("\n✅ Total available models: {}", all_available.len());
+                // Original verbose format
+                // Show manually registered models
+                let manual_models = state.registry.list();
+                if !manual_models.is_empty() {
+                    println!("📋 Registered Models:");
+                    for e in &manual_models {
+                        println!("  {} => {:?}", e.name, e.base_path);
+                    }
+                }
+
+                // Show auto-discovered models
+                let auto_discovered = state.registry.discovered_models.clone();
+                if !auto_discovered.is_empty() {
+                    if !manual_models.is_empty() {
+                        println!();
+                    }
+                    println!("🔍 Auto-Discovered Models:");
+                    for (name, model) in auto_discovered {
+                        let size_mb = model.size_bytes / (1024 * 1024);
+                        let type_info = match (&model.parameter_count, &model.quantization) {
+                            (Some(params), Some(quant)) => format!(" ({}·{})", params, quant),
+                            (Some(params), None) => format!(" ({})", params),
+                            (None, Some(quant)) => format!(" ({})", quant),
+                            _ => String::new(),
+                        };
+                        let lora_info = if model.lora_path.is_some() {
+                            " + LoRA"
+                        } else {
+                            ""
+                        };
+                        println!(
+                            "  {} => {:?} [{}MB{}{}]",
+                            name, model.path, size_mb, type_info, lora_info
+                        );
+                    }
+                }
+
+                // Show total available models
+                let all_available = state.registry.list_all_available();
+                if all_available.is_empty() {
+                    println!(
+                        "❌ No models found. Set SHIMMY_BASE_GGUF or place .gguf files in ./models/"
+                    );
+                } else {
+                    println!("\n✅ Total available models: {}", all_available.len());
+                }
             }
         }
         cli::Command::Discover => {
