@@ -16,14 +16,26 @@ exclude = [
     "target/*",
     ".*",
     "*.sh",
-    "*.ps1",
+    "*.ps1", 
     "*.py",
     "*.log",
     "*.bat",
+    ".github/*",
+    ".claude/*",
     "deployment_failures.log",
     "shimmy-tui-*/*",
     "SHIMMY_TUI_*",
-    "shimmy-tui-*"
+    "shimmy-tui-*",
+    "benchmark_results.json",
+    "Dockerfile*",
+    "ROADMAP.md",
+    "DCO.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SPONSORS.md",
+    "assets/*",
+    "benches/*",
+    "docs/*"
 ]
 
 [features]
