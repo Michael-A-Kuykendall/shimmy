@@ -21,13 +21,12 @@ jobs:
             artifact-name: shimmy-linux-x86_64
             features: "huggingface,llama"
             
-# ARM64 Linux via Docker QEMU emulation
-          - os: ubuntu-latest
+# ARM64 Linux via native GitHub ARM64 runners
+          - os: ubuntu-22.04-arm
             target: aarch64-unknown-linux-gnu
             binary-name: shimmy
             artifact-name: shimmy-linux-arm64
-            features: "huggingface"
-            docker-build: true
+            features: "huggingface,llama"
             
           # Windows builds
           - os: windows-latest  
@@ -62,7 +61,8 @@ jobs:
       - name: Install system dependencies (Linux ARM64)
         if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-gnu'
         run: |
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkg-config clang
       
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
@@ -75,17 +75,8 @@ jobs:
         with:
           targets: ${{ matrix.target }}
           
-      - name: Build binary (native)
-        if: matrix.docker-build != true
+      - name: Build binary
         run: cargo build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
-        
-      - name: Build binary (Docker ARM64)
-        if: matrix.docker-build == true
-        run: |
-          docker run --rm --platform linux/arm64 \
-            -v ${{ github.workspace }}:/workspace \
-            rust:1.89 \
-            bash -c "cd /workspace && cargo build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}"
         
       - name: Strip binary (Linux/macOS)
         if: runner.os != 'Windows'
@@ -122,8 +113,8 @@ jobs:
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
           
-          # Linux ARM64 (temporarily disabled)
-          # cp artifacts/shimmy-linux-arm64/shimmy release-files/shimmy-linux-arm64
+          # Linux ARM64
+          cp artifacts/shimmy-linux-arm64/shimmy release-files/shimmy-linux-arm64
           
           # Windows x86_64
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
@@ -144,7 +135,7 @@ jobs:
           
           echo "Binary feature sets:"
           echo "  shimmy-linux-x86_64: SafeTensors + llama.cpp"
-          # echo "  shimmy-linux-arm64: SafeTensors only (llama.cpp requires C++ cross-compiler)"
+          echo "  shimmy-linux-arm64: SafeTensors + llama.cpp (native ARM64 runner)"
           echo "  shimmy-windows-x86_64.exe: SafeTensors + llama.cpp"  
           echo "  shimmy-macos-intel: SafeTensors + llama.cpp"
           echo "  shimmy-macos-arm64: SafeTensors + llama.cpp (i8mm mixed-ISA issue resolved)"
@@ -196,7 +187,7 @@ jobs:
           
           **Download the right binary for your platform:**
           - **Linux x86_64**: `shimmy-linux-x86_64` (SafeTensors + llama.cpp)
-          - **Linux ARM64**: `shimmy-linux-arm64` (SafeTensors + Docker QEMU build)
+          - **Linux ARM64**: `shimmy-linux-arm64` (SafeTensors + llama.cpp, native ARM64 runner)
           - **Windows x86_64**: `shimmy-windows-x86_64.exe` (SafeTensors + llama.cpp)
           - **macOS Intel**: `shimmy-macos-intel` (SafeTensors + llama.cpp)
           - **macOS Apple Silicon**: `shimmy-macos-arm64` (SafeTensors + llama.cpp)
