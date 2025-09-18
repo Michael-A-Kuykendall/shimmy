@@ -18,6 +18,14 @@ pub struct Cli {
         help = "Additional model directories to search (e.g., --model-dirs 'D:\\models;E:\\ollama\\models')"
     )]
     pub model_dirs: Option<String>,
+
+    /// GPU backend to use for llama.cpp inference
+    #[arg(
+        long,
+        global = true,
+        help = "GPU backend: auto, cpu, cuda, vulkan, opencl"
+    )]
+    pub gpu_backend: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -51,6 +59,8 @@ pub enum Command {
         #[arg(long, default_value_t = 64)]
         max_tokens: usize,
     },
+    /// Show GPU backend information and capabilities
+    GpuInfo,
 }
 
 impl Command {

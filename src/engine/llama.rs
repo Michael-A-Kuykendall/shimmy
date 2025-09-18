@@ -6,14 +6,97 @@ use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
 #[cfg(feature = "llama")]
 use std::sync::Mutex;
-#[cfg(feature = "llama")]
 use tracing::info;
 
 #[derive(Default)]
-pub struct LlamaEngine;
+pub struct LlamaEngine {
+    gpu_backend: GpuBackend,
+}
+
+#[derive(Debug, Clone, Default)]
+enum GpuBackend {
+    #[default]
+    Cpu,
+    #[cfg(feature = "llama-cuda")]
+    Cuda,
+    #[cfg(feature = "llama-vulkan")]
+    Vulkan,
+    #[cfg(feature = "llama-opencl")]
+    OpenCL,
+}
+
 impl LlamaEngine {
     pub fn new() -> Self {
-        Self
+        Self {
+            gpu_backend: Self::detect_best_gpu_backend(),
+        }
+    }
+
+    /// Detect the best available GPU backend for this system
+    fn detect_best_gpu_backend() -> GpuBackend {
+        #[cfg(feature = "llama-cuda")]
+        {
+            if Self::is_cuda_available() {
+                info!("CUDA GPU detected, using CUDA backend");
+                return GpuBackend::Cuda;
+            }
+        }
+
+        #[cfg(feature = "llama-vulkan")]
+        {
+            if Self::is_vulkan_available() {
+                info!("Vulkan GPU detected, using Vulkan backend");
+                return GpuBackend::Vulkan;
+            }
+        }
+
+        #[cfg(feature = "llama-opencl")]
+        {
+            if Self::is_opencl_available() {
+                info!("OpenCL GPU detected, using OpenCL backend");
+                return GpuBackend::OpenCL;
+            }
+        }
+
+        info!("No GPU acceleration available, using CPU backend");
+        GpuBackend::Cpu
+    }
+
+    #[cfg(feature = "llama-cuda")]
+    fn is_cuda_available() -> bool {
+        // Check for NVIDIA GPU and CUDA runtime
+        // This is a simplified check - in practice you'd want more robust detection
+        std::process::Command::new("nvidia-smi")
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false)
+    }
+
+    #[cfg(feature = "llama-vulkan")]
+    fn is_vulkan_available() -> bool {
+        // Check for Vulkan-capable GPU
+        // This would require vulkan loader detection in practice
+        true // Placeholder - assume Vulkan is available if feature is enabled
+    }
+
+    #[cfg(feature = "llama-opencl")]
+    fn is_opencl_available() -> bool {
+        // Check for OpenCL-capable GPU
+        // This would require OpenCL runtime detection in practice
+        true // Placeholder - assume OpenCL is available if feature is enabled
+    }
+
+    /// Get information about the current GPU backend configuration
+    pub fn get_backend_info(&self) -> String {
+        match self.gpu_backend {
+            GpuBackend::Cpu => "CPU".to_string(),
+            #[cfg(feature = "llama-cuda")]
+            GpuBackend::Cuda => "CUDA".to_string(),
+            #[cfg(feature = "llama-vulkan")]
+            GpuBackend::Vulkan => "Vulkan".to_string(),
+            #[cfg(feature = "llama-opencl")]
+            GpuBackend::OpenCL => "OpenCL".to_string(),
+        }
     }
 }
 

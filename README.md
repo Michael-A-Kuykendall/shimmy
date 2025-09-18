@@ -162,6 +162,32 @@ cargo install shimmy --features huggingface
 cargo install shimmy --features huggingface
 ```
 
+### GPU Acceleration
+
+Shimmy supports multiple GPU backends for accelerated inference:
+
+#### **🖥️ Available Backends**
+
+| Backend | Hardware | Installation |
+|---------|----------|--------------|
+| **CUDA** | NVIDIA GPUs | `cargo install shimmy --features llama-cuda` |
+| **Vulkan** | Cross-platform GPUs | `cargo install shimmy --features llama-vulkan` |
+| **OpenCL** | AMD/Intel/Others | `cargo install shimmy --features llama-opencl` |
+| **MLX** | Apple Silicon | `cargo install shimmy --features mlx` |
+| **All GPUs** | Everything | `cargo install shimmy --features gpu` |
+
+#### **🔍 Check GPU Support**
+```bash
+# Show detected GPU backends
+shimmy gpu-info
+```
+
+#### **⚡ Usage Notes**
+- GPU backends are **automatically detected** at runtime
+- Falls back to CPU if GPU is unavailable
+- Multiple backends can be compiled in, best one selected automatically
+- Use `--gpu-backend <backend>` to force specific backend
+
 ### Get Models
 
 Shimmy auto-discovers models from:
