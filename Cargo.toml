@@ -58,9 +58,14 @@ default = ["huggingface", "llama"]  # macOS ARM64 i8mm issues fixed via forked l
 llama = ["dep:llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
 mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
+# GPU acceleration backends for llama.cpp
+llama-cuda = ["llama", "llama-cpp-2/cuda"] # NVIDIA CUDA GPU acceleration
+llama-vulkan = ["llama"] # Vulkan GPU acceleration (cross-platform)
+llama-opencl = ["llama"] # OpenCL GPU acceleration (AMD, Intel, etc.)
 # Convenience feature sets
 fast = ["huggingface"] # Fast compilation - no C++ deps
 full = ["huggingface", "llama", "mlx"] # Full compilation - includes all backends
+gpu = ["huggingface", "llama-cuda", "llama-vulkan", "llama-opencl"] # GPU-optimized build
 apple = ["huggingface", "mlx"] # Apple Silicon optimized - MLX + HuggingFace
 coverage = ["huggingface"] # Coverage testing - minimal deps for faster builds
 

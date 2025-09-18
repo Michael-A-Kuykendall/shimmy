@@ -52,7 +52,7 @@ pub struct ModelAutoDiscovery {
 
 impl ModelAutoDiscovery {
     pub fn new() -> Self {
-        let mut search_paths = vec![PathBuf::from("./models"), PathBuf::from("./")];
+        let mut search_paths = vec![PathBuf::from("./models")];
 
         // Add paths from environment variables
         if let Ok(shimmy_base) = std::env::var("SHIMMY_BASE_GGUF") {
@@ -156,19 +156,40 @@ impl ModelAutoDiscovery {
     }
 
     fn scan_directory_with_depth(&self, dir: &Path, depth: usize) -> Result<Vec<DiscoveredModel>> {
-        // Prevent infinite recursion - limit depth to 8 levels
-        if depth >= 8 {
+        // Prevent infinite recursion - limit depth to 4 levels for performance
+        if depth >= 4 {
             return Ok(Vec::new());
         }
 
-        // Skip system directories that cause problems on macOS
+        // Skip system directories that cause problems on macOS and other systems
         if let Some(dir_name) = dir.file_name().and_then(|n| n.to_str()) {
+            // Skip hidden directories except known model directories
             if dir_name.starts_with('.')
                 && dir_name != ".cache"
                 && dir_name != ".ollama"
                 && dir_name != ".local"
             {
                 return Ok(Vec::new());
+            }
+            
+            // Skip problematic macOS directories
+            match dir_name {
+                "Library" | "Applications" | "System" | "Developer" | "usr" | "var" | "tmp" 
+                | "private" | "Volumes" | "cores" | "dev" | "etc" | "home" | "net" | "proc" 
+                | "opt" | "sbin" | "bin" => {
+                    return Ok(Vec::new());
+                }
+                _ => {}
+            }
+            
+            // Skip Windows system directories
+            #[cfg(windows)]
+            match dir_name.to_lowercase().as_str() {
+                "windows" | "program files" | "program files (x86)" | "programdata" 
+                | "users" | "system volume information" | "$recycle.bin" | "recovery" => {
+                    return Ok(Vec::new());
+                }
+                _ => {}
             }
         }
 

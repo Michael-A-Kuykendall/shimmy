@@ -249,6 +249,64 @@ async fn main() -> anyhow::Result<()> {
                 .await?;
             println!("{}", out);
         }
+        cli::Command::GpuInfo => {
+            println!("🖥️  GPU Backend Information");
+            println!();
+            
+            // Check llama.cpp backend info
+            #[cfg(feature = "llama")]
+            {
+                use crate::engine::llama::LlamaEngine;
+                let llama_engine = LlamaEngine::new();
+                println!("🔧 llama.cpp Backend: {}", llama_engine.get_backend_info());
+                
+                // Show available features
+                println!("📋 Available GPU Features:");
+                #[cfg(feature = "llama-cuda")]
+                println!("  ✅ CUDA support enabled");
+                #[cfg(not(feature = "llama-cuda"))]
+                println!("  ❌ CUDA support disabled");
+                
+                #[cfg(feature = "llama-vulkan")]
+                println!("  ✅ Vulkan support enabled");
+                #[cfg(not(feature = "llama-vulkan"))]
+                println!("  ❌ Vulkan support disabled");
+                
+                #[cfg(feature = "llama-opencl")]
+                println!("  ✅ OpenCL support enabled");
+                #[cfg(not(feature = "llama-opencl"))]
+                println!("  ❌ OpenCL support disabled");
+            }
+            
+            #[cfg(not(feature = "llama"))]
+            {
+                println!("❌ llama.cpp backend not available (compile with --features llama)");
+            }
+            
+            // Check MLX backend info
+            #[cfg(feature = "mlx")]
+            {
+                use crate::engine::mlx::MLXEngine;
+                let mlx_engine = MLXEngine::new();
+                if mlx_engine.is_available() {
+                    println!("🍎 MLX Backend: Available (Apple Silicon)");
+                } else {
+                    println!("🍎 MLX Backend: Not available (requires Apple Silicon)");
+                }
+            }
+            
+            #[cfg(not(feature = "mlx"))]
+            {
+                println!("🍎 MLX Backend: Disabled (compile with --features mlx)");
+            }
+            
+            println!();
+            println!("💡 To enable GPU acceleration:");
+            println!("   cargo install shimmy --features llama-cuda    # NVIDIA CUDA");
+            println!("   cargo install shimmy --features llama-vulkan  # Cross-platform Vulkan");
+            println!("   cargo install shimmy --features llama-opencl  # AMD/Intel OpenCL");
+            println!("   cargo install shimmy --features gpu           # All GPU backends");
+        }
     }
     Ok(())
 }

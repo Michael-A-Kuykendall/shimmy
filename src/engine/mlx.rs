@@ -42,6 +42,11 @@ impl MLXEngine {
         }
     }
 
+    /// Public method to check if MLX is available
+    pub fn is_available(&self) -> bool {
+        self.mlx_available
+    }
+
     /// Check if MLX Python packages are available
     fn check_mlx_python_available() -> bool {
         // Try to run a simple MLX command to verify installation
