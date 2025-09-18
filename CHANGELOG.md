@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-09-18
+
+🚀 Major release featuring complete developer ecosystem, MLX support for Apple Silicon, and HuggingFace model ID compatibility.
+
+
 ### Added
 - **Opt-in Usage Analytics**: Anonymous business intelligence collection system
 - **Performance Benchmarking Tools**: Cross-platform scripts for real GPU/CPU measurement
@@ -468,3 +473,5 @@ Shimmy is committed to being free forever with no asterisks, no "free for now" p
 
 [Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/Michael-A-Kuykendall/shimmy/releases/tag/v0.1.0
+
+[1.4.0]: https://github.com/Michael-A-Kuykendall/shimmy/releases/tag/v1.4.0
