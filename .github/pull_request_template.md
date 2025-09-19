@@ -10,7 +10,7 @@ Brief description of changes and motivation.
 - [ ] Code refactoring
 
 ## Shimmy Philosophy Compliance
-- [ ] Maintains lightweight binary size (~5MB target)
+- [ ] Maintains lightweight binary size (≤20MB constitutional limit)
 - [ ] Preserves zero-config principle
 - [ ] Enhances OpenAI API compatibility
 - [ ] Follows invisible infrastructure philosophy
@@ -29,9 +29,9 @@ Brief description of changes and motivation.
 ## Binary Size Impact
 Current binary size: ___ MB
 New binary size: ___ MB
-Change: ___ MB (increase/decrease)
+Change: ± ___ MB (increase/decrease)
 
-## Enterprise Considerations
+## Quality Considerations
 - [ ] This change maintains backward compatibility
 - [ ] Performance impact has been measured and documented
 - [ ] Documentation has been updated where applicable
@@ -41,8 +41,6 @@ Change: ___ MB (increase/decrease)
 - [ ] This change benefits the broader Shimmy community
 - [ ] Breaking changes are clearly documented and justified
 - [ ] Migration path is provided for breaking changes
-New binary size: ___ MB
-Change: ± ___ MB
 
 ## Checklist
 - [ ] My code follows the project's coding standards
