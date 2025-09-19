@@ -428,7 +428,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let request = GenerateRequest {
             model: "test".to_string(),
@@ -454,7 +454,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise list_models handler code path
         let _result = list_models(State(state)).await;
@@ -520,7 +520,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise discover_models handler code path
         let _result = discover_models(State(state)).await;
@@ -535,7 +535,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise load_model handler (lines 210-218)
         let _result = load_model(State(state), Path("test-model".to_string())).await;
@@ -550,7 +550,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise unload_model handler (lines 220-227)
         let _result = unload_model(State(state), Path("test-model".to_string())).await;
@@ -565,7 +565,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise model_status handler (lines 229-236)
         let _result = model_status(State(state), Path("test-model".to_string())).await;
@@ -579,7 +579,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise list_tools handler (lines 239-243)
         let _result = list_tools(State(state)).await;
@@ -594,7 +594,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let arguments = serde_json::json!({"test": "value"});
 
@@ -611,7 +611,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let request = serde_json::json!({"workflow": "test"});
 
@@ -636,7 +636,7 @@ mod tests {
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let request = GenerateRequest {
             model: "stream-test".to_string(),
@@ -671,7 +671,7 @@ mod tests {
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let request = GenerateRequest {
             model: "messages-test".to_string(),
@@ -788,7 +788,7 @@ mod tests {
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
-        let _state = Arc::new(AppState { engine, registry });
+        let _state = Arc::new(AppState::new(engine, registry));
 
         // We can't easily test the WebSocket upgrade without a real WebSocket connection,
         // but we can test that the handler function exists and accepts the right parameters
@@ -871,7 +871,7 @@ mod tests {
         // The registry might have discovered models too
         // Exercise both paths in list_models handler (lines 155-175)
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let _response = list_models(State(state)).await;
         // Test completed successfully
@@ -967,7 +967,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise discover_models handler success path (lines 187-200)
         let _response = discover_models(State(state)).await;

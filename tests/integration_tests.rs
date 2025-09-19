@@ -12,7 +12,7 @@ async fn create_test_server() -> (String, tokio::task::JoinHandle<()>) {
     let registry = Registry::default();
     let engine = Box::new(shimmy::engine::llama::LlamaEngine::new());
 
-    let state = Arc::new(AppState { engine, registry });
+    let state = Arc::new(AppState::new(engine, registry));
 
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
