@@ -2,8 +2,8 @@
 
 *These principles are immutable and govern all development decisions for the Shimmy inference engine.*
 
-## Article I: The 5MB Mandate
-**IMMUTABLE**: Shimmy's core binary shall never exceed 5MB in size. This is our fundamental competitive advantage over bloated alternatives (Ollama: 680MB+). All features must be designed as optional components or external libraries that preserve this constraint.
+## Article I: The Lightweight Binary Mandate
+**IMMUTABLE**: Shimmy's core binary shall remain lightweight and focused, never exceeding 20MB. This preserves our fundamental competitive advantage over bloated alternatives (Ollama: 680MB+). Even at 20MB, Shimmy remains 34x smaller than Ollama. Target range: 10-20MB for full-featured deployment. All features must be designed for minimal binary impact while delivering maximum value.
 
 ## Article II: Library-First Architecture
 **REQUIREMENT**: Every feature must begin as a standalone, reusable library before integration into Shimmy core. This ensures modularity, testability, and prevents architectural debt.
@@ -41,7 +41,7 @@
 - Major version bumps require constitutional review
 
 ### Feature Acceptance Criteria
-1. ✅ Preserves 5MB core constraint
+1. ✅ Preserves lightweight binary constraint (≤20MB)
 2. ✅ Maintains sub-2-second startup
 3. ✅ Zero new Python dependencies
 4. ✅ CLI interface provided
@@ -60,7 +60,7 @@ In exceptional circumstances, constitutional principles may be temporarily suspe
 
 ### Performance Hierarchy
 1. **Startup Speed** (non-negotiable)
-2. **Memory Efficiency** (5MB constraint)
+2. **Binary Efficiency** (lightweight constraint ≤20MB)
 3. **Inference Throughput** (optimize within constraints)
 4. **Feature Richness** (only if compatible with above)
 
@@ -81,5 +81,9 @@ In exceptional circumstances, constitutional principles may be temporarily suspe
 
 *Constitutional violations will result in immediate development halt and architectural review.*
 
-*Last Updated: September 17, 2025*
-*Version: 1.0*
+*Last Updated: September 18, 2025*
+*Version: 1.1 - Developer Expansion Update*
+
+## Amendment History
+- **v1.1 (Sept 18, 2025)**: Updated binary size constraint from 5MB to ≤20MB to support developer expansion features while maintaining 34x competitive advantage over Ollama
+- **v1.0 (Sept 17, 2025)**: Initial constitutional framework

@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shimmy-deployment
+  labels:
+    app: shimmy
+    version: v1.4.1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: shimmy
+  template:
+    metadata:
+      labels:
+        app: shimmy
+        version: v1.4.1
+    spec:
+      containers:
+      - name: shimmy
+        image: shimmy:latest
+        ports:
+        - containerPort: 11435
+          name: http
+          protocol: TCP
+        
+        env:
+        - name: SHIMMY_HOST
+          value: "0.0.0.0"
+        - name: SHIMMY_PORT
+          value: "11435"
+        - name: RUST_LOG
+          value: "info"
+        - name: SHIMMY_MODEL_PATHS
+          value: "/app/models"
+        
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+        
+        volumeMounts:
+        - name: models-volume
+          mountPath: /app/models
+          readOnly: true
+        - name: cache-volume
+          mountPath: /app/cache
+        
+        livenessProbe:
+          httpGet:
+            path: /v1/models
+            port: 11435
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /v1/models
+            port: 11435
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        startupProbe:
+          httpGet:
+            path: /v1/models
+            port: 11435
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+      
+      volumes:
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: shimmy-models-pvc
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 5Gi
+      
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      
+      restartPolicy: Always

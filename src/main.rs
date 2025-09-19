@@ -307,6 +307,16 @@ async fn main() -> anyhow::Result<()> {
             println!("   cargo install shimmy --features llama-opencl  # AMD/Intel OpenCL");
             println!("   cargo install shimmy --features gpu           # All GPU backends");
         }
+        cli::Command::Init { template, output, name } => {
+            let result = templates::generate_template(&template, &output, name.as_deref());
+            match result {
+                Ok(message) => println!("{}", message),
+                Err(e) => {
+                    eprintln!("❌ Template generation failed: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
     }
     Ok(())
 }

@@ -1,7 +1,7 @@
 # Claude Code Configuration for Shimmy
 
 ## Project Overview
-Shimmy is a lightweight 5MB Rust inference engine serving as an optimal shim for AI model inference. It provides OpenAI API compatibility with native SafeTensors support, 2x faster loading, and no Python dependencies.
+Shimmy is a lightweight sub-20MB Rust inference engine serving as an optimal shim for AI model inference. It provides OpenAI API compatibility with native SafeTensors support, 2x faster loading, and no Python dependencies.
 
 ## Critical Development Rules
 
@@ -58,14 +58,14 @@ project/
 
 ## Shimmy Architecture
 
-**Core Principle**: Shimmy transforms complexity into simplicity - a 5MB binary that provides enterprise-grade AI inference with zero configuration.
+**Core Principle**: Shimmy transforms complexity into simplicity - a sub-20MB binary that provides enterprise-grade AI inference with zero configuration.
 
 ### Key Features
 - **Model Support**: SafeTensors (native), GGUF via llama.cpp, HuggingFace integration
 - **GPU Acceleration**: NVIDIA CUDA, AMD ROCm, Intel GPU detection
 - **API Compatibility**: Drop-in replacement for OpenAI API
 - **Performance**: 2x faster model loading, <2s startup time
-- **Size**: 5MB binary vs 680MB+ alternatives
+- **Size**: Sub-20MB binary vs 680MB+ alternatives (34x smaller)
 
 ### Testing Strategy
 - **Command**: `cargo test --all-features`

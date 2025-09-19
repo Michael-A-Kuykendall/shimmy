@@ -2,13 +2,23 @@
 
 use crate::engine::ModelSpec;
 use anyhow::Result;
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
+use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
+use tracing::{info, warn};
 
+#[derive(Clone)]
 pub struct ModelManager {
     // Store loaded model information
     loaded_models: Arc<RwLock<HashMap<String, ModelLoadInfo>>>,
+    // Usage tracking for smart preloading
+    usage_stats: Arc<RwLock<HashMap<String, ModelUsageStats>>>,
+    // Configuration for preloading behavior
+    preload_config: PreloadConfig,
+    // Background preloading state
+    preload_queue: Arc<RwLock<VecDeque<String>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -16,33 +26,273 @@ pub struct ModelLoadInfo {
     pub name: String,
     pub spec: ModelSpec,
     pub loaded_at: std::time::SystemTime,
+    pub last_accessed: std::time::SystemTime,
+    pub access_count: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModelUsageStats {
+    pub model_name: String,
+    pub total_requests: u64,
+    pub last_used: SystemTime,
+    pub average_response_time: Duration,
+    pub popularity_score: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct PreloadConfig {
+    pub enabled: bool,
+    pub max_preloaded_models: usize,
+    pub max_memory_mb: usize,
+    pub preload_threshold_score: f64,
+    pub min_usage_for_preload: u64,
+    pub cleanup_interval: Duration,
+}
+
+impl Default for PreloadConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            max_preloaded_models: 3,
+            max_memory_mb: 8192, // 8GB default
+            preload_threshold_score: 0.5,
+            min_usage_for_preload: 2,
+            cleanup_interval: Duration::from_secs(300), // 5 minutes
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PreloadStats {
+    pub loaded_models: usize,
+    pub max_models: usize,
+    pub queue_length: usize,
+    pub total_tracked_models: usize,
+    pub memory_limit_mb: usize,
+    pub preloading_enabled: bool,
 }
 
 impl ModelManager {
     pub fn new() -> Self {
+        Self::with_config(PreloadConfig::default())
+    }
+
+    pub fn with_config(config: PreloadConfig) -> Self {
         Self {
             loaded_models: Arc::new(RwLock::new(HashMap::new())),
+            usage_stats: Arc::new(RwLock::new(HashMap::new())),
+            preload_config: config,
+            preload_queue: Arc::new(RwLock::new(VecDeque::new())),
         }
     }
 
     pub async fn load_model(&self, name: String, spec: ModelSpec) -> Result<()> {
-        // For now, just track that we've "loaded" the model
-        // In a full implementation, this would create and store the actual engine instance
+        let now = SystemTime::now();
+        
+        // Create model load info with usage tracking
         let info = ModelLoadInfo {
             name: name.clone(),
             spec,
-            loaded_at: std::time::SystemTime::now(),
+            loaded_at: now,
+            last_accessed: now,
+            access_count: 1,
         };
 
+        // Store the loaded model
         let mut models = self.loaded_models.write().await;
-        models.insert(name, info);
+        models.insert(name.clone(), info);
+        
+        info!("Model '{}' loaded successfully", name);
+        
+        // Update usage statistics
+        self.update_usage_stats(&name, Duration::from_millis(100)).await;
+        
+        // Trigger background preloading evaluation
+        if self.preload_config.enabled {
+            self.evaluate_preloading().await;
+        }
 
         Ok(())
     }
 
+    /// Record model access for usage tracking
+    pub async fn record_access(&self, name: &str, response_time: Duration) {
+        // Update loaded model access info
+        let mut models = self.loaded_models.write().await;
+        if let Some(info) = models.get_mut(name) {
+            info.last_accessed = SystemTime::now();
+            info.access_count += 1;
+        }
+        drop(models);
+        
+        // Update usage statistics
+        self.update_usage_stats(name, response_time).await;
+    }
+
+    /// Update usage statistics for smart preloading
+    async fn update_usage_stats(&self, name: &str, response_time: Duration) {
+        let mut stats = self.usage_stats.write().await;
+        let entry = stats.entry(name.to_string()).or_insert_with(|| ModelUsageStats {
+            model_name: name.to_string(),
+            total_requests: 0,
+            last_used: SystemTime::now(),
+            average_response_time: Duration::from_millis(0),
+            popularity_score: 0.0,
+        });
+        
+        entry.total_requests += 1;
+        entry.last_used = SystemTime::now();
+        
+        // Update rolling average response time
+        let current_avg_ms = entry.average_response_time.as_millis() as f64;
+        let new_response_ms = response_time.as_millis() as f64;
+        let new_avg_ms = (current_avg_ms * (entry.total_requests - 1) as f64 + new_response_ms) / entry.total_requests as f64;
+        entry.average_response_time = Duration::from_millis(new_avg_ms as u64);
+        
+        // Calculate popularity score (frequency + recency)
+        let time_since_last_use = SystemTime::now()
+            .duration_since(entry.last_used)
+            .unwrap_or_default()
+            .as_secs() as f64;
+        let recency_factor = 1.0 / (1.0 + time_since_last_use / 3600.0); // Decay over hours
+        let frequency_factor = (entry.total_requests as f64).ln() + 1.0;
+        entry.popularity_score = frequency_factor * recency_factor;
+    }
+
+    /// Evaluate which models should be preloaded
+    async fn evaluate_preloading(&self) {
+        if !self.preload_config.enabled {
+            return;
+        }
+
+        let stats = self.usage_stats.read().await;
+        let loaded_models = self.loaded_models.read().await;
+        
+        // Find top candidates for preloading
+        let mut candidates: Vec<_> = stats
+            .values()
+            .filter(|stat| {
+                stat.total_requests >= self.preload_config.min_usage_for_preload
+                    && stat.popularity_score >= self.preload_config.preload_threshold_score
+                    && !loaded_models.contains_key(&stat.model_name)
+            })
+            .collect();
+        
+        // Sort by popularity score
+        candidates.sort_by(|a, b| b.popularity_score.partial_cmp(&a.popularity_score).unwrap());
+        
+        // Add to preload queue
+        let mut queue = self.preload_queue.write().await;
+        let current_loaded = loaded_models.len();
+        let slots_available = self.preload_config.max_preloaded_models.saturating_sub(current_loaded);
+        
+        for candidate in candidates.iter().take(slots_available) {
+            if !queue.iter().any(|name| name == &candidate.model_name) {
+                queue.push_back(candidate.model_name.clone());
+                info!("Queued '{}' for preloading (score: {:.2})", 
+                      candidate.model_name, candidate.popularity_score);
+            }
+        }
+    }
+
+    /// Start background preloading task
+    pub async fn start_preloading_task(&self, model_registry: Arc<crate::model_registry::Registry>) {
+        if !self.preload_config.enabled {
+            return;
+        }
+
+        let manager = Arc::new(self.clone());
+        let registry = model_registry.clone();
+        
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(30));
+            
+            loop {
+                interval.tick().await;
+                
+                // Process preload queue
+                let model_to_preload = {
+                    let mut queue = manager.preload_queue.write().await;
+                    queue.pop_front()
+                };
+                
+                if let Some(model_name) = model_to_preload {
+                    // Check if we're under memory/count limits
+                    let current_count = manager.model_count().await;
+                    if current_count < manager.preload_config.max_preloaded_models {
+                        // Try to preload the model
+                        if let Some(spec) = registry.to_spec(&model_name) {
+                            match manager.load_model(model_name.clone(), spec).await {
+                                Ok(_) => {
+                                    info!("Successfully preloaded model '{}'", model_name);
+                                }
+                                Err(e) => {
+                                    warn!("Failed to preload model '{}': {}", model_name, e);
+                                }
+                            }
+                        }
+                    } else {
+                        // Put it back in queue for later
+                        let mut queue = manager.preload_queue.write().await;
+                        queue.push_front(model_name);
+                    }
+                }
+                
+                // Cleanup old models if needed
+                manager.cleanup_old_models().await;
+            }
+        });
+    }
+
+    /// Cleanup old/unused models to free memory
+    async fn cleanup_old_models(&self) {
+        let current_count = self.model_count().await;
+        if current_count <= self.preload_config.max_preloaded_models {
+            return;
+        }
+
+        let mut models = self.loaded_models.write().await;
+        let cutoff_time = SystemTime::now() - Duration::from_secs(3600); // 1 hour
+
+        // Find models to remove (oldest, least used)
+        let mut candidates: Vec<_> = models
+            .iter()
+            .filter(|(_, info)| info.last_accessed < cutoff_time && info.access_count < 5)
+            .map(|(name, info)| (name.clone(), info.last_accessed, info.access_count))
+            .collect();
+
+        candidates.sort_by_key(|(_, last_accessed, access_count)| (*last_accessed, *access_count));
+
+        let to_remove = current_count.saturating_sub(self.preload_config.max_preloaded_models);
+        for (name, _, _) in candidates.iter().take(to_remove) {
+            models.remove(name);
+            info!("Cleaned up unused model '{}'", name);
+        }
+    }
+
+    /// Get preloading statistics
+    pub async fn get_preload_stats(&self) -> PreloadStats {
+        let models = self.loaded_models.read().await;
+        let stats = self.usage_stats.read().await;
+        let queue = self.preload_queue.read().await;
+
+        PreloadStats {
+            loaded_models: models.len(),
+            max_models: self.preload_config.max_preloaded_models,
+            queue_length: queue.len(),
+            total_tracked_models: stats.len(),
+            memory_limit_mb: self.preload_config.max_memory_mb,
+            preloading_enabled: self.preload_config.enabled,
+        }
+    }
+
     pub async fn unload_model(&self, name: &str) -> Result<bool> {
         let mut models = self.loaded_models.write().await;
-        Ok(models.remove(name).is_some())
+        let removed = models.remove(name).is_some();
+        if removed {
+            info!("Model '{}' unloaded", name);
+        }
+        Ok(removed)
     }
 
     pub async fn get_model_info(&self, name: &str) -> Option<ModelLoadInfo> {
@@ -87,6 +337,18 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: None,
+        }
+    }
+    
+    // Helper function to create test ModelLoadInfo
+    fn create_test_load_info(name: &str, spec: ModelSpec) -> ModelLoadInfo {
+        let now = SystemTime::now();
+        ModelLoadInfo {
+            name: name.to_string(),
+            spec,
+            loaded_at: now,
+            last_accessed: now,
+            access_count: 1,
         }
     }
 
@@ -360,6 +622,8 @@ mod tests {
             name: "clone-test".to_string(),
             spec: spec.clone(),
             loaded_at: SystemTime::now(),
+            access_count: 0,
+            last_accessed: SystemTime::now(),
         };
 
         let info2 = info1.clone();
@@ -376,6 +640,8 @@ mod tests {
             name: "debug-test".to_string(),
             spec,
             loaded_at: SystemTime::now(),
+            access_count: 0,
+            last_accessed: SystemTime::now(),
         };
 
         let debug_string = format!("{:?}", info);

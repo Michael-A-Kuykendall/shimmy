@@ -2,7 +2,7 @@
 
 **Vision:** The privacy-first local AI infrastructure that replaces cloud dependencies
 
-Shimmy is a 5MB, zero-config, OpenAI-compatible inference server targeting the **$50B+ AI inference market**. Its mission is **invisible infrastructure**: drop it in, it works.
+Shimmy is a sub-20MB, zero-config, OpenAI-compatible inference server targeting the **$50B+ AI inference market**. Its mission is **invisible infrastructure**: drop it in, it works.
 
 ## 🆓 Forever Free Commitment
 
@@ -50,7 +50,7 @@ Shimmy is a 5MB, zero-config, OpenAI-compatible inference server targeting the *
 
 ### Technical Excellence
 - **100% OpenAI API Parity** - Complete feature compatibility
-- **Sub-5MB Binary** - Maintain lightweight footprint (current: 5.1MB)
+- **Sub-20MB Binary** - Maintain lightweight footprint (target: 10-20MB, 34x smaller than Ollama)
 - **Universal Deployment** - Zero configuration, runs anywhere
 - **Hardware Optimization** - SIMD/GPU acceleration within size constraints
 - **Enterprise Reliability** - 99.99% uptime, consumer simplicity

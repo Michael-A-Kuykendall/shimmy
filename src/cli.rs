@@ -61,6 +61,18 @@ pub enum Command {
     },
     /// Show GPU backend information and capabilities
     GpuInfo,
+    /// Initialize integration templates for deployment platforms
+    Init {
+        /// Template type: docker, kubernetes, railway, fly, fastapi, express
+        #[arg(short, long)]
+        template: String,
+        /// Output directory for generated files
+        #[arg(short, long, default_value = ".")]
+        output: String,
+        /// Project name for template customization
+        #[arg(short, long)]
+        name: Option<String>,
+    },
 }
 
 impl Command {

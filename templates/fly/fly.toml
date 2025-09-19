@@ -1,0 +1,45 @@
+app = "shimmy-ai"
+primary_region = "sea"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SHIMMY_HOST = "0.0.0.0"
+  SHIMMY_PORT = "11435"
+  RUST_LOG = "info"
+
+[http_service]
+  internal_port = 11435
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "15s"
+    method = "GET"
+    path = "/v1/models"
+    protocol = "http"
+    timeout = "10s"
+
+[mounts]
+  source = "shimmy_models"
+  destination = "/app/models"
+  initial_size = "10gb"
+
+[mounts]
+  source = "shimmy_cache"
+  destination = "/app/cache"
+  initial_size = "5gb"
+
+[[vm]]
+  memory = "8gb"
+  cpu_kind = "performance"
+  cpus = 4
+
+[metrics]
+  port = 9091
+  path = "/metrics"
