@@ -318,7 +318,7 @@ shimmy probe model-name         # Verify model loads
 
 ### 🚀 Momentum Snapshot
 
-📦 **5 MB single binary**  
+📦 **Sub-20MB single binary** (34x smaller than Ollama)  
 🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**  
 ⏱ **<1s startup**  
 🦀 **100% Rust, no Python**
@@ -333,7 +333,7 @@ shimmy probe model-name         # Verify model loads
 
 | Tool | Binary Size | Startup Time | Memory Usage | OpenAI API |
 |------|-------------|--------------|--------------|------------|
-| **Shimmy** | **5.1MB** | **<100ms** | **50MB** | **100%** |
+| **Shimmy** | **10-20MB** | **<100ms** | **50MB** | **100%** |
 | Ollama | 680MB | 5-10s | 200MB+ | Partial |
 | llama.cpp | 89MB | 1-2s | 100MB | None |
 

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: shimmy-service
+  labels:
+    app: shimmy
+spec:
+  selector:
+    app: shimmy
+  ports:
+  - name: http
+    port: 80
+    targetPort: 11435
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shimmy-loadbalancer
+  labels:
+    app: shimmy
+spec:
+  selector:
+    app: shimmy
+  ports:
+  - name: http
+    port: 80
+    targetPort: 11435
+    protocol: TCP
+  type: LoadBalancer

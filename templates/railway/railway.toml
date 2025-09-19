@@ -1,0 +1,47 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/v1/models"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Environment variables
+[[deploy.environmentVariables]]
+name = "SHIMMY_HOST"
+value = "0.0.0.0"
+
+[[deploy.environmentVariables]]
+name = "SHIMMY_PORT"
+value = "11435"
+
+[[deploy.environmentVariables]]
+name = "RUST_LOG"
+value = "info"
+
+[[deploy.environmentVariables]]
+name = "SHIMMY_MODEL"
+value = "phi3-mini"
+
+# Resource configuration
+[deploy.resources]
+memory = "8Gi"
+cpu = "4"
+
+# Networking
+[deploy.networking]
+port = 11435
+protocol = "http"
+
+# Volume mounts for models
+[[deploy.volumes]]
+name = "models"
+mountPath = "/app/models"
+size = "10Gi"
+
+[[deploy.volumes]]
+name = "cache"
+mountPath = "/app/cache"
+size = "5Gi"

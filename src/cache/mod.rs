@@ -10,6 +10,9 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 pub mod model_cache;
+pub mod response_cache;
+
+pub use response_cache::{ResponseCache, ResponseCacheConfig, CacheKey, CacheStats as ResponseCacheStats};
 
 /// Cached metadata for a model file
 #[derive(Debug, Serialize, Deserialize, Clone)]
