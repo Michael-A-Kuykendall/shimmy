@@ -305,6 +305,14 @@ shimmy probe model-name         # Verify model loads
 - **Dynamic port management**: Zero conflicts, auto-allocation
 - **Zero-config auto-discovery**: Just works™
 
+### 🚀 Advanced Features
+
+- **Smart Model Preloading**: Background loading with usage tracking for instant model switching
+- **Response Caching**: LRU + TTL cache delivering 20-40% performance gains on repeat queries
+- **Integration Templates**: One-command deployment for Docker, Kubernetes, Railway, Fly.io, FastAPI, Express
+- **Request Routing**: Multi-instance support with health checking and load balancing
+- **Advanced Observability**: Real-time metrics with self-optimization and Prometheus integration
+
 ## Community & Support
 
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/Michael-A-Kuykendall/shimmy/issues)
