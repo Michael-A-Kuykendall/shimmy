@@ -430,32 +430,56 @@ impl ModelAutoDiscovery {
     fn discover_ollama_models(&self) -> Result<Vec<DiscoveredModel>> {
         let mut models = Vec::new();
 
-        // Find Ollama models directory - check OLLAMA_MODELS env var first
-        let ollama_dir = if let Ok(ollama_models) = std::env::var("OLLAMA_MODELS") {
-            PathBuf::from(ollama_models)
-        } else if let Some(home) = std::env::var_os("HOME") {
-            PathBuf::from(home).join(".ollama/models")
-        } else if let Some(user_profile) = std::env::var_os("USERPROFILE") {
-            PathBuf::from(user_profile).join(".ollama").join("models")
-        } else {
-            return Ok(models);
-        };
+        // Collect potential Ollama directories to check
+        let mut ollama_dirs = Vec::new();
 
-        if !ollama_dir.exists() {
-            return Ok(models);
+        // Check OLLAMA_MODELS env var first
+        if let Ok(ollama_models) = std::env::var("OLLAMA_MODELS") {
+            ollama_dirs.push(PathBuf::from(ollama_models));
         }
 
-        let manifests_dir = ollama_dir.join("manifests").join("registry.ollama.ai");
-        let blobs_dir = ollama_dir.join("blobs");
-
-        // Try new manifest/blob format first
-        if manifests_dir.exists() && blobs_dir.exists() {
-            models.extend(self.discover_ollama_manifest_models(&manifests_dir, &blobs_dir)?);
+        // Check SHIMMY_BASE_GGUF parent directory for Ollama structure
+        if let Ok(shimmy_base) = std::env::var("SHIMMY_BASE_GGUF") {
+            let path = PathBuf::from(shimmy_base);
+            if let Some(parent) = path.parent() {
+                // Check if we're directly in an Ollama structure
+                ollama_dirs.push(parent.to_path_buf());
+                
+                // Also check if we're in a 'blobs' directory - go up one more level
+                if parent.file_name().and_then(|n| n.to_str()) == Some("blobs") {
+                    if let Some(grandparent) = parent.parent() {
+                        ollama_dirs.push(grandparent.to_path_buf());
+                    }
+                }
+            }
         }
 
-        // Fallback: scan for GGUF files directly in ollama directory structure
-        // This handles legacy Ollama installations and custom directory layouts
-        models.extend(self.discover_ollama_direct_models(&ollama_dir)?);
+        // Add standard Ollama locations
+        if let Some(home) = std::env::var_os("HOME") {
+            ollama_dirs.push(PathBuf::from(home).join(".ollama/models"));
+        }
+        if let Some(user_profile) = std::env::var_os("USERPROFILE") {
+            ollama_dirs.push(PathBuf::from(user_profile).join(".ollama").join("models"));
+        }
+
+        // Check each potential Ollama directory
+        for ollama_dir in ollama_dirs {
+            if !ollama_dir.exists() {
+                continue;
+            }
+
+            let manifests_dir = ollama_dir.join("manifests");
+            let blobs_dir = ollama_dir.join("blobs");
+
+            // Try new manifest/blob format first
+            if manifests_dir.exists() && blobs_dir.exists() {
+                models.extend(self.discover_ollama_manifest_models(&manifests_dir, &blobs_dir)?);
+            }
+
+            // Fallback: scan for GGUF files directly in ollama directory structure
+            // This handles legacy Ollama installations and custom directory layouts
+            models.extend(self.discover_ollama_direct_models(&ollama_dir)?);
+        }
 
         Ok(models)
     }
@@ -467,68 +491,63 @@ impl ModelAutoDiscovery {
     ) -> Result<Vec<DiscoveredModel>> {
         let mut models = Vec::new();
 
-        // Scan manifest directories for model names
-        for namespace_entry in fs::read_dir(manifests_dir)
-            .map_err(|_| anyhow::anyhow!("Cannot read manifests directory"))?
+        // Recursively scan manifests directory to find all manifest files
+        self.scan_manifest_directory(manifests_dir, blobs_dir, &mut models, Vec::new())?;
+
+        Ok(models)
+    }
+
+    fn scan_manifest_directory(
+        &self,
+        dir: &Path,
+        blobs_dir: &Path,
+        models: &mut Vec<DiscoveredModel>,
+        path_components: Vec<String>,
+    ) -> Result<()> {
+        for entry in fs::read_dir(dir)
+            .map_err(|_| anyhow::anyhow!("Cannot read directory: {:?}", dir))?
         {
-            let namespace_entry = namespace_entry?;
-            if !namespace_entry.path().is_dir() {
-                continue;
-            }
+            let entry = entry?;
+            let entry_name = entry.file_name().to_string_lossy().to_string();
+            let mut new_path_components = path_components.clone();
+            new_path_components.push(entry_name.clone());
 
-            for model_entry in fs::read_dir(namespace_entry.path())
-                .map_err(|_| anyhow::anyhow!("Cannot read model directory"))?
-            {
-                let model_entry = model_entry?;
-                if !model_entry.path().is_dir() {
-                    continue;
-                }
+            if entry.path().is_dir() {
+                // Recursively scan subdirectories
+                self.scan_manifest_directory(&entry.path(), blobs_dir, models, new_path_components)?;
+            } else if entry.path().is_file() {
+                // This is a manifest file, try to parse it
+                if let Ok(manifest_content) = fs::read_to_string(entry.path()) {
+                    if let Ok(manifest) = serde_json::from_str::<OllamaManifest>(&manifest_content) {
+                        // Find the model blob (largest layer that's likely a GGUF)
+                        for layer in &manifest.layers {
+                            if layer.media_type == "application/vnd.ollama.image.model" {
+                                if let Some(hash) = layer.digest.strip_prefix("sha256:") {
+                                    let blob_path = blobs_dir.join(format!("sha256-{}", hash));
+                                    if blob_path.exists()
+                                        && self.is_gguf_blob(&blob_path).unwrap_or(false)
+                                    {
+                                        // Build display name from path components
+                                        let display_name = if path_components.len() >= 2 {
+                                            // Format: registry/namespace/model:tag or namespace/model:tag
+                                            let mut name_parts = path_components.clone();
+                                            name_parts.push(entry_name.clone());
+                                            name_parts.join("/")
+                                        } else {
+                                            // Fallback to simple name
+                                            format!("{}:{}", path_components.join("/"), entry_name)
+                                        };
 
-                // Get model name from directory structure
-                let namespace = namespace_entry.file_name().to_string_lossy().to_string();
-                let model_name = model_entry.file_name().to_string_lossy().to_string();
-
-                for tag_entry in fs::read_dir(model_entry.path())
-                    .map_err(|_| anyhow::anyhow!("Cannot read tag directory"))?
-                {
-                    let tag_entry = tag_entry?;
-                    if tag_entry.path().is_file() {
-                        // Parse the manifest file
-                        if let Ok(manifest_content) = fs::read_to_string(tag_entry.path()) {
-                            if let Ok(manifest) =
-                                serde_json::from_str::<OllamaManifest>(&manifest_content)
-                            {
-                                // Find the model blob (largest layer that's likely a GGUF)
-                                for layer in &manifest.layers {
-                                    if layer.media_type == "application/vnd.ollama.image.model" {
-                                        if let Some(hash) = layer.digest.strip_prefix("sha256:") {
-                                            let blob_path =
-                                                blobs_dir.join(format!("sha256-{}", hash));
-                                            if blob_path.exists()
-                                                && self.is_gguf_blob(&blob_path).unwrap_or(false)
-                                            {
-                                                let tag = tag_entry
-                                                    .file_name()
-                                                    .to_string_lossy()
-                                                    .to_string();
-                                                let display_name = if namespace == "library" {
-                                                    format!("{}:{}", model_name, tag)
-                                                } else {
-                                                    format!("{}{}:{}", namespace, model_name, tag)
-                                                };
-
-                                                let discovered = DiscoveredModel {
-                                                    name: display_name.clone(),
-                                                    path: blob_path.clone(),
-                                                    lora_path: None,
-                                                    size_bytes: layer.size as u64,
-                                                    model_type: "Ollama".to_string(),
-                                                    parameter_count: None,
-                                                    quantization: None,
-                                                };
-                                                models.push(discovered);
-                                            }
-                                        }
+                                        let discovered = DiscoveredModel {
+                                            name: display_name,
+                                            path: blob_path,
+                                            lora_path: None,
+                                            size_bytes: layer.size as u64,
+                                            model_type: "Ollama".to_string(),
+                                            parameter_count: None,
+                                            quantization: None,
+                                        };
+                                        models.push(discovered);
                                     }
                                 }
                             }
@@ -537,8 +556,7 @@ impl ModelAutoDiscovery {
                 }
             }
         }
-
-        Ok(models)
+        Ok(())
     }
 
     fn discover_ollama_direct_models(&self, ollama_dir: &Path) -> Result<Vec<DiscoveredModel>> {
