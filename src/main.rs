@@ -252,37 +252,37 @@ async fn main() -> anyhow::Result<()> {
         cli::Command::GpuInfo => {
             println!("🖥️  GPU Backend Information");
             println!();
-            
+
             // Check llama.cpp backend info
             #[cfg(feature = "llama")]
             {
                 use crate::engine::llama::LlamaEngine;
                 let llama_engine = LlamaEngine::new();
                 println!("🔧 llama.cpp Backend: {}", llama_engine.get_backend_info());
-                
+
                 // Show available features
                 println!("📋 Available GPU Features:");
                 #[cfg(feature = "llama-cuda")]
                 println!("  ✅ CUDA support enabled");
                 #[cfg(not(feature = "llama-cuda"))]
                 println!("  ❌ CUDA support disabled");
-                
+
                 #[cfg(feature = "llama-vulkan")]
                 println!("  ✅ Vulkan support enabled");
                 #[cfg(not(feature = "llama-vulkan"))]
                 println!("  ❌ Vulkan support disabled");
-                
+
                 #[cfg(feature = "llama-opencl")]
                 println!("  ✅ OpenCL support enabled");
                 #[cfg(not(feature = "llama-opencl"))]
                 println!("  ❌ OpenCL support disabled");
             }
-            
+
             #[cfg(not(feature = "llama"))]
             {
                 println!("❌ llama.cpp backend not available (compile with --features llama)");
             }
-            
+
             // Check MLX backend info
             #[cfg(feature = "mlx")]
             {
@@ -294,12 +294,12 @@ async fn main() -> anyhow::Result<()> {
                     println!("🍎 MLX Backend: Not available (requires Apple Silicon)");
                 }
             }
-            
+
             #[cfg(not(feature = "mlx"))]
             {
                 println!("🍎 MLX Backend: Disabled (compile with --features mlx)");
             }
-            
+
             println!();
             println!("💡 To enable GPU acceleration:");
             println!("   cargo install shimmy --features llama-cuda    # NVIDIA CUDA");
@@ -307,7 +307,11 @@ async fn main() -> anyhow::Result<()> {
             println!("   cargo install shimmy --features llama-opencl  # AMD/Intel OpenCL");
             println!("   cargo install shimmy --features gpu           # All GPU backends");
         }
-        cli::Command::Init { template, output, name } => {
+        cli::Command::Init {
+            template,
+            output,
+            name,
+        } => {
             let result = templates::generate_template(&template, &output, name.as_deref());
             match result {
                 Ok(message) => println!("{}", message),

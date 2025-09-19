@@ -75,11 +75,11 @@ impl TemplateFamily {
 pub async fn generate_docker_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
-    
+
     // Copy Dockerfile
     let dockerfile_content = include_str!("../templates/docker/Dockerfile");
     fs::write(output_path.join("Dockerfile"), dockerfile_content)?;
-    
+
     // Copy docker-compose.yml
     let compose_content = include_str!("../templates/docker/docker-compose.yml");
     let customized_compose = if let Some(name) = project_name {
@@ -88,11 +88,11 @@ pub async fn generate_docker_template(output_dir: &str, project_name: Option<&st
         compose_content.to_string()
     };
     fs::write(output_path.join("docker-compose.yml"), customized_compose)?;
-    
+
     // Copy nginx.conf
     let nginx_content = include_str!("../templates/docker/nginx.conf");
     fs::write(output_path.join("nginx.conf"), nginx_content)?;
-    
+
     // Create .dockerignore
     let dockerignore_content = r#"target/
 Cargo.lock
@@ -104,52 +104,58 @@ tests/
 README.md
 "#;
     fs::write(output_path.join(".dockerignore"), dockerignore_content)?;
-    
+
     Ok(())
 }
 
 /// Generate Kubernetes deployment template
-pub async fn generate_kubernetes_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
+pub async fn generate_kubernetes_template(
+    output_dir: &str,
+    project_name: Option<&str>,
+) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
-    
+
     let name = project_name.unwrap_or("shimmy");
-    
+
     // Generate deployment.yaml
     let deployment_content = include_str!("../templates/kubernetes/deployment.yaml")
         .replace("shimmy-deployment", &format!("{}-deployment", name))
         .replace("app: shimmy", &format!("app: {}", name));
     fs::write(output_path.join("deployment.yaml"), deployment_content)?;
-    
-    // Generate service.yaml  
+
+    // Generate service.yaml
     let service_content = include_str!("../templates/kubernetes/service.yaml")
         .replace("shimmy-service", &format!("{}-service", name))
         .replace("shimmy-loadbalancer", &format!("{}-loadbalancer", name))
         .replace("app: shimmy", &format!("app: {}", name));
     fs::write(output_path.join("service.yaml"), service_content)?;
-    
+
     // Generate configmap.yaml
     let configmap_content = include_str!("../templates/kubernetes/configmap.yaml")
         .replace("shimmy-config", &format!("{}-config", name))
         .replace("shimmy-models-pvc", &format!("{}-models-pvc", name))
         .replace("app: shimmy", &format!("app: {}", name));
     fs::write(output_path.join("configmap.yaml"), configmap_content)?;
-    
+
     Ok(())
 }
 
 /// Generate Railway deployment template
-pub async fn generate_railway_template(output_dir: &str, _project_name: Option<&str>) -> Result<()> {
+pub async fn generate_railway_template(
+    output_dir: &str,
+    _project_name: Option<&str>,
+) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
-    
+
     let railway_content = include_str!("../templates/railway/railway.toml");
     fs::write(output_path.join("railway.toml"), railway_content)?;
-    
+
     // Generate Dockerfile for Railway
     let dockerfile_content = include_str!("../templates/docker/Dockerfile");
     fs::write(output_path.join("Dockerfile"), dockerfile_content)?;
-    
+
     Ok(())
 }
 
@@ -157,7 +163,7 @@ pub async fn generate_railway_template(output_dir: &str, _project_name: Option<&
 pub async fn generate_fly_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
-    
+
     let fly_content = include_str!("../templates/fly/fly.toml");
     let customized_fly = if let Some(name) = project_name {
         fly_content.replace("shimmy-ai", &format!("{}-ai", name))
@@ -165,25 +171,28 @@ pub async fn generate_fly_template(output_dir: &str, project_name: Option<&str>)
         fly_content.to_string()
     };
     fs::write(output_path.join("fly.toml"), customized_fly)?;
-    
+
     // Generate Dockerfile for Fly
     let dockerfile_content = include_str!("../templates/docker/Dockerfile");
     fs::write(output_path.join("Dockerfile"), dockerfile_content)?;
-    
+
     Ok(())
 }
 
 /// Generate FastAPI integration template
-pub async fn generate_fastapi_template(output_dir: &str, _project_name: Option<&str>) -> Result<()> {
+pub async fn generate_fastapi_template(
+    output_dir: &str,
+    _project_name: Option<&str>,
+) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
-    
+
     let main_content = include_str!("../templates/frameworks/fastapi/main.py");
     fs::write(output_path.join("main.py"), main_content)?;
-    
+
     let requirements_content = include_str!("../templates/frameworks/fastapi/requirements.txt");
     fs::write(output_path.join("requirements.txt"), requirements_content)?;
-    
+
     Ok(())
 }
 
@@ -191,26 +200,33 @@ pub async fn generate_fastapi_template(output_dir: &str, _project_name: Option<&
 pub async fn generate_express_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
-    
+
     let app_content = include_str!("../templates/frameworks/express/app.js");
     fs::write(output_path.join("app.js"), app_content)?;
-    
+
     let package_content = include_str!("../templates/frameworks/express/package.json");
     let customized_package = if let Some(name) = project_name {
-        package_content.replace("shimmy-express-integration", &format!("{}-shimmy-integration", name))
+        package_content.replace(
+            "shimmy-express-integration",
+            &format!("{}-shimmy-integration", name),
+        )
     } else {
         package_content.to_string()
     };
     fs::write(output_path.join("package.json"), customized_package)?;
-    
+
     Ok(())
 }
 
 /// Generic template generation function that dispatches to specific template generators
-pub fn generate_template(template: &str, output_dir: &str, project_name: Option<&str>) -> Result<String> {
+pub fn generate_template(
+    template: &str,
+    output_dir: &str,
+    project_name: Option<&str>,
+) -> Result<String> {
     // Use tokio runtime for async template functions
     let rt = tokio::runtime::Runtime::new()?;
-    
+
     match template.to_lowercase().as_str() {
         "docker" => {
             rt.block_on(generate_docker_template(output_dir, project_name))?;
@@ -218,7 +234,10 @@ pub fn generate_template(template: &str, output_dir: &str, project_name: Option<
         }
         "kubernetes" | "k8s" => {
             rt.block_on(generate_kubernetes_template(output_dir, project_name))?;
-            Ok(format!("✅ Kubernetes template generated in {}", output_dir))
+            Ok(format!(
+                "✅ Kubernetes template generated in {}",
+                output_dir
+            ))
         }
         "railway" => {
             rt.block_on(generate_railway_template(output_dir, project_name))?;
@@ -234,7 +253,10 @@ pub fn generate_template(template: &str, output_dir: &str, project_name: Option<
         }
         "express" => {
             rt.block_on(generate_express_template(output_dir, project_name))?;
-            Ok(format!("✅ Express.js template generated in {}", output_dir))
+            Ok(format!(
+                "✅ Express.js template generated in {}",
+                output_dir
+            ))
         }
         _ => {
             anyhow::bail!("Unknown template type: {}. Available: docker, kubernetes, railway, fly, fastapi, express", template)

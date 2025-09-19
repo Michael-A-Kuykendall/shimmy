@@ -171,22 +171,28 @@ impl ModelAutoDiscovery {
             {
                 return Ok(Vec::new());
             }
-            
+
             // Skip problematic macOS directories
             match dir_name {
-                "Library" | "Applications" | "System" | "Developer" | "usr" | "var" | "tmp" 
-                | "private" | "Volumes" | "cores" | "dev" | "etc" | "home" | "net" | "proc" 
+                "Library" | "Applications" | "System" | "Developer" | "usr" | "var" | "tmp"
+                | "private" | "Volumes" | "cores" | "dev" | "etc" | "home" | "net" | "proc"
                 | "opt" | "sbin" | "bin" => {
                     return Ok(Vec::new());
                 }
                 _ => {}
             }
-            
+
             // Skip Windows system directories
             #[cfg(windows)]
             match dir_name.to_lowercase().as_str() {
-                "windows" | "program files" | "program files (x86)" | "programdata" 
-                | "users" | "system volume information" | "$recycle.bin" | "recovery" => {
+                "windows"
+                | "program files"
+                | "program files (x86)"
+                | "programdata"
+                | "users"
+                | "system volume information"
+                | "$recycle.bin"
+                | "recovery" => {
                     return Ok(Vec::new());
                 }
                 _ => {}
@@ -454,7 +460,11 @@ impl ModelAutoDiscovery {
         Ok(models)
     }
 
-    fn discover_ollama_manifest_models(&self, manifests_dir: &Path, blobs_dir: &Path) -> Result<Vec<DiscoveredModel>> {
+    fn discover_ollama_manifest_models(
+        &self,
+        manifests_dir: &Path,
+        blobs_dir: &Path,
+    ) -> Result<Vec<DiscoveredModel>> {
         let mut models = Vec::new();
 
         // Scan manifest directories for model names
@@ -536,21 +546,19 @@ impl ModelAutoDiscovery {
 
         // Skip manifest and blob directories to avoid duplicate detection
         let skip_dirs = ["manifests", "blobs"];
-        
+
         // Recursively scan ollama directory for GGUF files
         if let Ok(entries) = fs::read_dir(ollama_dir) {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.is_dir() {
-                    let dir_name = path.file_name()
-                        .and_then(|n| n.to_str())
-                        .unwrap_or("");
-                    
+                    let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
                     // Skip manifest/blob dirs and hidden dirs
                     if skip_dirs.contains(&dir_name) || dir_name.starts_with('.') {
                         continue;
                     }
-                    
+
                     // Recursively scan subdirectories
                     models.extend(self.discover_ollama_direct_models_recursive(&path, 0)?);
                 } else if self.is_model_file(&path) {
@@ -568,9 +576,13 @@ impl ModelAutoDiscovery {
         Ok(models)
     }
 
-    fn discover_ollama_direct_models_recursive(&self, dir: &Path, depth: usize) -> Result<Vec<DiscoveredModel>> {
+    fn discover_ollama_direct_models_recursive(
+        &self,
+        dir: &Path,
+        depth: usize,
+    ) -> Result<Vec<DiscoveredModel>> {
         let mut models = Vec::new();
-        
+
         // Limit recursion depth to prevent infinite loops
         if depth >= 5 {
             return Ok(models);
@@ -580,26 +592,26 @@ impl ModelAutoDiscovery {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.is_dir() {
-                    let dir_name = path.file_name()
-                        .and_then(|n| n.to_str())
-                        .unwrap_or("");
-                    
+                    let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
                     // Skip hidden directories and common non-model dirs
                     if dir_name.starts_with('.') || dir_name == "tmp" || dir_name == "cache" {
                         continue;
                     }
-                    
+
                     models.extend(self.discover_ollama_direct_models_recursive(&path, depth + 1)?);
                 } else if self.is_model_file(&path) {
                     if let Ok(mut model) = self.analyze_model_file(&path) {
                         // Extract model name from directory structure for better naming
-                        let relative_path = path.strip_prefix(dir.ancestors().nth(depth).unwrap_or(dir))
+                        let relative_path = path
+                            .strip_prefix(dir.ancestors().nth(depth).unwrap_or(dir))
                             .unwrap_or(&path);
-                        let parent_name = relative_path.parent()
+                        let parent_name = relative_path
+                            .parent()
                             .and_then(|p| p.file_name())
                             .and_then(|n| n.to_str())
                             .unwrap_or("unknown");
-                        
+
                         model.name = format!("ollama:{}", parent_name);
                         model.model_type = "Ollama".to_string();
                         models.push(model);
