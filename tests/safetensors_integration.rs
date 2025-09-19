@@ -3,7 +3,6 @@
 // Rules matched: 2 test patterns
 
 use shimmy::test_utils::create_test_safetensors;
-use std::path::Path;
 
 #[cfg(test)]
 mod tests {

@@ -83,7 +83,7 @@ where
     F: Fn() -> bool,
 {
     println!("🔍 Exploration test: {}", name);
-    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| test_fn())) {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(test_fn)) {
         Ok(true) => println!("✅ Exploration test '{}' passed", name),
         Ok(false) => println!("❌ Exploration test '{}' failed", name),
         Err(_) => println!("💥 Exploration test '{}' panicked", name),
@@ -161,7 +161,7 @@ pub mod shimmy_invariants {
         );
 
         assert_invariant(
-            response.len() > 0,
+            !response.is_empty(),
             "Generation must produce output",
             Some("generation"),
         );
@@ -170,7 +170,7 @@ pub mod shimmy_invariants {
     /// API invariants
     pub fn assert_api_response_valid(status_code: u16, body: &str) {
         assert_invariant(
-            status_code >= 200 && status_code < 600,
+            (200..600).contains(&status_code),
             "API response status must be valid HTTP code",
             Some("api_response"),
         );

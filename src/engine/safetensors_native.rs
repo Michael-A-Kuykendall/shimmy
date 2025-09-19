@@ -234,7 +234,7 @@ impl SafeTensorsModel {
         })
     }
 
-    /// Load model from cached metadata (much faster)
+    // Load model from cached metadata (much faster)
     /* async fn load_from_cached_metadata(spec: &ModelSpec, metadata: &ModelMetadata, use_mmap: bool) -> Result<Self> {
         info!("Loading model from cached metadata");
 

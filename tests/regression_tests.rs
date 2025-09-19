@@ -178,7 +178,7 @@ mod regression_tests {
 
         // The search_paths should include our test paths
         let path_strings: Vec<String> = discovery
-            .search_paths
+            .search_paths()
             .iter()
             .map(|p| p.to_string_lossy().to_string())
             .collect();
@@ -254,14 +254,14 @@ mod regression_tests {
 
         // Test with model-dirs option
         let cli =
-            Cli::try_parse_from(&["shimmy", "--model-dirs", "test/path1;test/path2", "serve"]);
+            Cli::try_parse_from(["shimmy", "--model-dirs", "test/path1;test/path2", "serve"]);
 
         assert!(cli.is_ok());
         let cli = cli.unwrap();
         assert_eq!(cli.model_dirs, Some("test/path1;test/path2".to_string()));
 
         // Test without model-dirs option (backward compatibility)
-        let cli = Cli::try_parse_from(&["shimmy", "list"]);
+        let cli = Cli::try_parse_from(["shimmy", "list"]);
         assert!(cli.is_ok());
         let cli = cli.unwrap();
         assert!(cli.model_dirs.is_none());

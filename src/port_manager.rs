@@ -68,10 +68,7 @@ impl PortAllocator {
     }
 
     fn is_port_available(&self, port: u16) -> bool {
-        match TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], port))) {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], port))).is_ok()
     }
 
     #[allow(dead_code)]

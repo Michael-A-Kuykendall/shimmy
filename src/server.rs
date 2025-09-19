@@ -182,7 +182,7 @@ mod tests {
     fn test_router_route_creation() {
         use axum::{routing::get, Router};
         let _app: Router<()> = Router::new().route("/health", get(|| async { "ok" }));
-        assert!(true);
+        // Test completed successfully
     }
 
     #[test]
@@ -250,7 +250,7 @@ mod tests {
             .with_state(state);
 
         // Router creation should succeed, this exercises router construction patterns
-        assert!(true); // If we get here, router creation succeeded
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -303,7 +303,7 @@ mod tests {
         // Lines 7-22: Router construction with all routes
         // Line 23: axum::serve setup
         // This covers the full execution path through line 23
-        assert!(true); // Test passes if no panics occurred
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -333,6 +333,6 @@ mod tests {
         // Line 23: axum::serve(listener, app).await?;
         // (Line 24: Ok(()) - not reached due to abort)
 
-        assert!(true);
+        // Test completed successfully
     }
 }

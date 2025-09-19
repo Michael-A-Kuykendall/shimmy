@@ -169,7 +169,7 @@ mod tests {
 
         let responses: Vec<(StatusCode, Json<ErrorResponse>)> = errors
             .into_iter()
-            .map(|e| <(StatusCode, Json<ErrorResponse>)>::from(e))
+            .map(<(StatusCode, Json<ErrorResponse>)>::from)
             .collect();
 
         assert_eq!(responses.len(), 4);

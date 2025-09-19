@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn test_cli_serve_command_default() {
-        let cli = Cli::try_parse_from(&["shimmy", "serve"]).unwrap();
+        let cli = Cli::try_parse_from(["shimmy", "serve"]).unwrap();
         match cli.cmd {
             Command::Serve { bind } => assert_eq!(bind, "auto"),
             _ => panic!("Expected Serve command"),
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn test_cli_serve_command_manual_bind() {
-        let cli = Cli::try_parse_from(&["shimmy", "serve", "--bind", "127.0.0.1:8080"]).unwrap();
+        let cli = Cli::try_parse_from(["shimmy", "serve", "--bind", "127.0.0.1:8080"]).unwrap();
         match cli.cmd {
             Command::Serve { bind } => assert_eq!(bind, "127.0.0.1:8080"),
             _ => panic!("Expected Serve command"),
@@ -145,22 +145,22 @@ mod tests {
 
     #[test]
     fn test_cli_list_command() {
-        let cli = Cli::try_parse_from(&["shimmy", "list"]).unwrap();
+        let cli = Cli::try_parse_from(["shimmy", "list"]).unwrap();
         matches!(cli.cmd, Command::List { short: false });
     }
 
     #[test]
     fn test_cli_list_short_command() {
-        let cli = Cli::try_parse_from(&["shimmy", "list", "--short"]).unwrap();
+        let cli = Cli::try_parse_from(["shimmy", "list", "--short"]).unwrap();
         matches!(cli.cmd, Command::List { short: true });
 
-        let cli = Cli::try_parse_from(&["shimmy", "list", "-s"]).unwrap();
+        let cli = Cli::try_parse_from(["shimmy", "list", "-s"]).unwrap();
         matches!(cli.cmd, Command::List { short: true });
     }
 
     #[test]
     fn test_cli_generate_command() {
-        let cli = Cli::try_parse_from(&[
+        let cli = Cli::try_parse_from([
             "shimmy",
             "generate",
             "model",
@@ -186,13 +186,13 @@ mod tests {
 
     #[test]
     fn test_cli_discover_command() {
-        let cli = Cli::try_parse_from(&["shimmy", "discover"]).unwrap();
+        let cli = Cli::try_parse_from(["shimmy", "discover"]).unwrap();
         matches!(cli.cmd, Command::Discover);
     }
 
     #[test]
     fn test_cli_probe_command() {
-        let cli = Cli::try_parse_from(&["shimmy", "probe", "test-model"]).unwrap();
+        let cli = Cli::try_parse_from(["shimmy", "probe", "test-model"]).unwrap();
         match cli.cmd {
             Command::Probe { name } => assert_eq!(name, "test-model"),
             _ => panic!("Expected Probe command"),
@@ -202,7 +202,7 @@ mod tests {
     #[test]
     fn test_cli_bench_command() {
         let cli =
-            Cli::try_parse_from(&["shimmy", "bench", "test-model", "--max-tokens", "128"]).unwrap();
+            Cli::try_parse_from(["shimmy", "bench", "test-model", "--max-tokens", "128"]).unwrap();
         match cli.cmd {
             Command::Bench { name, max_tokens } => {
                 assert_eq!(name, "test-model");
@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn test_cli_bench_command_default_tokens() {
-        let cli = Cli::try_parse_from(&["shimmy", "bench", "test-model"]).unwrap();
+        let cli = Cli::try_parse_from(["shimmy", "bench", "test-model"]).unwrap();
         match cli.cmd {
             Command::Bench { name, max_tokens } => {
                 assert_eq!(name, "test-model");

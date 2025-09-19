@@ -392,7 +392,7 @@ mod tests {
         };
         let _state_arc = Arc::new(state);
 
-        assert!(true); // We reached here without panicking
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -445,7 +445,7 @@ mod tests {
         let should_auto_register = manual_count <= 1;
 
         // This will be true in test environment with no models
-        assert!(should_auto_register || !should_auto_register); // Either path is valid
+        // Either auto-registration path is valid - test that logic works
     }
 
     #[tokio::test]
@@ -473,7 +473,7 @@ mod tests {
         let _all_available = registry.list_all_available();
 
         // The logic paths are exercised by calling the methods
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -526,16 +526,16 @@ mod tests {
             match load_result {
                 Ok(_) => {
                     // Line 151 - success path
-                    assert!(true);
+                    // Test completed successfully
                 }
                 Err(_) => {
                     // Lines 152-155 - error path
-                    assert!(true);
+                    // Test completed successfully
                 }
             }
         } else {
             // Line 149 - no model found path
-            assert!(true);
+            // Test completed successfully
         }
     }
 
@@ -675,7 +675,7 @@ mod tests {
         // Validate state is properly created
         assert_ne!(std::mem::size_of_val(&state), 0);
         let models = state.registry.list();
-        assert!(models.len() >= 0);
+        // Models vec was created successfully
     }
 
     #[test]
@@ -727,7 +727,7 @@ mod tests {
         });
 
         let models = reg.list();
-        assert!(models.len() >= 1);
+        assert!(!models.is_empty());
 
         // Clean up
         env::remove_var("SHIMMY_BASE_GGUF");
@@ -774,7 +774,7 @@ mod tests {
         let registry = Registry::with_discovery();
         let state = AppState { engine, registry };
 
-        assert!(state.registry.list().len() >= 0);
+        // Registry was created successfully
     }
 
     #[test]
@@ -920,7 +920,7 @@ mod tests {
                 assert!(all_available.is_empty());
             } else {
                 // Line 119 - success message
-                assert!(all_available.len() >= 0);
+                // Available models list was created
             }
         }
 
@@ -956,10 +956,10 @@ mod tests {
             // For probe command - line 149 success path
             // For bench command - line 159 success path
             // For generate command - line 172 success path
-            assert!(true); // We got the spec successfully
+            // Test completed successfully
         } else {
             // Lines would bail with "no model {name}" error
-            assert!(false, "Expected to find test model");
+            panic!("Expected to find test model");
         }
     }
 
@@ -1135,7 +1135,7 @@ mod tests {
             assert_eq!(discovered.len(), 0);
         } else {
             // Test non-empty case - exercise the match arms in lines 103-108
-            for (_name, model) in &discovered {
+            for model in discovered.values() {
                 // Test parameter_count and quantization combinations
                 let _type_info = match (&model.parameter_count, &model.quantization) {
                     (Some(params), Some(quant)) => {
@@ -1174,7 +1174,7 @@ mod tests {
 
         // Test list_all_available (lines 115, 647, etc.)
         let all_available = registry.list_all_available();
-        assert!(all_available.len() >= 0);
+        // Available models list was created
     }
 
     #[tokio::test]
@@ -1269,7 +1269,7 @@ mod tests {
             for (name, model) in discovered {
                 // Test size calculation (line 137)
                 let size_mb = model.size_bytes / (1024 * 1024);
-                assert!(size_mb >= 0);
+                // File size was calculated
 
                 // Test lora info logic (line 145)
                 let lora_info = if model.lora_path.is_some() {
@@ -1277,7 +1277,7 @@ mod tests {
                 } else {
                     ""
                 };
-                assert!(lora_info == " + LoRA" || lora_info == "");
+                assert!(lora_info == " + LoRA" || lora_info.is_empty());
 
                 assert!(!name.is_empty());
             }
@@ -1306,16 +1306,16 @@ mod tests {
             match engine.load(&spec).await {
                 Ok(_) => {
                     // Line 151: Success path - would print "ok: loaded {name}"
-                    assert!(true);
+                    // Test completed successfully
                 }
                 Err(_) => {
                     // Lines 152-154: Error path - would print error and exit(2)
-                    assert!(false, "MockEngine should not fail");
+                    panic!("MockEngine should not fail");
                 }
             }
         } else {
             // Line 149: No spec found - would bail with "no model {name}"
-            assert!(false, "Expected to find probe-test model");
+            panic!("Expected to find probe-test model");
         }
     }
 
@@ -1461,7 +1461,7 @@ mod tests {
             Err(_) => {
                 // This would be the error path for probe (lines 153-155)
                 // and similar for bench/generate
-                assert!(true); // We handled the error
+                // Test completed successfully
             }
         }
     }

@@ -225,14 +225,13 @@ mod property_tests {
                 }
 
                 // For GGUF files, verify the specific invariant
-                if file_path.to_lowercase().ends_with(".gguf") {
-                    if !checked
+                if file_path.to_lowercase().ends_with(".gguf")
+                    && !checked
                         .iter()
                         .any(|inv| inv.contains("GGUF files must use Llama backend"))
                     {
                         return false;
                     }
-                }
             }
             true
         });

@@ -244,7 +244,7 @@ impl WorkflowEngine {
 
         for step in steps {
             if !visited.contains(&step.id) {
-                self.visit_step(&step.id, steps, &mut visited, &mut temp_visited, &mut order)?;
+                Self::visit_step(&step.id, steps, &mut visited, &mut temp_visited, &mut order)?;
             }
         }
 
@@ -252,7 +252,6 @@ impl WorkflowEngine {
     }
 
     fn visit_step(
-        &self,
         step_id: &str,
         steps: &[WorkflowStep],
         visited: &mut std::collections::HashSet<String>,
@@ -278,7 +277,7 @@ impl WorkflowEngine {
             .ok_or_else(|| anyhow::anyhow!("Step {} not found", step_id))?;
 
         for dep in &step.depends_on {
-            self.visit_step(dep, steps, visited, temp_visited, order)?;
+            Self::visit_step(dep, steps, visited, temp_visited, order)?;
         }
 
         temp_visited.remove(step_id);

@@ -660,7 +660,7 @@ mod tests {
     #[test]
     fn test_model_auto_discovery_new() {
         let discovery = ModelAutoDiscovery::new();
-        assert!(discovery.search_paths.len() >= 1);
+        assert!(!discovery.search_paths.is_empty());
     }
 
     #[test]

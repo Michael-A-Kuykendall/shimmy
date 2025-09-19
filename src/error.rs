@@ -393,9 +393,9 @@ mod tests {
             },
             ShimmyError::TemplateError {
                 template: "test".to_string(),
-                source: Box::new(IoError::new(ErrorKind::Other, "test")),
+                source: Box::new(IoError::other("test")),
             },
-            ShimmyError::IoError(IoError::new(ErrorKind::Other, "test")),
+            ShimmyError::IoError(IoError::other("test")),
             ShimmyError::SerdeError(serde_json::from_str::<i32>("invalid").unwrap_err()),
         ];
 

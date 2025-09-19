@@ -3,7 +3,6 @@
 
 use anyhow::Result;
 use std::time::Instant;
-use tokio;
 
 use shimmy::cache::ModelCache;
 use shimmy::engine::safetensors_native::SafeTensorsEngine;
