@@ -32,7 +32,7 @@ jobs:
     - name: Run PPT Contract Tests (Critical Path)
       run: |
         echo "🧪 Running PPT Contract Tests - Critical Quality Gate"
-        timeout 300s cargo test ppt_contracts --features huggingface -- --nocapture
+        timeout 300s cargo test invariant_ppt::tests --no-default-features --features huggingface -- --nocapture
         
     - name: Verify PPT Coverage
       run: |
@@ -65,17 +65,17 @@ jobs:
         
     - name: Run Property Tests
       run: |
-        echo "🧪 Running Property Tests"
-        timeout 180s cargo test property_tests --features huggingface -- --nocapture
+        echo "Running Property Tests"
+        timeout 180s cargo test property_tests --no-default-features --features huggingface -- --nocapture
         
     - name: Run Unit Tests (HuggingFace)
       run: |
-        echo "🧪 Running Unit Tests - HuggingFace Feature"
-        timeout 300s cargo test --lib --features huggingface --verbose
+        echo "Running Unit Tests - HuggingFace Feature"
+        timeout 300s cargo test --lib --no-default-features --features huggingface --verbose
       
     - name: Run Unit Tests (All Features)
       run: |
-        echo "🧪 Running Unit Tests - All Features" 
+        echo "Running Unit Tests - All Features" 
         timeout 600s cargo test --lib --all-features --verbose
 
   # Code Coverage Analysis
@@ -104,8 +104,9 @@ jobs:
         
     - name: Generate coverage report
       run: |
-        echo "📊 Generating coverage report with professional standards"
+        echo "Generating coverage report"
         timeout 900s cargo tarpaulin \
+          --no-default-features \
           --features huggingface \
           --out xml \
           --output-dir coverage \
