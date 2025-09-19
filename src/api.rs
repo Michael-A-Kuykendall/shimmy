@@ -363,7 +363,7 @@ pub async fn execute_workflow(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json;
+    
 
     #[test]
     fn test_generate_request_parsing() {
@@ -379,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_model_list_response() {
-        let models = vec!["model1".to_string(), "model2".to_string()];
+        let models = ["model1".to_string(), "model2".to_string()];
         assert_eq!(models.len(), 2);
         assert!(models.contains(&"model1".to_string()));
     }
@@ -444,7 +444,7 @@ mod tests {
 
         // Exercise handler code path (will fail gracefully due to no model)
         let _result = generate(State(state), Json(request)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -458,7 +458,7 @@ mod tests {
 
         // Exercise list_models handler code path
         let _result = list_models(State(state)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[test]
@@ -524,7 +524,7 @@ mod tests {
 
         // Exercise discover_models handler code path
         let _result = discover_models(State(state)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -539,7 +539,7 @@ mod tests {
 
         // Exercise load_model handler (lines 210-218)
         let _result = load_model(State(state), Path("test-model".to_string())).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -554,7 +554,7 @@ mod tests {
 
         // Exercise unload_model handler (lines 220-227)
         let _result = unload_model(State(state), Path("test-model".to_string())).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -569,7 +569,7 @@ mod tests {
 
         // Exercise model_status handler (lines 229-236)
         let _result = model_status(State(state), Path("test-model".to_string())).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -583,7 +583,7 @@ mod tests {
 
         // Exercise list_tools handler (lines 239-243)
         let _result = list_tools(State(state)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -601,7 +601,7 @@ mod tests {
         // Exercise execute_tool handler (lines 246-250)
         let _result =
             execute_tool(State(state), Path("test-tool".to_string()), Json(arguments)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -617,7 +617,7 @@ mod tests {
 
         // Exercise execute_workflow handler (lines 253-258)
         let _result = execute_workflow(State(state), Json(request)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -652,7 +652,7 @@ mod tests {
 
         // Exercise streaming path (lines 54-64)
         let _result = generate(State(state), Json(request)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -696,7 +696,7 @@ mod tests {
 
         // Exercise messages path with system prompt (lines 35-42)
         let _result = generate(State(state), Json(request)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[test]
@@ -768,7 +768,7 @@ mod tests {
         if let Some(s) = stream {
             opts.stream = s;
         }
-        assert_eq!(opts.stream, true);
+        assert!(opts.stream);
     }
 
     #[tokio::test]
@@ -874,7 +874,7 @@ mod tests {
         let state = Arc::new(AppState { engine, registry });
 
         let _response = list_models(State(state)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[test]
@@ -971,7 +971,7 @@ mod tests {
 
         // Exercise discover_models handler success path (lines 187-200)
         let _response = discover_models(State(state)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[test]

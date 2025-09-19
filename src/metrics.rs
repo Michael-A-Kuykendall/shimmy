@@ -130,6 +130,12 @@ pub struct TelemetryCollector {
     hourly_request_counts: std::sync::Mutex<Vec<u64>>,
 }
 
+impl Default for TelemetryCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TelemetryCollector {
     pub fn new() -> Self {
         let config_path = Self::get_config_path();
@@ -150,7 +156,7 @@ impl TelemetryCollector {
     }
 
     pub fn is_enabled(&self) -> bool {
-        self.config.as_ref().map_or(false, |c| c.enabled)
+        self.config.as_ref().is_some_and(|c| c.enabled)
     }
 
     pub async fn prompt_first_run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -177,8 +183,10 @@ impl TelemetryCollector {
         io::stdin().read_line(&mut input)?;
         let enabled = !matches!(input.trim().to_lowercase().as_str(), "n" | "no");
 
-        let mut config = TelemetryConfig::default();
-        config.enabled = enabled;
+        let config = TelemetryConfig {
+            enabled,
+            ..Default::default()
+        };
 
         self.save_config(&config).await?;
         self.config = Some(config);
@@ -417,7 +425,7 @@ impl TelemetryCollector {
                         // Windows fallback: check for AMD GPU via wmic
                         if cfg!(windows) {
                             std::process::Command::new("wmic")
-                                .args(&["path", "win32_VideoController", "get", "name"])
+                                .args(["path", "win32_VideoController", "get", "name"])
                                 .output()
                                 .map(|o| {
                                     String::from_utf8_lossy(&o.stdout)
@@ -439,7 +447,7 @@ impl TelemetryCollector {
         // Check for Intel GPU tools
         if cfg!(windows) {
             std::process::Command::new("wmic")
-                .args(&["path", "win32_VideoController", "get", "name"])
+                .args(["path", "win32_VideoController", "get", "name"])
                 .output()
                 .map(|o| {
                     String::from_utf8_lossy(&o.stdout)
@@ -463,7 +471,7 @@ impl TelemetryCollector {
     fn detect_integration_type() -> Option<String> {
         // Detect common IDE/tool integrations based on process environment
         if std::env::var("VSCODE_PID").is_ok()
-            || std::env::var("TERM_PROGRAM").map_or(false, |v| v.contains("vscode"))
+            || std::env::var("TERM_PROGRAM").is_ok_and(|v| v.contains("vscode"))
         {
             Some("vscode".to_string())
         } else if std::env::var("CURSOR_USER_DATA").is_ok() {

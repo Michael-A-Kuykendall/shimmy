@@ -2,6 +2,15 @@
 
 Thanks for your interest in contributing to Shimmy!
 
+## 🚨 IMPORTANT: Maintainer-Only Pull Requests
+
+**Pull requests are restricted to approved maintainers only.** Unsolicited PRs will be declined. To contribute code, you must first apply for maintainer status by emailing michaelallenkuykendall@gmail.com.
+
+**Non-maintainers can contribute by:**
+- Opening issues for bugs or feature requests
+- Participating in GitHub Discussions
+- Providing feedback and testing
+
 ## How to Contribute
 1. Fork the repo and create a branch (`git checkout -b feature/foo`)
 2. Make your changes with clear commits and tests if applicable
@@ -48,6 +57,13 @@ Features should align with the **Shimmy philosophy**:
 - Features not aligned with OpenAI compatibility
 
 ## Review Process
+
+**IMPORTANT: Pull Request Access is Restricted**
+- Only approved maintainers may submit pull requests
+- All contributions from non-maintainers will be declined
+- Code contributions require pre-approval via maintainer application process
+
+**For Approved Maintainers:**
 - All PRs require review and approval from the lead maintainer
 - Merge authority is reserved to maintain project direction
 - We aim to review PRs within 1-2 business days
@@ -75,16 +91,18 @@ cargo clippy -- -D warnings
 - **Additional Maintainers**: Currently none (solo-maintained project)
 
 ### Becoming a Maintainer
-Currently, Shimmy is maintained by a single maintainer to ensure consistent vision and rapid iteration. If you're interested in becoming a maintainer in the future:
+Currently, Shimmy is maintained by a single maintainer to ensure consistent vision and rapid iteration. **Code contributions require pre-approved maintainer status.**
 
-1. **Demonstrate Expertise**: Contribute several high-quality PRs over time
-2. **Private Application**: Email `maintainer-request@shimmy-ai.dev` with:
-   - Your GitHub username and contribution history
+**To apply for maintainer status:**
+
+1. **Private Application**: Email michaelallenkuykendall@gmail.com with:
+   - Your GitHub username and relevant experience
    - Area of expertise (e.g., performance, platform support, API design)
    - Time commitment you can provide
    - Why you'd like to help maintain Shimmy
 
-3. **Evaluation Process**: Applications are reviewed when additional maintainers are needed
+2. **Evaluation Process**: Applications are reviewed when additional maintainers are needed
+3. **No Unsolicited PRs**: Code contributions without prior approval will be declined
 
 ### Maintainer Responsibilities
 When additional maintainers are added, they will:
