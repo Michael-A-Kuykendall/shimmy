@@ -325,7 +325,7 @@ mod tests {
     async fn test_chat_completions_handler_execution() {
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let request = ChatCompletionRequest {
             model: "test".to_string(),
@@ -345,7 +345,7 @@ mod tests {
     async fn test_models_handler_execution() {
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise models handler code path
         let _result = models(State(state)).await;
@@ -398,7 +398,7 @@ mod tests {
     async fn test_chat_completions_model_not_found() {
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let request = ChatCompletionRequest {
             model: "nonexistent-model".to_string(),
@@ -435,7 +435,7 @@ mod tests {
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let request = ChatCompletionRequest {
             model: "test-streaming".to_string(),
@@ -470,7 +470,7 @@ mod tests {
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         let request = ChatCompletionRequest {
             model: "test-non-streaming".to_string(),
@@ -788,7 +788,7 @@ mod tests {
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Exercise models endpoint (lines 82-96)
         let _response = models(State(state)).await;

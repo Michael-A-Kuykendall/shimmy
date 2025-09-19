@@ -10,8 +10,10 @@ pub mod main_integration;
 pub mod metrics;
 pub mod model_manager;
 pub mod model_registry;
+pub mod observability;
 pub mod openai_compat;
 pub mod port_manager;
+pub mod routing;
 pub mod rustchain_compat;
 pub mod safetensors_adapter;
 pub mod server;
@@ -34,4 +36,17 @@ pub mod test_utils;
 pub struct AppState {
     pub engine: Box<dyn engine::InferenceEngine>,
     pub registry: model_registry::Registry,
+    pub observability: observability::ObservabilityManager,
+    pub response_cache: cache::ResponseCache,
+}
+
+impl AppState {
+    pub fn new(engine: Box<dyn engine::InferenceEngine>, registry: model_registry::Registry) -> Self {
+        Self {
+            engine,
+            registry,
+            observability: observability::ObservabilityManager::new(),
+            response_cache: cache::ResponseCache::new(),
+        }
+    }
 }
