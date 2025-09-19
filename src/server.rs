@@ -165,7 +165,7 @@ mod tests {
     fn test_app_state_creation() {
         let registry = Registry::default();
         let engine = Box::new(crate::engine::adapter::InferenceEngineAdapter::new());
-        let state = Arc::new(AppState { engine, registry });
+        let state = Arc::new(AppState::new(engine, registry));
 
         // Test that state is created successfully
         assert_eq!(state.registry.list().len(), 0);
@@ -206,7 +206,7 @@ mod tests {
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(crate::AppState { engine, registry });
+        let state = Arc::new(crate::AppState::new(engine, registry));
 
         // Test that run function can be called (would bind to address)
         // This exercises the run function signature and initial setup
@@ -222,7 +222,7 @@ mod tests {
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(crate::AppState { engine, registry });
+        let state = Arc::new(crate::AppState::new(engine, registry));
 
         // Test that run function exercises TcpListener::bind line (line 6)
         let result = timeout(Duration::from_millis(100), async { run(addr, state).await }).await;
@@ -240,7 +240,7 @@ mod tests {
 
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(crate::AppState { engine, registry });
+        let state = Arc::new(crate::AppState::new(engine, registry));
 
         // Test that we can construct a router with similar routes as the run function
         // This exercises the router creation pattern used in lines 7-22
@@ -262,7 +262,7 @@ mod tests {
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(crate::AppState { engine, registry });
+        let state = Arc::new(crate::AppState::new(engine, registry));
 
         // Create a future that will exercise the run function
         let run_future = run(addr, state);
@@ -287,7 +287,7 @@ mod tests {
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(crate::AppState { engine, registry });
+        let state = Arc::new(crate::AppState::new(engine, registry));
 
         // Spawn the server in a background task
         let server_handle = tokio::spawn(async move { run(addr, state).await });
@@ -315,7 +315,7 @@ mod tests {
         let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
         let registry = Registry::default();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = Arc::new(crate::AppState { engine, registry });
+        let state = Arc::new(crate::AppState::new(engine, registry));
 
         // Start the function and let it bind
         let run_task = tokio::spawn(run(addr, state));

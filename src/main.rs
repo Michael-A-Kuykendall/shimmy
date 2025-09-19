@@ -1,12 +1,15 @@
 mod api;
 mod api_errors;
 mod auto_discovery;
+mod cache;
 mod cli;
 mod engine;
 mod main_integration;
 mod model_registry;
+mod observability;
 mod openai_compat;
 mod port_manager;
+mod routing;
 mod server;
 mod templates;
 mod util {
@@ -22,6 +25,19 @@ use tracing::info;
 pub struct AppState {
     pub engine: Box<dyn engine::InferenceEngine>,
     pub registry: Registry,
+    pub observability: observability::ObservabilityManager,
+    pub response_cache: cache::ResponseCache,
+}
+
+impl AppState {
+    pub fn new(engine: Box<dyn engine::InferenceEngine>, registry: Registry) -> Self {
+        Self {
+            engine,
+            registry,
+            observability: observability::ObservabilityManager::new(),
+            response_cache: cache::ResponseCache::new(),
+        }
+    }
 }
 
 #[tokio::main]
@@ -58,10 +74,7 @@ async fn main() -> anyhow::Result<()> {
 
     let engine: Box<dyn engine::InferenceEngine> =
         Box::new(engine::adapter::InferenceEngineAdapter::new());
-    let state = AppState {
-        engine,
-        registry: reg,
-    };
+    let state = AppState::new(engine, reg);
     let state = Arc::new(state);
 
     match cli.cmd {
@@ -75,10 +88,10 @@ async fn main() -> anyhow::Result<()> {
             let manual_count = state.registry.list().len();
             if manual_count <= 1 {
                 // Only the default phi3-lora entry
-                let mut enhanced_state = AppState {
-                    engine: Box::new(engine::llama::LlamaEngine::new()),
-                    registry: state.registry.clone(),
-                };
+                let mut enhanced_state = AppState::new(
+                    Box::new(engine::llama::LlamaEngine::new()),
+                    state.registry.clone(),
+                );
                 enhanced_state.registry.auto_register_discovered();
                 let enhanced_state = Arc::new(enhanced_state);
 
@@ -670,7 +683,7 @@ mod tests {
         // Test state creation paths
         let registry = Registry::with_discovery();
         let engine = Box::new(InferenceEngineAdapter::new());
-        let state = std::sync::Arc::new(crate::AppState { engine, registry });
+        let state = std::sync::Arc::new(crate::AppState::new(engine, registry));
 
         // Validate state is properly created
         assert_ne!(std::mem::size_of_val(&state), 0);
@@ -772,7 +785,7 @@ mod tests {
 
         let engine: Box<dyn engine::InferenceEngine> = Box::new(InferenceEngineAdapter::new());
         let registry = Registry::with_discovery();
-        let state = AppState { engine, registry };
+        let state = AppState::new(engine, registry);
 
         // Registry was created successfully
     }
