@@ -31,7 +31,7 @@ fi
 
 # 2. Basic Compilation Check (Fast)
 echo "🔨 Checking compilation..."
-if ! cargo check --features huggingface >/dev/null 2>&1; then
+if ! cargo check --no-default-features --features huggingface >/dev/null 2>&1; then
     echo "❌ Compilation check failed"
     echo "   Fix compilation errors before committing"
     CHECKS_FAILED=true
@@ -41,9 +41,9 @@ fi
 
 # 3. Critical PPT Contract Tests (Medium)
 echo "🧪 Running critical contract tests..."
-if ! timeout 60s cargo test ppt_contracts --features huggingface -- --quiet >/dev/null 2>&1; then
+if ! timeout 60s cargo test invariant_ppt::tests --no-default-features --features huggingface -- --quiet >/dev/null 2>&1; then
     echo "❌ PPT contract tests failed"
-    echo "   Run: cargo test ppt_contracts --features huggingface"
+    echo "   Run: cargo test invariant_ppt::tests --no-default-features --features huggingface"
     CHECKS_FAILED=true
 else
     echo "✅ PPT contracts: OK"
@@ -51,9 +51,9 @@ fi
 
 # 4. Basic Clippy Lints (Medium)
 echo "🔍 Running clippy lints..."
-if ! cargo clippy --features huggingface -- -D warnings >/dev/null 2>&1; then
+if ! cargo clippy --no-default-features --features huggingface -- -D warnings >/dev/null 2>&1; then
     echo "⚠️  Clippy warnings found (allowing commit)"
-    echo "   Review with: cargo clippy --features huggingface"
+    echo "   Review with: cargo clippy --no-default-features --features huggingface"
     # Don't fail on clippy warnings, just warn
 else
     echo "✅ Clippy lints: OK"
@@ -106,7 +106,7 @@ fi
 
 echo "📊 Quick coverage check..."
 if command -v cargo-tarpaulin >/dev/null 2>&1; then
-    if timeout 180s cargo tarpaulin --features huggingface --out xml --output-dir coverage >/dev/null 2>&1; then
+    if timeout 180s cargo tarpaulin --no-default-features --features huggingface --out xml --output-dir coverage >/dev/null 2>&1; then
         if [ -f "coverage/cobertura.xml" ]; then
             COVERAGE_PERCENT=$(grep -o 'line-rate="[^"]*"' coverage/cobertura.xml | head -1 | grep -o '[0-9.]*' || echo "0")
             MEETS_STANDARD=$(echo "$COVERAGE_PERCENT >= 0.90" | bc -l 2>/dev/null || echo "0")
