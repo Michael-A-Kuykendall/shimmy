@@ -63,22 +63,15 @@ impl Registry {
         }
     }
 
-    fn infer_template(&self, model_name: &str) -> String {
+    pub fn infer_template(&self, model_name: &str) -> String {
         let name_lower = model_name.to_lowercase();
 
         // Check model name patterns for better template detection
         if name_lower.contains("llama") {
             "llama3".to_string()
-        } else if name_lower.contains("phi") {
-            "chatml".to_string()
-        } else if name_lower.contains("mistral") {
-            "chatml".to_string()
-        } else if name_lower.contains("qwen") {
-            "chatml".to_string()
-        } else if name_lower.contains("gemma") {
-            "chatml".to_string()
         } else {
-            "chatml".to_string() // Default to chatml for most models
+            // Default to chatml for most models (phi, mistral, qwen, gemma, etc.)
+            "chatml".to_string()
         }
     }
 

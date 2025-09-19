@@ -92,6 +92,10 @@ impl ModelDiscovery {
         self.search_paths.push(path);
     }
 
+    pub fn search_paths(&self) -> &[PathBuf] {
+        &self.search_paths
+    }
+
     pub fn discover_models(&self) -> Result<Vec<DiscoveredModel>> {
         let mut models = Vec::new();
 
@@ -190,7 +194,7 @@ mod tests {
         let discovery = ModelDiscovery::from_env();
 
         // Should have at least the parent directory of SHIMMY_BASE_GGUF
-        assert!(discovery.search_paths.len() > 0);
+        assert!(!discovery.search_paths.is_empty());
         assert!(discovery
             .search_paths
             .iter()
@@ -497,7 +501,7 @@ mod tests {
 
         // Should still create discovery object, just won't add parent path
         // Verify discovery object was created successfully
-        assert!(!discovery.search_paths.is_empty() || true); // Always succeeds, validates creation
+        assert!(!discovery.search_paths.is_empty()); // Validates that search paths were added
 
         env::remove_var("SHIMMY_BASE_GGUF");
     }

@@ -101,7 +101,7 @@ fn test_model_directory(model_dir: &Path) -> Result<(), Box<dyn std::error::Erro
     // Test probe command
     println!("🔍 Testing probe command...");
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "shimmy", "--", "discover"])
+        .args(["run", "--bin", "shimmy", "--", "discover"])
         .output()?;
 
     if !output.status.success() {
@@ -166,7 +166,7 @@ fn test_memory_intensive_scenarios(test_dir: &Path) -> Result<(), Box<dyn std::e
 
         // Use our create_test_safetensors tool to create a properly structured model
         let output = Command::new("cargo")
-            .args(&[
+            .args([
                 "run",
                 "--bin",
                 "shimmy",
@@ -208,7 +208,7 @@ fn test_server_mode() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting server with SafeTensors model...");
 
     let mut server = Command::new("cargo")
-        .args(&["run", "--bin", "shimmy", "--", "serve"])
+        .args(["run", "--bin", "shimmy", "--", "serve"])
         .spawn()?;
 
     // Give server time to start
@@ -217,7 +217,7 @@ fn test_server_mode() -> Result<(), Box<dyn std::error::Error>> {
     // Test if server is responding
     println!("🔗 Testing server health...");
     let health_result = Command::new("curl")
-        .args(&["--max-time", "5", "http://127.0.0.1:11435/health"])
+        .args(["--max-time", "5", "http://127.0.0.1:11435/health"])
         .output();
 
     match health_result {

@@ -65,13 +65,13 @@ pub struct Delta {
     pub role: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ModelsResponse {
     pub object: String,
     pub data: Vec<Model>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Model {
     pub id: String,
     pub object: String,
@@ -148,7 +148,7 @@ pub async fn chat_completions(
         .messages
         .iter()
         .filter(|m| m.role == "user")
-        .last()
+        .next_back()
         .map(|m| m.content.as_str());
 
     // Build conversation history without the last user message
@@ -218,10 +218,7 @@ pub async fn chat_completions(
                     finish_reason: None,
                 }],
             };
-            let _ = tx_tokens.send(format!(
-                "data: {}\n\n",
-                serde_json::to_string(&initial_chunk).unwrap()
-            ));
+            let _ = tx_tokens.send(serde_json::to_string(&initial_chunk).unwrap());
 
             // Generate and stream tokens
             let _ = loaded
@@ -243,10 +240,7 @@ pub async fn chat_completions(
                                 finish_reason: None,
                             }],
                         };
-                        let _ = tx_tokens.send(format!(
-                            "data: {}\n\n",
-                            serde_json::to_string(&chunk).unwrap()
-                        ));
+                        let _ = tx_tokens.send(serde_json::to_string(&chunk).unwrap());
                     })),
                 )
                 .await;
@@ -266,11 +260,8 @@ pub async fn chat_completions(
                     finish_reason: Some("stop".to_string()),
                 }],
             };
-            let _ = tx.send(format!(
-                "data: {}\n\n",
-                serde_json::to_string(&final_chunk).unwrap()
-            ));
-            let _ = tx.send("data: [DONE]\n\n".to_string());
+            let _ = tx.send(serde_json::to_string(&final_chunk).unwrap());
+            let _ = tx.send("[DONE]".to_string());
         });
 
         let stream = UnboundedReceiverStream::new(rx)
@@ -347,7 +338,7 @@ mod tests {
 
         // Exercise handler code path (will gracefully fail due to no model)
         let _result = chat_completions(State(state), Json(request)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -358,7 +349,7 @@ mod tests {
 
         // Exercise models handler code path
         let _result = models(State(state)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[test]
@@ -425,7 +416,7 @@ mod tests {
         // The response should be a 404 NOT_FOUND (line 107)
         // We can't easily test the exact status without response introspection,
         // but we exercise the code path
-        assert!(true); // Reached here means code path executed
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -460,7 +451,7 @@ mod tests {
 
         // Exercise streaming path (lines 132-213)
         let _response = chat_completions(State(state), Json(request)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[tokio::test]
@@ -501,7 +492,7 @@ mod tests {
 
         // Exercise non-streaming path (lines 214-244)
         let _response = chat_completions(State(state), Json(request)).await;
-        assert!(true);
+        // Test completed successfully
     }
 
     #[test]
@@ -592,7 +583,7 @@ mod tests {
         if let Some(s) = stream {
             opts.stream = s;
         }
-        assert_eq!(opts.stream, true);
+        assert!(opts.stream);
     }
 
     #[test]
@@ -753,16 +744,14 @@ mod tests {
     #[test]
     fn test_message_pairs_conversion() {
         // Test the message pairs logic used in chat_completions (lines 120-122)
-        let messages = vec![
-            ChatMessage {
+        let messages = [ChatMessage {
                 role: "user".to_string(),
                 content: "Hello".to_string(),
             },
             ChatMessage {
                 role: "assistant".to_string(),
                 content: "Hi there!".to_string(),
-            },
-        ];
+            }];
 
         let pairs: Vec<(String, String)> = messages
             .iter()
@@ -805,6 +794,6 @@ mod tests {
         let _response = models(State(state)).await;
 
         // The response should include the registered models
-        assert!(true); // Successfully executed the endpoint
+        // Test completed successfully
     }
 }

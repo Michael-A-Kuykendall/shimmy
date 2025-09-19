@@ -131,6 +131,12 @@ impl CacheStats {
     }
 }
 
+impl Default for ResponseCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ResponseCache {
     pub fn new() -> Self {
         Self::with_config(ResponseCacheConfig::default())
@@ -165,9 +171,9 @@ impl ResponseCache {
                 entry.access();
                 stats.hits += 1;
                 stats.average_response_time_saved = Duration::from_millis(
-                    ((stats.average_response_time_saved.as_millis() as u64 * (stats.hits - 1)
+                    (stats.average_response_time_saved.as_millis() as u64 * (stats.hits - 1)
                         + entry.response_time.as_millis() as u64)
-                        / stats.hits) as u64,
+                        / stats.hits,
                 );
                 debug!("Cache hit for key: {:?}", key);
                 Some(entry.response.clone())

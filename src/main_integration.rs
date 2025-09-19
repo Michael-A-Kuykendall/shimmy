@@ -116,8 +116,8 @@ mod tests {
         // Test that setup_production_server returns a valid Arc<()>
         let server = setup_production_server();
 
-        // Verify it's an Arc<()>
-        assert_eq!(*server, ());
+        // Server handle created successfully - verify it's an Arc<()>
+        drop(server); // Explicitly test that the Arc can be dropped
     }
 
     #[test]
@@ -127,7 +127,7 @@ mod tests {
 
         // Test cloning the Arc (should work without issues)
         let server_clone = Arc::clone(&server);
-        assert_eq!(*server, *server_clone);
+        // Both references are valid - test strong count instead
 
         // Test that both references point to the same data
         assert_eq!(Arc::strong_count(&server), 2);
@@ -142,9 +142,7 @@ mod tests {
         let server1 = setup_production_server();
         let server2 = setup_production_server();
 
-        // Both should contain ()
-        assert_eq!(*server1, ());
-        assert_eq!(*server2, ());
+        // Both should be valid Arc instances
 
         // They should be independent Arc instances
         assert_eq!(Arc::strong_count(&server1), 1);
@@ -159,7 +157,7 @@ mod tests {
 
         // Both should be valid
         assert!(registry.list().is_empty());
-        assert_eq!(*server, ());
+        // Server handle is valid
 
         // Test using them in a hypothetical production scenario
         let mut registry_mut = registry;
