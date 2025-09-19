@@ -60,12 +60,15 @@ impl InferenceEngineAdapter {
                     return BackendChoice::MLX;
                 }
             }
-            
+
             // Check if we're on Apple Silicon and model is MLX-compatible
             if cfg!(target_os = "macos") && std::env::consts::ARCH == "aarch64" {
                 let model_name = spec.name.to_lowercase();
-                if model_name.contains("llama") || model_name.contains("mistral") 
-                    || model_name.contains("phi") || model_name.contains("qwen") {
+                if model_name.contains("llama")
+                    || model_name.contains("mistral")
+                    || model_name.contains("phi")
+                    || model_name.contains("qwen")
+                {
                     // Prefer MLX for known compatible models on Apple Silicon
                     return BackendChoice::MLX;
                 }
@@ -251,33 +254,33 @@ mod tests {
     #[test]
     fn test_huggingface_model_id_detection() {
         let adapter = InferenceEngineAdapter::new();
-        
+
         // Test HuggingFace model IDs
         let hf_spec = create_test_spec("qwen", "Qwen/Qwen3-Next-80B-A3B-Instruct");
         let backend = adapter.select_backend(&hf_spec);
         #[cfg(feature = "huggingface")]
         assert_eq!(backend, BackendChoice::HuggingFace);
-        
+
         let hf_spec2 = create_test_spec("llama", "meta-llama/Llama-2-7b-chat-hf");
         let backend2 = adapter.select_backend(&hf_spec2);
         #[cfg(feature = "huggingface")]
         assert_eq!(backend2, BackendChoice::HuggingFace);
     }
-    
+
     #[test]
     fn test_local_file_detection() {
         let adapter = InferenceEngineAdapter::new();
-        
+
         // Test local files still work
         let gguf_spec = create_test_spec("local", "model.gguf");
         let backend = adapter.select_backend(&gguf_spec);
         #[cfg(feature = "llama")]
         assert_eq!(backend, BackendChoice::Llama);
-        
+
         let safetensors_spec = create_test_spec("local", "model.safetensors");
         let backend2 = adapter.select_backend(&safetensors_spec);
         assert_eq!(backend2, BackendChoice::SafeTensors);
-        
+
         // Test Windows paths (should not be treated as HF model IDs)
         let windows_spec = create_test_spec("local", "C:\\path\\to\\model.gguf");
         let backend3 = adapter.select_backend(&windows_spec);

@@ -12,7 +12,9 @@ use std::time::SystemTime;
 pub mod model_cache;
 pub mod response_cache;
 
-pub use response_cache::{ResponseCache, ResponseCacheConfig, CacheKey, CacheStats as ResponseCacheStats};
+pub use response_cache::{
+    CacheKey, CacheStats as ResponseCacheStats, ResponseCache, ResponseCacheConfig,
+};
 
 /// Cached metadata for a model file
 #[derive(Debug, Serialize, Deserialize, Clone)]

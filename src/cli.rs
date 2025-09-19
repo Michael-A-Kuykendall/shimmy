@@ -153,7 +153,7 @@ mod tests {
     fn test_cli_list_short_command() {
         let cli = Cli::try_parse_from(&["shimmy", "list", "--short"]).unwrap();
         matches!(cli.cmd, Command::List { short: true });
-        
+
         let cli = Cli::try_parse_from(&["shimmy", "list", "-s"]).unwrap();
         matches!(cli.cmd, Command::List { short: true });
     }

@@ -422,10 +422,10 @@ impl TelemetryCollector {
                                 .map(|o| {
                                     String::from_utf8_lossy(&o.stdout)
                                         .to_lowercase()
-                                        .contains("amd") || 
-                                    String::from_utf8_lossy(&o.stdout)
-                                        .to_lowercase()
-                                        .contains("radeon")
+                                        .contains("amd")
+                                        || String::from_utf8_lossy(&o.stdout)
+                                            .to_lowercase()
+                                            .contains("radeon")
                                 })
                                 .unwrap_or(false)
                         } else {
