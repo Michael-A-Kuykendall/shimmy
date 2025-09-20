@@ -44,12 +44,35 @@ impl InferenceEngineAdapter {
                     #[cfg(feature = "llama")]
                     { BackendChoice::Llama }
                     #[cfg(not(feature = "llama"))]
-                    { BackendChoice::HuggingFace }
+                    { 
+                        #[cfg(feature = "huggingface")]
+                        { BackendChoice::HuggingFace }
+                        #[cfg(not(feature = "huggingface"))]
+                        { panic!("No backend available for GGUF files") }
+                    }
                 },
-                _ => BackendChoice::HuggingFace,
+                _ => {
+                    #[cfg(feature = "huggingface")]
+                    { BackendChoice::HuggingFace }
+                    #[cfg(not(feature = "huggingface"))]
+                    { 
+                        #[cfg(feature = "llama")]
+                        { BackendChoice::Llama }
+                        #[cfg(not(feature = "llama"))]
+                        { panic!("No backend available") }
+                    }
+                }
             }
         } else {
-            BackendChoice::HuggingFace
+            #[cfg(feature = "huggingface")]
+            { BackendChoice::HuggingFace }
+            #[cfg(not(feature = "huggingface"))]
+            { 
+                #[cfg(feature = "llama")]
+                { BackendChoice::Llama }
+                #[cfg(not(feature = "llama"))]
+                { panic!("No backend available") }
+            }
         }
     }
 }
@@ -70,7 +93,7 @@ impl InferenceEngine for InferenceEngineAdapter {
         // Check if already loaded
         {
             let models = self.loaded_models.read();
-            if models.contains_key(&model_key) {
+            if (*models).contains_key(&model_key) {
                 // Return a reference wrapper since we can't clone trait objects
                 return Ok(Box::new(CachedModelRef {
                     key: model_key,
@@ -98,7 +121,7 @@ impl InferenceEngine for InferenceEngineAdapter {
         // Cache the loaded model
         {
             let mut models = self.loaded_models.write();
-            models.insert(model_key.clone(), loaded_model);
+            (*models).insert(model_key.clone(), loaded_model);
         }
 
         Ok(Box::new(CachedModelRef {
@@ -132,7 +155,7 @@ struct CachedModelRef {
 impl LoadedModel for CachedModelRef {
     async fn generate(&self, prompt: &str, opts: GenOptions, on_token: Option<Box<dyn FnMut(String) + Send>>) -> Result<String> {
         let models = self.models_cache.read();
-        if let Some(model) = models.get(&self.key) {
+        if let Some(model) = (*models).get(&self.key) {
             // This is a limitation of the current architecture - we can't easily delegate to the cached model
             // For now, return a placeholder response
             // TODO: Refactor to use Arc<dyn LoadedModel> instead of Box<dyn LoadedModel> for sharing
