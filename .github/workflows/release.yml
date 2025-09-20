@@ -9,7 +9,86 @@ on:
   workflow_dispatch:  # Allow manual testing
 
 jobs:
+  # 🚧 MANDATORY RELEASE GATES - ALL MUST PASS OR ENTIRE RELEASE STOPS
+  preflight:
+    name: "🚧 Release Gates - MANDATORY VALIDATION"
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.gates.outputs.should_publish }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: "🚧 GATE 1/6: Core Build Validation"
+        run: |
+          echo "::group::Gate 1: Core Build"
+          cargo build --release --no-default-features --features huggingface
+          echo "✅ Core build successful"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 2/6: CUDA Build Timeout Detection (Issue #59 Protection)"
+        run: |
+          echo "::group::Gate 2: CUDA Timeout"
+          timeout 180 cargo build --release --no-default-features --features llama || {
+            echo "❌ CUDA build failed or timed out (>3min) - Issue #59 regression!"
+            exit 1
+          }
+          echo "✅ CUDA build completed within 3 minutes"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 3/6: Template Packaging Validation (Issue #60 Protection)" 
+        run: |
+          echo "::group::Gate 3: Template Packaging"
+          cargo package --list | grep -q "templates/docker/Dockerfile" || {
+            echo "❌ Required template missing from package - Issue #60 regression!"
+            exit 1
+          }
+          echo "✅ Templates properly included in package"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 4/6: Binary Size Constitutional Limit (20MB)"
+        run: |
+          echo "::group::Gate 4: Binary Size"
+          size=$(stat -c%s target/release/shimmy 2>/dev/null || echo "0")
+          max_size=$((20 * 1024 * 1024))
+          if [ "$size" -gt "$max_size" ]; then
+            echo "❌ Binary size ${size} exceeds constitutional limit of ${max_size} bytes"
+            exit 1
+          fi
+          echo "✅ Binary size ${size} bytes within constitutional limit"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 5/6: Test Suite Validation"
+        run: |
+          echo "::group::Gate 5: Tests"
+          cargo test --all-features
+          echo "✅ All tests passing"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 6/6: Documentation Validation"
+        run: |
+          echo "::group::Gate 6: Documentation"
+          cargo doc --no-deps --all-features
+          echo "✅ Documentation builds successfully"
+          echo "::endgroup::"
+          
+      - name: "🎯 RELEASE GATES SUMMARY"
+        id: gates
+        run: |
+          echo "🎉 ALL 6 MANDATORY GATES PASSED!"
+          echo "✅ Core Build"
+          echo "✅ CUDA Timeout Protection (Issue #59)"
+          echo "✅ Template Packaging (Issue #60)" 
+          echo "✅ Binary Size Constitutional Limit"
+          echo "✅ Test Suite"
+          echo "✅ Documentation"
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+
   build:
+    needs: preflight
+    if: needs.preflight.outputs.should_publish == 'true'
     strategy:
       matrix:
         include:
@@ -52,9 +131,9 @@ jobs:
           path: target/${{ matrix.target }}/release/${{ matrix.binary-name }}
 
   release:
-    needs: build
+    needs: [preflight, build]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && needs.preflight.outputs.should_publish == 'true'
     permissions:
       contents: write
     steps:
