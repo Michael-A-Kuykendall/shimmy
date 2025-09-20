@@ -7,7 +7,7 @@ Shimmy is a lightweight sub-20MB Rust inference engine serving as an optimal shi
 
 **READ BEFORE WRITE**: Always read a file before editing or writing to it (Claude Code requirement)
 **FOLLOW INTEGRATION PLAN**: Check integration plans before implementation decisions
-**PUBLIC RELEASE APPROVAL**: Human approval required for releases, Cargo.toml, README changes
+**MANDATORY RELEASE APPROVAL**: NEVER create releases, tags, or version bumps without explicit human authorization. Always ask "Should I proceed with creating release v[X.X.X]?" before any release actions
 **PROFESSIONAL LANGUAGE**: No profanity, maintain professional standards
 **CONVENTIONAL COMMITS**: Use conventional commit format for all commits
 
