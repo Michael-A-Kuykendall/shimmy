@@ -61,10 +61,17 @@ fn test_gate_3_template_packaging_protection() {
         .expect("Failed to run cargo package --list");
     
     let package_list = String::from_utf8_lossy(&output.stdout);
+    
+    // Check for any of the valid Docker template paths (Issue #60 protection)
+    let has_dockerfile = package_list.lines().any(|line| {
+        line == "Dockerfile" || 
+        line == "packaging/docker/Dockerfile" || 
+        line == "templates/docker/Dockerfile"
+    });
+    
     assert!(
-        package_list.contains("Dockerfile") || 
-        package_list.contains("packaging/docker/Dockerfile"),
-        "Required Dockerfile missing from package: {} (Issue #60 regression!)", 
+        has_dockerfile,
+        "Required Docker template missing from package: {} (Issue #60 regression!)", 
         package_list
     );
 }

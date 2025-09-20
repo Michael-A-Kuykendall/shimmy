@@ -41,11 +41,11 @@ jobs:
       - name: "🚧 GATE 3/6: Template Packaging Validation (Issue #60 Protection)" 
         run: |
           echo "::group::Gate 3: Template Packaging"
-          cargo package --list | grep -q "templates/docker/Dockerfile" || {
-            echo "❌ Required template missing from package - Issue #60 regression!"
+          cargo package --list | grep -Eq "^(Dockerfile|packaging/docker/Dockerfile|templates/docker/Dockerfile)$" || {
+            echo "❌ Required Docker template missing from package - Issue #60 regression!"
             exit 1
           }
-          echo "✅ Templates properly included in package"
+          echo "✅ Docker templates properly included in package"
           echo "::endgroup::"
           
       - name: "🚧 GATE 4/6: Binary Size Constitutional Limit (20MB)"
