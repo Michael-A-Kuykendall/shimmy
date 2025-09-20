@@ -19,34 +19,34 @@ jobs:
             target: x86_64-unknown-linux-gnu
             binary-name: shimmy
             artifact-name: shimmy-linux-x86_64
-            features: "huggingface,llama"
+            features: "gpu"
             
 # ARM64 Linux via native GitHub ARM64 runners
           - os: ubuntu-22.04-arm
             target: aarch64-unknown-linux-gnu
             binary-name: shimmy
             artifact-name: shimmy-linux-arm64
-            features: "huggingface,llama"
+            features: "gpu"
             
           # Windows builds
           - os: windows-latest  
             target: x86_64-pc-windows-msvc
             binary-name: shimmy.exe
             artifact-name: shimmy-windows-x86_64.exe
-            features: "huggingface,llama"
+            features: "gpu"
             
           # macOS builds
           - os: macos-latest
             target: x86_64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-intel
-            features: "huggingface,llama"
+            features: "gpu"
             
           - os: macos-latest
             target: aarch64-apple-darwin 
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
-            features: "huggingface,llama"  # i8mm mixed-ISA issue resolved via production-grade fix
+            features: "huggingface,llama-cuda,llama-vulkan,llama-opencl,mlx"  # Full GPU + MLX for Apple Silicon
 
     runs-on: ${{ matrix.os }}
     steps:
