@@ -399,10 +399,7 @@ mod tests {
             Box::new(engine::adapter::InferenceEngineAdapter::new());
 
         // Test state creation (lines 43-44)
-        let state = AppState {
-            engine,
-            registry: reg,
-        };
+        let state = AppState::new(engine, reg);
         let _state_arc = Arc::new(state);
 
         // Test completed successfully
@@ -696,10 +693,10 @@ mod tests {
         // Test enhanced state creation for serve command (lines 53-58)
         let registry = model_registry::Registry::with_discovery();
 
-        let mut enhanced_state = AppState {
-            engine: Box::new(engine::llama::LlamaEngine::new()),
-            registry: registry.clone(),
-        };
+        let mut enhanced_state = AppState::new(
+            Box::new(engine::llama::LlamaEngine::new()),
+            registry.clone(),
+        );
 
         // Test auto-registration call (line 57)
         enhanced_state.registry.auto_register_discovered();
@@ -821,10 +818,7 @@ mod tests {
 
         let engine: Box<dyn engine::InferenceEngine> =
             Box::new(engine::adapter::InferenceEngineAdapter::new());
-        let state = AppState {
-            engine,
-            registry: reg,
-        };
+        let state = AppState::new(engine, reg);
         let state = Arc::new(state);
 
         // Simulate serve command logic with dynamic port allocation
@@ -840,10 +834,10 @@ mod tests {
 
         if manual_count <= 1 {
             // Simulate enhanced state creation (lines 53-58)
-            let mut enhanced_state = AppState {
-                engine: Box::new(engine::llama::LlamaEngine::new()),
-                registry: state.registry.clone(),
-            };
+            let mut enhanced_state = AppState::new(
+                Box::new(engine::llama::LlamaEngine::new()),
+                state.registry.clone(),
+            );
             enhanced_state.registry.auto_register_discovered();
             let enhanced_state_arc = Arc::new(enhanced_state);
 
@@ -890,10 +884,10 @@ mod tests {
             n_threads: None,
         });
         let engine = MockEngine;
-        let state = Arc::new(AppState {
-            engine: Box::new(engine::adapter::InferenceEngineAdapter::new()),
-            registry: reg,
-        });
+        let state = Arc::new(AppState::new(
+            Box::new(engine::adapter::InferenceEngineAdapter::new()),
+            reg,
+        ));
 
         // Test List command branch (lines 86-121)
         {
@@ -1201,10 +1195,10 @@ mod tests {
         // This should be <= 1 and trigger enhanced state creation
         if manual_count <= 1 {
             // Simulate enhanced state logic (lines 53-58)
-            let mut enhanced_state = AppState {
-                engine: Box::new(engine::llama::LlamaEngine::new()),
-                registry: empty_registry.clone(),
-            };
+            let mut enhanced_state = AppState::new(
+                Box::new(engine::llama::LlamaEngine::new()),
+                empty_registry.clone(),
+            );
 
             // Test auto-register call
             enhanced_state.registry.auto_register_discovered();
