@@ -85,18 +85,39 @@ jobs:
           echo "✅ Test Suite"
           echo "✅ Documentation"
           echo "should_publish=true" >> $GITHUB_OUTPUT
+          
+      # 🚀 REUSE GATE BINARIES - NO RECOMPILATION WASTE
+      - name: "Upload gate binaries as artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-built-binary
+          path: target/release/shimmy
 
+  # 🚀 LINUX BINARY - REUSE FROM GATES (NO RECOMPILATION)
+  reuse-gate-binary:
+    needs: preflight
+    if: needs.preflight.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download gate-built binary
+        uses: actions/download-artifact@v4
+        with:
+          name: gate-built-binary
+          path: ./
+          
+      - name: Upload as Linux x86_64 artifact  
+        uses: actions/upload-artifact@v4
+        with:
+          name: shimmy-linux-x86_64
+          path: shimmy
+
+  # 🚀 CROSS-PLATFORM BUILDS (ONLY WHAT GATES DIDN'T BUILD)
   build:
     needs: preflight
     if: needs.preflight.outputs.should_publish == 'true'
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            binary-name: shimmy
-            artifact-name: shimmy-linux-x86_64
-            
           - os: windows-latest  
             target: x86_64-pc-windows-msvc
             binary-name: shimmy.exe
@@ -131,7 +152,7 @@ jobs:
           path: target/${{ matrix.target }}/release/${{ matrix.binary-name }}
 
   release:
-    needs: [preflight, build]
+    needs: [preflight, reuse-gate-binary, build]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') && needs.preflight.outputs.should_publish == 'true'
     permissions:
