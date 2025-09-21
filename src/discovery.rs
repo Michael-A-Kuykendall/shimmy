@@ -277,8 +277,16 @@ mod tests {
 
     #[test]
     fn test_discover_models_nonexistent_paths() {
-        let mut discovery = ModelDiscovery::new();
-        discovery.add_search_path(PathBuf::from("/nonexistent/path"));
+        // Create discovery without default paths 
+        let mut discovery = ModelDiscovery {
+            search_paths: Vec::new(),
+        };
+        
+        // Add a path that definitely doesn't exist
+        use std::env;
+        let temp_dir = env::temp_dir();
+        let nonexistent_path = temp_dir.join("nonexistent_shimmy_test_dir_12345");
+        discovery.add_search_path(nonexistent_path);
         
         let models = discovery.discover_models().unwrap();
         assert_eq!(models.len(), 0);
