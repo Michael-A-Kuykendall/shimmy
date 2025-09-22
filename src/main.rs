@@ -40,8 +40,48 @@ impl AppState {
     }
 }
 
+/// Runtime version validation - prevents Issue #63 broken binary distribution
+fn validate_runtime_version() {
+    let version = env!("CARGO_PKG_VERSION");
+
+    // Check for the specific issue reported in #63
+    if version == "0.1.0" {
+        eprintln!();
+        eprintln!("❌ ERROR: Invalid shimmy version detected!");
+        eprintln!();
+        eprintln!("This binary reports version 0.1.0, which indicates it was built incorrectly.");
+        eprintln!("This is the exact issue reported in GitHub Issue #63.");
+        eprintln!();
+        eprintln!("🔧 Solutions:");
+        eprintln!("  • Download the official release from: https://github.com/Michael-A-Kuykendall/shimmy/releases");
+        eprintln!("  • If building from source, ensure you're building from a proper Git tag");
+        eprintln!("  • If forking, update the version in Cargo.toml before building");
+        eprintln!();
+        eprintln!("Current version: {}", version);
+        eprintln!("Expected version: 1.4.1+ (not 0.1.0)");
+        eprintln!();
+        std::process::exit(1);
+    }
+
+    // Additional validation for empty or malformed versions
+    if version.is_empty() {
+        eprintln!("ERROR: Empty version detected. This binary was built incorrectly.");
+        std::process::exit(1);
+    }
+
+    // Validate basic semver format
+    let parts: Vec<&str> = version.split('.').collect();
+    if parts.len() < 2 || parts.iter().take(2).any(|p| p.parse::<u32>().is_err()) {
+        eprintln!("ERROR: Invalid version format '{}'. Expected semantic versioning.", version);
+        std::process::exit(1);
+    }
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Version validation - prevents Issue #63 distribution of broken binaries
+    validate_runtime_version();
+
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
