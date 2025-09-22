@@ -2,7 +2,60 @@
 use std::env;
 use std::path::PathBuf;
 
+/// Validates version consistency to prevent Issue #63 version mismatch problems
+fn validate_version() {
+    // Get version from Cargo.toml
+    let version = env!("CARGO_PKG_VERSION");
+
+    // Validate version is not the default placeholder
+    if version == "0.1.0" {
+        panic!(
+            "ERROR: Version is set to default 0.1.0\n\
+             This suggests the package was not properly configured.\n\
+             Please ensure Cargo.toml has the correct version number.\n\
+             This prevents the version mismatch issue reported in Issue #63."
+        );
+    }
+
+    // Validate version is not empty
+    if version.is_empty() {
+        panic!("ERROR: CARGO_PKG_VERSION is empty. Check your build environment.");
+    }
+
+    // Validate semantic versioning format
+    let parts: Vec<&str> = version.split('.').collect();
+    if parts.len() < 3 {
+        panic!(
+            "ERROR: Version '{}' does not follow semantic versioning (major.minor.patch)\n\
+             Please use a valid version format like '1.4.2'",
+            version
+        );
+    }
+
+    // Validate each version component is numeric
+    for (i, part) in parts.iter().take(3).enumerate() {
+        if part.parse::<u32>().is_err() {
+            panic!(
+                "ERROR: Version component '{}' at position {} is not a valid number\n\
+                 Version: {}",
+                part, i, version
+            );
+        }
+    }
+
+    // Set build-time version for verification
+    println!("cargo:rustc-env=SHIMMY_BUILD_VERSION={}", version);
+
+    // Rebuild if version-related files change
+    println!("cargo:rerun-if-changed=Cargo.toml");
+
+    println!("cargo:warning=Building shimmy version {}", version);
+}
+
 fn main() {
+    // Version validation - prevents Issue #63 version mismatch problems
+    validate_version();
+
     println!("cargo:rerun-if-changed=libs/");
 
     // Check if we should use pre-built libraries
