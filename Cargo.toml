@@ -12,7 +12,7 @@ categories = ["command-line-utilities", "web-programming::http-server"]
 authors = ["Michael A. Kuykendall <michaelallenkuykendall@gmail.com>"]
 exclude = [
     "docs-internal/*",
-    "test-models/*", 
+    "test-models/*",
     "target/*",
     "target-minimal/*",
     "release-artifacts/*",
@@ -21,7 +21,7 @@ exclude = [
     "tests/*",
     ".*",
     "*.sh",
-    "*.ps1", 
+    "*.ps1",
     "*.py",
     "*.log",
     "*.bat",
@@ -49,8 +49,7 @@ exclude = [
     "shimmy.exe",
     "spec-kit-env/*",
     "specs/*",
-    "memory/*",
-    "templates/*"
+    "memory/*"
 ]
 
 [features]
