@@ -107,7 +107,16 @@ pub async fn chat_completions(
     // Load and validate model
     let Some(spec) = state.registry.to_spec(&req.model) else {
         tracing::warn!("Model '{}' not found in registry", req.model);
-        return StatusCode::NOT_FOUND.into_response();
+        let available_models = state.registry.list_all_available();
+        let error_response = serde_json::json!({
+            "error": {
+                "message": format!("Model '{}' not found. Available models: {:?}", req.model, available_models),
+                "type": "invalid_request_error",
+                "param": "model",
+                "code": "model_not_found"
+            }
+        });
+        return (StatusCode::NOT_FOUND, Json(error_response)).into_response();
     };
     tracing::debug!("Found model spec for '{}': {:?}", req.model, spec);
     let engine = &state.engine;
