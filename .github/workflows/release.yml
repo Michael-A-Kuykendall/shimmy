@@ -9,7 +9,49 @@ on:
   workflow_dispatch:  # Allow manual testing
 
 jobs:
+  # MANDATORY version validation before any release proceeds
+  version-validation:
+    runs-on: ubuntu-latest
+    name: "🔍 Version Validation (Required)"
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run version validation
+        run: |
+          # Extract versions
+          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          TAG_VERSION=${GITHUB_REF_NAME#v}
+
+          echo "🔍 MANDATORY VERSION VALIDATION"
+          echo "Cargo.toml: $CARGO_VERSION"
+          echo "Git tag:    $TAG_VERSION"
+
+          # FAIL if versions don't match
+          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ RELEASE BLOCKED: Version mismatch!"
+            echo "Fix Cargo.toml or retag before release can proceed"
+            exit 1
+          fi
+
+          # Test binary reports correct version
+          cargo build --release --no-default-features --features "huggingface"
+          VERSION_OUTPUT=$(./target/release/shimmy --version)
+
+          if ! echo "$VERSION_OUTPUT" | grep -q "$CARGO_VERSION"; then
+            echo "❌ RELEASE BLOCKED: Binary version mismatch!"
+            exit 1
+          fi
+
+          echo "✅ Version validation passed - release approved"
+
   build:
+    needs: version-validation  # BLOCK release until validation passes
     strategy:
       fail-fast: false  # Don't cancel other jobs if one fails
       matrix:
@@ -95,7 +137,7 @@ jobs:
           path: target/${{ matrix.target }}/release/${{ matrix.binary-name }}
 
   publish-crate:
-    needs: build
+    needs: [version-validation, build]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
@@ -110,7 +152,7 @@ jobs:
         run: cargo publish --no-verify --allow-dirty
 
   release:
-    needs: [build]
+    needs: [version-validation, build]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
