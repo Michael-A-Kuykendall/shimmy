@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "1.4.1"
+version = "1.4.2"
 edition = "2021"
 license = "MIT"
 description = "Lightweight sub-20MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading. Now with GitHub Spec-Kit integration for systematic development."
@@ -49,7 +49,6 @@ exclude = [
     "spec-kit-env/*",
     "specs/*",
     "memory/*",
-    "templates/*"
 ]
 
 [features]
