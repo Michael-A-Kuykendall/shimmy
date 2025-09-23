@@ -82,13 +82,13 @@ jobs:
             target: x86_64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-intel
-            features: "huggingface,llama"
-            
+            features: "apple"
+
           - os: macos-latest
-            target: aarch64-apple-darwin 
+            target: aarch64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
-            features: "huggingface,llama"
+            features: "apple"
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -199,9 +199,9 @@ jobs:
           echo "Binary feature sets:"
           echo "  shimmy-linux-x86_64: SafeTensors + llama.cpp"
           echo "  shimmy-linux-arm64: SafeTensors + llama.cpp (native ARM64 runner)"
-          echo "  shimmy-windows-x86_64.exe: SafeTensors + llama.cpp"  
-          echo "  shimmy-macos-intel: SafeTensors + llama.cpp"
-          echo "  shimmy-macos-arm64: SafeTensors + llama.cpp (i8mm mixed-ISA issue resolved)"
+          echo "  shimmy-windows-x86_64.exe: SafeTensors + GPU acceleration (CUDA, Vulkan, OpenCL)"
+          echo "  shimmy-macos-intel: SafeTensors + Apple MLX acceleration"
+          echo "  shimmy-macos-arm64: SafeTensors + Apple MLX acceleration (Metal GPU)"
           
       - name: Generate changelog entry
         id: changelog
@@ -251,9 +251,9 @@ jobs:
           **Download the right binary for your platform:**
           - **Linux x86_64**: `shimmy-linux-x86_64` (SafeTensors + llama.cpp)
           - **Linux ARM64**: `shimmy-linux-arm64` (SafeTensors + llama.cpp, native ARM64 runner)
-          - **Windows x86_64**: `shimmy-windows-x86_64.exe` (SafeTensors + llama.cpp)
-          - **macOS Intel**: `shimmy-macos-intel` (SafeTensors + llama.cpp)
-          - **macOS Apple Silicon**: `shimmy-macos-arm64` (SafeTensors + llama.cpp)
+          - **Windows x86_64**: `shimmy-windows-x86_64.exe` (SafeTensors + GPU acceleration)
+          - **macOS Intel**: `shimmy-macos-intel` (SafeTensors + Apple MLX)
+          - **macOS Apple Silicon**: `shimmy-macos-arm64` (SafeTensors + Apple MLX + Metal GPU)
           
           All binaries include native SafeTensors support with zero Python dependencies.
           
