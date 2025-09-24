@@ -153,6 +153,110 @@ fn test_ci_build_matrix_features() {
     println!("✅ CI build matrix feature combinations test passed");
 }
 
+#[test]
+fn test_mlx_status_messages_comprehensive() {
+    // Test the comprehensive MLX status message behavior
+
+    // Test apple feature set includes MLX
+    let apple_test = Command::new("cargo")
+        .args(&["check", "--no-default-features", "--features", "apple"])
+        .output()
+        .expect("Failed to check apple features");
+
+    assert!(apple_test.status.success(),
+           "Apple feature set should compile with MLX support");
+
+    // Test that mlx feature alone works
+    let mlx_only_test = Command::new("cargo")
+        .args(&["check", "--no-default-features", "--features", "mlx"])
+        .output()
+        .expect("Failed to check mlx feature alone");
+
+    assert!(mlx_only_test.status.success(),
+           "MLX feature should compile standalone");
+
+    println!("✅ MLX feature compilation tests comprehensive check passed");
+}
+
+#[test]
+fn test_mlx_binary_status_messages() {
+    // Build binary with apple features (includes MLX)
+    let build_output = Command::new("cargo")
+        .args(&["build", "--release", "--no-default-features", "--features", "apple"])
+        .output()
+        .expect("Failed to build with apple features");
+
+    assert!(build_output.status.success(),
+           "Build with apple features should succeed");
+
+    // Test the gpu-info command output for specific MLX status messages
+    let gpu_info_output = Command::new("./target/release/shimmy")
+        .arg("gpu-info")
+        .output()
+        .expect("Failed to run shimmy gpu-info");
+
+    assert!(gpu_info_output.status.success(),
+           "gpu-info command should succeed");
+
+    let output_text = String::from_utf8_lossy(&gpu_info_output.stdout);
+
+    // MLX should be compiled in (not showing "Disabled")
+    assert!(!output_text.contains("MLX Backend: Disabled"),
+           "MLX should not show as disabled when compiled with apple features: {}",
+           output_text);
+
+    // Should show either "Not available (requires Apple Silicon)" or actual MLX info
+    assert!(output_text.contains("MLX Backend:"),
+           "MLX Backend information should be present in gpu-info output: {}",
+           output_text);
+
+    // Should NOT show the old error message
+    assert!(!output_text.contains("compile with --features mlx"),
+           "Should not suggest compiling with MLX when it's already compiled in: {}",
+           output_text);
+
+    // Verify the specific expected message for non-Apple Silicon
+    if !cfg!(target_arch = "aarch64") || !cfg!(target_os = "macos") {
+        assert!(output_text.contains("Not available (requires Apple Silicon)") ||
+                output_text.contains("MLX Backend: Available"),
+               "Should show proper Apple Silicon requirement message: {}",
+               output_text);
+    }
+
+    println!("✅ MLX binary status messages test passed");
+}
+
+#[test]
+fn test_mlx_regression_prevention() {
+    // Comprehensive test to prevent MLX regression issues
+
+    // 1. Test that apple feature set is correctly defined
+    let cargo_toml = std::fs::read_to_string("Cargo.toml")
+        .expect("Should be able to read Cargo.toml");
+
+    assert!(cargo_toml.contains("apple = [\"huggingface\", \"mlx\"]"),
+           "Apple feature set should include MLX in Cargo.toml");
+
+    // 2. Test release workflow uses apple features for macOS
+    let workflow_file = std::fs::read_to_string(".github/workflows/release.yml")
+        .expect("Should be able to read release workflow");
+
+    assert!(workflow_file.contains("features: \"apple\""),
+           "Release workflow should use apple features for macOS builds");
+
+    // 3. Test that MLX feature compiles without errors
+    let mlx_check = Command::new("cargo")
+        .args(&["check", "--features", "mlx"])
+        .output()
+        .expect("Failed to run cargo check with mlx");
+
+    assert!(mlx_check.status.success(),
+           "MLX feature should compile successfully: {}",
+           String::from_utf8_lossy(&mlx_check.stderr));
+
+    println!("✅ MLX regression prevention test passed");
+}
+
 #[cfg(test)]
 mod integration_tests {
     use super::*;
