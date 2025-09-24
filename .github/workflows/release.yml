@@ -98,7 +98,7 @@ jobs:
         if: contains(matrix.features, 'gpu') || contains(matrix.features, 'llama-cuda')
         uses: Jimver/cuda-toolkit@v0.2.16
         with:
-          cuda: '12.6.0'
+          cuda: '12.4.1'
       
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
