@@ -96,9 +96,9 @@ jobs:
       
       - name: Install CUDA Toolkit
         if: contains(matrix.features, 'gpu') || contains(matrix.features, 'llama-cuda')
-        uses: Jimver/cuda-toolkit@v0.2.14
+        uses: Jimver/cuda-toolkit@v0.2.16
         with:
-          cuda: '12.5.0'
+          cuda: '12.6.0'
       
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
@@ -154,7 +154,7 @@ jobs:
   release:
     needs: [version-validation, build]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && always() && (needs.build.result == 'success' || needs.build.result == 'failure')
     permissions:
       contents: write
     steps:
@@ -162,6 +162,7 @@ jobs:
       
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           path: ./artifacts
           
@@ -169,25 +170,50 @@ jobs:
         run: |
           mkdir -p release-files
           
-          # Copy and rename artifacts with size info
+          # Copy and rename artifacts with size info (skip if missing)
           echo "Preparing release files with size information..."
-          
+
           # Linux x86_64
-          cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
-          cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
-          
+          if [ -f artifacts/shimmy-linux-x86_64/shimmy ]; then
+            cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
+            cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
+            echo "✅ Linux x86_64 binary included"
+          else
+            echo "⚠️ Linux x86_64 binary missing"
+          fi
+
           # Linux ARM64
-          cp artifacts/shimmy-linux-arm64/shimmy release-files/shimmy-linux-arm64
-          
+          if [ -f artifacts/shimmy-linux-arm64/shimmy ]; then
+            cp artifacts/shimmy-linux-arm64/shimmy release-files/shimmy-linux-arm64
+            echo "✅ Linux ARM64 binary included"
+          else
+            echo "⚠️ Linux ARM64 binary missing"
+          fi
+
           # Windows x86_64
-          cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
-          cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name
-          
+          if [ -f artifacts/shimmy-windows-x86_64.exe/shimmy.exe ]; then
+            cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
+            cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name
+            echo "✅ Windows x86_64 binary included"
+          else
+            echo "⚠️ Windows x86_64 binary missing (build may have failed)"
+          fi
+
           # macOS Intel
-          cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
-          
+          if [ -f artifacts/shimmy-macos-intel/shimmy ]; then
+            cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
+            echo "✅ macOS Intel binary included"
+          else
+            echo "⚠️ macOS Intel binary missing"
+          fi
+
           # macOS ARM64
-          cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
+          if [ -f artifacts/shimmy-macos-arm64/shimmy ]; then
+            cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
+            echo "✅ macOS ARM64 binary included"
+          else
+            echo "⚠️ macOS ARM64 binary missing"
+          fi
           
           # Make binaries executable
           chmod +x release-files/shimmy*
