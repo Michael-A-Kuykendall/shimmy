@@ -168,7 +168,7 @@ pub async fn chat_completions(
                     finish_reason: None,
                 }],
             };
-            let _ = tx_tokens.send(format!("data: {}\n\n", serde_json::to_string(&initial_chunk).unwrap()));
+            let _ = tx_tokens.send(format!("{}\n\n", serde_json::to_string(&initial_chunk).unwrap()));
             
             // Generate and stream tokens
             let _ = loaded.generate(&prompt_clone, opts_clone, Some(Box::new(move |tok| {
@@ -186,7 +186,7 @@ pub async fn chat_completions(
                         finish_reason: None,
                     }],
                 };
-                let _ = tx_tokens.send(format!("data: {}\n\n", serde_json::to_string(&chunk).unwrap()));
+                let _ = tx_tokens.send(format!("{}\n\n", serde_json::to_string(&chunk).unwrap()));
             }))).await;
             
             // Send final chunk
@@ -204,8 +204,8 @@ pub async fn chat_completions(
                     finish_reason: Some("stop".to_string()),
                 }],
             };
-            let _ = tx.send(format!("data: {}\n\n", serde_json::to_string(&final_chunk).unwrap()));
-            let _ = tx.send("data: [DONE]\n\n".to_string());
+            let _ = tx.send(format!("{}\n\n", serde_json::to_string(&final_chunk).unwrap()));
+            let _ = tx.send("[DONE]\n\n".to_string());
         });
         
         let stream = UnboundedReceiverStream::new(rx)
