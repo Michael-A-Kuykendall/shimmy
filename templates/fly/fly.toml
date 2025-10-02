@@ -1,0 +1,20 @@
+app = "shimmy"
+primary_region = "ord"
+
+[build]
+
+[env]
+  SHIMMY_HOST = "0.0.0.0"
+  SHIMMY_PORT = "8080"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]

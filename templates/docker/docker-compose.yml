@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  shimmy:
+    build: .
+    ports:
+      - "11435:11435"
+    volumes:
+      - ./models:/models
+    environment:
+      - SHIMMY_MODEL_PATH=/models
+    restart: unless-stopped

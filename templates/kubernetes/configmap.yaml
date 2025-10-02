@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shimmy-config
+data:
+  SHIMMY_MODEL_PATH: "/models"
+  SHIMMY_PORT: "11435"
+  SHIMMY_HOST: "0.0.0.0"

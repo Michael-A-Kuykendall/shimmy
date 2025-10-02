@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shimmy
+  labels:
+    app: shimmy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shimmy
+  template:
+    metadata:
+      labels:
+        app: shimmy
+    spec:
+      containers:
+      - name: shimmy
+        image: shimmy:latest
+        ports:
+        - containerPort: 11435
+        env:
+        - name: SHIMMY_MODEL_PATH
+          value: "/models"
+        volumeMounts:
+        - name: models
+          mountPath: /models
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: shimmy-models
