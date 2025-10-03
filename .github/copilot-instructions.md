@@ -1,4 +1,53 @@
-Yeah let's get all the parallel stuff knocked out and then we can go back and do the careful stuff as long as it's sequential and we're not doing anything out of order that'll blow anything up it sounds like a good idea # Copilot / AI Assistant Operating Guide for Shimmy
+# 🚨 ACTIVE FIX TRACKER - Issue #72: GPU Backend Not Working
+
+## Problem Summary
+- **Reporter**: D0wn10ad
+- **Issue**: `--gpu-backend` flag (auto/vulkan/opencl) is ignored; all layers assigned to CPU
+- **Version**: 1.5.6 (built from source)
+- **Build**: `cargo build --release --no-default-features --features huggingface,llama-opencl,llama-vulkan`
+- **GPU**: Works with standalone llama.cpp on same hardware (Vulkan confirmed working)
+- **Evidence**: All 29 layers show `load_tensors: layer N assigned to device CPU, is_swa = 0`
+
+## Root Cause Analysis
+The `--gpu-backend` CLI flag is accepted but not passed through to llama.cpp backend initialization.
+Need to trace: CLI arg → model loading → llama.cpp params.
+
+## Files to Investigate
+1. `src/cli.rs` - Check if `--gpu-backend` is parsed and stored
+2. `src/engine/llama.rs` - Check if GPU backend param is used during model load
+3. `src/model_registry.rs` - Check if GPU config is passed to engine
+4. Check llama-cpp-2 crate docs for proper GPU initialization
+
+## Fix Plan
+1. ✅ Understand issue from logs and user report
+2. ✅ Locate where `--gpu-backend` CLI flag is defined (src/cli.rs line 28)
+3. ✅ Trace flag through to model loading code (FOUND THE BUG!)
+4. ✅ Find llama-cpp-2 GPU initialization API (`with_n_gpu_layers()`)
+5. ✅ Wire GPU backend selection into model load
+   - ✅ Modified `LlamaEngine::new_with_backend()` to accept GPU backend
+   - ✅ Parse CLI gpu_backend string to GpuBackend enum
+   - ✅ Pass n_gpu_layers to model params based on backend
+   - ✅ Build successful with llama-vulkan feature
+6. [ ] Test with vulkan/opencl/auto settings
+7. [ ] Add regression test to prevent future breakage
+8. [ ] Commit, push, respond to issue
+
+## Bug Root Cause (CONFIRMED)
+- CLI parses `--gpu-backend` ✅
+- `LlamaEngine` has `gpu_backend` field ✅  
+- **BUT**: `gpu_backend` field is NEVER USED in model loading ❌
+- **AND**: CLI value is NEVER PASSED to engine constructor ❌
+- Model loads with default params → no GPU layers → CPU only
+
+## Testing Requirements
+- Build with `--features llama-vulkan,llama-opencl`
+- Verify `shimmy gpu-info` shows backends enabled
+- Verify `shimmy serve --gpu-backend vulkan` assigns layers to GPU (not CPU)
+- Check logs show `load_tensors: layer N assigned to device Vulkan/OpenCL`
+
+---
+
+# Copilot / AI Assistant Operating Guide for Shimmy
 
 This file teaches any AI assistant how to work effectively inside this repository. Keep replies lean, perform actions directly, and favor incremental verified changes.
 
