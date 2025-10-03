@@ -85,6 +85,33 @@ Running comprehensive audit:
 
 This file teaches any AI assistant how to work effectively inside this repository. Keep replies lean, perform actions directly, and favor incremental verified changes.
 
+## CRITICAL RULES - NEVER VIOLATE
+
+### 1. NEVER Print Fake Validation
+**WRONG**: `echo "✅ Build successful"` or `printf "All tests passing"`
+**RIGHT**: Actually check: `ls -lh target/release/shimmy.exe && echo $? && ./shimmy --version`
+
+- Never use echo/printf to print success messages
+- Always verify with actual commands (ls, grep, test exit codes, run the binary)
+- If you can't verify it, say "I cannot verify this yet" - don't fake it
+
+### 2. NEVER Use `!` in Bash Echo Strings
+**WRONG**: `echo "Build finished!"`
+**RIGHT**: `printf "%s\n" "Build finished"`
+
+- Bash interprets `!` as history expansion
+- Use printf instead of echo when printing messages
+- This happens 8-10 times per hour - check yourself
+
+### 3. Read Documentation BEFORE Trial-and-Error
+**WRONG**: Try random commands, see what works
+**RIGHT**: `fetch_webpage` to get official docs, then execute correct command
+
+- Your training data is 2+ years old
+- APIs change, flags change, behavior changes
+- Read current docs FIRST, especially for: cargo, git, build tools
+- One doc lookup saves 10 failed attempts
+
 ## Mission
 Shimmy is a single-binary local inference shim (GGUF + optional LoRA) exposing simple HTTP/SSE/WebSocket endpoints plus a CLI. Goal: fast, frictionless local LLM token streaming that can front other tools (e.g. punch-discovery, RustChain) and act as a drop‑in development aide.
 
