@@ -91,7 +91,11 @@ mod gpu_backend_tests {
         let engine = LlamaEngine::new();
         let backend_info = engine.get_backend_info();
 
-        // Should include OpenCL if available, or fallback to CPU
+        // When llama-opencl is enabled, auto-detect may pick OpenCL, Vulkan (if also enabled), or fallback to CPU
+        #[cfg(feature = "llama-vulkan")]
+        assert!(backend_info == "OpenCL" || backend_info == "Vulkan" || backend_info == "CPU");
+        
+        #[cfg(not(feature = "llama-vulkan"))]
         assert!(backend_info == "OpenCL" || backend_info == "CPU");
     }
 
