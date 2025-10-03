@@ -38,14 +38,17 @@ impl GpuBackend {
             #[cfg(feature = "llama-opencl")]
             "opencl" => GpuBackend::OpenCL,
             // Better error messages for backends not compiled in
+            #[cfg(not(feature = "llama-cuda"))]
             "cuda" => {
                 tracing::warn!("CUDA backend requested but not enabled at compile time. Rebuild with --features llama-cuda");
                 Self::detect_best()
             }
+            #[cfg(not(feature = "llama-vulkan"))]
             "vulkan" => {
                 tracing::warn!("Vulkan backend requested but not enabled at compile time. Rebuild with --features llama-vulkan");
                 Self::detect_best()
             }
+            #[cfg(not(feature = "llama-opencl"))]
             "opencl" => {
                 tracing::warn!("OpenCL backend requested but not enabled at compile time. Rebuild with --features llama-opencl");
                 Self::detect_best()
