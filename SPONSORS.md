@@ -6,8 +6,11 @@
 ## Corporate Backers ($100+/month)  
 *Your logo could be here*
 
-## Individual Heroes ($5+/month)
-*Matthias Zepper*. First sponsor!*
+## Bug Prioritizers ($25+/month)
+- **[Omar McIver](https://github.com/omarmciver)** - Priority support + featured sponsor
+
+## Coffee Tier Heroes ($5+/month)
+- **Matthias Zepper** - *First sponsor!*
 
 ---
 
