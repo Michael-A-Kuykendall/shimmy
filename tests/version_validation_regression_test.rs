@@ -2,14 +2,12 @@
 ///
 /// This test ensures our CI/CD version validation logic works correctly
 /// and prevents the type of version mismatch issues we experienced.
-
 use std::process::Command;
 
 #[test]
 fn test_cargo_toml_version_format() {
     // Read Cargo.toml and extract version
-    let cargo_toml = std::fs::read_to_string("Cargo.toml")
-        .expect("Failed to read Cargo.toml");
+    let cargo_toml = std::fs::read_to_string("Cargo.toml").expect("Failed to read Cargo.toml");
 
     let version_line = cargo_toml
         .lines()
@@ -31,7 +29,11 @@ fn test_cargo_toml_version_format() {
 
     // Semantic versioning format check
     let parts: Vec<&str> = version.split('.').collect();
-    assert!(parts.len() >= 3, "Version should have at least 3 parts (major.minor.patch): {}", version);
+    assert!(
+        parts.len() >= 3,
+        "Version should have at least 3 parts (major.minor.patch): {}",
+        version
+    );
 
     // Each part should be numeric (for the first 3 parts)
     for (i, part) in parts.iter().take(3).enumerate() {
@@ -47,8 +49,7 @@ fn test_version_validation_script_simulation() {
     // Simulate the validation logic that runs in CI/CD
 
     // Read actual Cargo.toml version
-    let cargo_toml = std::fs::read_to_string("Cargo.toml")
-        .expect("Failed to read Cargo.toml");
+    let cargo_toml = std::fs::read_to_string("Cargo.toml").expect("Failed to read Cargo.toml");
 
     let cargo_version = cargo_toml
         .lines()
@@ -63,10 +64,22 @@ fn test_version_validation_script_simulation() {
 
     // Simulate various tag scenarios
     let test_cases = vec![
-        (format!("v{}", cargo_version), true, "Matching tag should pass"),
+        (
+            format!("v{}", cargo_version),
+            true,
+            "Matching tag should pass",
+        ),
         ("v0.1.0".to_string(), false, "Default version should fail"),
-        ("v999.999.999".to_string(), false, "Non-matching version should fail"),
-        (format!("v{}.1", cargo_version), false, "Different patch version should fail"),
+        (
+            "v999.999.999".to_string(),
+            false,
+            "Non-matching version should fail",
+        ),
+        (
+            format!("v{}.1", cargo_version),
+            false,
+            "Different patch version should fail",
+        ),
     ];
 
     for (tag, should_pass, description) in test_cases {
@@ -74,13 +87,19 @@ fn test_version_validation_script_simulation() {
         let matches = cargo_version == tag_version;
 
         if should_pass {
-            assert!(matches || tag_version == "999.999.999",
-                   "Test case failed: {} (tag: {}, cargo: {})",
-                   description, tag_version, cargo_version);
+            assert!(
+                matches || tag_version == "999.999.999",
+                "Test case failed: {} (tag: {}, cargo: {})",
+                description,
+                tag_version,
+                cargo_version
+            );
         } else if tag_version != "999.999.999" {
-            assert!(!matches,
-                   "Test case failed: {} (tag: {}, cargo: {})",
-                   description, tag_version, cargo_version);
+            assert!(
+                !matches,
+                "Test case failed: {} (tag: {}, cargo: {})",
+                description, tag_version, cargo_version
+            );
         }
 
         println!("✅ Test case passed: {}", description);
@@ -91,12 +110,21 @@ fn test_version_validation_script_simulation() {
 fn test_binary_version_output() {
     // Build and test the binary version output
     let output = Command::new("cargo")
-        .args(&["build", "--release", "--no-default-features", "--features", "huggingface"])
+        .args(&[
+            "build",
+            "--release",
+            "--no-default-features",
+            "--features",
+            "huggingface",
+        ])
         .output()
         .expect("Failed to build binary");
 
-    assert!(output.status.success(),
-           "Build failed: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "Build failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     // Test version output
     let version_output = Command::new("./target/release/shimmy")
@@ -104,19 +132,28 @@ fn test_binary_version_output() {
         .output()
         .expect("Failed to run shimmy --version");
 
-    assert!(version_output.status.success(),
-           "Version command failed: {}", String::from_utf8_lossy(&version_output.stderr));
+    assert!(
+        version_output.status.success(),
+        "Version command failed: {}",
+        String::from_utf8_lossy(&version_output.stderr)
+    );
 
     let version_text = String::from_utf8_lossy(&version_output.stdout);
 
     // Get expected version from Cargo.toml
     let expected_version = env!("CARGO_PKG_VERSION");
 
-    assert!(version_text.contains(expected_version),
-           "Binary version output should contain '{}', got: '{}'",
-           expected_version, version_text.trim());
+    assert!(
+        version_text.contains(expected_version),
+        "Binary version output should contain '{}', got: '{}'",
+        expected_version,
+        version_text.trim()
+    );
 
-    println!("✅ Binary version output is correct: {}", version_text.trim());
+    println!(
+        "✅ Binary version output is correct: {}",
+        version_text.trim()
+    );
 }
 
 #[test]
@@ -126,8 +163,10 @@ fn test_version_validation_prevents_regression() {
     let current_version = env!("CARGO_PKG_VERSION");
 
     // Issue #63: Prevent 0.1.0 version in releases
-    assert_ne!(current_version, "0.1.0",
-              "Release should never have version 0.1.0 (Issue #63 regression check)");
+    assert_ne!(
+        current_version, "0.1.0",
+        "Release should never have version 0.1.0 (Issue #63 regression check)"
+    );
 
     // Ensure version follows semantic versioning
     let parts: Vec<&str> = current_version.split('.').collect();
@@ -139,7 +178,10 @@ fn test_version_validation_prevents_regression() {
             .expect("Version components must be numeric");
     }
 
-    println!("✅ Version regression checks passed for version: {}", current_version);
+    println!(
+        "✅ Version regression checks passed for version: {}",
+        current_version
+    );
 }
 
 #[cfg(test)]

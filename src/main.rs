@@ -9,7 +9,6 @@ mod model_registry;
 mod observability;
 mod openai_compat;
 mod port_manager;
-mod routing;
 mod server;
 mod templates;
 mod util {
@@ -72,7 +71,10 @@ fn validate_runtime_version() {
     // Validate basic semver format
     let parts: Vec<&str> = version.split('.').collect();
     if parts.len() < 2 || parts.iter().take(2).any(|p| p.parse::<u32>().is_err()) {
-        eprintln!("ERROR: Invalid version format '{}'. Expected semantic versioning.", version);
+        eprintln!(
+            "ERROR: Invalid version format '{}'. Expected semantic versioning.",
+            version
+        );
         std::process::exit(1);
     }
 }
@@ -112,10 +114,9 @@ async fn main() -> anyhow::Result<()> {
         n_threads: None,
     });
 
-    let engine: Box<dyn engine::InferenceEngine> =
-        Box::new(engine::adapter::InferenceEngineAdapter::new_with_backend(
-            cli.gpu_backend.as_deref(),
-        ));
+    let engine: Box<dyn engine::InferenceEngine> = Box::new(
+        engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref()),
+    );
     let state = AppState::new(engine, reg);
     let state = Arc::new(state);
 

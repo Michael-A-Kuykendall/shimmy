@@ -2,7 +2,6 @@
 ///
 /// This test ensures that MLX support is properly compiled into macOS builds
 /// and prevents regression of the issue where macOS binaries were missing MLX features.
-
 use std::process::Command;
 
 #[test]
@@ -13,9 +12,11 @@ fn test_mlx_feature_compilation() {
         .output()
         .expect("Failed to run cargo check with mlx feature");
 
-    assert!(output.status.success(),
-           "MLX feature should compile successfully: {}",
-           String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "MLX feature should compile successfully: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     println!("✅ MLX feature compilation test passed");
 }
@@ -28,9 +29,11 @@ fn test_apple_feature_set_compilation() {
         .output()
         .expect("Failed to run cargo check with apple feature set");
 
-    assert!(output.status.success(),
-           "Apple feature set should compile successfully: {}",
-           String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "Apple feature set should compile successfully: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     println!("✅ Apple feature set compilation test passed");
 }
@@ -39,13 +42,21 @@ fn test_apple_feature_set_compilation() {
 fn test_gpu_info_with_mlx_compiled() {
     // Build with apple features and test gpu-info output
     let build_output = Command::new("cargo")
-        .args(&["build", "--release", "--no-default-features", "--features", "apple"])
+        .args(&[
+            "build",
+            "--release",
+            "--no-default-features",
+            "--features",
+            "apple",
+        ])
         .output()
         .expect("Failed to build with apple features");
 
-    assert!(build_output.status.success(),
-           "Build with apple features should succeed: {}",
-           String::from_utf8_lossy(&build_output.stderr));
+    assert!(
+        build_output.status.success(),
+        "Build with apple features should succeed: {}",
+        String::from_utf8_lossy(&build_output.stderr)
+    );
 
     // Test gpu-info command
     let gpu_info_output = Command::new("./target/release/shimmy")
@@ -53,23 +64,31 @@ fn test_gpu_info_with_mlx_compiled() {
         .output()
         .expect("Failed to run shimmy gpu-info");
 
-    assert!(gpu_info_output.status.success(),
-           "gpu-info command should succeed: {}",
-           String::from_utf8_lossy(&gpu_info_output.stderr));
+    assert!(
+        gpu_info_output.status.success(),
+        "gpu-info command should succeed: {}",
+        String::from_utf8_lossy(&gpu_info_output.stderr)
+    );
 
     let output_text = String::from_utf8_lossy(&gpu_info_output.stdout);
 
     // MLX should be compiled in (not showing "Disabled (compile with --features mlx)")
-    assert!(!output_text.contains("MLX Backend: Disabled"),
-           "MLX should not show as disabled when compiled with apple features");
+    assert!(
+        !output_text.contains("MLX Backend: Disabled"),
+        "MLX should not show as disabled when compiled with apple features"
+    );
 
     // Should show either "Not available (requires Apple Silicon)" or actual MLX info
-    assert!(output_text.contains("MLX Backend:"),
-           "MLX Backend information should be present in gpu-info output");
+    assert!(
+        output_text.contains("MLX Backend:"),
+        "MLX Backend information should be present in gpu-info output"
+    );
 
     // Should NOT show the old error message
-    assert!(!output_text.contains("compile with --features mlx"),
-           "Should not suggest compiling with MLX when it's already compiled in");
+    assert!(
+        !output_text.contains("compile with --features mlx"),
+        "Should not suggest compiling with MLX when it's already compiled in"
+    );
 
     println!("✅ GPU info with MLX test passed");
     println!("MLX output: {}", output_text);
@@ -106,8 +125,10 @@ fn test_regression_issue_68_scenarios() {
         .output()
         .expect("Failed to check MLX compilation");
 
-    assert!(mlx_compile_test.status.success(),
-           "Issue #68 regression: MLX compilation should work (template files must be included)");
+    assert!(
+        mlx_compile_test.status.success(),
+        "Issue #68 regression: MLX compilation should work (template files must be included)"
+    );
 
     // Scenario 2: macOS binaries should include MLX support
     // Test that apple feature set includes MLX
@@ -116,8 +137,10 @@ fn test_regression_issue_68_scenarios() {
         .output()
         .expect("Failed to check apple features");
 
-    assert!(apple_features_test.status.success(),
-           "Issue #68 regression: Apple feature set should compile with MLX support");
+    assert!(
+        apple_features_test.status.success(),
+        "Issue #68 regression: Apple feature set should compile with MLX support"
+    );
 
     println!("✅ Issue #68 regression tests passed");
 }
@@ -128,11 +151,19 @@ fn test_ci_build_matrix_features() {
 
     // Test Linux features
     let linux_test = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "huggingface,llama"])
+        .args(&[
+            "check",
+            "--no-default-features",
+            "--features",
+            "huggingface,llama",
+        ])
         .output()
         .expect("Failed to check Linux features");
 
-    assert!(linux_test.status.success(), "Linux feature set should compile");
+    assert!(
+        linux_test.status.success(),
+        "Linux feature set should compile"
+    );
 
     // Test Windows features
     let windows_test = Command::new("cargo")
@@ -140,7 +171,10 @@ fn test_ci_build_matrix_features() {
         .output()
         .expect("Failed to check Windows features");
 
-    assert!(windows_test.status.success(), "Windows feature set should compile");
+    assert!(
+        windows_test.status.success(),
+        "Windows feature set should compile"
+    );
 
     // Test macOS features (the fix for Issue #68)
     let macos_test = Command::new("cargo")
@@ -148,7 +182,10 @@ fn test_ci_build_matrix_features() {
         .output()
         .expect("Failed to check macOS features");
 
-    assert!(macos_test.status.success(), "macOS feature set should compile");
+    assert!(
+        macos_test.status.success(),
+        "macOS feature set should compile"
+    );
 
     println!("✅ CI build matrix feature combinations test passed");
 }
@@ -163,8 +200,10 @@ fn test_mlx_status_messages_comprehensive() {
         .output()
         .expect("Failed to check apple features");
 
-    assert!(apple_test.status.success(),
-           "Apple feature set should compile with MLX support");
+    assert!(
+        apple_test.status.success(),
+        "Apple feature set should compile with MLX support"
+    );
 
     // Test that mlx feature alone works
     let mlx_only_test = Command::new("cargo")
@@ -172,8 +211,10 @@ fn test_mlx_status_messages_comprehensive() {
         .output()
         .expect("Failed to check mlx feature alone");
 
-    assert!(mlx_only_test.status.success(),
-           "MLX feature should compile standalone");
+    assert!(
+        mlx_only_test.status.success(),
+        "MLX feature should compile standalone"
+    );
 
     println!("✅ MLX feature compilation tests comprehensive check passed");
 }
@@ -182,12 +223,20 @@ fn test_mlx_status_messages_comprehensive() {
 fn test_mlx_binary_status_messages() {
     // Build binary with apple features (includes MLX)
     let build_output = Command::new("cargo")
-        .args(&["build", "--release", "--no-default-features", "--features", "apple"])
+        .args(&[
+            "build",
+            "--release",
+            "--no-default-features",
+            "--features",
+            "apple",
+        ])
         .output()
         .expect("Failed to build with apple features");
 
-    assert!(build_output.status.success(),
-           "Build with apple features should succeed");
+    assert!(
+        build_output.status.success(),
+        "Build with apple features should succeed"
+    );
 
     // Test the gpu-info command output for specific MLX status messages
     let gpu_info_output = Command::new("./target/release/shimmy")
@@ -195,32 +244,42 @@ fn test_mlx_binary_status_messages() {
         .output()
         .expect("Failed to run shimmy gpu-info");
 
-    assert!(gpu_info_output.status.success(),
-           "gpu-info command should succeed");
+    assert!(
+        gpu_info_output.status.success(),
+        "gpu-info command should succeed"
+    );
 
     let output_text = String::from_utf8_lossy(&gpu_info_output.stdout);
 
     // MLX should be compiled in (not showing "Disabled")
-    assert!(!output_text.contains("MLX Backend: Disabled"),
-           "MLX should not show as disabled when compiled with apple features: {}",
-           output_text);
+    assert!(
+        !output_text.contains("MLX Backend: Disabled"),
+        "MLX should not show as disabled when compiled with apple features: {}",
+        output_text
+    );
 
     // Should show either "Not available (requires Apple Silicon)" or actual MLX info
-    assert!(output_text.contains("MLX Backend:"),
-           "MLX Backend information should be present in gpu-info output: {}",
-           output_text);
+    assert!(
+        output_text.contains("MLX Backend:"),
+        "MLX Backend information should be present in gpu-info output: {}",
+        output_text
+    );
 
     // Should NOT show the old error message
-    assert!(!output_text.contains("compile with --features mlx"),
-           "Should not suggest compiling with MLX when it's already compiled in: {}",
-           output_text);
+    assert!(
+        !output_text.contains("compile with --features mlx"),
+        "Should not suggest compiling with MLX when it's already compiled in: {}",
+        output_text
+    );
 
     // Verify the specific expected message for non-Apple Silicon
     if !cfg!(target_arch = "aarch64") || !cfg!(target_os = "macos") {
-        assert!(output_text.contains("Not available (requires Apple Silicon)") ||
-                output_text.contains("MLX Backend: Available"),
-               "Should show proper Apple Silicon requirement message: {}",
-               output_text);
+        assert!(
+            output_text.contains("Not available (requires Apple Silicon)")
+                || output_text.contains("MLX Backend: Available"),
+            "Should show proper Apple Silicon requirement message: {}",
+            output_text
+        );
     }
 
     println!("✅ MLX binary status messages test passed");
@@ -231,18 +290,22 @@ fn test_mlx_regression_prevention() {
     // Comprehensive test to prevent MLX regression issues
 
     // 1. Test that apple feature set is correctly defined
-    let cargo_toml = std::fs::read_to_string("Cargo.toml")
-        .expect("Should be able to read Cargo.toml");
+    let cargo_toml =
+        std::fs::read_to_string("Cargo.toml").expect("Should be able to read Cargo.toml");
 
-    assert!(cargo_toml.contains("apple = [\"huggingface\", \"mlx\"]"),
-           "Apple feature set should include MLX in Cargo.toml");
+    assert!(
+        cargo_toml.contains("apple = [\"huggingface\", \"mlx\"]"),
+        "Apple feature set should include MLX in Cargo.toml"
+    );
 
     // 2. Test release workflow uses apple features for macOS
     let workflow_file = std::fs::read_to_string(".github/workflows/release.yml")
         .expect("Should be able to read release workflow");
 
-    assert!(workflow_file.contains("features: \"apple\""),
-           "Release workflow should use apple features for macOS builds");
+    assert!(
+        workflow_file.contains("features: \"apple\""),
+        "Release workflow should use apple features for macOS builds"
+    );
 
     // 3. Test that MLX feature compiles without errors
     let mlx_check = Command::new("cargo")
@@ -250,9 +313,11 @@ fn test_mlx_regression_prevention() {
         .output()
         .expect("Failed to run cargo check with mlx");
 
-    assert!(mlx_check.status.success(),
-           "MLX feature should compile successfully: {}",
-           String::from_utf8_lossy(&mlx_check.stderr));
+    assert!(
+        mlx_check.status.success(),
+        "MLX feature should compile successfully: {}",
+        String::from_utf8_lossy(&mlx_check.stderr)
+    );
 
     println!("✅ MLX regression prevention test passed");
 }
@@ -265,12 +330,20 @@ mod integration_tests {
     fn test_full_apple_feature_build_and_run() {
         // Full integration test: build and run with apple features
         let build_result = Command::new("cargo")
-            .args(&["build", "--release", "--no-default-features", "--features", "apple"])
+            .args(&[
+                "build",
+                "--release",
+                "--no-default-features",
+                "--features",
+                "apple",
+            ])
             .output()
             .expect("Failed to build with apple features");
 
-        assert!(build_result.status.success(),
-               "Full apple feature build should succeed");
+        assert!(
+            build_result.status.success(),
+            "Full apple feature build should succeed"
+        );
 
         // Test that the binary works
         let version_result = Command::new("./target/release/shimmy")
@@ -278,12 +351,17 @@ mod integration_tests {
             .output()
             .expect("Failed to run shimmy --version");
 
-        assert!(version_result.status.success(),
-               "shimmy --version should work with apple features");
+        assert!(
+            version_result.status.success(),
+            "shimmy --version should work with apple features"
+        );
 
         let version_output = String::from_utf8_lossy(&version_result.stdout);
-        assert!(version_output.contains("shimmy"),
-               "Version output should contain 'shimmy': {}", version_output);
+        assert!(
+            version_output.contains("shimmy"),
+            "Version output should contain 'shimmy': {}",
+            version_output
+        );
 
         println!("✅ Full apple feature integration test passed");
     }

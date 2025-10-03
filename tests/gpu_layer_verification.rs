@@ -16,7 +16,10 @@ mod gpu_layer_verification {
     fn test_gpu_backend_selection_vulkan() {
         let engine = LlamaEngine::new_with_backend(Some("vulkan"));
         let info = engine.get_backend_info();
-        assert_eq!(info, "Vulkan", "Vulkan backend should be selected when feature enabled");
+        assert_eq!(
+            info, "Vulkan",
+            "Vulkan backend should be selected when feature enabled"
+        );
     }
 
     #[test]
@@ -24,7 +27,10 @@ mod gpu_layer_verification {
     fn test_gpu_backend_selection_opencl() {
         let engine = LlamaEngine::new_with_backend(Some("opencl"));
         let info = engine.get_backend_info();
-        assert_eq!(info, "OpenCL", "OpenCL backend should be selected when feature enabled");
+        assert_eq!(
+            info, "OpenCL",
+            "OpenCL backend should be selected when feature enabled"
+        );
     }
 
     #[test]
@@ -32,20 +38,26 @@ mod gpu_layer_verification {
     fn test_gpu_backend_selection_cuda() {
         let engine = LlamaEngine::new_with_backend(Some("cuda"));
         let info = engine.get_backend_info();
-        assert_eq!(info, "CUDA", "CUDA backend should be selected when feature enabled");
+        assert_eq!(
+            info, "CUDA",
+            "CUDA backend should be selected when feature enabled"
+        );
     }
 
     #[test]
     fn test_auto_backend_fallback_to_cpu_when_no_gpu() {
         #[cfg(not(any(
             feature = "llama-cuda",
-            feature = "llama-vulkan", 
+            feature = "llama-vulkan",
             feature = "llama-opencl"
         )))]
         {
             let engine = LlamaEngine::new_with_backend(Some("auto"));
             let info = engine.get_backend_info();
-            assert_eq!(info, "CPU", "Auto should fall back to CPU when no GPU features enabled");
+            assert_eq!(
+                info, "CPU",
+                "Auto should fall back to CPU when no GPU features enabled"
+            );
         }
     }
 
@@ -62,15 +74,21 @@ mod gpu_layer_verification {
         #[cfg(feature = "llama-vulkan")]
         {
             let vulkan_engine = LlamaEngine::new_with_backend(Some("vulkan"));
-            assert_eq!(vulkan_engine.get_backend_info(), "Vulkan", 
-                "Issue #72: --gpu-backend vulkan flag should select Vulkan backend");
+            assert_eq!(
+                vulkan_engine.get_backend_info(),
+                "Vulkan",
+                "Issue #72: --gpu-backend vulkan flag should select Vulkan backend"
+            );
         }
 
         #[cfg(feature = "llama-opencl")]
         {
             let opencl_engine = LlamaEngine::new_with_backend(Some("opencl"));
-            assert_eq!(opencl_engine.get_backend_info(), "OpenCL",
-                "Issue #72: --gpu-backend opencl flag should select OpenCL backend");
+            assert_eq!(
+                opencl_engine.get_backend_info(),
+                "OpenCL",
+                "Issue #72: --gpu-backend opencl flag should select OpenCL backend"
+            );
         }
     }
 }

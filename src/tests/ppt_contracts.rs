@@ -229,9 +229,9 @@ mod property_tests {
                     && !checked
                         .iter()
                         .any(|inv| inv.contains("GGUF files must use Llama backend"))
-                    {
-                        return false;
-                    }
+                {
+                    return false;
+                }
             }
             true
         });

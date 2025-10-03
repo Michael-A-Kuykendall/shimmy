@@ -62,7 +62,9 @@ async fn test_models_endpoint_real_functionality() {
     assert_eq!(response.status(), axum::http::StatusCode::OK);
 
     // Extract body and parse JSON
-    let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let models_response: ModelsResponse = serde_json::from_slice(&body).unwrap();
 
     // Verify OpenAI-compatible structure
@@ -110,7 +112,9 @@ async fn test_chat_completions_error_handling_real() {
     assert_eq!(response.status(), axum::http::StatusCode::NOT_FOUND);
 
     // Verify error response structure
-    let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let error_response: Value = serde_json::from_slice(&body).unwrap();
 
     assert!(error_response["error"].is_object());
@@ -283,13 +287,9 @@ fn test_template_auto_detection_comprehensive() {
         };
 
         assert_eq!(
-            detected_family,
-            test_case.expected_family,
+            detected_family, test_case.expected_family,
             "Template detection failed for '{}': {}. Expected {}, got {}",
-            test_case.model_name,
-            test_case.description,
-            test_case.expected_family,
-            detected_family
+            test_case.model_name, test_case.description, test_case.expected_family, detected_family
         );
     }
 }

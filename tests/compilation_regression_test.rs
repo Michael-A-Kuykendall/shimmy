@@ -56,7 +56,10 @@ fn test_gpu_feature_flags_available() {
     let has_huggingface = cfg!(feature = "huggingface");
 
     // At least one backend should be available
-    assert!(has_llama || has_huggingface, "At least one inference backend should be available");
+    assert!(
+        has_llama || has_huggingface,
+        "At least one inference backend should be available"
+    );
 
     // GPU features should be properly conditional on base llama feature
     if has_cuda || has_vulkan || has_opencl {
@@ -95,7 +98,7 @@ fn test_app_state_initialization_robustness() {
     // Test that AppState can be initialized with different engine configurations
     // Regression test for initialization issues
 
-    use shimmy::{AppState, engine::adapter::InferenceEngineAdapter, model_registry::Registry};
+    use shimmy::{engine::adapter::InferenceEngineAdapter, model_registry::Registry, AppState};
 
     let registry = Registry::default();
     let engine = Box::new(InferenceEngineAdapter::new());
@@ -136,36 +139,42 @@ fn test_model_registry_thread_safety() {
     // Test that Registry can be used safely across threads
     // Important for server operation under load
 
-    use shimmy::model_registry::{Registry, ModelEntry};
+    use shimmy::model_registry::{ModelEntry, Registry};
+    use std::path::PathBuf;
     use std::sync::{Arc, Mutex};
     use std::thread;
-    use std::path::PathBuf;
 
     let registry = Arc::new(Mutex::new(Registry::new()));
 
-    let handles: Vec<_> = (0..5).map(|i| {
-        let registry = registry.clone();
-        thread::spawn(move || {
-            let test_model = ModelEntry {
-                name: format!("test-model-{}", i),
-                base_path: PathBuf::from(format!("test{}.gguf", i)),
-                lora_path: None,
-                template: Some("chatml".to_string()),
-                ctx_len: Some(2048),
-                n_threads: None,
-            };
+    let handles: Vec<_> = (0..5)
+        .map(|i| {
+            let registry = registry.clone();
+            thread::spawn(move || {
+                let test_model = ModelEntry {
+                    name: format!("test-model-{}", i),
+                    base_path: PathBuf::from(format!("test{}.gguf", i)),
+                    lora_path: None,
+                    template: Some("chatml".to_string()),
+                    ctx_len: Some(2048),
+                    n_threads: None,
+                };
 
-            let mut reg = registry.lock().unwrap();
-            reg.register(test_model);
+                let mut reg = registry.lock().unwrap();
+                reg.register(test_model);
+            })
         })
-    }).collect();
+        .collect();
 
     for handle in handles {
         handle.join().unwrap();
     }
 
     let reg = registry.lock().unwrap();
-    assert_eq!(reg.list().len(), 5, "All models should be registered safely");
+    assert_eq!(
+        reg.list().len(),
+        5,
+        "All models should be registered safely"
+    );
 }
 
 #[test]
@@ -189,7 +198,7 @@ fn test_memory_usage_basic_operations() {
     // Basic test to ensure operations don't cause obvious memory issues
     // Not a comprehensive memory test, but catches gross leaks
 
-    use shimmy::{AppState, engine::adapter::InferenceEngineAdapter, model_registry::Registry};
+    use shimmy::{engine::adapter::InferenceEngineAdapter, model_registry::Registry, AppState};
     use std::sync::Arc;
 
     // Create and drop multiple states to test for basic memory leaks
@@ -225,7 +234,11 @@ fn test_error_handling_compilation() {
 
     // Test that we can handle errors without panicking
     let empty_list = registry.list();
-    assert_eq!(empty_list.len(), 0, "Empty registry should return empty list");
+    assert_eq!(
+        empty_list.len(),
+        0,
+        "Empty registry should return empty list"
+    );
 }
 
 #[cfg(test)]

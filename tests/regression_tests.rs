@@ -253,8 +253,7 @@ mod regression_tests {
         use shimmy::cli::Cli;
 
         // Test with model-dirs option
-        let cli =
-            Cli::try_parse_from(["shimmy", "--model-dirs", "test/path1;test/path2", "serve"]);
+        let cli = Cli::try_parse_from(["shimmy", "--model-dirs", "test/path1;test/path2", "serve"]);
 
         assert!(cli.is_ok());
         let cli = cli.unwrap();
