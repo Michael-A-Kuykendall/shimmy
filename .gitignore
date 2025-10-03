@@ -1,11 +1,9 @@
 # Rust build artifacts
 /target/
 /alt_target/
+/target-minimal/
 **/*.rs.bk
 *.pdb
-
-# Cargo lock for binaries (keep it)
-# Cargo.lock
 
 # IDE files
 .vscode/
@@ -55,6 +53,7 @@ ollama_test_result.txt
 rustchain.exe
 coverage_run.log
 *.ps1
+*.sh
 SHOWCASE-SUMMARY.md
 
 # Temporary files and analysis
@@ -75,3 +74,15 @@ test_*.yaml
 # Coverage and profiling artifacts  
 coverage/
 *.profraw
+
+# Platform-specific binaries (generated, not source)
+shimmy-linux-*/
+shimmy-macos-*/
+shimmy-windows-*/
+release-artifacts/
+spec-kit-env/
+
+# Stray files that shouldn't be in root
+json
+shimmy
+shimmy.exe
