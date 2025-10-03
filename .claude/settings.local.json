@@ -12,7 +12,8 @@
       "Bash(./target/release/shimmy.exe serve:*)",
       "Bash(curl:*)",
       "Bash(git commit:*)",
-      "Bash(cargo check:*)"
+      "Bash(cargo check:*)",
+      "Bash(git stash pop:*)"
     ],
     "deny": [],
     "ask": [],
