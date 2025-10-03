@@ -2,15 +2,18 @@
 # Comprehensive Regression Testing Suite
 # Validates all core functionality before releases
 
+set -x  # Enable debug mode to see every command
 echo "🧪 Shimmy Regression Testing Suite"
 echo "=================================="
 echo "Testing all core functionality to prevent regressions..."
 echo ""
+echo "[DEBUG] Script started at $(date)" | tee -a debug-regression.log
 
 # Track overall success
 REGRESSION_SUCCESS=true
 RESULTS_LOG="regression-results.log"
 > "$RESULTS_LOG"
+echo "[DEBUG] Log file initialized" | tee -a debug-regression.log
 
 # Function to log results
 log_result() {
@@ -26,37 +29,49 @@ log_result() {
 
 echo "🔧 Phase 1: Unit & Integration Tests"
 echo "===================================="
-if cargo test --lib --features huggingface -- --test-threads=1 > unit-test-output.log 2>&1; then
+echo "[DEBUG] Starting Phase 1 at $(date)" | tee -a debug-regression.log
+if cargo test --lib --features huggingface > unit-test-output.log 2>&1; then
+    echo "[DEBUG] Phase 1 cargo test completed successfully" | tee -a debug-regression.log
     UNIT_TESTS=$(grep -c "test result: ok" unit-test-output.log || echo "0")
     log_result "Unit Tests" "PASS" "All unit tests passed"
     echo "✅ Unit Tests: Passed"
 else
+    echo "[DEBUG] Phase 1 cargo test FAILED" | tee -a debug-regression.log
     log_result "Unit Tests" "FAIL" "Some unit tests failed"
     echo "❌ Unit Tests: Failed (see unit-test-output.log)"
 fi
+echo "[DEBUG] Phase 1 completed at $(date)" | tee -a debug-regression.log
 
 echo ""
 echo "🧪 Phase 2: Regression Test Suite" 
 echo "================================="
+echo "[DEBUG] Starting Phase 2 at $(date)" | tee -a debug-regression.log
 if cargo test --test regression_tests --features huggingface > regression-test-output.log 2>&1; then
+    echo "[DEBUG] Phase 2 cargo test completed successfully" | tee -a debug-regression.log
     REGRESSION_TESTS=$(grep -c "test result: ok" regression-test-output.log || echo "0")
     log_result "Regression Tests" "PASS" "All regression tests passed"
     echo "✅ Regression Tests: Passed"
 else
+    echo "[DEBUG] Phase 2 cargo test FAILED" | tee -a debug-regression.log
     log_result "Regression Tests" "FAIL" "Some regression tests failed"
     echo "❌ Regression Tests: Failed (see regression-test-output.log)"
 fi
+echo "[DEBUG] Phase 2 completed at $(date)" | tee -a debug-regression.log
 
 echo ""
 echo "🏗️ Phase 3: Build Verification"
 echo "=============================="
+echo "[DEBUG] Starting Phase 3 at $(date)" | tee -a debug-regression.log
 if cargo build --release --features huggingface > build-output.log 2>&1; then
+    echo "[DEBUG] Phase 3 build completed successfully" | tee -a debug-regression.log
     log_result "Release Build" "PASS" "Release build succeeded"
     echo "✅ Release Build: Succeeded"
 else
+    echo "[DEBUG] Phase 3 build FAILED" | tee -a debug-regression.log
     log_result "Release Build" "FAIL" "Release build failed"
     echo "❌ Release Build: Failed (see build-output.log)"
 fi
+echo "[DEBUG] Phase 3 completed at $(date)" | tee -a debug-regression.log
 
 echo ""
 echo "🔍 Phase 4: API Compatibility Tests"

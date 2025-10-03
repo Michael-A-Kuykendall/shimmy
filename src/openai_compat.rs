@@ -753,14 +753,16 @@ mod tests {
     #[test]
     fn test_message_pairs_conversion() {
         // Test the message pairs logic used in chat_completions (lines 120-122)
-        let messages = [ChatMessage {
+        let messages = [
+            ChatMessage {
                 role: "user".to_string(),
                 content: "Hello".to_string(),
             },
             ChatMessage {
                 role: "assistant".to_string(),
                 content: "Hi there!".to_string(),
-            }];
+            },
+        ];
 
         let pairs: Vec<(String, String)> = messages
             .iter()
@@ -850,7 +852,7 @@ mod tests {
                 ChatMessage {
                     role: "user".to_string(),
                     content: "Hello!".to_string(),
-                }
+                },
             ],
             stream: Some(false),
             temperature: Some(0.7),
@@ -864,12 +866,10 @@ mod tests {
         // Test streaming request (used by Open WebUI)
         let streaming_request = ChatCompletionRequest {
             model: "phi3-mini-4k-instruct".to_string(),
-            messages: vec![
-                ChatMessage {
-                    role: "user".to_string(),
-                    content: "Count to 3".to_string(),
-                }
-            ],
+            messages: vec![ChatMessage {
+                role: "user".to_string(),
+                content: "Count to 3".to_string(),
+            }],
             stream: Some(true),
             temperature: Some(0.5),
             max_tokens: Some(50),
@@ -911,7 +911,8 @@ mod tests {
 
             assert_eq!(
                 detected, expected_template,
-                "Auto-detection failed for {}", model_name
+                "Auto-detection failed for {}",
+                model_name
             );
         }
     }
@@ -925,12 +926,10 @@ mod tests {
 
         let invalid_request = ChatCompletionRequest {
             model: "nonexistent-model".to_string(),
-            messages: vec![
-                ChatMessage {
-                    role: "user".to_string(),
-                    content: "This should fail".to_string(),
-                }
-            ],
+            messages: vec![ChatMessage {
+                role: "user".to_string(),
+                content: "This should fail".to_string(),
+            }],
             stream: Some(false),
             temperature: None,
             max_tokens: None,
@@ -995,7 +994,7 @@ mod tests {
                     object: "model".to_string(),
                     created: 0,
                     owned_by: "shimmy".to_string(),
-                }
+                },
             ],
         };
 

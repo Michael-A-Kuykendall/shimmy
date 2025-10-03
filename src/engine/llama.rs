@@ -107,7 +107,7 @@ impl GpuBackend {
         {
             return true;
         }
-        
+
         // Fallback: assume available if feature is enabled
         // (Vulkan may be present even without vulkaninfo tool)
         true
@@ -123,7 +123,7 @@ impl GpuBackend {
         {
             return true;
         }
-        
+
         // On Windows, try alternative detection
         #[cfg(target_os = "windows")]
         {
@@ -137,7 +137,7 @@ impl GpuBackend {
                 return true;
             }
         }
-        
+
         // Fallback: assume available if feature is enabled
         true
     }
@@ -166,15 +166,13 @@ impl LlamaEngine {
     /// Create engine with specific GPU backend from CLI
     pub fn new_with_backend(backend_str: Option<&str>) -> Self {
         let gpu_backend = backend_str
-            .map(|s| GpuBackend::from_string(s))
-            .unwrap_or_else(|| GpuBackend::detect_best());
-        
+            .map(GpuBackend::from_string)
+            .unwrap_or_else(GpuBackend::detect_best);
+
         info!("GPU backend configured: {:?}", gpu_backend);
-        
+
         Self { gpu_backend }
     }
-
-
 
     /// Get information about the current GPU backend configuration
     pub fn get_backend_info(&self) -> String {
@@ -199,19 +197,19 @@ impl InferenceEngine for LlamaEngine {
             use llama_cpp_2 as llama;
             use std::num::NonZeroU32;
             let be = llama::llama_backend::LlamaBackend::init()?;
-            
+
             // Configure GPU acceleration based on backend
             let n_gpu_layers = self.gpu_backend.get_gpu_layers();
-            info!("Loading model with {} GPU layers ({:?} backend)", n_gpu_layers, self.gpu_backend);
-            
-            let model_params = llama::model::params::LlamaModelParams::default()
-                .with_n_gpu_layers(n_gpu_layers);
-            
-            let model = llama::model::LlamaModel::load_from_file(
-                &be,
-                &spec.base_path,
-                &model_params,
-            )?;
+            info!(
+                "Loading model with {} GPU layers ({:?} backend)",
+                n_gpu_layers, self.gpu_backend
+            );
+
+            let model_params =
+                llama::model::params::LlamaModelParams::default().with_n_gpu_layers(n_gpu_layers);
+
+            let model =
+                llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &model_params)?;
             let ctx_params = llama::context::params::LlamaContextParams::default()
                 .with_n_ctx(NonZeroU32::new(spec.ctx_len as u32))
                 .with_n_batch(2048)
