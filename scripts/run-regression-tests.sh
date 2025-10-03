@@ -110,6 +110,15 @@ else
     echo "❌ CLI Options: Broken!"
 fi
 
+echo "🔄 Testing Issue #72 fix (GPU backend flag ignored)..."
+if cargo test --no-default-features --features huggingface,llama-opencl,llama-vulkan gpu_backend >> issue-fix-output.log 2>&1; then
+    log_result "Issue #72 Fix" "PASS" "GPU backend flag properly wired to model loading"
+    echo "✅ Issue #72 (GPU backend): Fixed"
+else
+    log_result "Issue #72 Fix" "FAIL" "GPU backend flag regression detected"
+    echo "❌ Issue #72 (GPU backend): Regression detected!"
+fi
+
 echo ""
 echo "🔒 Phase 6: Security & Error Handling"
 echo "====================================="
