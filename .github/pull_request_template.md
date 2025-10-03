@@ -10,7 +10,7 @@ Brief description of changes and motivation.
 - [ ] Code refactoring
 
 ## Shimmy Philosophy Compliance
-- [ ] Maintains lightweight binary size (≤20MB constitutional limit)
+- [ ] Maintains lightweight binary size (≤5MB constitutional limit)
 - [ ] Preserves zero-config principle
 - [ ] Enhances OpenAI API compatibility
 - [ ] Follows invisible infrastructure philosophy

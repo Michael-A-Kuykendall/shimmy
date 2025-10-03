@@ -1,53 +1,42 @@
-# � CURRENT TASK BOOKMARK - Visual Studio Update Break
+# 📋 CURRENT STATUS - Code Cleanup & Audit Phase
 
-**Status as of 2:30 PM, Oct 3, 2025:**
+**Status as of 3:40 PM, Oct 3, 2025:**
 
 ## What We're Doing Right Now
-Preparing to cut a new release tag (v1.5.7 or v1.6.0) for Issue #72 GPU backend fix.
+Comprehensive codebase audit and cleanup before cutting release tag for Issue #72.
 
 ## What We Just Completed
-1. ✅ Fixed Issue #72 - GPU backend flag now properly wired to model loading
-2. ✅ All 13 GPU backend regression tests passing
-3. ✅ Added Issue #72 to release gate script (Phase 5)
-4. ✅ Fixed test suite for multi-backend builds (opencl + vulkan)
-5. ✅ Committed and pushed all changes (commits: cc82cec9, 28e07340, 41e4604)
+1. ✅ Fixed Issue #72 - GPU backend flag properly wired to model loading
+2. ✅ All 13 GPU backend regression tests passing  
+3. ✅ Removed unused specs (001, 002, 004) and dead code (ModelCache, RouteManager)
+4. ✅ Fixed all clippy errors - build clean
+5. ✅ Updated all "sub-20MB" references back to "sub-5MB" (actual: 4.8MB)
+6. ✅ Toned down AI marketing language in README
+7. ✅ Committed cleanup: f4a12f7
 
-## What We're Trying To Do Next
-Run the **full release gate validation** (`scripts/run-regression-tests.sh`) to verify everything passes before cutting a tag.
+## Current Phase
+Running comprehensive audit:
+- Removing stale log files from root
+- Cleaning up test artifacts
+- Verifying directory structure
+- Running full regression suite
 
-## Current Blocker
-Release gate script takes 10-15 minutes to run (300 lib tests + all regression tests). Started at 2:23 PM, still running Phase 1 when stopped for VS Code update.
+## Next Steps
+1. Complete regression tests
+2. Final commit of audit cleanup
+3. Cut release tag (v1.5.7 or v1.6.0)
+4. Respond to Issue #72 with tag info
+5. Wait for @D0wn10ad verification before closing
 
-## When You Resume After VS Code Restart
-1. **Re-run release gate**: `bash scripts/run-regression-tests.sh` (expect 10-15 min)
-2. **If all tests pass**: Cut new tag and push
-3. **Then respond to Issue #72**: Tell @D0wn10ad fix is available in new tag
-4. **Then close Issue #72**: Only after user confirms it works
-
-## Files Modified (Not Yet Committed)
-- `scripts/run-regression-tests.sh` - Added debug logging with `set -x` and timestamps
-- Removed `--test-threads=1` for parallel test execution (faster)
-
-## Next Release Tag Info
-- **Version**: TBD (check Cargo.toml current version, increment patch)
-- **Changelog**: GPU backend fix for Issue #72
-- **Critical for**: @D0wn10ad (loyal user, deserves quick turnaround)
-
-## Commands Ready To Run After Restart
-```bash
-# 1. Run release gate
-bash scripts/run-regression-tests.sh
-
-# 2. If passes, check current version
-grep "^version" Cargo.toml
-
-# 3. Update version, commit, tag, push
-# (specific commands TBD based on current version)
-```
+## Key Files Modified
+- Updated binary size references: 4.8MB (142x smaller than Ollama)
+- Constitution restored to sub-5MB limit
+- README cleaned of AI fluff
+- Cargo.toml, ROADMAP.md, CLAUDE.md all updated
 
 ---
 
-# �🚨 ACTIVE FIX TRACKER - Issue #72: GPU Backend Not Working ✅ RESOLVED
+# 🚨 ACTIVE FIX TRACKER - Issue #72: GPU Backend Not Working ✅ RESOLVED
 
 ## Problem Summary
 - **Reporter**: D0wn10ad
