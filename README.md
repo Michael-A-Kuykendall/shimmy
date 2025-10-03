@@ -32,28 +32,27 @@
 
 ## Drop-in OpenAI API Replacement for Local LLMs
 
-Shimmy is a **5.1MB single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
+Shimmy is a **4.8MB single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
 
-## 🤔 What are you building with Shimmy?
+## Developer Tools
 
-**New developer tools and specifications included!** Whether you're forking Shimmy for your application or integrating it as a service, we now provide:
+Whether you're forking Shimmy or integrating it as a service, we provide:
 
-- **🔧 Integration Templates**: Copy-paste guidance for embedding Shimmy in your projects
-- **📋 Development Specifications**: GitHub Spec-Kit methodology for planning Shimmy-based features
-- **🛡️ Architectural Guarantees**: Constitutional principles ensuring Shimmy stays reliable and lightweight
-- **📖 Complete Documentation**: Everything you need to build on Shimmy's foundation
+- **Integration Templates**: Guidance for embedding Shimmy in your projects
+- **Development Specifications**: GitHub Spec-Kit methodology for planning features
+- **Architectural Guarantees**: Constitutional principles ensuring reliability and lightweight design
+- **Complete Documentation**: Everything you need to build on Shimmy
 
-**Building something cool with Shimmy?** These tools help you do it systematically and reliably.
+### GitHub Spec-Kit Integration
 
-### 🚀 **GitHub Spec-Kit Integration**
-Shimmy now includes [GitHub's brand-new Spec-Kit methodology](https://github.com/github/spec-kit) – specification-driven development that just launched in September 2025! Get professional-grade development workflows:
+Shimmy includes [GitHub Spec-Kit methodology](https://github.com/github/spec-kit) for systematic development:
 
-- **🏗️ Systematic Development**: `/specify` → `/plan` → `/tasks` → implement
-- **🤖 AI-Native Workflow**: Works with Claude Code, GitHub Copilot, and other AI assistants  
-- **📋 Professional Templates**: Complete specification and planning frameworks
-- **🛡️ Constitutional Protection**: Built-in governance and architectural validation
+- Systematic workflow: `/specify` → `/plan` → `/tasks` → implement
+- AI-assistant compatible (Claude Code, GitHub Copilot)
+- Professional specification templates
+- Built-in architectural validation
 
-[**📖 Complete Developer Guide →**](DEVELOPERS.md) • [**🛠️ Learn GitHub Spec-Kit →**](https://github.com/github/spec-kit)
+[**Developer Guide →**](DEVELOPERS.md) • [**Learn Spec-Kit →**](https://github.com/github/spec-kit)
 
 ### Try it in 30 seconds
 
@@ -326,7 +325,7 @@ shimmy probe model-name         # Verify model loads
 
 ### 🚀 Momentum Snapshot
 
-📦 **Sub-20MB single binary** (34x smaller than Ollama)  
+📦 **Sub-5MB single binary** (142x smaller than Ollama)  
 🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**  
 ⏱ **<1s startup**  
 🦀 **100% Rust, no Python**
@@ -341,7 +340,7 @@ shimmy probe model-name         # Verify model loads
 
 | Tool | Binary Size | Startup Time | Memory Usage | OpenAI API |
 |------|-------------|--------------|--------------|------------|
-| **Shimmy** | **10-20MB** | **<100ms** | **50MB** | **100%** |
+| **Shimmy** | **4.8MB** | **<100ms** | **50MB** | **100%** |
 | Ollama | 680MB | 5-10s | 200MB+ | Partial |
 | llama.cpp | 89MB | 1-2s | 100MB | None |
 

@@ -298,7 +298,7 @@ cargo search llama-cpp-2 --features
 
 ### Performance Requirements
 - **Startup time**: <100ms (constitutional requirement)
-- **Binary size**: <20MB (constitutional limit)
+- **Binary size**: <5MB (constitutional limit)
 - **Memory usage**: Minimal overhead for GPU detection
 - **Reliability**: Must fail gracefully when GPU unavailable
 
@@ -307,7 +307,7 @@ cargo search llama-cpp-2 --features
 # Current release gates that must pass
 - Core Build Validation
 - CUDA Build Timeout Detection (<3min)
-- Binary Size Limit (20MB)
+- Binary Size Limit (5MB)
 - Test Suite Validation
 ```
 
