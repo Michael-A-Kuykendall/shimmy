@@ -113,7 +113,9 @@ async fn main() -> anyhow::Result<()> {
     });
 
     let engine: Box<dyn engine::InferenceEngine> =
-        Box::new(engine::adapter::InferenceEngineAdapter::new());
+        Box::new(engine::adapter::InferenceEngineAdapter::new_with_backend(
+            cli.gpu_backend.as_deref(),
+        ));
     let state = AppState::new(engine, reg);
     let state = Arc::new(state);
 
@@ -129,7 +131,9 @@ async fn main() -> anyhow::Result<()> {
             if manual_count <= 1 {
                 // Only the default phi3-lora entry
                 let mut enhanced_state = AppState::new(
-                    Box::new(engine::llama::LlamaEngine::new()),
+                    Box::new(engine::llama::LlamaEngine::new_with_backend(
+                        cli.gpu_backend.as_deref(),
+                    )),
                     state.registry.clone(),
                 );
                 enhanced_state.registry.auto_register_discovered();
@@ -310,7 +314,7 @@ async fn main() -> anyhow::Result<()> {
             #[cfg(feature = "llama")]
             {
                 use crate::engine::llama::LlamaEngine;
-                let llama_engine = LlamaEngine::new();
+                let llama_engine = LlamaEngine::new_with_backend(cli.gpu_backend.as_deref());
                 println!("🔧 llama.cpp Backend: {}", llama_engine.get_backend_info());
 
                 // Show available features

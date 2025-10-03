@@ -25,15 +25,40 @@ enum GpuBackend {
     OpenCL,
 }
 
-impl LlamaEngine {
-    pub fn new() -> Self {
-        Self {
-            gpu_backend: Self::detect_best_gpu_backend(),
+impl GpuBackend {
+    /// Parse GPU backend from CLI string
+    fn from_string(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "auto" => Self::detect_best(),
+            "cpu" => GpuBackend::Cpu,
+            #[cfg(feature = "llama-cuda")]
+            "cuda" => GpuBackend::Cuda,
+            #[cfg(feature = "llama-vulkan")]
+            "vulkan" => GpuBackend::Vulkan,
+            #[cfg(feature = "llama-opencl")]
+            "opencl" => GpuBackend::OpenCL,
+            // Better error messages for backends not compiled in
+            "cuda" => {
+                tracing::warn!("CUDA backend requested but not enabled at compile time. Rebuild with --features llama-cuda");
+                Self::detect_best()
+            }
+            "vulkan" => {
+                tracing::warn!("Vulkan backend requested but not enabled at compile time. Rebuild with --features llama-vulkan");
+                Self::detect_best()
+            }
+            "opencl" => {
+                tracing::warn!("OpenCL backend requested but not enabled at compile time. Rebuild with --features llama-opencl");
+                Self::detect_best()
+            }
+            _ => {
+                tracing::warn!("Unknown GPU backend '{}', using auto-detect", s);
+                Self::detect_best()
+            }
         }
     }
 
     /// Detect the best available GPU backend for this system
-    fn detect_best_gpu_backend() -> GpuBackend {
+    fn detect_best() -> Self {
         #[cfg(feature = "llama-cuda")]
         {
             if Self::is_cuda_available() {
@@ -64,8 +89,6 @@ impl LlamaEngine {
 
     #[cfg(feature = "llama-cuda")]
     fn is_cuda_available() -> bool {
-        // Check for NVIDIA GPU and CUDA runtime
-        // This is a simplified check - in practice you'd want more robust detection
         std::process::Command::new("nvidia-smi")
             .output()
             .map(|output| output.status.success())
@@ -74,17 +97,84 @@ impl LlamaEngine {
 
     #[cfg(feature = "llama-vulkan")]
     fn is_vulkan_available() -> bool {
-        // Check for Vulkan-capable GPU
-        // This would require vulkan loader detection in practice
-        true // Placeholder - assume Vulkan is available if feature is enabled
+        // Check for Vulkan loader and runtime
+        // Try vulkaninfo first (most reliable)
+        if std::process::Command::new("vulkaninfo")
+            .arg("--summary")
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false)
+        {
+            return true;
+        }
+        
+        // Fallback: assume available if feature is enabled
+        // (Vulkan may be present even without vulkaninfo tool)
+        true
     }
 
     #[cfg(feature = "llama-opencl")]
     fn is_opencl_available() -> bool {
-        // Check for OpenCL-capable GPU
-        // This would require OpenCL runtime detection in practice
-        true // Placeholder - assume OpenCL is available if feature is enabled
+        // Check for OpenCL runtime using clinfo
+        if std::process::Command::new("clinfo")
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false)
+        {
+            return true;
+        }
+        
+        // On Windows, try alternative detection
+        #[cfg(target_os = "windows")]
+        {
+            // Check for OpenCL.dll in system paths
+            if std::process::Command::new("where")
+                .arg("OpenCL.dll")
+                .output()
+                .map(|output| output.status.success())
+                .unwrap_or(false)
+            {
+                return true;
+            }
+        }
+        
+        // Fallback: assume available if feature is enabled
+        true
     }
+
+    /// Get the number of layers to offload to GPU
+    fn get_gpu_layers(&self) -> u32 {
+        match self {
+            GpuBackend::Cpu => 0,
+            #[cfg(feature = "llama-cuda")]
+            GpuBackend::Cuda => 999, // Offload all layers
+            #[cfg(feature = "llama-vulkan")]
+            GpuBackend::Vulkan => 999, // Offload all layers
+            #[cfg(feature = "llama-opencl")]
+            GpuBackend::OpenCL => 999, // Offload all layers
+        }
+    }
+}
+
+impl LlamaEngine {
+    pub fn new() -> Self {
+        Self {
+            gpu_backend: GpuBackend::detect_best(),
+        }
+    }
+
+    /// Create engine with specific GPU backend from CLI
+    pub fn new_with_backend(backend_str: Option<&str>) -> Self {
+        let gpu_backend = backend_str
+            .map(|s| GpuBackend::from_string(s))
+            .unwrap_or_else(|| GpuBackend::detect_best());
+        
+        info!("GPU backend configured: {:?}", gpu_backend);
+        
+        Self { gpu_backend }
+    }
+
+
 
     /// Get information about the current GPU backend configuration
     pub fn get_backend_info(&self) -> String {
@@ -109,10 +199,18 @@ impl InferenceEngine for LlamaEngine {
             use llama_cpp_2 as llama;
             use std::num::NonZeroU32;
             let be = llama::llama_backend::LlamaBackend::init()?;
+            
+            // Configure GPU acceleration based on backend
+            let n_gpu_layers = self.gpu_backend.get_gpu_layers();
+            info!("Loading model with {} GPU layers ({:?} backend)", n_gpu_layers, self.gpu_backend);
+            
+            let model_params = llama::model::params::LlamaModelParams::default()
+                .with_n_gpu_layers(n_gpu_layers);
+            
             let model = llama::model::LlamaModel::load_from_file(
                 &be,
                 &spec.base_path,
-                &Default::default(),
+                &model_params,
             )?;
             let ctx_params = llama::context::params::LlamaContextParams::default()
                 .with_n_ctx(NonZeroU32::new(spec.ctx_len as u32))

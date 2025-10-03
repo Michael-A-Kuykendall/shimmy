@@ -37,6 +37,19 @@ impl InferenceEngineAdapter {
         }
     }
 
+    /// Create adapter with specific GPU backend from CLI
+    pub fn new_with_backend(gpu_backend: Option<&str>) -> Self {
+        Self {
+            #[cfg(feature = "huggingface")]
+            huggingface_engine: super::huggingface::HuggingFaceEngine::new(),
+            #[cfg(feature = "llama")]
+            llama_engine: super::llama::LlamaEngine::new_with_backend(gpu_backend),
+            #[cfg(feature = "mlx")]
+            mlx_engine: super::mlx::MLXEngine::new(),
+            safetensors_engine: super::safetensors_native::SafeTensorsEngine::new(),
+        }
+    }
+
     /// Auto-detect best backend for model
     fn select_backend(&self, spec: &ModelSpec) -> BackendChoice {
         // Check file extension and path patterns to determine optimal backend
