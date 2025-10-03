@@ -446,7 +446,7 @@ impl ModelAutoDiscovery {
             if let Some(parent) = path.parent() {
                 // Check if we're directly in an Ollama structure
                 ollama_dirs.push(parent.to_path_buf());
-                
+
                 // Also check if we're in a 'blobs' directory - go up one more level
                 if parent.file_name().and_then(|n| n.to_str()) == Some("blobs") {
                     if let Some(grandparent) = parent.parent() {
@@ -506,8 +506,8 @@ impl ModelAutoDiscovery {
         models: &mut Vec<DiscoveredModel>,
         path_components: Vec<String>,
     ) -> Result<()> {
-        for entry in fs::read_dir(dir)
-            .map_err(|_| anyhow::anyhow!("Cannot read directory: {:?}", dir))?
+        for entry in
+            fs::read_dir(dir).map_err(|_| anyhow::anyhow!("Cannot read directory: {:?}", dir))?
         {
             let entry = entry?;
             let entry_name = entry.file_name().to_string_lossy().to_string();
@@ -516,11 +516,17 @@ impl ModelAutoDiscovery {
 
             if entry.path().is_dir() {
                 // Recursively scan subdirectories
-                self.scan_manifest_directory(&entry.path(), blobs_dir, models, new_path_components)?;
+                self.scan_manifest_directory(
+                    &entry.path(),
+                    blobs_dir,
+                    models,
+                    new_path_components,
+                )?;
             } else if entry.path().is_file() {
                 // This is a manifest file, try to parse it
                 if let Ok(manifest_content) = fs::read_to_string(entry.path()) {
-                    if let Ok(manifest) = serde_json::from_str::<OllamaManifest>(&manifest_content) {
+                    if let Ok(manifest) = serde_json::from_str::<OllamaManifest>(&manifest_content)
+                    {
                         // Find the model blob (largest layer that's likely a GGUF)
                         for layer in &manifest.layers {
                             if layer.media_type == "application/vnd.ollama.image.model" {

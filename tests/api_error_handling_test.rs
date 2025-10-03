@@ -3,7 +3,6 @@
 /// This test ensures that when a user requests a non-existent model,
 /// they receive a helpful JSON error response with available models
 /// instead of just a 404 status code.
-
 use serde_json::Value;
 
 #[test]
@@ -19,8 +18,14 @@ fn test_model_not_found_error_format() {
     });
 
     assert!(error_response["error"]["message"].is_string());
-    assert!(error_response["error"]["message"].as_str().unwrap().contains("not found"));
-    assert!(error_response["error"]["message"].as_str().unwrap().contains("Available models"));
+    assert!(error_response["error"]["message"]
+        .as_str()
+        .unwrap()
+        .contains("not found"));
+    assert!(error_response["error"]["message"]
+        .as_str()
+        .unwrap()
+        .contains("Available models"));
     assert_eq!(error_response["error"]["type"], "invalid_request_error");
     assert_eq!(error_response["error"]["param"], "model");
     assert_eq!(error_response["error"]["code"], "model_not_found");
@@ -47,10 +52,10 @@ fn test_error_response_serialization() {
 #[tokio::test]
 async fn test_chat_completions_model_not_found_response() {
     // Test the actual handler response for model not found
-    use shimmy::openai_compat::{chat_completions, ChatCompletionRequest};
-    use shimmy::api::ChatMessage;
-    use shimmy::{AppState, engine::adapter::InferenceEngineAdapter, model_registry::Registry};
     use axum::{extract::State, Json};
+    use shimmy::api::ChatMessage;
+    use shimmy::openai_compat::{chat_completions, ChatCompletionRequest};
+    use shimmy::{engine::adapter::InferenceEngineAdapter, model_registry::Registry, AppState};
     use std::sync::Arc;
 
     let registry = Registry::default(); // Empty registry
@@ -80,13 +85,16 @@ async fn test_chat_completions_model_not_found_response() {
 #[test]
 fn test_available_models_inclusion_in_error() {
     // Test that available models are properly included in error messages
-    let available_models = vec!["model1".to_string(), "model2".to_string(), "model3".to_string()];
+    let available_models = vec![
+        "model1".to_string(),
+        "model2".to_string(),
+        "model3".to_string(),
+    ];
     let requested_model = "nonexistent";
 
     let error_message = format!(
         "Model '{}' not found. Available models: {:?}",
-        requested_model,
-        available_models
+        requested_model, available_models
     );
 
     assert!(error_message.contains("Model 'nonexistent' not found"));
