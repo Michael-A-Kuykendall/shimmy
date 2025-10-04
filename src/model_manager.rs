@@ -187,7 +187,11 @@ impl ModelManager {
                 .collect();
 
             // Sort by popularity score
-            candidates.sort_by(|a, b| b.popularity_score.partial_cmp(&a.popularity_score).unwrap_or(std::cmp::Ordering::Equal));
+            candidates.sort_by(|a, b| {
+                b.popularity_score
+                    .partial_cmp(&a.popularity_score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
 
             let current_loaded = loaded_models.len();
             let candidates_vec: Vec<_> = candidates
@@ -596,11 +600,9 @@ mod tests {
         let info_handles: Vec<_> = (0..10)
             .map(|i| {
                 let manager_clone = Arc::clone(&manager);
-                tokio::spawn(async move {
-                    manager_clone
-                        .model_info(&format!("concurrent-{}", i))
-                        .await
-                })
+                tokio::spawn(
+                    async move { manager_clone.model_info(&format!("concurrent-{}", i)).await },
+                )
             })
             .collect();
 

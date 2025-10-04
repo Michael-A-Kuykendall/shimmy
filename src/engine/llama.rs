@@ -290,7 +290,10 @@ impl LoadedModel for LlamaLoaded {
             model::{AddBos, Special},
             sampling::LlamaSampler,
         };
-        let mut ctx = self.ctx.lock().map_err(|e| anyhow::anyhow!("Failed to lock context: {}", e))?;
+        let mut ctx = self
+            .ctx
+            .lock()
+            .map_err(|e| anyhow::anyhow!("Failed to lock context: {}", e))?;
         let tokens = self.model.str_to_token(prompt, AddBos::Always)?;
 
         // Create batch with explicit logits configuration

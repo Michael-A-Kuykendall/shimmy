@@ -97,17 +97,21 @@ impl Tool for CalculatorTool {
         let expression = arguments
             .get("expression")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ShimmyError::MissingParameter { parameter: "expression".to_string() })?;
+            .ok_or_else(|| ShimmyError::MissingParameter {
+                parameter: "expression".to_string(),
+            })?;
 
         // Simple calculator - in production this would use a proper expression parser
         let result = match expression {
             expr if expr.contains(" + ") => {
                 let parts: Vec<&str> = expr.split(" + ").collect();
                 if parts.len() == 2 {
-                    let a: f64 = parts[0].parse()
-                        .map_err(|e| ShimmyError::GenerationError { reason: format!("Parse error: {}", e) })?;
-                    let b: f64 = parts[1].parse()
-                        .map_err(|e| ShimmyError::GenerationError { reason: format!("Parse error: {}", e) })?;
+                    let a: f64 = parts[0].parse().map_err(|e| ShimmyError::GenerationError {
+                        reason: format!("Parse error: {}", e),
+                    })?;
+                    let b: f64 = parts[1].parse().map_err(|e| ShimmyError::GenerationError {
+                        reason: format!("Parse error: {}", e),
+                    })?;
                     a + b
                 } else {
                     return Ok(ToolResult {
@@ -120,10 +124,12 @@ impl Tool for CalculatorTool {
             expr if expr.contains(" * ") => {
                 let parts: Vec<&str> = expr.split(" * ").collect();
                 if parts.len() == 2 {
-                    let a: f64 = parts[0].parse()
-                        .map_err(|e| ShimmyError::GenerationError { reason: format!("Parse error: {}", e) })?;
-                    let b: f64 = parts[1].parse()
-                        .map_err(|e| ShimmyError::GenerationError { reason: format!("Parse error: {}", e) })?;
+                    let a: f64 = parts[0].parse().map_err(|e| ShimmyError::GenerationError {
+                        reason: format!("Parse error: {}", e),
+                    })?;
+                    let b: f64 = parts[1].parse().map_err(|e| ShimmyError::GenerationError {
+                        reason: format!("Parse error: {}", e),
+                    })?;
                     a * b
                 } else {
                     return Ok(ToolResult {
@@ -174,7 +180,9 @@ impl Tool for FileReadTool {
         let path = arguments
             .get("path")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ShimmyError::MissingParameter { parameter: "path".to_string() })?;
+            .ok_or_else(|| ShimmyError::MissingParameter {
+                parameter: "path".to_string(),
+            })?;
 
         match std::fs::read_to_string(path) {
             Ok(content) => Ok(ToolResult {
@@ -215,7 +223,9 @@ impl Tool for HttpGetTool {
         let _url = arguments
             .get("url")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| ShimmyError::MissingParameter { parameter: "url".to_string() })?;
+            .ok_or_else(|| ShimmyError::MissingParameter {
+                parameter: "url".to_string(),
+            })?;
 
         // Placeholder - in production this would make actual HTTP requests
         Ok(ToolResult {

@@ -1,4 +1,3 @@
-use crate::port_manager::GLOBAL_PORT_ALLOCATOR;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -103,7 +102,7 @@ mod tests {
         let command = Command::Serve {
             bind: "auto".to_string(),
         };
-        
+
         // Test that we can access the bind field
         match command {
             Command::Serve { bind } => {

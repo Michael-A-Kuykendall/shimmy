@@ -227,13 +227,10 @@ pub async fn chat_completions(
                     finish_reason: None,
                 }],
             };
-            let _ = tx_tokens.send(
-                serde_json::to_string(&initial_chunk)
-                    .unwrap_or_else(|e| {
-                        tracing::error!("Failed to serialize initial chunk: {}", e);
-                        "{}".to_string()
-                    })
-            );
+            let _ = tx_tokens.send(serde_json::to_string(&initial_chunk).unwrap_or_else(|e| {
+                tracing::error!("Failed to serialize initial chunk: {}", e);
+                "{}".to_string()
+            }));
 
             // Generate and stream tokens
             let _ = loaded
@@ -255,13 +252,10 @@ pub async fn chat_completions(
                                 finish_reason: None,
                             }],
                         };
-                        let _ = tx_tokens.send(
-                            serde_json::to_string(&chunk)
-                                .unwrap_or_else(|e| {
-                                    tracing::error!("Failed to serialize chunk: {}", e);
-                                    "{}".to_string()
-                                })
-                        );
+                        let _ = tx_tokens.send(serde_json::to_string(&chunk).unwrap_or_else(|e| {
+                            tracing::error!("Failed to serialize chunk: {}", e);
+                            "{}".to_string()
+                        }));
                     })),
                 )
                 .await;
@@ -281,13 +275,10 @@ pub async fn chat_completions(
                     finish_reason: Some("stop".to_string()),
                 }],
             };
-            let _ = tx.send(
-                serde_json::to_string(&final_chunk)
-                    .unwrap_or_else(|e| {
-                        tracing::error!("Failed to serialize final chunk: {}", e);
-                        "{}".to_string()
-                    })
-            );
+            let _ = tx.send(serde_json::to_string(&final_chunk).unwrap_or_else(|e| {
+                tracing::error!("Failed to serialize final chunk: {}", e);
+                "{}".to_string()
+            }));
             let _ = tx.send("[DONE]".to_string());
         });
 
@@ -860,7 +851,7 @@ mod tests {
         // Both platforms expect this to succeed and return a list
 
         // Test chat completions with system message (common in AnythingLLM)
-        let request_with_system = ChatCompletionRequest {
+        let _request_with_system = ChatCompletionRequest {
             model: "llama-3-8b-instruct".to_string(),
             messages: vec![
                 ChatMessage {
@@ -882,7 +873,7 @@ mod tests {
         // let _chat_response = chat_completions(State(state.clone()), Json(request_with_system)).await;
 
         // Test streaming request (used by Open WebUI)
-        let streaming_request = ChatCompletionRequest {
+        let _streaming_request = ChatCompletionRequest {
             model: "phi3-mini-4k-instruct".to_string(),
             messages: vec![ChatMessage {
                 role: "user".to_string(),
@@ -954,7 +945,7 @@ mod tests {
             top_p: None,
         };
 
-        let response = chat_completions(State(state), Json(invalid_request)).await;
+        let _response = chat_completions(State(state), Json(invalid_request)).await;
 
         // Should return proper HTTP status and error format
         // Both Open WebUI and AnythingLLM expect proper error handling

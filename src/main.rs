@@ -316,7 +316,7 @@ async fn main() -> anyhow::Result<()> {
             {
                 use crate::engine::llama::LlamaEngine;
                 let llama_engine = LlamaEngine::new_with_backend(cli.gpu_backend.as_deref());
-                println!("🔧 llama.cpp Backend: {}", llama_engine.backend_info());
+                println!("🔧 llama.cpp Backend: {}", llama_engine.get_backend_info());
 
                 // Show available features
                 println!("📋 Available GPU Features:");
