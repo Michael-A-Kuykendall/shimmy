@@ -1,42 +1,88 @@
-# 📋 CURRENT STATUS - Code Cleanup & Audit Phase
+# 📋 CURRENT STATUS - Systematic Code Quality Improvements
 
-**Status as of 3:40 PM, Oct 3, 2025:**
+**Status as of 4:15 PM, Oct 4, 2025:**
 
 ## What We're Doing Right Now
-Comprehensive codebase audit and cleanup before cutting release tag for Issue #72.
+Systematic audit-driven code cleanup following structured phases. About to:
+1. Create feature branch for PR workflow
+2. Run final regression tests
+3. Check Issue queue before proceeding
 
-## What We Just Completed
-1. ✅ Fixed Issue #72 - GPU backend flag properly wired to model loading
-2. ✅ All 13 GPU backend regression tests passing  
-3. ✅ Removed unused specs (001, 002, 004) and dead code (ModelCache, RouteManager)
-4. ✅ Fixed all clippy errors - build clean
-5. ✅ Updated all "sub-20MB" references back to "sub-5MB" (actual: 4.8MB)
-6. ✅ Toned down AI marketing language in README
-7. ✅ Committed cleanup: f4a12f7
+## What We Just Completed - Phase 1-3 Cleanup ✅
+**5 commits ahead of origin/main:**
 
-## Current Phase
-Running comprehensive audit:
-- Removing stale log files from root
-- Cleaning up test artifacts
-- Verifying directory structure
-- Running full regression suite
+### Phase 1: I2 Pattern (Java-style getters) ✅ 
+- **Commit**: 9418042
+- **Changes**: Renamed 22 Java-style getters to Rust conventions
+  - `get_tool()` → `tool()`
+  - `get_gpu_layers()` → `gpu_layers()`
+  - `get_backend_info()` → `backend_info()` (kept as `get_backend_info()` for trait compat)
+  - Updated 35+ call sites across 14 files
+- **Tests**: 295/295 passing
 
-## Next Steps
-1. Complete regression tests
-2. Final commit of audit cleanup
-3. Cut release tag (v1.5.7 or v1.6.0)
-4. Respond to Issue #72 with tag info
-5. Wait for @D0wn10ad verification before closing
+### Phase 2: N5 Pattern (Unwraps) ✅
+- **Commit**: 420f221  
+- **Changes**: Replaced 14 production unwraps with proper error handling
+  - src/metrics.rs (5): Mutex locks → unwrap_or_else with panic
+  - src/openai_compat.rs (3): JSON serialization → unwrap_or_else with logging
+  - src/preloading.rs (2): Option unwraps → unwrap_or defaults
+  - src/model_manager.rs (1): partial_cmp → unwrap_or(Ordering::Equal)
+  - src/workflow.rs (1): strip_prefix → unwrap_or fallback
+  - src/engine/llama.rs (1): Mutex lock → unwrap_or_else
+  - src/observability/mod.rs (1): partial_cmp → unwrap_or(Ordering::Equal)
+- **Note**: 226+ test unwraps left alone (acceptable - tests should panic)
+- **Tests**: 295/295 passing
 
-## Key Files Modified
-- Updated binary size references: 4.8MB (142x smaller than Ollama)
-- Constitution restored to sub-5MB limit
-- README cleaned of AI fluff
-- Cargo.toml, ROADMAP.md, CLAUDE.md all updated
+### Phase 3: A3_stringly Pattern (String errors → Typed errors) ✅
+- **Commits**: 4a58e55, fd95ee8
+- **Changes**: Added 13 new ShimmyError variants, converted 16+ string errors
+  - **New error types**: WorkflowStepNotFound, WorkflowVariableNotFound, WorkflowCircularDependency, UnsupportedOperation, ToolExecutionFailed, InvalidPath, FileNotFound, ScriptExecutionFailed, ProcessFailed, SafeTensorsConversionNeeded, MissingParameter, MlxNotAvailable, MlxIncompatible, NotImplemented, UnsupportedBackend, PythonDependenciesMissing, ModelVerificationFailed
+  - **Files converted**: src/workflow.rs (7 errors), src/safetensors_adapter.rs (4 errors), src/tools.rs (3 errors + parse errors), src/preloading.rs (2 errors)
+  - **Engine layer decision**: Kept engine/* with anyhow::Result to avoid deep third-party error conversion refactoring
+- **Tests**: 295/295 passing
+
+### Formatting & Clippy Fixes ✅
+- **Commit**: 2bcc458
+- **Changes**: 
+  - Fixed `backend_info()` call site (method was `get_backend_info()`)
+  - Removed unused import `GLOBAL_PORT_ALLOCATOR`
+  - Fixed trailing whitespace in safetensors_adapter.rs
+  - Ran `cargo fmt` on all files
+  - Removed 5 useless `.into()` conversions (clippy warnings)
+  - Prefixed unused test variables with `_`
+- **Tests**: All regression tests passing (last confirmed)
+
+## What's Left from Audit (243 issues total)
+**Completed**: 
+- ✅ I2 (Java getters): 9 → 0 remaining
+- ✅ N5 (Unwraps): 37 production → 14 fixed, 226 test (acceptable)
+- 🔄 A3_stringly (String errors): 25 → ~9 remaining (engine layer deferred)
+
+**Pending**:
+- C3 (Pub API): 18 files with over-exposed APIs
+- A6/A7 (Debug prints): 30 instances (mostly legitimate)
+- P7 (Lint suppressions): 12 instances to review
+- P4 (Documentation): 44 items (low priority)
+- P6/AP1 (Clones): 38 instances (optimization, defer)
+- Other minor patterns: I1, I4, I3, etc.
+
+## Next Steps (IMMEDIATE)
+1. Create feature branch: `git checkout -b refactor/audit-cleanup-phase1-3`
+2. Push branch: `git push -u origin refactor/audit-cleanup-phase1-3`
+3. Run full regression suite to confirm: `bash scripts/run-regression-tests.sh`
+4. Check Issue queue (user mentioned one to review)
+5. Create PR to main with detailed description
+6. Continue with Phase 4 or address Issue as needed
+
+## Branch Strategy (NEW)
+- Work in feature branches
+- PR to main instead of direct pushes
+- Keep main clean and releasable
+- Current branch to create: `refactor/audit-cleanup-phase1-3`
 
 ---
 
-# 🚨 ACTIVE FIX TRACKER - Issue #72: GPU Backend Not Working ✅ RESOLVED
+# 🚨 RESOLVED - Issue #72: GPU Backend Not Working ✅
 
 ## Problem Summary
 - **Reporter**: D0wn10ad
