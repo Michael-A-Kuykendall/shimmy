@@ -7,7 +7,7 @@
 //! - Managing memory efficiently with LRU eviction
 
 use crate::engine::{ModelSpec, InferenceEngine, LoadedModel, GenOptions};
-use anyhow::{Result, anyhow};
+use crate::error::{Result, ShimmyError};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::{SystemTime, Duration, Instant};
@@ -155,7 +155,7 @@ impl SmartPreloader {
             let specs = self.available_specs.read().await;
             specs.get(model_name)
                 .cloned()
-                .ok_or_else(|| anyhow!("Model spec not found: {}", model_name))?
+                .ok_or_else(|| ShimmyError::ModelNotFound { name: model_name.to_string() })?
         };
 
         let loaded_model = self.engine.load(&spec).await?;
@@ -314,7 +314,7 @@ impl SmartPreloader {
             let specs = self.available_specs.read().await;
             specs.get(model_name)
                 .cloned()
-                .ok_or_else(|| anyhow!("Model spec not found for preloading: {}", model_name))?
+                .ok_or_else(|| ShimmyError::ModelNotFound { name: model_name.to_string() })?
         };
 
         let loaded_model = self.engine.load(&spec).await?;
