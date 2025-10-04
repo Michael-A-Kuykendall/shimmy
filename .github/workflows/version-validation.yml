@@ -53,15 +53,15 @@ jobs:
         run: |
           TAG_NAME="${{ steps.determine_tag.outputs.tag_name }}"
 
-          # Extract version from Cargo.toml
-          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          # Extract version from Cargo.toml - strip all whitespace/newlines
+          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/' | tr -d '\r\n' | xargs)
 
-          # Extract version from tag (remove 'v' prefix)
-          TAG_VERSION=${TAG_NAME#v}
+          # Extract version from tag (remove 'v' prefix) - strip whitespace/newlines
+          TAG_VERSION=$(echo "${TAG_NAME#v}" | tr -d '\r\n' | xargs)
 
           echo "🔍 Version Check Results:"
-          echo "  Cargo.toml version: $CARGO_VERSION"
-          echo "  Git tag version:    $TAG_VERSION"
+          echo "  Cargo.toml version: '$CARGO_VERSION'"
+          echo "  Git tag version:    '$TAG_VERSION'"
 
           if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
             echo "❌ ERROR: Version mismatch detected!"
