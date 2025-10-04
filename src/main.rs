@@ -84,8 +84,14 @@ async fn main() -> anyhow::Result<()> {
     // Version validation - prevents Issue #63 distribution of broken binaries
     validate_runtime_version();
 
+    // Smart ANSI detection: respect NO_COLOR, check TTY, and verify TERM capability
+    let use_ansi = std::env::var("NO_COLOR").is_err()
+        && std::io::IsTerminal::is_terminal(&std::io::stdout()) 
+        && std::env::var("TERM").map(|t| !t.is_empty() && t != "dumb").unwrap_or(false);
+    
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_ansi(use_ansi)
         .init();
 
     // Platform capability notice
@@ -114,14 +120,24 @@ async fn main() -> anyhow::Result<()> {
         n_threads: None,
     });
 
-    let engine: Box<dyn engine::InferenceEngine> = Box::new(
-        engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref()),
-    );
+    // Create engine with MoE configuration if needed
+    let engine: Box<dyn engine::InferenceEngine> = {
+        let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+        
+        // Apply MoE configuration from global flags
+        #[cfg(feature = "llama")]
+        if cli.cpu_moe || cli.n_cpu_moe.is_some() {
+            adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+        }
+        
+        Box::new(adapter)
+    };
+    
     let state = AppState::new(engine, reg);
     let state = Arc::new(state);
 
     match cli.cmd {
-        cli::Command::Serve { ref bind } => {
+        cli::Command::Serve { ref bind, .. } => {
             let bind_address = bind;
             let addr: SocketAddr = bind_address.parse().expect("bad bind address");
 
