@@ -271,7 +271,7 @@ impl ResponseCache {
     }
 
     /// Get cache statistics
-    pub async fn get_stats(&self) -> CacheStats {
+    pub async fn stats(&self) -> CacheStats {
         let cache = self.cache.read().await;
         let stats_guard = self.stats.read().await;
         let mut stats = (*stats_guard).clone();
@@ -332,7 +332,7 @@ mod tests {
             .await;
         assert_eq!(cache.get(&key).await, Some("test response".to_string()));
 
-        let stats = cache.get_stats().await;
+        let stats = cache.stats().await;
         assert_eq!(stats.hits, 1);
         assert_eq!(stats.misses, 1);
     }
@@ -430,7 +430,7 @@ mod tests {
         cache.get(&key).await;
         cache.get(&key).await;
 
-        let stats = cache.get_stats().await;
+        let stats = cache.stats().await;
         assert_eq!(stats.hits, 2);
         assert_eq!(stats.misses, 1);
         assert_eq!(stats.hit_rate(), 2.0 / 3.0);

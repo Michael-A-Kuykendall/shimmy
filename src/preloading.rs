@@ -134,7 +134,7 @@ impl SmartPreloader {
     }
 
     /// Get a loaded model, loading if necessary
-    pub async fn get_model(&self, model_name: &str) -> Result<Arc<dyn LoadedModel>> {
+    pub async fn model(&self, model_name: &str) -> Result<Arc<dyn LoadedModel>> {
         // Record usage
         self.record_usage(model_name).await?;
 
@@ -366,7 +366,7 @@ impl SmartPreloader {
     }
 
     /// Get usage statistics for all models
-    pub async fn get_usage_stats(&self) -> HashMap<String, ModelUsageStats> {
+    pub async fn usage_stats(&self) -> HashMap<String, ModelUsageStats> {
         self.usage_stats.read().await.clone()
     }
 
@@ -460,7 +460,7 @@ mod tests {
 
         preloader.register_model("test-model".to_string(), spec).await;
         
-        let stats = preloader.get_usage_stats().await;
+        let stats = preloader.usage_stats().await;
         assert!(stats.contains_key("test-model"));
     }
 
@@ -483,12 +483,12 @@ mod tests {
         
         // First load should actually load the model
         let start = Instant::now();
-        let model1 = preloader.get_model("cache-test").await.unwrap();
+        let model1 = preloader.model("cache-test").await.unwrap();
         let first_load_time = start.elapsed();
         
         // Second load should be faster (cached)
         let start = Instant::now();
-        let model2 = preloader.get_model("cache-test").await.unwrap();
+        let model2 = preloader.model("cache-test").await.unwrap();
         let second_load_time = start.elapsed();
         
         // Verify caching worked
@@ -519,10 +519,10 @@ mod tests {
         
         // Use the model multiple times
         for _ in 0..3 {
-            preloader.get_model("usage-test").await.unwrap();
+            preloader.model("usage-test").await.unwrap();
         }
         
-        let stats = preloader.get_usage_stats().await;
+        let stats = preloader.usage_stats().await;
         let usage_stat = stats.get("usage-test").unwrap();
         
         assert_eq!(usage_stat.total_requests, 3);
@@ -554,7 +554,7 @@ mod tests {
 
         // Load all 3 models
         for i in 0..3 {
-            preloader.get_model(&format!("model-{}", i)).await.unwrap();
+            preloader.model(&format!("model-{}", i)).await.unwrap();
             // Small delay to ensure different load times
             tokio::time::sleep(Duration::from_millis(1)).await;
         }
@@ -621,15 +621,15 @@ mod tests {
         };
 
         preloader.register_model("clear-test".to_string(), spec).await;
-        preloader.get_model("clear-test").await.unwrap();
+        preloader.model("clear-test").await.unwrap();
         
         assert_eq!(preloader.loaded_model_count().await, 1);
-        assert!(!preloader.get_usage_stats().await.is_empty());
+        assert!(!preloader.usage_stats().await.is_empty());
         
         preloader.clear().await.unwrap();
         
         assert_eq!(preloader.loaded_model_count().await, 0);
-        assert!(preloader.get_usage_stats().await.is_empty());
+        assert!(preloader.usage_stats().await.is_empty());
     }
 
     #[tokio::test] 
@@ -654,7 +654,7 @@ mod tests {
         for _ in 0..10 {
             let preloader_clone = Arc::clone(&preloader);
             let handle = tokio::spawn(async move {
-                preloader_clone.get_model("concurrent-test").await
+                preloader_clone.model("concurrent-test").await
             });
             handles.push(handle);
         }
@@ -666,7 +666,7 @@ mod tests {
         }
 
         // Should only load the model once
-        let stats = preloader.get_usage_stats().await;
+        let stats = preloader.usage_stats().await;
         let usage_stat = stats.get("concurrent-test").unwrap();
         assert_eq!(usage_stat.load_count, 1);
         assert_eq!(usage_stat.total_requests, 10);

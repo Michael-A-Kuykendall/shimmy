@@ -50,7 +50,7 @@ impl ToolRegistry {
         self.tools.insert(name, tool);
     }
 
-    pub fn get_tool(&self, name: &str) -> Option<&dyn Tool> {
+    pub fn tool(&self, name: &str) -> Option<&dyn Tool> {
         self.tools.get(name).map(|t| t.as_ref())
     }
 
@@ -59,7 +59,7 @@ impl ToolRegistry {
     }
 
     pub fn execute_tool(&self, call: &ToolCall) -> Result<ToolResult> {
-        if let Some(tool) = self.get_tool(&call.name) {
+        if let Some(tool) = self.tool(&call.name) {
             tool.execute(call.arguments.clone())
         } else {
             Ok(ToolResult {

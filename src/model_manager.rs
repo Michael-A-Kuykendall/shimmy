@@ -295,7 +295,7 @@ impl ModelManager {
     }
 
     /// Get preloading statistics
-    pub async fn get_preload_stats(&self) -> PreloadStats {
+    pub async fn preload_stats(&self) -> PreloadStats {
         let models = self.loaded_models.read().await;
         let stats = self.usage_stats.read().await;
         let queue = self.preload_queue.read().await;
@@ -319,7 +319,7 @@ impl ModelManager {
         Ok(removed)
     }
 
-    pub async fn get_model_info(&self, name: &str) -> Option<ModelLoadInfo> {
+    pub async fn model_info(&self, name: &str) -> Option<ModelLoadInfo> {
         let models = self.loaded_models.read().await;
         models.get(name).cloned()
     }
@@ -428,7 +428,7 @@ mod tests {
             .await;
         assert!(result.is_ok());
 
-        let info = manager.get_model_info("model-with-lora").await;
+        let info = manager.model_info("model-with-lora").await;
         assert!(info.is_some());
         assert!(info.unwrap().spec.lora_path.is_some());
     }
@@ -495,7 +495,7 @@ mod tests {
             .await
             .unwrap();
 
-        let info = manager.get_model_info("test-model").await;
+        let info = manager.model_info("test-model").await;
         assert!(info.is_some());
 
         let info = info.unwrap();
@@ -509,7 +509,7 @@ mod tests {
     async fn test_get_model_info_nonexistent() {
         let manager = ModelManager::new();
 
-        let info = manager.get_model_info("nonexistent").await;
+        let info = manager.model_info("nonexistent").await;
         assert!(info.is_none());
     }
 
@@ -598,7 +598,7 @@ mod tests {
                 let manager_clone = Arc::clone(&manager);
                 tokio::spawn(async move {
                     manager_clone
-                        .get_model_info(&format!("concurrent-{}", i))
+                        .model_info(&format!("concurrent-{}", i))
                         .await
                 })
             })
@@ -626,7 +626,7 @@ mod tests {
             .await
             .unwrap();
 
-        let info = manager.get_model_info("test-props").await.unwrap();
+        let info = manager.model_info("test-props").await.unwrap();
 
         assert_eq!(info.name, "test-props");
         assert_eq!(info.spec.base_path, PathBuf::from("test-props.gguf"));
@@ -697,7 +697,7 @@ mod tests {
             .load_model("overwrite-test".to_string(), spec1)
             .await
             .unwrap();
-        let info1 = manager.get_model_info("overwrite-test").await.unwrap();
+        let info1 = manager.model_info("overwrite-test").await.unwrap();
         assert_eq!(info1.spec.base_path, PathBuf::from("original.gguf"));
         assert!(info1.spec.lora_path.is_none());
 
@@ -706,7 +706,7 @@ mod tests {
             .load_model("overwrite-test".to_string(), spec2)
             .await
             .unwrap();
-        let info2 = manager.get_model_info("overwrite-test").await.unwrap();
+        let info2 = manager.model_info("overwrite-test").await.unwrap();
         assert_eq!(info2.spec.base_path, PathBuf::from("updated.gguf"));
         assert_eq!(
             info2.spec.lora_path,
@@ -743,7 +743,7 @@ mod tests {
         // Verify all models are properly loaded
         for i in 0..100 {
             assert!(manager.is_loaded(&format!("large-{}", i)).await);
-            let info = manager.get_model_info(&format!("large-{}", i)).await;
+            let info = manager.model_info(&format!("large-{}", i)).await;
             assert!(info.is_some());
 
             let info = info.unwrap();
@@ -782,7 +782,7 @@ mod tests {
         std::thread::sleep(Duration::from_millis(10)); // Small delay to ensure timing difference
         let after_load = SystemTime::now();
 
-        let info = manager.get_model_info("timing-test").await.unwrap();
+        let info = manager.model_info("timing-test").await.unwrap();
         assert!(info.loaded_at > before_load);
         assert!(info.loaded_at < after_load);
     }
@@ -812,17 +812,17 @@ mod tests {
         let manager = ModelManager::new();
 
         // Test empty string model name
-        let info = manager.get_model_info("").await;
+        let info = manager.model_info("").await;
         assert!(info.is_none());
 
         // Test very long model name
         let long_name = "a".repeat(1000);
-        let info = manager.get_model_info(&long_name).await;
+        let info = manager.model_info(&long_name).await;
         assert!(info.is_none());
 
         // Test special characters in model name
         let special_name = "model/with:special#chars@test";
-        let info = manager.get_model_info(special_name).await;
+        let info = manager.model_info(special_name).await;
         assert!(info.is_none());
     }
 
