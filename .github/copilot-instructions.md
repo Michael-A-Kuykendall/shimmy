@@ -95,13 +95,21 @@ This file teaches any AI assistant how to work effectively inside this repositor
 - Always verify with actual commands (ls, grep, test exit codes, run the binary)
 - If you can't verify it, say "I cannot verify this yet" - don't fake it
 
-### 2. NEVER Use `!` in Bash Echo Strings
-**WRONG**: `echo "Build finished!"`
-**RIGHT**: `printf "%s\n" "Build finished"`
+### 2. NEVER Use `!` in Bash Commands
+**WRONG**: `echo "Build finished!"` or `rg "println!" src/`
+**RIGHT**: `printf "%s\n" "Build finished"` or `rg 'println\!' src/`
 
-- Bash interprets `!` as history expansion
-- Use printf instead of echo when printing messages
-- This happens 8-10 times per hour - check yourself
+- Bash interprets `!` as history expansion (event not found error)
+- Use printf instead of echo when printing messages with !
+- **ALWAYS escape ! in regex patterns**: Use `'println\!'` not `"println!"`
+- This happens constantly - CHECK EVERY COMMAND with ! before running
+
+### 3. Python Command is `py` NOT `python3`
+**WRONG**: `python3 script.py`
+**RIGHT**: `py script.py`
+
+- Windows uses `py` launcher, not `python3`
+- Check yourself before running Python commands
 
 ### 3. Read Documentation BEFORE Trial-and-Error
 **WRONG**: Try random commands, see what works

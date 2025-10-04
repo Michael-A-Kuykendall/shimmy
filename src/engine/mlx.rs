@@ -206,7 +206,7 @@ pub mod utils {
     }
 
     /// Get MLX system information
-    pub fn get_mlx_info() -> Result<String> {
+    pub fn mlx_info() -> Result<String> {
         if !is_mlx_supported() {
             return Ok("MLX not supported on this system".to_string());
         }
