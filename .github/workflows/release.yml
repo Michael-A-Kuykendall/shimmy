@@ -24,13 +24,13 @@ jobs:
 
       - name: Run version validation
         run: |
-          # Extract versions
-          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/' | tr -d '\r\n')
-          TAG_VERSION=${GITHUB_REF_NAME#v}
+          # Extract versions - strip all whitespace and newlines
+          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/' | tr -d '\r\n' | xargs)
+          TAG_VERSION=$(echo "${GITHUB_REF_NAME#v}" | tr -d '\r\n' | xargs)
 
           echo "🔍 MANDATORY VERSION VALIDATION"
-          echo "Cargo.toml: $CARGO_VERSION"
-          echo "Git tag:    $TAG_VERSION"
+          echo "Cargo.toml: '$CARGO_VERSION'"
+          echo "Git tag:    '$TAG_VERSION'"
 
           # FAIL if versions don't match
           if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
