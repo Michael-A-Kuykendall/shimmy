@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-01-03
+
+### 🎯 Windows CUDA Support (First in Rust LLM Ecosystem!)
+
+**Issue #72: GPU Backend Flag Implementation + Windows MSVC CUDA**
+- ✅ Fixed `--gpu-backend` CLI flag wiring through to model loading
+- ✅ **BREAKTHROUGH**: First lightweight Rust LLM tool with Windows MSVC CUDA support
+  - Fixed llama-cpp-rs bindgen header discovery issue blocking Windows CUDA builds
+  - Uses cc::Build to extract MSVC INCLUDE paths, passes as -isystem to bindgen
+  - Fork: Michael-A-Kuykendall/llama-cpp-rs (branch: fix-windows-msvc-cuda-stdbool)
+- ✅ Implemented GpuBackend::from_string() parser with helpful error messages
+- ✅ Implemented GpuBackend::detect_best() with priority: CUDA > Vulkan > OpenCL > CPU
+- ✅ All 4 GPU backends verified on Windows: Vulkan, OpenCL, CUDA, HuggingFace
+- ✅ Binary sizes: 4.8MB (minimal), 24MB (CUDA) + 36MB ggml-cuda.lib
+- ✅ Build times: HuggingFace 8s, OpenCL 45s, Vulkan 3m19s, CUDA 11m25s
+
+### 🐛 Critical Stability Fixes
+
+**Concurrent Load Deadlock**
+- Fixed RwLock deadlock in ModelManager causing infinite hangs with concurrent tasks
+- Pattern: Drop write lock immediately after operations, before calling other functions
+- All 295 unit tests now passing (was hanging indefinitely at test_concurrent_load_unload)
+
+**Flaky Property Tests**
+- Rebuilt 4 property tests without broken property_test() wrapper
+- Fixed test_backend_routing_property, test_generation_length_property, etc.
+- Tests now deterministic: 284/284 pass minimal features, 295/295 with backends
+
+**Feature Flag Compatibility**
+- Added cfg guards to PPT test modules for llama backend features
+- Fixed adapter test compilation with minimal features
+- All tests work with `--no-default-features --features huggingface`
+
 ### Added
 - **Opt-in Usage Analytics**: Anonymous business intelligence collection system
 - **Performance Benchmarking Tools**: Cross-platform scripts for real GPU/CPU measurement

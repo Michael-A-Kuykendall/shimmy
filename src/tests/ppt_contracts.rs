@@ -5,7 +5,15 @@ use crate::invariant_ppt::shimmy_invariants::*;
 use crate::invariant_ppt::*;
 
 // PPT tests require actual model loading, which needs a compiled backend
-#[cfg(all(test, any(feature = "llama", feature = "llama-cuda", feature = "llama-vulkan", feature = "llama-opencl")))]
+#[cfg(all(
+    test,
+    any(
+        feature = "llama",
+        feature = "llama-cuda",
+        feature = "llama-vulkan",
+        feature = "llama-opencl"
+    )
+))]
 mod contract_tests {
     use super::*;
     use tokio;
@@ -135,7 +143,15 @@ mod contract_tests {
     }
 }
 
-#[cfg(all(test, any(feature = "llama", feature = "llama-cuda", feature = "llama-vulkan", feature = "llama-opencl")))]
+#[cfg(all(
+    test,
+    any(
+        feature = "llama",
+        feature = "llama-cuda",
+        feature = "llama-vulkan",
+        feature = "llama-opencl"
+    )
+))]
 mod property_tests {
     use super::*;
 
@@ -151,8 +167,11 @@ mod property_tests {
             // Verify the invariant was checked
             let checked = get_checked_invariants();
             assert!(
-                checked.iter().any(|inv| inv.contains("Model name must not be empty")),
-                "Missing model name invariant for model: {}", name
+                checked
+                    .iter()
+                    .any(|inv| inv.contains("Model name must not be empty")),
+                "Missing model name invariant for model: {}",
+                name
             );
         }
     }
@@ -175,20 +194,29 @@ mod property_tests {
 
             // Verify all generation invariants were checked
             let checked = get_checked_invariants();
-            
+
             assert!(
-                checked.iter().any(|inv| inv.contains("Generation prompt must not be empty")),
-                "Missing prompt invariant for prompt: {}", prompt
+                checked
+                    .iter()
+                    .any(|inv| inv.contains("Generation prompt must not be empty")),
+                "Missing prompt invariant for prompt: {}",
+                prompt
             );
-            
+
             assert!(
-                checked.iter().any(|inv| inv.contains("Generation response must not be empty")),
-                "Missing response invariant for prompt: {}", prompt
+                checked
+                    .iter()
+                    .any(|inv| inv.contains("Generation response must not be empty")),
+                "Missing response invariant for prompt: {}",
+                prompt
             );
-            
+
             assert!(
-                checked.iter().any(|inv| inv.contains("Generation must produce output")),
-                "Missing output invariant for prompt: {}", prompt
+                checked
+                    .iter()
+                    .any(|inv| inv.contains("Generation must produce output")),
+                "Missing output invariant for prompt: {}",
+                prompt
             );
         }
     }
@@ -209,22 +237,31 @@ mod property_tests {
 
             // Verify invariants were checked
             let checked = get_checked_invariants();
-            
+
             assert!(
-                checked.iter().any(|inv| inv.contains("File path for backend selection must not be empty")),
-                "Missing invariant check for file path on {}", file_path
+                checked
+                    .iter()
+                    .any(|inv| inv.contains("File path for backend selection must not be empty")),
+                "Missing invariant check for file path on {}",
+                file_path
             );
-            
+
             assert!(
-                checked.iter().any(|inv| inv.contains("Selected backend must not be empty")),
-                "Missing invariant check for backend on {}", file_path
+                checked
+                    .iter()
+                    .any(|inv| inv.contains("Selected backend must not be empty")),
+                "Missing invariant check for backend on {}",
+                file_path
             );
 
             // For GGUF files, verify the specific invariant
             if file_path.to_lowercase().ends_with(".gguf") {
                 assert!(
-                    checked.iter().any(|inv| inv.contains("GGUF files must use Llama backend")),
-                    "Missing GGUF-specific invariant check for {}", file_path
+                    checked
+                        .iter()
+                        .any(|inv| inv.contains("GGUF files must use Llama backend")),
+                    "Missing GGUF-specific invariant check for {}",
+                    file_path
                 );
             }
         }
@@ -248,14 +285,25 @@ mod property_tests {
             // Verify invariants were checked
             let checked = get_checked_invariants();
             assert!(
-                checked.iter().any(|inv| inv.contains("API response status must be valid HTTP code")),
-                "Missing API status invariant for status code: {}", status
+                checked
+                    .iter()
+                    .any(|inv| inv.contains("API response status must be valid HTTP code")),
+                "Missing API status invariant for status code: {}",
+                status
             );
         }
     }
 }
 
-#[cfg(all(test, any(feature = "llama", feature = "llama-cuda", feature = "llama-vulkan", feature = "llama-opencl")))]
+#[cfg(all(
+    test,
+    any(
+        feature = "llama",
+        feature = "llama-cuda",
+        feature = "llama-vulkan",
+        feature = "llama-opencl"
+    )
+))]
 mod exploration_tests {
     use super::*;
 
