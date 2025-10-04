@@ -285,19 +285,23 @@ mod tests {
         let adapter = InferenceEngineAdapter::new();
 
         // Test local files still work
-        let gguf_spec = create_test_spec("local", "model.gguf");
-        let backend = adapter.select_backend(&gguf_spec);
         #[cfg(feature = "llama")]
-        assert_eq!(backend, BackendChoice::Llama);
+        {
+            let gguf_spec = create_test_spec("local", "model.gguf");
+            let backend = adapter.select_backend(&gguf_spec);
+            assert_eq!(backend, BackendChoice::Llama);
+        }
 
         let safetensors_spec = create_test_spec("local", "model.safetensors");
         let backend2 = adapter.select_backend(&safetensors_spec);
         assert_eq!(backend2, BackendChoice::SafeTensors);
 
         // Test Windows paths (should not be treated as HF model IDs)
-        let windows_spec = create_test_spec("local", "C:\\path\\to\\model.gguf");
-        let backend3 = adapter.select_backend(&windows_spec);
         #[cfg(feature = "llama")]
-        assert_eq!(backend3, BackendChoice::Llama);
+        {
+            let windows_spec = create_test_spec("local", "C:\\path\\to\\model.gguf");
+            let backend3 = adapter.select_backend(&windows_spec);
+            assert_eq!(backend3, BackendChoice::Llama);
+        }
     }
 }

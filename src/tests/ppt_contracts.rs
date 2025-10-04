@@ -4,7 +4,8 @@
 use crate::invariant_ppt::shimmy_invariants::*;
 use crate::invariant_ppt::*;
 
-#[cfg(test)]
+// PPT tests require actual model loading, which needs a compiled backend
+#[cfg(all(test, any(feature = "llama", feature = "llama-cuda", feature = "llama-vulkan", feature = "llama-opencl")))]
 mod contract_tests {
     use super::*;
     use tokio;
@@ -134,140 +135,127 @@ mod contract_tests {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(feature = "llama", feature = "llama-cuda", feature = "llama-vulkan", feature = "llama-opencl")))]
 mod property_tests {
     use super::*;
 
     #[test]
     fn test_model_name_property() {
-        property_test("model_names_always_valid", || {
-            // Property: Valid model names are never empty and contain reasonable characters
-            let test_names = vec!["phi3", "llama2-7b", "mistral-v0.1", "gpt-3.5-turbo"];
+        // Property: Valid model names are never empty and contain reasonable characters
+        let test_names = vec!["phi3", "llama2-7b", "mistral-v0.1", "gpt-3.5-turbo"];
 
-            for name in test_names {
-                clear_invariant_log();
-                assert_model_loaded(name, true);
+        for name in test_names {
+            clear_invariant_log();
+            assert_model_loaded(name, true);
 
-                // Verify the invariant was checked
-                let checked = get_checked_invariants();
-                if !checked
-                    .iter()
-                    .any(|inv| inv.contains("Model name must not be empty"))
-                {
-                    return false;
-                }
-            }
-            true
-        });
+            // Verify the invariant was checked
+            let checked = get_checked_invariants();
+            assert!(
+                checked.iter().any(|inv| inv.contains("Model name must not be empty")),
+                "Missing model name invariant for model: {}", name
+            );
+        }
     }
 
     #[test]
     fn test_generation_length_property() {
-        property_test("generation_produces_meaningful_output", || {
-            // Property: Generation always produces non-trivial output for non-empty prompts
-            let test_cases = vec![
-                ("Hi", "Hello there!"),
-                ("What is 2+2?", "2+2 equals 4."),
-                (
-                    "Tell me a joke",
-                    "Why don't scientists trust atoms? Because they make up everything!",
-                ),
-            ];
+        // Property: Generation always produces non-trivial output for non-empty prompts
+        let test_cases = vec![
+            ("Hi", "Hello there!"),
+            ("What is 2+2?", "2+2 equals 4."),
+            (
+                "Tell me a joke",
+                "Why don't scientists trust atoms? Because they make up everything!",
+            ),
+        ];
 
-            for (prompt, response) in test_cases {
-                clear_invariant_log();
-                assert_generation_valid(prompt, response);
+        for (prompt, response) in test_cases {
+            clear_invariant_log();
+            assert_generation_valid(prompt, response);
 
-                // Verify all generation invariants were checked
-                let checked = get_checked_invariants();
-                let required_checks = [
-                    "Generation prompt must not be empty",
-                    "Generation response must not be empty",
-                    "Generation must produce output",
-                ];
-
-                for required in &required_checks {
-                    if !checked.iter().any(|inv| inv.contains(required)) {
-                        return false;
-                    }
-                }
-            }
-            true
-        });
+            // Verify all generation invariants were checked
+            let checked = get_checked_invariants();
+            
+            assert!(
+                checked.iter().any(|inv| inv.contains("Generation prompt must not be empty")),
+                "Missing prompt invariant for prompt: {}", prompt
+            );
+            
+            assert!(
+                checked.iter().any(|inv| inv.contains("Generation response must not be empty")),
+                "Missing response invariant for prompt: {}", prompt
+            );
+            
+            assert!(
+                checked.iter().any(|inv| inv.contains("Generation must produce output")),
+                "Missing output invariant for prompt: {}", prompt
+            );
+        }
     }
 
     #[test]
     fn test_backend_routing_property() {
-        property_test("backend_routing_always_consistent", || {
-            // Property: File extensions always map to correct backends
-            let test_cases = vec![
-                ("model.gguf", "llama"),
-                ("model.GGUF", "llama"),
-                ("large-model.gguf", "llama"),
-                ("model.safetensors", "huggingface"),
-            ];
+        // Property: File extensions always map to correct backends
+        let test_cases = vec![
+            ("model.gguf", "llama"),
+            ("model.GGUF", "llama"),
+            ("large-model.gguf", "llama"),
+            ("model.safetensors", "huggingface"),
+        ];
 
-            for (file_path, expected_backend) in test_cases {
-                clear_invariant_log();
-                assert_backend_selection_valid(file_path, expected_backend);
+        for (file_path, expected_backend) in test_cases {
+            clear_invariant_log();
+            assert_backend_selection_valid(file_path, expected_backend);
 
-                // Verify invariants were checked
-                let checked = get_checked_invariants();
-                let required_checks = [
-                    "File path for backend selection must not be empty",
-                    "Selected backend must not be empty",
-                ];
+            // Verify invariants were checked
+            let checked = get_checked_invariants();
+            
+            assert!(
+                checked.iter().any(|inv| inv.contains("File path for backend selection must not be empty")),
+                "Missing invariant check for file path on {}", file_path
+            );
+            
+            assert!(
+                checked.iter().any(|inv| inv.contains("Selected backend must not be empty")),
+                "Missing invariant check for backend on {}", file_path
+            );
 
-                for required in &required_checks {
-                    if !checked.iter().any(|inv| inv.contains(required)) {
-                        return false;
-                    }
-                }
-
-                // For GGUF files, verify the specific invariant
-                if file_path.to_lowercase().ends_with(".gguf")
-                    && !checked
-                        .iter()
-                        .any(|inv| inv.contains("GGUF files must use Llama backend"))
-                {
-                    return false;
-                }
+            // For GGUF files, verify the specific invariant
+            if file_path.to_lowercase().ends_with(".gguf") {
+                assert!(
+                    checked.iter().any(|inv| inv.contains("GGUF files must use Llama backend")),
+                    "Missing GGUF-specific invariant check for {}", file_path
+                );
             }
-            true
-        });
+        }
     }
 
     #[test]
     fn test_api_status_codes_property() {
-        property_test("api_status_codes_always_valid", || {
-            // Property: API responses always have valid HTTP status codes
-            let test_cases = vec![
-                (200, "{\"success\": true}"),
-                (201, "{\"created\": true}"),
-                (400, "{\"error\": \"bad request\"}"),
-                (404, "{\"error\": \"not found\"}"),
-                (500, "{\"error\": \"internal error\"}"),
-            ];
+        // Property: API responses always have valid HTTP status codes
+        let test_cases = vec![
+            (200, "{\"success\": true}"),
+            (201, "{\"created\": true}"),
+            (400, "{\"error\": \"bad request\"}"),
+            (404, "{\"error\": \"not found\"}"),
+            (500, "{\"error\": \"internal error\"}"),
+        ];
 
-            for (status, body) in test_cases {
-                clear_invariant_log();
-                assert_api_response_valid(status, body);
+        for (status, body) in test_cases {
+            clear_invariant_log();
+            assert_api_response_valid(status, body);
 
-                // Verify invariants were checked
-                let checked = get_checked_invariants();
-                if !checked
-                    .iter()
-                    .any(|inv| inv.contains("API response status must be valid HTTP code"))
-                {
-                    return false;
-                }
-            }
-            true
-        });
+            // Verify invariants were checked
+            let checked = get_checked_invariants();
+            assert!(
+                checked.iter().any(|inv| inv.contains("API response status must be valid HTTP code")),
+                "Missing API status invariant for status code: {}", status
+            );
+        }
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(feature = "llama", feature = "llama-cuda", feature = "llama-vulkan", feature = "llama-opencl")))]
 mod exploration_tests {
     use super::*;
 

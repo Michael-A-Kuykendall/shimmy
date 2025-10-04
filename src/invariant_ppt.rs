@@ -39,6 +39,9 @@ where
 
     // Run multiple iterations with different conditions
     for iteration in 1..=10 {
+        // Clear log before each iteration for test isolation
+        clear_invariant_log();
+        
         if !test_fn() {
             panic!("Property test '{}' failed on iteration {}", name, iteration);
         }
