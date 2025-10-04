@@ -1186,7 +1186,6 @@ checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 [[package]]
 name = "llama-cpp-2"
 version = "0.1.122"
-source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-windows-msvc-cuda-stdbool#3997cc135259a01968b68d58ffecb6132ff223ba"
 dependencies = [
  "enumflags2",
  "llama-cpp-sys-2",
@@ -1198,7 +1197,6 @@ dependencies = [
 [[package]]
 name = "llama-cpp-sys-2"
 version = "0.1.122"
-source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs.git?branch=fix-windows-msvc-cuda-stdbool#3997cc135259a01968b68d58ffecb6132ff223ba"
 dependencies = [
  "bindgen",
  "cc",

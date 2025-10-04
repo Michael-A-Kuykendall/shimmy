@@ -25,6 +25,14 @@ pub struct Cli {
         help = "GPU backend: auto, cpu, cuda, vulkan, opencl"
     )]
     pub gpu_backend: Option<String>,
+    
+    /// Offload ALL MoE expert tensors to CPU (saves VRAM for large MoE models)
+    #[arg(long, global = true)]
+    pub cpu_moe: bool,
+    
+    /// Offload first N MoE layers' expert tensors to CPU
+    #[arg(long, global = true, value_name = "N", conflicts_with = "cpu_moe")]
+    pub n_cpu_moe: Option<usize>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -83,7 +91,7 @@ mod tests {
     fn test_cli_serve_command_default() {
         let cli = Cli::try_parse_from(["shimmy", "serve"]).unwrap();
         match cli.cmd {
-            Command::Serve { bind } => assert_eq!(bind, "auto"),
+            Command::Serve { bind, .. } => assert_eq!(bind, "auto"),
             _ => panic!("Expected Serve command"),
         }
     }
@@ -92,7 +100,7 @@ mod tests {
     fn test_cli_serve_command_manual_bind() {
         let cli = Cli::try_parse_from(["shimmy", "serve", "--bind", "127.0.0.1:8080"]).unwrap();
         match cli.cmd {
-            Command::Serve { bind } => assert_eq!(bind, "127.0.0.1:8080"),
+            Command::Serve { bind, .. } => assert_eq!(bind, "127.0.0.1:8080"),
             _ => panic!("Expected Serve command"),
         }
     }
@@ -101,11 +109,13 @@ mod tests {
     fn test_get_bind_address_auto() {
         let command = Command::Serve {
             bind: "auto".to_string(),
+            cpu_moe: false,
+            n_cpu_moe: None,
         };
 
         // Test that we can access the bind field
         match command {
-            Command::Serve { bind } => {
+            Command::Serve { bind, .. } => {
                 assert!(bind.starts_with("auto") || bind.starts_with("127.0.0.1:"));
             }
             _ => panic!("Expected Serve command"),
@@ -116,10 +126,12 @@ mod tests {
     fn test_get_bind_address_manual() {
         let command = Command::Serve {
             bind: "192.168.1.100:9000".to_string(),
+            cpu_moe: false,
+            n_cpu_moe: None,
         };
 
         match command {
-            Command::Serve { bind } => {
+            Command::Serve { bind, .. } => {
                 assert_eq!(bind, "192.168.1.100:9000");
             }
             _ => panic!("Expected Serve command"),
