@@ -187,7 +187,7 @@ impl ModelManager {
                 .collect();
 
             // Sort by popularity score
-            candidates.sort_by(|a, b| b.popularity_score.partial_cmp(&a.popularity_score).unwrap());
+            candidates.sort_by(|a, b| b.popularity_score.partial_cmp(&a.popularity_score).unwrap_or(std::cmp::Ordering::Equal));
 
             let current_loaded = loaded_models.len();
             let candidates_vec: Vec<_> = candidates
