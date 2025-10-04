@@ -87,6 +87,29 @@ pub enum ShimmyError {
     // Tool errors
     #[error("Tool not found: {name}")]
     ToolNotFound { name: String },
+
+    #[error("Missing parameter: {parameter}")]
+    MissingParameter { parameter: String },
+
+    // MLX errors
+    #[error("MLX not available: {reason}")]
+    MlxNotAvailable { reason: String },
+
+    #[error("MLX incompatible model: {model}")]
+    MlxIncompatible { model: String },
+
+    #[error("Not implemented: {feature}")]
+    NotImplemented { feature: String },
+
+    // HuggingFace errors
+    #[error("Unsupported backend: {backend}")]
+    UnsupportedBackend { backend: String },
+
+    #[error("Python dependencies missing: {details}")]
+    PythonDependenciesMissing { details: String },
+
+    #[error("Model verification failed: {details}")]
+    ModelVerificationFailed { details: String },
 }
 
 pub type Result<T> = std::result::Result<T, ShimmyError>;
@@ -473,6 +496,13 @@ mod tests {
                 ShimmyError::PortAllocationFailed { .. } => {}
                 ShimmyError::DiscoveryFailed { .. } => {}
                 ShimmyError::ToolNotFound { .. } => {}
+                ShimmyError::MissingParameter { .. } => {}
+                ShimmyError::MlxNotAvailable { .. } => {}
+                ShimmyError::MlxIncompatible { .. } => {}
+                ShimmyError::NotImplemented { .. } => {}
+                ShimmyError::UnsupportedBackend { .. } => {}
+                ShimmyError::PythonDependenciesMissing { .. } => {}
+                ShimmyError::ModelVerificationFailed { .. } => {}
             }
         }
     }
