@@ -13,14 +13,17 @@ pub fn convert_safetensors_to_gguf(safetensors_path: &Path) -> Result<PathBuf> {
 
     // Read the SafeTensors file
     let data = fs::read(safetensors_path)?;
-    let tensors = SafeTensors::deserialize(&data)
-        .map_err(|e| ShimmyError::GenerationError { reason: format!("Failed to deserialize SafeTensors: {}", e) })?;
+    let tensors = SafeTensors::deserialize(&data).map_err(|e| ShimmyError::GenerationError {
+        reason: format!("Failed to deserialize SafeTensors: {}", e),
+    })?;
 
     debug!("SafeTensors contains {} tensors", tensors.len());
 
     let safetensors_dir = safetensors_path
         .parent()
-        .ok_or_else(|| ShimmyError::InvalidPath { path: safetensors_path.display().to_string() })?;
+        .ok_or_else(|| ShimmyError::InvalidPath {
+            path: safetensors_path.display().to_string(),
+        })?;
 
     // Look for adapter_model.gguf in the same directory
     let gguf_path = safetensors_dir.join("adapter_model.gguf");
@@ -85,7 +88,7 @@ pub fn convert_safetensors_to_gguf(safetensors_path: &Path) -> Result<PathBuf> {
             gguf_path.display(),
             safetensors_dir.display()
         )
-    }.into())
+    })
 }
 
 fn find_llama_cpp_script(script_name: &str) -> Option<PathBuf> {
@@ -123,7 +126,7 @@ fn find_llama_cpp_script(script_name: &str) -> Option<PathBuf> {
 }
 
 fn run_conversion_script(script_path: &Path, input_path: &Path, output_path: &Path) -> Result<()> {
-    info!(script=%script_path.display(), input=%input_path.display(), output=%output_path.display(), 
+    info!(script=%script_path.display(), input=%input_path.display(), output=%output_path.display(),
           "Running LoRA conversion script");
 
     let output = Command::new("python")
@@ -138,7 +141,9 @@ fn run_conversion_script(script_path: &Path, input_path: &Path, output_path: &Pa
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(ShimmyError::ProcessFailed { stderr: stderr.to_string() }.into());
+        return Err(ShimmyError::ProcessFailed {
+            stderr: stderr.to_string(),
+        });
     }
 
     Ok(())
