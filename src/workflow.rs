@@ -102,7 +102,9 @@ impl WorkflowEngine {
                 .steps
                 .iter()
                 .find(|s| s.id == step_id)
-                .ok_or_else(|| ShimmyError::WorkflowStepNotFound { step_id: step_id.clone() })?;
+                .ok_or_else(|| ShimmyError::WorkflowStepNotFound {
+                    step_id: step_id.clone(),
+                })?;
 
             let step_start = std::time::Instant::now();
             let step_result = match self.execute_step(step, &context, &step_results).await {
@@ -208,7 +210,7 @@ impl WorkflowEngine {
                     } else {
                         Err(ShimmyError::ToolExecutionFailed {
                             error: format!("{:?}", tool_result.error),
-                        }.into())
+                        })
                     }
                 }
 
@@ -260,7 +262,7 @@ impl WorkflowEngine {
         if temp_visited.contains(step_id) {
             return Err(ShimmyError::WorkflowCircularDependency {
                 step_id: step_id.to_string(),
-            }.into());
+            });
         }
 
         if visited.contains(step_id) {
@@ -269,10 +271,11 @@ impl WorkflowEngine {
 
         temp_visited.insert(step_id.to_string());
 
-        let step = steps
-            .iter()
-            .find(|s| s.id == step_id)
-            .ok_or_else(|| ShimmyError::WorkflowStepNotFound { step_id: step_id.to_string() })?;
+        let step = steps.iter().find(|s| s.id == step_id).ok_or_else(|| {
+            ShimmyError::WorkflowStepNotFound {
+                step_id: step_id.to_string(),
+            }
+        })?;
 
         for dep in &step.depends_on {
             Self::visit_step(dep, steps, visited, temp_visited, order)?;
@@ -353,10 +356,14 @@ impl WorkflowEngine {
                     if let Some(step_result) = step_results.get(step_id) {
                         Ok(step_result.result.clone())
                     } else {
-                        Err(ShimmyError::WorkflowStepNotFound { step_id: step_id.to_string() })
+                        Err(ShimmyError::WorkflowStepNotFound {
+                            step_id: step_id.to_string(),
+                        })
                     }
                 } else {
-                    Err(ShimmyError::WorkflowVariableNotFound { variable: expression.to_string() })
+                    Err(ShimmyError::WorkflowVariableNotFound {
+                        variable: expression.to_string(),
+                    })
                 }
             }
             "filter" => {
@@ -365,7 +372,7 @@ impl WorkflowEngine {
             }
             _ => Err(ShimmyError::UnsupportedOperation {
                 operation: operation.to_string(),
-            }.into()),
+            }),
         }
     }
 

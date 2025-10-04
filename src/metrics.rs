@@ -335,10 +335,14 @@ impl TelemetryCollector {
                 .collect()
         };
 
-        let models_count = self.models_used.lock().unwrap_or_else(|e| {
-            tracing::warn!("Failed to lock models_used: {}", e);
-            panic!("Poisoned mutex: models_used")
-        }).len() as u64;
+        let models_count = self
+            .models_used
+            .lock()
+            .unwrap_or_else(|e| {
+                tracing::warn!("Failed to lock models_used: {}", e);
+                panic!("Poisoned mutex: models_used")
+            })
+            .len() as u64;
 
         let peak_requests_per_hour = {
             self.hourly_request_counts
