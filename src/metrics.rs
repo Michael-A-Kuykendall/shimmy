@@ -271,7 +271,10 @@ impl TelemetryCollector {
             return Ok(());
         }
 
-        let config = self.config.as_ref().unwrap();
+        let config = match self.config.as_ref() {
+            Some(c) => c,
+            None => return Ok(()), // Config not initialized
+        };
         let data = self.build_telemetry_data(config, metrics);
 
         // Send data with timeout
@@ -309,7 +312,10 @@ impl TelemetryCollector {
         let current_metrics = metrics.metrics();
 
         let avg_response_time = {
-            let times = self.request_times.lock().unwrap();
+            let times = self.request_times.lock().unwrap_or_else(|e| {
+                tracing::warn!("Failed to lock request_times: {}", e);
+                panic!("Poisoned mutex: request_times")
+            });
             if times.is_empty() {
                 0
             } else {
@@ -320,13 +326,19 @@ impl TelemetryCollector {
         let endpoints_used: Vec<String> = {
             self.endpoints_used
                 .lock()
-                .unwrap()
+                .unwrap_or_else(|e| {
+                    tracing::warn!("Failed to lock endpoints_used: {}", e);
+                    panic!("Poisoned mutex: endpoints_used")
+                })
                 .iter()
                 .cloned()
                 .collect()
         };
 
-        let models_count = self.models_used.lock().unwrap().len() as u64;
+        let models_count = self.models_used.lock().unwrap_or_else(|e| {
+            tracing::warn!("Failed to lock models_used: {}", e);
+            panic!("Poisoned mutex: models_used")
+        }).len() as u64;
 
         let peak_requests_per_hour = {
             self.hourly_request_counts

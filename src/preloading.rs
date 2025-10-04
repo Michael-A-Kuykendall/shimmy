@@ -287,8 +287,8 @@ impl SmartPreloader {
 
         // Sort by usage frequency (descending)
         candidates.sort_by(|a, b| {
-            let stat_a = stats.get(a).unwrap();
-            let stat_b = stats.get(b).unwrap();
+            let stat_a = stats.get(a).unwrap_or(&ModelUsageStats::default());
+            let stat_b = stats.get(b).unwrap_or(&ModelUsageStats::default());
             stat_b.total_requests.cmp(&stat_a.total_requests)
         });
 

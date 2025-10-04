@@ -227,7 +227,13 @@ pub async fn chat_completions(
                     finish_reason: None,
                 }],
             };
-            let _ = tx_tokens.send(serde_json::to_string(&initial_chunk).unwrap());
+            let _ = tx_tokens.send(
+                serde_json::to_string(&initial_chunk)
+                    .unwrap_or_else(|e| {
+                        tracing::error!("Failed to serialize initial chunk: {}", e);
+                        "{}".to_string()
+                    })
+            );
 
             // Generate and stream tokens
             let _ = loaded
@@ -249,7 +255,13 @@ pub async fn chat_completions(
                                 finish_reason: None,
                             }],
                         };
-                        let _ = tx_tokens.send(serde_json::to_string(&chunk).unwrap());
+                        let _ = tx_tokens.send(
+                            serde_json::to_string(&chunk)
+                                .unwrap_or_else(|e| {
+                                    tracing::error!("Failed to serialize chunk: {}", e);
+                                    "{}".to_string()
+                                })
+                        );
                     })),
                 )
                 .await;
@@ -269,7 +281,13 @@ pub async fn chat_completions(
                     finish_reason: Some("stop".to_string()),
                 }],
             };
-            let _ = tx.send(serde_json::to_string(&final_chunk).unwrap());
+            let _ = tx.send(
+                serde_json::to_string(&final_chunk)
+                    .unwrap_or_else(|e| {
+                        tracing::error!("Failed to serialize final chunk: {}", e);
+                        "{}".to_string()
+                    })
+            );
             let _ = tx.send("[DONE]".to_string());
         });
 

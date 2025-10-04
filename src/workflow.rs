@@ -351,7 +351,7 @@ impl WorkflowEngine {
                     Ok(value.clone())
                 } else if expression.starts_with("step_") {
                     // Extract from step result
-                    let step_id = expression.strip_prefix("step_").unwrap();
+                    let step_id = expression.strip_prefix("step_").unwrap_or(expression);
                     if let Some(step_result) = step_results.get(step_id) {
                         Ok(step_result.result.clone())
                     } else {
