@@ -190,8 +190,11 @@ impl ModelManager {
             candidates.sort_by(|a, b| b.popularity_score.partial_cmp(&a.popularity_score).unwrap());
 
             let current_loaded = loaded_models.len();
-            let candidates_vec: Vec<_> = candidates.iter().map(|c| (c.model_name.clone(), c.popularity_score)).collect();
-            
+            let candidates_vec: Vec<_> = candidates
+                .iter()
+                .map(|c| (c.model_name.clone(), c.popularity_score))
+                .collect();
+
             (candidates_vec, current_loaded)
         }; // Drop read locks before acquiring write lock
 

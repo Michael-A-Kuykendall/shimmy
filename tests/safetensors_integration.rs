@@ -13,7 +13,10 @@ mod tests {
     fn create_test_safetensors_error_case() {
         // Test error case handling with nonexistent parent directory
         // Use a path that definitely won't exist on any system
-        let result = create_test_safetensors("/this/path/absolutely/does/not/exist/anywhere/test.safetensors", &[]);
+        let result = create_test_safetensors(
+            "/this/path/absolutely/does/not/exist/anywhere/test.safetensors",
+            &[],
+        );
         assert!(
             result.is_err(),
             "Function should return Err for path with nonexistent parent directory"
