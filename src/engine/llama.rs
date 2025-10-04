@@ -146,16 +146,8 @@ impl GpuBackend {
     }
 
     /// Get the number of layers to offload to GPU
-    fn get_gpu_layers(&self) -> u32 {
-        match self {
-            GpuBackend::Cpu => 0,
-            #[cfg(feature = "llama-cuda")]
-            GpuBackend::Cuda => 999, // Offload all layers
-            #[cfg(feature = "llama-vulkan")]
-            GpuBackend::Vulkan => 999, // Offload all layers
-            #[cfg(feature = "llama-opencl")]
-            GpuBackend::OpenCL => 999, // Offload all layers
-        }
+    fn gpu_layers(&self) -> u32 {
+        999 // Offload all layers to GPU
     }
 }
 
@@ -202,7 +194,7 @@ impl InferenceEngine for LlamaEngine {
             let be = llama::llama_backend::LlamaBackend::init()?;
 
             // Configure GPU acceleration based on backend
-            let n_gpu_layers = self.gpu_backend.get_gpu_layers();
+            let n_gpu_layers = self.gpu_backend.gpu_layers();
             info!(
                 "Loading model with {} GPU layers ({:?} backend)",
                 n_gpu_layers, self.gpu_backend

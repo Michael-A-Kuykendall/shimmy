@@ -165,9 +165,9 @@ impl ObservabilityManager {
         let mut metrics = self.metrics.write().await;
 
         // Simplified system monitoring - in production this would use proper system APIs
-        metrics.memory_usage_mb = self.get_memory_usage().await;
-        metrics.cpu_usage_percent = self.get_cpu_usage().await;
-        metrics.disk_usage_percent = self.get_disk_usage().await;
+        metrics.memory_usage_mb = self.memory_usage().await;
+        metrics.cpu_usage_percent = self.cpu_usage().await;
+        metrics.disk_usage_percent = self.disk_usage().await;
 
         // Update uptime
         metrics.uptime_seconds = SystemTime::now()
@@ -388,23 +388,23 @@ impl ObservabilityManager {
     }
 
     /// Get current metrics snapshot
-    pub async fn get_metrics(&self) -> SystemMetrics {
+    pub async fn metrics(&self) -> SystemMetrics {
         self.metrics.read().await.clone()
     }
 
     // Simplified system monitoring methods (placeholders)
-    async fn get_memory_usage(&self) -> f64 {
+    async fn memory_usage(&self) -> f64 {
         // In production, this would use proper system APIs
         // For now, return a reasonable estimate
         128.0 // 128MB baseline
     }
 
-    async fn get_cpu_usage(&self) -> f64 {
+    async fn cpu_usage(&self) -> f64 {
         // In production, this would calculate actual CPU usage
         15.0 // 15% estimate
     }
 
-    async fn get_disk_usage(&self) -> f64 {
+    async fn disk_usage(&self) -> f64 {
         // In production, this would check actual disk usage
         25.0 // 25% estimate
     }
@@ -448,7 +448,7 @@ mod tests {
         obs.record_request("phi3-mini", Duration::from_millis(200), true)
             .await;
 
-        let metrics = obs.get_metrics().await;
+        let metrics = obs.metrics().await;
         assert_eq!(metrics.total_requests, 2);
         assert_eq!(metrics.successful_requests, 2);
         assert!(metrics.model_stats.contains_key("phi3-mini"));

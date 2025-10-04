@@ -51,7 +51,7 @@ impl MetricsCollector {
         self.errors.fetch_add(1, Ordering::Relaxed);
     }
 
-    pub fn get_metrics(&self) -> Metrics {
+    pub fn metrics(&self) -> Metrics {
         Metrics {
             requests_total: self.requests.load(Ordering::Relaxed),
             generation_errors: self.errors.load(Ordering::Relaxed),
@@ -61,7 +61,7 @@ impl MetricsCollector {
 }
 
 pub async fn metrics_handler(metrics: Arc<MetricsCollector>) -> Json<Metrics> {
-    Json(metrics.get_metrics())
+    Json(metrics.metrics())
 }
 
 // Opt-in telemetry system
@@ -306,7 +306,7 @@ impl TelemetryCollector {
         config: &TelemetryConfig,
         metrics: &MetricsCollector,
     ) -> TelemetryData {
-        let current_metrics = metrics.get_metrics();
+        let current_metrics = metrics.metrics();
 
         let avg_response_time = {
             let times = self.request_times.lock().unwrap();
@@ -587,7 +587,7 @@ mod tests {
         metrics.record_request();
         metrics.record_error();
 
-        let result = metrics.get_metrics();
+        let result = metrics.metrics();
         assert_eq!(result.requests_total, 1);
         assert_eq!(result.generation_errors, 1);
         assert!(result.uptime_seconds < 60);

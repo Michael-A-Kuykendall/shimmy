@@ -165,7 +165,7 @@ mod property_tests {
             assert_model_loaded(name, true);
 
             // Verify the invariant was checked
-            let checked = get_checked_invariants();
+            let checked = checked_invariants();
             assert!(
                 checked
                     .iter()
@@ -193,7 +193,7 @@ mod property_tests {
             assert_generation_valid(prompt, response);
 
             // Verify all generation invariants were checked
-            let checked = get_checked_invariants();
+            let checked = checked_invariants();
 
             assert!(
                 checked
@@ -236,7 +236,7 @@ mod property_tests {
             assert_backend_selection_valid(file_path, expected_backend);
 
             // Verify invariants were checked
-            let checked = get_checked_invariants();
+            let checked = checked_invariants();
 
             assert!(
                 checked
@@ -283,7 +283,7 @@ mod property_tests {
             assert_api_response_valid(status, body);
 
             // Verify invariants were checked
-            let checked = get_checked_invariants();
+            let checked = checked_invariants();
             assert!(
                 checked
                     .iter()
@@ -314,20 +314,20 @@ mod exploration_tests {
         explore_test("empty_model_discovery", || {
             clear_invariant_log();
             assert_discovery_valid(0);
-            !get_checked_invariants().is_empty()
+            !checked_invariants().is_empty()
         });
 
         explore_test("large_generation_response", || {
             clear_invariant_log();
             let large_response = "A".repeat(10000);
             assert_generation_valid("Generate a long response", &large_response);
-            !get_checked_invariants().is_empty()
+            !checked_invariants().is_empty()
         });
 
         explore_test("api_no_content_response", || {
             clear_invariant_log();
             assert_api_response_valid(204, ""); // No content responses are valid
-            !get_checked_invariants().is_empty()
+            !checked_invariants().is_empty()
         });
     }
 }

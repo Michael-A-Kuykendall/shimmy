@@ -121,8 +121,8 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(state);
 
     match cli.cmd {
-        cli::Command::Serve { .. } => {
-            let bind_address = cli.cmd.get_bind_address();
+        cli::Command::Serve { ref bind } => {
+            let bind_address = bind;
             let addr: SocketAddr = bind_address.parse().expect("bad bind address");
 
             println!("🚀 Starting Shimmy server on {}", bind_address);
@@ -316,7 +316,7 @@ async fn main() -> anyhow::Result<()> {
             {
                 use crate::engine::llama::LlamaEngine;
                 let llama_engine = LlamaEngine::new_with_backend(cli.gpu_backend.as_deref());
-                println!("🔧 llama.cpp Backend: {}", llama_engine.get_backend_info());
+                println!("🔧 llama.cpp Backend: {}", llama_engine.backend_info());
 
                 // Show available features
                 println!("📋 Available GPU Features:");
