@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use anyhow::{anyhow, Result};
+use crate::error::{Result, ShimmyError};
 use safetensors::SafeTensors;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -13,13 +13,14 @@ pub fn convert_safetensors_to_gguf(safetensors_path: &Path) -> Result<PathBuf> {
 
     // Read the SafeTensors file
     let data = fs::read(safetensors_path)?;
-    let tensors = SafeTensors::deserialize(&data)?;
+    let tensors = SafeTensors::deserialize(&data)
+        .map_err(|e| ShimmyError::GenerationError { reason: format!("Failed to deserialize SafeTensors: {}", e) })?;
 
     debug!("SafeTensors contains {} tensors", tensors.len());
 
     let safetensors_dir = safetensors_path
         .parent()
-        .ok_or_else(|| anyhow!("Invalid SafeTensors path"))?;
+        .ok_or_else(|| ShimmyError::InvalidPath { path: safetensors_path.display().to_string() })?;
 
     // Look for adapter_model.gguf in the same directory
     let gguf_path = safetensors_dir.join("adapter_model.gguf");
@@ -70,22 +71,21 @@ pub fn convert_safetensors_to_gguf(safetensors_path: &Path) -> Result<PathBuf> {
     // convert the tensor formats and metadata
     warn!("No llama.cpp conversion scripts found, providing guidance");
 
-    Err(anyhow!(
-        "SafeTensors to GGUF conversion needed for: {}\n\
-        \n\
-        Shimmy detected a SafeTensors LoRA adapter but requires GGUF format.\n\
-        \n\
-        To enable this adapter:\n\
-        1. Install llama.cpp with Python bindings\n\
-        2. Run conversion: python /path/to/llama.cpp/convert-lora-to-ggml.py {} {}\n\
-        3. Or place a pre-converted .gguf file in: {}\n\
-        \n\
-        This is the shim functionality - shimmy bridges SafeTensors adapters to GGUF-based inference.",
-        safetensors_path.display(),
-        safetensors_path.display(),
-        gguf_path.display(),
-        safetensors_dir.display()
-    ))
+    Err(ShimmyError::SafeTensorsConversionNeeded {
+        guidance: format!(
+            "SafeTensors to GGUF conversion needed for: {}\n\n\
+            Shimmy detected a SafeTensors LoRA adapter but requires GGUF format.\n\n\
+            To enable this adapter:\n\
+            1. Install llama.cpp with Python bindings\n\
+            2. Run conversion: python /path/to/llama.cpp/convert-lora-to-ggml.py {} {}\n\
+            3. Or place a pre-converted .gguf file in: {}\n\n\
+            This is the shim functionality - shimmy bridges SafeTensors adapters to GGUF-based inference.",
+            safetensors_path.display(),
+            safetensors_path.display(),
+            gguf_path.display(),
+            safetensors_dir.display()
+        )
+    }.into())
 }
 
 fn find_llama_cpp_script(script_name: &str) -> Option<PathBuf> {
@@ -131,11 +131,14 @@ fn run_conversion_script(script_path: &Path, input_path: &Path, output_path: &Pa
         .arg(input_path)
         .arg(output_path)
         .output()
-        .map_err(|e| anyhow!("Failed to run conversion script: {}", e))?;
+        .map_err(|e| ShimmyError::ScriptExecutionFailed {
+            script: script_path.display().to_string(),
+            source: Some(e.into()),
+        })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(anyhow!("Conversion script failed: {}", stderr));
+        return Err(ShimmyError::ProcessFailed { stderr: stderr.to_string() }.into());
     }
 
     Ok(())
