@@ -375,8 +375,8 @@ mod tests {
     #[test]
     fn test_llama_engine_initialization() {
         let engine = LlamaEngine::new();
-        // LlamaEngine is a unit struct, just test creation
-        assert_eq!(std::mem::size_of_val(&engine), 0);
+        // LlamaEngine has a GpuBackend field (enum, size 1 byte)
+        assert_eq!(std::mem::size_of_val(&engine), 1);
     }
 
     #[tokio::test]

@@ -11,11 +11,12 @@ mod tests {
     // Rule: rust_result_err - Functions returning Result need Err case tests
     #[test]
     fn create_test_safetensors_error_case() {
-        // Test error case handling with invalid path
-        let result = create_test_safetensors("/nonexistent/path/test.safetensors", &[]);
+        // Test error case handling with nonexistent parent directory
+        // Use a path that definitely won't exist on any system
+        let result = create_test_safetensors("/this/path/absolutely/does/not/exist/anywhere/test.safetensors", &[]);
         assert!(
             result.is_err(),
-            "Function should return Err for invalid path"
+            "Function should return Err for path with nonexistent parent directory"
         );
     }
 

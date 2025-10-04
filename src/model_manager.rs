@@ -99,8 +99,10 @@ impl ModelManager {
         };
 
         // Store the loaded model
-        let mut models = self.loaded_models.write().await;
-        models.insert(name.clone(), info);
+        {
+            let mut models = self.loaded_models.write().await;
+            models.insert(name.clone(), info);
+        } // Drop write lock before calling other functions
 
         info!("Model '{}' loaded successfully", name);
 
@@ -169,36 +171,43 @@ impl ModelManager {
             return;
         }
 
-        let stats = self.usage_stats.read().await;
-        let loaded_models = self.loaded_models.read().await;
+        // Collect candidates while holding read locks, then drop them
+        let (candidates_to_queue, current_loaded) = {
+            let stats = self.usage_stats.read().await;
+            let loaded_models = self.loaded_models.read().await;
 
-        // Find top candidates for preloading
-        let mut candidates: Vec<_> = stats
-            .values()
-            .filter(|stat| {
-                stat.total_requests >= self.preload_config.min_usage_for_preload
-                    && stat.popularity_score >= self.preload_config.preload_threshold_score
-                    && !loaded_models.contains_key(&stat.model_name)
-            })
-            .collect();
+            // Find top candidates for preloading
+            let mut candidates: Vec<_> = stats
+                .values()
+                .filter(|stat| {
+                    stat.total_requests >= self.preload_config.min_usage_for_preload
+                        && stat.popularity_score >= self.preload_config.preload_threshold_score
+                        && !loaded_models.contains_key(&stat.model_name)
+                })
+                .collect();
 
-        // Sort by popularity score
-        candidates.sort_by(|a, b| b.popularity_score.partial_cmp(&a.popularity_score).unwrap());
+            // Sort by popularity score
+            candidates.sort_by(|a, b| b.popularity_score.partial_cmp(&a.popularity_score).unwrap());
+
+            let current_loaded = loaded_models.len();
+            let candidates_vec: Vec<_> = candidates.iter().map(|c| (c.model_name.clone(), c.popularity_score)).collect();
+            
+            (candidates_vec, current_loaded)
+        }; // Drop read locks before acquiring write lock
 
         // Add to preload queue
         let mut queue = self.preload_queue.write().await;
-        let current_loaded = loaded_models.len();
         let slots_available = self
             .preload_config
             .max_preloaded_models
             .saturating_sub(current_loaded);
 
-        for candidate in candidates.iter().take(slots_available) {
-            if !queue.iter().any(|name| name == &candidate.model_name) {
-                queue.push_back(candidate.model_name.clone());
+        for (model_name, score) in candidates_to_queue.iter().take(slots_available) {
+            if !queue.iter().any(|name| name == model_name) {
+                queue.push_back(model_name.clone());
                 info!(
                     "Queued '{}' for preloading (score: {:.2})",
-                    candidate.model_name, candidate.popularity_score
+                    model_name, score
                 );
             }
         }
