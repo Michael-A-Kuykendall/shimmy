@@ -147,10 +147,21 @@ async fn main() -> anyhow::Result<()> {
             let manual_count = state.registry.list().len();
             if manual_count <= 1 {
                 // Only the default phi3-lora entry
+                // Create new engine with same configuration (including MoE if set)
+                let enhanced_engine: Box<dyn engine::InferenceEngine> = {
+                    let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+                    
+                    // Apply MoE configuration from global flags
+                    #[cfg(feature = "llama")]
+                    if cli.cpu_moe || cli.n_cpu_moe.is_some() {
+                        adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+                    }
+                    
+                    Box::new(adapter)
+                };
+                
                 let mut enhanced_state = AppState::new(
-                    Box::new(engine::llama::LlamaEngine::new_with_backend(
-                        cli.gpu_backend.as_deref(),
-                    )),
+                    enhanced_engine,
                     state.registry.clone(),
                 );
                 enhanced_state.registry.auto_register_discovered();
