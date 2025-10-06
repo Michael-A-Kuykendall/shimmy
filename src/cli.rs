@@ -1,4 +1,3 @@
-use crate::port_manager::GLOBAL_PORT_ALLOCATOR;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -26,6 +25,14 @@ pub struct Cli {
         help = "GPU backend: auto, cpu, cuda, vulkan, opencl"
     )]
     pub gpu_backend: Option<String>,
+    
+    /// Offload ALL MoE expert tensors to CPU (saves VRAM for large MoE models)
+    #[arg(long, global = true)]
+    pub cpu_moe: bool,
+    
+    /// Offload first N MoE layers' expert tensors to CPU
+    #[arg(long, global = true, value_name = "N", conflicts_with = "cpu_moe")]
+    pub n_cpu_moe: Option<usize>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -75,27 +82,6 @@ pub enum Command {
     },
 }
 
-impl Command {
-    pub fn get_bind_address(&self) -> String {
-        match self {
-            Command::Serve { bind } => {
-                if bind == "auto" {
-                    match GLOBAL_PORT_ALLOCATOR.find_available_port("shimmy-server") {
-                        Ok(port) => format!("127.0.0.1:{}", port),
-                        Err(_) => {
-                            eprintln!("Warning: Could not allocate dynamic port, falling back to 127.0.0.1:11435");
-                            "127.0.0.1:11435".to_string()
-                        }
-                    }
-                } else {
-                    bind.clone()
-                }
-            }
-            _ => "127.0.0.1:11435".to_string(), // Default fallback for other commands
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -105,7 +91,7 @@ mod tests {
     fn test_cli_serve_command_default() {
         let cli = Cli::try_parse_from(["shimmy", "serve"]).unwrap();
         match cli.cmd {
-            Command::Serve { bind } => assert_eq!(bind, "auto"),
+            Command::Serve { bind, .. } => assert_eq!(bind, "auto"),
             _ => panic!("Expected Serve command"),
         }
     }
@@ -114,7 +100,7 @@ mod tests {
     fn test_cli_serve_command_manual_bind() {
         let cli = Cli::try_parse_from(["shimmy", "serve", "--bind", "127.0.0.1:8080"]).unwrap();
         match cli.cmd {
-            Command::Serve { bind } => assert_eq!(bind, "127.0.0.1:8080"),
+            Command::Serve { bind, .. } => assert_eq!(bind, "127.0.0.1:8080"),
             _ => panic!("Expected Serve command"),
         }
     }
@@ -124,13 +110,14 @@ mod tests {
         let command = Command::Serve {
             bind: "auto".to_string(),
         };
-        let address = command.get_bind_address();
 
-        // Should either be dynamic port or fallback
-        assert!(address.starts_with("127.0.0.1:"));
-        let port_part = address.split(':').nth(1).unwrap();
-        let port: u16 = port_part.parse().unwrap();
-        assert!(port > 0);
+        // Test that we can access the bind field
+        match command {
+            Command::Serve { bind, .. } => {
+                assert!(bind.starts_with("auto") || bind.starts_with("127.0.0.1:"));
+            }
+            _ => panic!("Expected Serve command"),
+        }
     }
 
     #[test]
@@ -138,9 +125,13 @@ mod tests {
         let command = Command::Serve {
             bind: "192.168.1.100:9000".to_string(),
         };
-        let address = command.get_bind_address();
 
-        assert_eq!(address, "192.168.1.100:9000");
+        match command {
+            Command::Serve { bind, .. } => {
+                assert_eq!(bind, "192.168.1.100:9000");
+            }
+            _ => panic!("Expected Serve command"),
+        }
     }
 
     #[test]

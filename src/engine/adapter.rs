@@ -50,6 +50,13 @@ impl InferenceEngineAdapter {
         }
     }
 
+    /// Set MoE CPU offloading configuration for llama engine
+    #[cfg(feature = "llama")]
+    pub fn with_moe_config(mut self, cpu_moe_all: bool, n_cpu_moe: Option<usize>) -> Self {
+        self.llama_engine = self.llama_engine.with_moe_config(cpu_moe_all, n_cpu_moe);
+        self
+    }
+
     /// Auto-detect best backend for model
     fn select_backend(&self, spec: &ModelSpec) -> BackendChoice {
         // Check file extension and path patterns to determine optimal backend

@@ -1,5 +1,5 @@
+use crate::error::{Result, ShimmyError};
 use crate::tools::{ToolCall, ToolRegistry};
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -102,7 +102,9 @@ impl WorkflowEngine {
                 .steps
                 .iter()
                 .find(|s| s.id == step_id)
-                .ok_or_else(|| anyhow::anyhow!("Step {} not found", step_id))?;
+                .ok_or_else(|| ShimmyError::WorkflowStepNotFound {
+                    step_id: step_id.clone(),
+                })?;
 
             let step_start = std::time::Instant::now();
             let step_result = match self.execute_step(step, &context, &step_results).await {
@@ -206,10 +208,9 @@ impl WorkflowEngine {
                     if tool_result.success {
                         Ok(tool_result.result)
                     } else {
-                        Err(anyhow::anyhow!(
-                            "Tool execution failed: {:?}",
-                            tool_result.error
-                        ))
+                        Err(ShimmyError::ToolExecutionFailed {
+                            error: format!("{:?}", tool_result.error),
+                        })
                     }
                 }
 
@@ -259,10 +260,9 @@ impl WorkflowEngine {
         order: &mut Vec<String>,
     ) -> Result<()> {
         if temp_visited.contains(step_id) {
-            return Err(anyhow::anyhow!(
-                "Circular dependency detected involving step {}",
-                step_id
-            ));
+            return Err(ShimmyError::WorkflowCircularDependency {
+                step_id: step_id.to_string(),
+            });
         }
 
         if visited.contains(step_id) {
@@ -271,10 +271,11 @@ impl WorkflowEngine {
 
         temp_visited.insert(step_id.to_string());
 
-        let step = steps
-            .iter()
-            .find(|s| s.id == step_id)
-            .ok_or_else(|| anyhow::anyhow!("Step {} not found", step_id))?;
+        let step = steps.iter().find(|s| s.id == step_id).ok_or_else(|| {
+            ShimmyError::WorkflowStepNotFound {
+                step_id: step_id.to_string(),
+            }
+        })?;
 
         for dep in &step.depends_on {
             Self::visit_step(dep, steps, visited, temp_visited, order)?;
@@ -351,24 +352,27 @@ impl WorkflowEngine {
                     Ok(value.clone())
                 } else if expression.starts_with("step_") {
                     // Extract from step result
-                    let step_id = expression.strip_prefix("step_").unwrap();
+                    let step_id = expression.strip_prefix("step_").unwrap_or(expression);
                     if let Some(step_result) = step_results.get(step_id) {
                         Ok(step_result.result.clone())
                     } else {
-                        Err(anyhow::anyhow!("Step {} not found", step_id))
+                        Err(ShimmyError::WorkflowStepNotFound {
+                            step_id: step_id.to_string(),
+                        })
                     }
                 } else {
-                    Err(anyhow::anyhow!("Variable {} not found", expression))
+                    Err(ShimmyError::WorkflowVariableNotFound {
+                        variable: expression.to_string(),
+                    })
                 }
             }
             "filter" => {
                 // Simple filtering - would be expanded with a proper expression evaluator
                 Ok(serde_json::json!({ "filtered": true, "expression": expression }))
             }
-            _ => Err(anyhow::anyhow!(
-                "Unsupported data transform operation: {}",
-                operation
-            )),
+            _ => Err(ShimmyError::UnsupportedOperation {
+                operation: operation.to_string(),
+            }),
         }
     }
 

@@ -1,83 +1,38 @@
-# 📋 CURRENT STATUS - Code Cleanup & Audit Phase
+# 📋 CURRENT STATUS - Oct 4, 2025
 
-**Status as of 3:40 PM, Oct 3, 2025:**
+## Active Work: Upstream Contribution → Cleanup → Licensing Feature
 
-## What We're Doing Right Now
-Comprehensive codebase audit and cleanup before cutting release tag for Issue #72.
+### PR #1: CUDA stdbool Fix (SUBMITTED ✅)
+- **Status**: LIVE at https://github.com/utilityai/llama-cpp-rs/pull/839
+- **Location**: Fork `Michael-A-Kuykendall/llama-cpp-rs`, branch `fix-windows-msvc-cuda-stdbool`, commit 2ee7c7e
+- **Problem**: Windows MSVC + GPU backends fail (stdbool.h not found)
+- **Solution**: Use cc crate to discover MSVC INCLUDE paths, pass to bindgen
+- **Tested**: Production use in shimmy v1.6.0 (295/295 tests passing)
+- **Next**: Await maintainer review, respond professionally to feedback
 
-## What We Just Completed
-1. ✅ Fixed Issue #72 - GPU backend flag properly wired to model loading
-2. ✅ All 13 GPU backend regression tests passing  
-3. ✅ Removed unused specs (001, 002, 004) and dead code (ModelCache, RouteManager)
-4. ✅ Fixed all clippy errors - build clean
-5. ✅ Updated all "sub-20MB" references back to "sub-5MB" (actual: 4.8MB)
-6. ✅ Toned down AI marketing language in README
-7. ✅ Committed cleanup: f4a12f7
+### Issue #81: MoE CPU Offloading (DEFERRED - Future Enhancement)
+- **Status**: Research complete, response drafted, parked for future work
+- **Findings**: Requires `tensor_buft_overrides` field in llama-cpp-2 (not currently exposed)
+- **Complexity**: FFI pointer arrays, string lifetimes, new struct types - significant work
+- **Decision**: Defer to future milestone after audit cleanup complete
+- **Documentation**: `docs-internal/MOE-RESEARCH-FINDINGS.md` has full implementation plan
+- **User Response**: `docs-internal/ISSUE-81-RESPONSE-DRAFT.md` ready to post
 
-## Current Phase
-Running comprehensive audit:
-- Removing stale log files from root
-- Cleaning up test artifacts
-- Verifying directory structure
-- Running full regression suite
+### Shimmy Audit Cleanup (PARKED - Resume After PRs)
+- **Status**: Branch `refactor/audit-cleanup-phase1-3` created, pushed to origin
+- **Work done**: 73 fixes (I2 getters, N5 unwraps, A3_stringly errors)
+- **Tests**: 295/295 passing
+- **Plan**: Create PR to main AFTER upstream PRs are complete
+- **Remaining**: C3 (pub APIs), A6/A7 (debug prints), P7 (lint suppressions), etc.
 
-## Next Steps
-1. Complete regression tests
-2. Final commit of audit cleanup
-3. Cut release tag (v1.5.7 or v1.6.0)
-4. Respond to Issue #72 with tag info
-5. Wait for @D0wn10ad verification before closing
-
-## Key Files Modified
-- Updated binary size references: 4.8MB (142x smaller than Ollama)
-- Constitution restored to sub-5MB limit
-- README cleaned of AI fluff
-- Cargo.toml, ROADMAP.md, CLAUDE.md all updated
-
----
-
-# 🚨 ACTIVE FIX TRACKER - Issue #72: GPU Backend Not Working ✅ RESOLVED
-
-## Problem Summary
-- **Reporter**: D0wn10ad
-- **Issue**: `--gpu-backend` flag (auto/vulkan/opencl) was ignored; all layers assigned to CPU
-- **Version**: 1.5.6 (built from source)
-- **Build**: `cargo build --release --no-default-features --features huggingface,llama-opencl,llama-vulkan`
-- **GPU**: Works with standalone llama.cpp on same hardware (Vulkan confirmed working)
-- **Evidence**: All 29 layers showed `load_tensors: layer N assigned to device CPU, is_swa = 0`
-
-## Root Cause (CONFIRMED)
-- CLI parsed `--gpu-backend` ✅
-- `LlamaEngine` had `gpu_backend` field ✅  
-- **BUT**: `gpu_backend` field was NEVER USED in model loading ❌
-- **AND**: CLI value was NEVER PASSED to engine constructor ❌
-- Model loaded with default params → no GPU layers → CPU only
-
-## Fix Implementation ✅ COMPLETE
-1. ✅ Added `LlamaEngine::new_with_backend(Option<&str>)` constructor
-2. ✅ Implemented `GpuBackend::from_string()` parser with helpful error messages
-3. ✅ Implemented `GpuBackend::detect_best()` with priority: CUDA > Vulkan > OpenCL > CPU
-4. ✅ Implemented `GpuBackend::get_gpu_layers()` returning 999 for GPU, 0 for CPU
-5. ✅ Modified model loading to call `.with_n_gpu_layers(n_gpu_layers)`
-6. ✅ Wired CLI `--gpu-backend` through all engine instantiation points (serve, generate, gpu-info)
-7. ✅ Added detection checks (vulkaninfo, clinfo) for runtime validation
-
-## Testing & Verification ✅ ALL PASSING
-- ✅ Build successful with `--features huggingface,llama-opencl,llama-vulkan`
-- ✅ All 13 GPU backend regression tests passing (gpu_backend_tests.rs + gpu_layer_verification.rs)
-- ✅ Test suite validates backend selection, CLI flag respect, multi-backend auto-detection
-- ✅ Added Issue #72 to release gate (`scripts/run-regression-tests.sh` Phase 5)
-- ✅ Manual verification: `shimmy gpu-info --gpu-backend vulkan` shows "Vulkan" backend selected
-
-## Commits
-- cc82cec9 - Core fix: Wire --gpu-backend CLI flag through to model loading
-- 40790a2f - Add GPU layer configuration support  
-- 28e07340 - Add Issue #72 regression tests to release gate
-
-## Status: READY FOR USER VERIFICATION
-- All tests passing
-- Release gate updated  
-- Need user to test with actual model loading and verify logs show GPU layer assignment
+### Paid Licensing Feature (WAITING - After Cleanup)
+- **Status**: Branch with Ed25519 keygen controls standing by
+- **Goal**: Add Claude Code-style subscription licensing ($10-20/month)
+- **Value Prop**: Unlimited local inference without time/usage restrictions
+- **Market**: Users spending $100/month on Claude who max it out regularly
+- **Tech**: Ed25519-based license key validation, time-based activation
+- **Strategy**: Keep eyes out during cleanup/refactors for alignment opportunities
+- **Priority**: AFTER audit cleanup is complete and codebase is polished
 
 ---
 
@@ -95,13 +50,21 @@ This file teaches any AI assistant how to work effectively inside this repositor
 - Always verify with actual commands (ls, grep, test exit codes, run the binary)
 - If you can't verify it, say "I cannot verify this yet" - don't fake it
 
-### 2. NEVER Use `!` in Bash Echo Strings
-**WRONG**: `echo "Build finished!"`
-**RIGHT**: `printf "%s\n" "Build finished"`
+### 2. NEVER Use `!` in Bash Commands
+**WRONG**: `echo "Build finished!"` or `rg "println!" src/`
+**RIGHT**: `printf "%s\n" "Build finished"` or `rg 'println\!' src/`
 
-- Bash interprets `!` as history expansion
-- Use printf instead of echo when printing messages
-- This happens 8-10 times per hour - check yourself
+- Bash interprets `!` as history expansion (event not found error)
+- Use printf instead of echo when printing messages with !
+- **ALWAYS escape ! in regex patterns**: Use `'println\!'` not `"println!"`
+- This happens constantly - CHECK EVERY COMMAND with ! before running
+
+### 3. Python Command is `py` NOT `python3`
+**WRONG**: `python3 script.py`
+**RIGHT**: `py script.py`
+
+- Windows uses `py` launcher, not `python3`
+- Check yourself before running Python commands
 
 ### 3. Read Documentation BEFORE Trial-and-Error
 **WRONG**: Try random commands, see what works
@@ -208,51 +171,12 @@ Introduce a cargo feature `stub` to force deterministic token output; then asser
 ---
 Keep this file concise; prune outdated sections when features land.
 
-## RustChain Mission-Driven Development
+## Upstream Contribution Protocol
 
-Shimmy development now follows a mission-driven approach using RustChain AI agent framework:
-
-### Mission Management Structure
-- `docs/mission-stacks/hopper/` - Upcoming missions (priority ordered)
-- `docs/mission-stacks/current/` - Active mission and related submissions
-- `docs/mission-stacks/done/` - Completed missions (archived)
-
-### Mission Workflow
-1. **Mission Planning**: Create comprehensive YAML missions in hopper/ with:
-   - Clear verification criteria and tests
-   - Gated epic structure with dependencies
-   - Specific deliverables and acceptance criteria
-   - Integration points with existing codebase
-
-2. **Mission Execution**: 
-   - Move mission from hopper/ to current/ when starting
-   - AI assistant executes mission using RustChain
-   - Create submissions for needed corrections if verification fails
-   - All related files stay in current/ during active work
-
-3. **Mission Completion**:
-   - Verify mission passes all defined tests
-   - Move completed mission and outputs to done/
-   - Update project status and next mission priority
-
-### Mission Standards
-- Each mission MUST have verifiable completion criteria
-- Include build tests, functional tests, and integration checks  
-- Missions should be granular but coherent (1-3 day scope)
-- Dependencies clearly defined between missions
-- Champion LLM (llama32-champion) provides domain expertise
-
-### AI Assistant Mission Responsibilities
-- Execute RustChain missions in order of priority
-- Run verification tests and QA each mission
-- Create corrective submissions when missions fail verification
-- Pause for user input only when mission requirements unclear
-- Report mission completion status and next recommended actions
-
-### Champion LLM Integration
-- Use llama32-champion model for shimmy-specific analysis
-- Leverage champion's training on user's development patterns
-- Champion provides architecture guidance and implementation strategy
-- Regular champion consultation on complex technical decisions
-
-This mission-driven approach ensures systematic, verified progress toward shimmy's goals of becoming a robust local-first AI serving solution.
+**CRITICAL**: When contributing to upstream projects (llama-cpp-rs, etc.):
+1. **NO AI SHORTCUTS** - Every line must be real, working code
+2. **NO STUBBING** - Never use "...existing code..." or placeholder comments
+3. **VERIFY EVERYTHING** - Test in shimmy production first
+4. **ACCURATE COMMIT MESSAGES** - Describe what code actually does, not what you intended
+5. **REVIEW BEFORE PUSH** - User reviews every line before submission
+6. **PATIENCE** - Better to take time and get it right than rush and embarrass ourselves

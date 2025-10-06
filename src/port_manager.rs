@@ -81,7 +81,7 @@ impl PortAllocator {
     }
 
     #[allow(dead_code)]
-    pub fn get_allocated_ports(&self) -> HashMap<String, u16> {
+    pub fn allocated_ports(&self) -> HashMap<String, u16> {
         self.allocated_ports.lock().clone()
     }
 }
