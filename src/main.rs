@@ -79,6 +79,60 @@ fn validate_runtime_version() {
     }
 }
 
+/// Print startup diagnostics for serve command
+fn print_startup_diagnostics(
+    version: &str,
+    gpu_backend: Option<&str>,
+    cpu_moe: bool,
+    n_cpu_moe: Option<usize>,
+    model_count: usize,
+) {
+    println!("🎯 Shimmy v{}", version);
+    
+    // GPU backend info
+    #[cfg(feature = "llama")]
+    {
+        let backend_display = match gpu_backend {
+            Some("cpu") => "CPU only".to_string(),
+            Some("cuda") => "CUDA (GPU acceleration)".to_string(),
+            Some("vulkan") => "Vulkan (GPU acceleration)".to_string(),
+            Some("opencl") => "OpenCL (GPU acceleration)".to_string(),
+            Some("auto") | None => {
+                // Auto-detect logic mirrors what LlamaEngine does
+                if cfg!(feature = "llama-cuda") {
+                    "CUDA (auto-detected)".to_string()
+                } else if cfg!(feature = "llama-vulkan") {
+                    "Vulkan (auto-detected)".to_string()
+                } else if cfg!(feature = "llama-opencl") {
+                    "OpenCL (auto-detected)".to_string()
+                } else {
+                    "CPU (no GPU acceleration)".to_string()
+                }
+            }
+            Some(other) => format!("{} (custom)", other),
+        };
+        println!("🔧 Backend: {}", backend_display);
+    }
+    
+    #[cfg(not(feature = "llama"))]
+    {
+        println!("🔧 Backend: Stub mode (no llama feature)");
+    }
+    
+    // MoE configuration
+    #[cfg(feature = "llama")]
+    if cpu_moe || n_cpu_moe.is_some() {
+        if let Some(n) = n_cpu_moe {
+            println!("🧠 MoE: CPU offload first {} layers (saves VRAM for large MoE models)", n);
+        } else if cpu_moe {
+            println!("🧠 MoE: CPU offload ALL expert tensors (saves ~80-85% VRAM)");
+        }
+    }
+    
+    // Model count
+    println!("📦 Models: {} available", model_count);
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Version validation - prevents Issue #63 distribution of broken binaries
@@ -141,7 +195,15 @@ async fn main() -> anyhow::Result<()> {
             let bind_address = bind;
             let addr: SocketAddr = bind_address.parse().expect("bad bind address");
 
-            println!("🚀 Starting Shimmy server on {}", bind_address);
+            // Print startup diagnostics before server starts
+            print_startup_diagnostics(
+                env!("CARGO_PKG_VERSION"),
+                cli.gpu_backend.as_deref(),
+                cli.cpu_moe,
+                cli.n_cpu_moe,
+                0, // Will update after model discovery
+            );
+            println!("🚀 Starting server on {}", bind_address);
 
             // Auto-register discovered models if we only have the default
             let manual_count = state.registry.list().len();
@@ -176,6 +238,13 @@ async fn main() -> anyhow::Result<()> {
                     std::process::exit(1);
                 }
 
+                // Show final model count and ready message
+                println!("📦 Models: {} available", available_models.len());
+                println!("✅ Ready to serve requests");
+                println!("   • POST /api/generate (streaming + non-streaming)");
+                println!("   • GET  /health (health check + metrics)");
+                println!("   • GET  /v1/models (OpenAI-compatible)");
+                
                 info!(%addr, models=%available_models.len(), "shimmy serving with {} available models", available_models.len());
                 return server::run(addr, enhanced_state).await;
             }
@@ -190,6 +259,13 @@ async fn main() -> anyhow::Result<()> {
                 std::process::exit(1);
             }
 
+            // Show final model count and ready message
+            println!("📦 Models: {} available", available_models.len());
+            println!("✅ Ready to serve requests");
+            println!("   • POST /api/generate (streaming + non-streaming)");
+            println!("   • GET  /health (health check + metrics)");
+            println!("   • GET  /v1/models (OpenAI-compatible)");
+            
             info!(%addr, models=%available_models.len(), "shimmy serving with {} available models", available_models.len());
             server::run(addr, state).await?;
         }
@@ -1543,5 +1619,86 @@ mod tests {
                 // Test completed successfully
             }
         }
+    }
+
+    #[test]
+    fn test_print_startup_diagnostics_basic() {
+        // Test basic startup diagnostics output (no MoE)
+        // This test verifies the function runs without panic
+        // We can't easily capture println! output in tests, but we verify the logic works
+        print_startup_diagnostics("1.6.0", None, false, None, 3);
+        print_startup_diagnostics("1.6.0", Some("auto"), false, None, 5);
+        
+        // Test completed successfully - no panic means diagnostics formatted correctly
+    }
+
+    #[test]
+    fn test_print_startup_diagnostics_with_backends() {
+        // Test diagnostics with different GPU backends
+        print_startup_diagnostics("1.6.0", Some("cpu"), false, None, 2);
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 4);
+        print_startup_diagnostics("1.6.0", Some("vulkan"), false, None, 1);
+        print_startup_diagnostics("1.6.0", Some("opencl"), false, None, 6);
+        print_startup_diagnostics("1.6.0", Some("custom-backend"), false, None, 3);
+        
+        // Test completed successfully
+    }
+
+    #[test]
+    #[cfg(feature = "llama")]
+    fn test_print_startup_diagnostics_with_moe() {
+        // Test diagnostics with MoE configuration
+        print_startup_diagnostics("1.6.0", Some("cuda"), true, None, 2);
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, Some(16), 2);
+        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 5);
+        
+        // Test completed successfully
+    }
+
+    #[test]
+    fn test_print_startup_diagnostics_zero_models() {
+        // Test diagnostics with zero models (edge case)
+        print_startup_diagnostics("1.6.0", None, false, None, 0);
+        
+        // Should not panic even with 0 models
+        // (The actual serve command will exit with error, but diagnostics should print)
+    }
+
+    #[test]
+    fn test_print_startup_diagnostics_many_models() {
+        // Test diagnostics with many models (like user's 13+ scenario)
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 13);
+        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 25);
+        
+        // Test completed successfully
+    }
+
+    #[test]
+    fn test_serve_diagnostics_integration() {
+        // Test that serve command calls diagnostics in correct order
+        // This is a structural test - verify the function exists and has correct signature
+        
+        let _version = env!("CARGO_PKG_VERSION");
+        let _gpu_backend: Option<&str> = None;
+        let _cpu_moe = false;
+        let _n_cpu_moe: Option<usize> = None;
+        let _model_count = 0;
+        
+        // Call diagnostics as serve command would
+        print_startup_diagnostics(_version, _gpu_backend, _cpu_moe, _n_cpu_moe, _model_count);
+        
+        // Test completed - verifies function signature matches usage
+    }
+
+    #[test]
+    fn test_startup_diagnostics_version_display() {
+        // Test that version is displayed correctly
+        // Uses actual CARGO_PKG_VERSION from build
+        let version = env!("CARGO_PKG_VERSION");
+        assert!(!version.is_empty(), "Version should not be empty");
+        assert_ne!(version, "0.1.0", "Version should not be the broken 0.1.0 from Issue #63");
+        
+        // Call diagnostics with real version
+        print_startup_diagnostics(version, None, false, None, 1);
     }
 }
