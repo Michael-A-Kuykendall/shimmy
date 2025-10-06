@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use std::collections::HashMap;
-use std::net::{SocketAddr, TcpListener};
+use std::net::TcpListener;
 use std::sync::Arc;
 
 lazy_static! {
@@ -12,44 +12,16 @@ lazy_static! {
 #[derive(Debug)]
 pub struct PortAllocator {
     allocated_ports: Arc<Mutex<HashMap<String, u16>>>,
-    port_range: (u16, u16),
 }
 
 impl PortAllocator {
     pub fn new() -> Self {
         Self {
             allocated_ports: Arc::new(Mutex::new(HashMap::new())),
-            port_range: (11435, 65535), // Start from shimmy default port
         }
     }
 
-    pub fn find_available_port(&self, service_name: &str) -> Result<u16> {
-        let mut allocated = self.allocated_ports.lock();
 
-        // Check if already allocated for this service
-        if let Some(&existing_port) = allocated.get(service_name) {
-            if self.is_port_available(existing_port) {
-                return Ok(existing_port);
-            } else {
-                // Port no longer available, remove from tracking
-                allocated.remove(service_name);
-            }
-        }
-
-        // Find new available port
-        for port in self.port_range.0..=self.port_range.1 {
-            if self.is_port_available(port) {
-                allocated.insert(service_name.to_string(), port);
-                return Ok(port);
-            }
-        }
-
-        Err(anyhow!(
-            "No available ports in range {}..{}",
-            self.port_range.0,
-            self.port_range.1
-        ))
-    }
 
     #[allow(dead_code)]
     pub fn allocate_ephemeral_port(&self, service_name: &str) -> Result<u16> {
@@ -67,9 +39,7 @@ impl PortAllocator {
         allocated.retain(|_, &mut v| v != port);
     }
 
-    fn is_port_available(&self, port: u16) -> bool {
-        TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], port))).is_ok()
-    }
+
 
     #[allow(dead_code)]
     fn find_ephemeral_port(&self) -> Result<u16> {
