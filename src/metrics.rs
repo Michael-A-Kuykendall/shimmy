@@ -51,7 +51,7 @@ impl MetricsCollector {
         self.errors.fetch_add(1, Ordering::Relaxed);
     }
 
-    pub fn get_metrics(&self) -> Metrics {
+    pub fn metrics(&self) -> Metrics {
         Metrics {
             requests_total: self.requests.load(Ordering::Relaxed),
             generation_errors: self.errors.load(Ordering::Relaxed),
@@ -61,7 +61,7 @@ impl MetricsCollector {
 }
 
 pub async fn metrics_handler(metrics: Arc<MetricsCollector>) -> Json<Metrics> {
-    Json(metrics.get_metrics())
+    Json(metrics.metrics())
 }
 
 // Opt-in telemetry system
@@ -271,7 +271,10 @@ impl TelemetryCollector {
             return Ok(());
         }
 
-        let config = self.config.as_ref().unwrap();
+        let config = match self.config.as_ref() {
+            Some(c) => c,
+            None => return Ok(()), // Config not initialized
+        };
         let data = self.build_telemetry_data(config, metrics);
 
         // Send data with timeout
@@ -306,10 +309,13 @@ impl TelemetryCollector {
         config: &TelemetryConfig,
         metrics: &MetricsCollector,
     ) -> TelemetryData {
-        let current_metrics = metrics.get_metrics();
+        let current_metrics = metrics.metrics();
 
         let avg_response_time = {
-            let times = self.request_times.lock().unwrap();
+            let times = self.request_times.lock().unwrap_or_else(|e| {
+                tracing::warn!("Failed to lock request_times: {}", e);
+                panic!("Poisoned mutex: request_times")
+            });
             if times.is_empty() {
                 0
             } else {
@@ -320,13 +326,23 @@ impl TelemetryCollector {
         let endpoints_used: Vec<String> = {
             self.endpoints_used
                 .lock()
-                .unwrap()
+                .unwrap_or_else(|e| {
+                    tracing::warn!("Failed to lock endpoints_used: {}", e);
+                    panic!("Poisoned mutex: endpoints_used")
+                })
                 .iter()
                 .cloned()
                 .collect()
         };
 
-        let models_count = self.models_used.lock().unwrap().len() as u64;
+        let models_count = self
+            .models_used
+            .lock()
+            .unwrap_or_else(|e| {
+                tracing::warn!("Failed to lock models_used: {}", e);
+                panic!("Poisoned mutex: models_used")
+            })
+            .len() as u64;
 
         let peak_requests_per_hour = {
             self.hourly_request_counts
@@ -587,7 +603,7 @@ mod tests {
         metrics.record_request();
         metrics.record_error();
 
-        let result = metrics.get_metrics();
+        let result = metrics.metrics();
         assert_eq!(result.requests_total, 1);
         assert_eq!(result.generation_errors, 1);
         assert!(result.uptime_seconds < 60);

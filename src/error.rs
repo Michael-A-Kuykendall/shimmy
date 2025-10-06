@@ -37,6 +37,79 @@ pub enum ShimmyError {
 
     #[error("Serialization error")]
     SerdeError(#[from] serde_json::Error),
+
+    // Workflow errors
+    #[error("Workflow step not found: {step_id}")]
+    WorkflowStepNotFound { step_id: String },
+
+    #[error("Workflow variable not found: {variable}")]
+    WorkflowVariableNotFound { variable: String },
+
+    #[error("Circular dependency detected in workflow involving step: {step_id}")]
+    WorkflowCircularDependency { step_id: String },
+
+    #[error("Unsupported operation: {operation}")]
+    UnsupportedOperation { operation: String },
+
+    #[error("Tool execution failed: {error}")]
+    ToolExecutionFailed { error: String },
+
+    // Path/File errors
+    #[error("Invalid path: {path}")]
+    InvalidPath { path: String },
+
+    #[error("File not found: {path}")]
+    FileNotFound { path: PathBuf },
+
+    // Script/Process errors
+    #[error("Script execution failed: {script}")]
+    ScriptExecutionFailed {
+        script: String,
+        #[source]
+        source: Option<anyhow::Error>,
+    },
+
+    #[error("Process failed with stderr: {stderr}")]
+    ProcessFailed { stderr: String },
+
+    // SafeTensors conversion errors
+    #[error("SafeTensors to GGUF conversion needed:\n{guidance}")]
+    SafeTensorsConversionNeeded { guidance: String },
+
+    // Port management errors
+    #[error("Port allocation failed: {reason}")]
+    PortAllocationFailed { reason: String },
+
+    // Discovery errors
+    #[error("Model discovery failed: {reason}")]
+    DiscoveryFailed { reason: String },
+
+    // Tool errors
+    #[error("Tool not found: {name}")]
+    ToolNotFound { name: String },
+
+    #[error("Missing parameter: {parameter}")]
+    MissingParameter { parameter: String },
+
+    // MLX errors
+    #[error("MLX not available: {reason}")]
+    MlxNotAvailable { reason: String },
+
+    #[error("MLX incompatible model: {model}")]
+    MlxIncompatible { model: String },
+
+    #[error("Not implemented: {feature}")]
+    NotImplemented { feature: String },
+
+    // HuggingFace errors
+    #[error("Unsupported backend: {backend}")]
+    UnsupportedBackend { backend: String },
+
+    #[error("Python dependencies missing: {details}")]
+    PythonDependenciesMissing { details: String },
+
+    #[error("Model verification failed: {details}")]
+    ModelVerificationFailed { details: String },
 }
 
 pub type Result<T> = std::result::Result<T, ShimmyError>;
@@ -410,6 +483,26 @@ mod tests {
                 ShimmyError::AsyncError(_) => {}
                 ShimmyError::IoError(_) => {}
                 ShimmyError::SerdeError(_) => {}
+                ShimmyError::WorkflowStepNotFound { .. } => {}
+                ShimmyError::WorkflowVariableNotFound { .. } => {}
+                ShimmyError::WorkflowCircularDependency { .. } => {}
+                ShimmyError::UnsupportedOperation { .. } => {}
+                ShimmyError::ToolExecutionFailed { .. } => {}
+                ShimmyError::InvalidPath { .. } => {}
+                ShimmyError::FileNotFound { .. } => {}
+                ShimmyError::ScriptExecutionFailed { .. } => {}
+                ShimmyError::ProcessFailed { .. } => {}
+                ShimmyError::SafeTensorsConversionNeeded { .. } => {}
+                ShimmyError::PortAllocationFailed { .. } => {}
+                ShimmyError::DiscoveryFailed { .. } => {}
+                ShimmyError::ToolNotFound { .. } => {}
+                ShimmyError::MissingParameter { .. } => {}
+                ShimmyError::MlxNotAvailable { .. } => {}
+                ShimmyError::MlxIncompatible { .. } => {}
+                ShimmyError::NotImplemented { .. } => {}
+                ShimmyError::UnsupportedBackend { .. } => {}
+                ShimmyError::PythonDependenciesMissing { .. } => {}
+                ShimmyError::ModelVerificationFailed { .. } => {}
             }
         }
     }

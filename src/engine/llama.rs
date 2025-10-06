@@ -11,6 +11,13 @@ use tracing::info;
 #[derive(Default)]
 pub struct LlamaEngine {
     gpu_backend: GpuBackend,
+    moe_config: MoeConfig,
+}
+
+#[derive(Debug, Clone, Default)]
+struct MoeConfig {
+    cpu_moe_all: bool,
+    n_cpu_moe: Option<usize>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -146,16 +153,8 @@ impl GpuBackend {
     }
 
     /// Get the number of layers to offload to GPU
-    fn get_gpu_layers(&self) -> u32 {
-        match self {
-            GpuBackend::Cpu => 0,
-            #[cfg(feature = "llama-cuda")]
-            GpuBackend::Cuda => 999, // Offload all layers
-            #[cfg(feature = "llama-vulkan")]
-            GpuBackend::Vulkan => 999, // Offload all layers
-            #[cfg(feature = "llama-opencl")]
-            GpuBackend::OpenCL => 999, // Offload all layers
-        }
+    fn gpu_layers(&self) -> u32 {
+        999 // Offload all layers to GPU
     }
 }
 
@@ -163,6 +162,7 @@ impl LlamaEngine {
     pub fn new() -> Self {
         Self {
             gpu_backend: GpuBackend::detect_best(),
+            moe_config: MoeConfig::default(),
         }
     }
 
@@ -174,7 +174,19 @@ impl LlamaEngine {
 
         info!("GPU backend configured: {:?}", gpu_backend);
 
-        Self { gpu_backend }
+        Self { 
+            gpu_backend,
+            moe_config: MoeConfig::default(),
+        }
+    }
+    
+    /// Set MoE CPU offloading configuration
+    pub fn with_moe_config(mut self, cpu_moe_all: bool, n_cpu_moe: Option<usize>) -> Self {
+        self.moe_config = MoeConfig {
+            cpu_moe_all,
+            n_cpu_moe,
+        };
+        self
     }
 
     /// Get information about the current GPU backend configuration
@@ -202,14 +214,23 @@ impl InferenceEngine for LlamaEngine {
             let be = llama::llama_backend::LlamaBackend::init()?;
 
             // Configure GPU acceleration based on backend
-            let n_gpu_layers = self.gpu_backend.get_gpu_layers();
+            let n_gpu_layers = self.gpu_backend.gpu_layers();
             info!(
                 "Loading model with {} GPU layers ({:?} backend)",
                 n_gpu_layers, self.gpu_backend
             );
 
-            let model_params =
+            let mut model_params =
                 llama::model::params::LlamaModelParams::default().with_n_gpu_layers(n_gpu_layers);
+            
+            // Apply MoE CPU offloading if configured
+            if let Some(n) = self.moe_config.n_cpu_moe {
+                info!("MoE: Offloading first {} expert layers to CPU", n);
+                model_params = model_params.with_n_cpu_moe(n);
+            } else if self.moe_config.cpu_moe_all {
+                info!("MoE: Offloading ALL expert tensors to CPU");
+                model_params = model_params.with_cpu_moe_all();
+            }
 
             let model =
                 llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &model_params)?;
@@ -298,7 +319,10 @@ impl LoadedModel for LlamaLoaded {
             model::{AddBos, Special},
             sampling::LlamaSampler,
         };
-        let mut ctx = self.ctx.lock().unwrap();
+        let mut ctx = self
+            .ctx
+            .lock()
+            .map_err(|e| anyhow::anyhow!("Failed to lock context: {}", e))?;
         let tokens = self.model.str_to_token(prompt, AddBos::Always)?;
 
         // Create batch with explicit logits configuration

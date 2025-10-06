@@ -113,7 +113,7 @@ pub fn clear_invariant_log() {
 }
 
 /// Get all invariants that have been checked
-pub fn get_checked_invariants() -> Vec<String> {
+pub fn checked_invariants() -> Vec<String> {
     match INVARIANT_LOG.lock() {
         Ok(log) => log.iter().cloned().collect(),
         Err(poisoned) => poisoned.into_inner().iter().cloned().collect(),
@@ -121,7 +121,7 @@ pub fn get_checked_invariants() -> Vec<String> {
 }
 
 /// Get all failed invariants
-pub fn get_failed_invariants() -> Vec<String> {
+pub fn failed_invariants() -> Vec<String> {
     match FAILED_INVARIANTS.lock() {
         Ok(failed) => failed.clone(),
         Err(poisoned) => poisoned.into_inner().clone(),
@@ -230,7 +230,7 @@ mod tests {
 
         assert_invariant(true, "Test invariant", Some("test_context"));
 
-        let checked = get_checked_invariants();
+        let checked = checked_invariants();
         assert!(checked.iter().any(|msg| msg.contains("Test invariant")));
     }
 
