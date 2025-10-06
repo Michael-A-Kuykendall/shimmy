@@ -72,7 +72,7 @@ impl TemplateFamily {
 // Template generation functions for deployment platforms
 
 /// Generate Docker deployment template
-pub async fn generate_docker_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
+pub fn generate_docker_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
 
@@ -109,7 +109,7 @@ README.md
 }
 
 /// Generate Kubernetes deployment template
-pub async fn generate_kubernetes_template(
+pub fn generate_kubernetes_template(
     output_dir: &str,
     project_name: Option<&str>,
 ) -> Result<()> {
@@ -142,7 +142,7 @@ pub async fn generate_kubernetes_template(
 }
 
 /// Generate Railway deployment template
-pub async fn generate_railway_template(
+pub fn generate_railway_template(
     output_dir: &str,
     _project_name: Option<&str>,
 ) -> Result<()> {
@@ -160,7 +160,7 @@ pub async fn generate_railway_template(
 }
 
 /// Generate Fly.io deployment template
-pub async fn generate_fly_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
+pub fn generate_fly_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
 
@@ -180,7 +180,7 @@ pub async fn generate_fly_template(output_dir: &str, project_name: Option<&str>)
 }
 
 /// Generate FastAPI integration template
-pub async fn generate_fastapi_template(
+pub fn generate_fastapi_template(
     output_dir: &str,
     _project_name: Option<&str>,
 ) -> Result<()> {
@@ -197,7 +197,7 @@ pub async fn generate_fastapi_template(
 }
 
 /// Generate Express.js integration template  
-pub async fn generate_express_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
+pub fn generate_express_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
 
@@ -224,35 +224,32 @@ pub fn generate_template(
     output_dir: &str,
     project_name: Option<&str>,
 ) -> Result<String> {
-    // Use tokio runtime for async template functions
-    let rt = tokio::runtime::Runtime::new()?;
-
     match template.to_lowercase().as_str() {
         "docker" => {
-            rt.block_on(generate_docker_template(output_dir, project_name))?;
+            generate_docker_template(output_dir, project_name)?;
             Ok(format!("✅ Docker template generated in {}", output_dir))
         }
         "kubernetes" | "k8s" => {
-            rt.block_on(generate_kubernetes_template(output_dir, project_name))?;
+            generate_kubernetes_template(output_dir, project_name)?;
             Ok(format!(
                 "✅ Kubernetes template generated in {}",
                 output_dir
             ))
         }
         "railway" => {
-            rt.block_on(generate_railway_template(output_dir, project_name))?;
+            generate_railway_template(output_dir, project_name)?;
             Ok(format!("✅ Railway template generated in {}", output_dir))
         }
         "fly" => {
-            rt.block_on(generate_fly_template(output_dir, project_name))?;
+            generate_fly_template(output_dir, project_name)?;
             Ok(format!("✅ Fly.io template generated in {}", output_dir))
         }
         "fastapi" => {
-            rt.block_on(generate_fastapi_template(output_dir, project_name))?;
+            generate_fastapi_template(output_dir, project_name)?;
             Ok(format!("✅ FastAPI template generated in {}", output_dir))
         }
         "express" => {
-            rt.block_on(generate_express_template(output_dir, project_name))?;
+            generate_express_template(output_dir, project_name)?;
             Ok(format!(
                 "✅ Express.js template generated in {}",
                 output_dir

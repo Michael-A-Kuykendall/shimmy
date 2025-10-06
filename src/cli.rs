@@ -109,6 +109,8 @@ mod tests {
     fn test_get_bind_address_auto() {
         let command = Command::Serve {
             bind: "auto".to_string(),
+            cpu_moe: false,
+            n_cpu_moe: None,
         };
 
         // Test that we can access the bind field
@@ -124,6 +126,8 @@ mod tests {
     fn test_get_bind_address_manual() {
         let command = Command::Serve {
             bind: "192.168.1.100:9000".to_string(),
+            cpu_moe: false,
+            n_cpu_moe: None,
         };
 
         match command {
