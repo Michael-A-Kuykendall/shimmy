@@ -136,3 +136,4 @@ harness = false
 [[bench]]
 name = "generation_performance"
 harness = false
+
