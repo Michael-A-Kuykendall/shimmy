@@ -342,7 +342,7 @@ shimmy probe model-name         # Verify model loads
 |------|-------------|--------------|--------------|------------|
 | **Shimmy** | **4.8MB** | **<100ms** | **50MB** | **100%** |
 | Ollama | 680MB | 5-10s | 200MB+ | Partial |
-| llama.cpp | 89MB | 1-2s | 100MB | None |
+| llama.cpp | 89MB | 1-2s | 100MB | Via llama-server |
 
 ## Quality & Reliability
 
