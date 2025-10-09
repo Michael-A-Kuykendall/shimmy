@@ -75,7 +75,7 @@ async fn test_chat_completions_model_not_found_response() {
     };
 
     // Exercise the handler - should return 404 with JSON error
-    let response = chat_completions(State(state), Json(request)).await;
+    let _response = chat_completions(State(state), Json(request)).await;
 
     // Response should be properly formatted (we can't easily test the exact
     // status code without response introspection, but we exercise the code path)
