@@ -20,7 +20,6 @@ mod util {
 
 use clap::Parser;
 use model_registry::{ModelEntry, Registry};
-use std::net::SocketAddr;
 use std::sync::Arc;
 use tracing::info;
 
@@ -85,9 +84,9 @@ fn validate_runtime_version() {
 /// Print startup diagnostics for serve command
 fn print_startup_diagnostics(
     version: &str,
-    _gpu_backend: Option<&str>,
-    _cpu_moe: bool,
-    _n_cpu_moe: Option<usize>,
+    gpu_backend: Option<&str>,
+    cpu_moe: bool,
+    n_cpu_moe: Option<usize>,
     model_count: usize,
 ) {
     println!("🎯 Shimmy v{}", version);
