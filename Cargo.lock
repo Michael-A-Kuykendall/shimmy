@@ -1186,6 +1186,7 @@ checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 [[package]]
 name = "llama-cpp-2"
 version = "0.1.123"
+source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs?branch=feat%2Fmoe-cpu-offload#6c9a7044bbf83f7de16b39c15a3d00c1a239f3e0"
 dependencies = [
  "enumflags2",
  "llama-cpp-sys-2",
@@ -1197,6 +1198,7 @@ dependencies = [
 [[package]]
 name = "llama-cpp-sys-2"
 version = "0.1.123"
+source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs?branch=feat%2Fmoe-cpu-offload#6c9a7044bbf83f7de16b39c15a3d00c1a239f3e0"
 dependencies = [
  "bindgen",
  "cc",
@@ -1843,7 +1845,7 @@ dependencies = [
 
 [[package]]
 name = "shimmy"
-version = "1.6.0"
+version = "1.7.0"
 dependencies = [
  "anyhow",
  "async-trait",
