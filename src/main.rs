@@ -82,9 +82,9 @@ fn validate_runtime_version() {
 /// Print startup diagnostics for serve command
 fn print_startup_diagnostics(
     version: &str,
-    gpu_backend: Option<&str>,
-    cpu_moe: bool,
-    n_cpu_moe: Option<usize>,
+    _gpu_backend: Option<&str>,
+    _cpu_moe: bool,
+    _n_cpu_moe: Option<usize>,
     model_count: usize,
 ) {
     println!("🎯 Shimmy v{}", version);
@@ -176,15 +176,22 @@ async fn main() -> anyhow::Result<()> {
 
     // Create engine with MoE configuration if needed
     let engine: Box<dyn engine::InferenceEngine> = {
-        let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
-        
-        // Apply MoE configuration from global flags
         #[cfg(feature = "llama")]
-        if cli.cpu_moe || cli.n_cpu_moe.is_some() {
-            adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+        {
+            let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+            
+            // Apply MoE configuration from global flags
+            if cli.cpu_moe || cli.n_cpu_moe.is_some() {
+                adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+            }
+            
+            Box::new(adapter)
         }
-        
-        Box::new(adapter)
+        #[cfg(not(feature = "llama"))]
+        {
+            let adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+            Box::new(adapter)
+        }
     };
     
     let state = AppState::new(engine, reg);
@@ -211,15 +218,22 @@ async fn main() -> anyhow::Result<()> {
                 // Only the default phi3-lora entry
                 // Create new engine with same configuration (including MoE if set)
                 let enhanced_engine: Box<dyn engine::InferenceEngine> = {
-                    let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
-                    
-                    // Apply MoE configuration from global flags
                     #[cfg(feature = "llama")]
-                    if cli.cpu_moe || cli.n_cpu_moe.is_some() {
-                        adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+                    {
+                        let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+                        
+                        // Apply MoE configuration from global flags
+                        if cli.cpu_moe || cli.n_cpu_moe.is_some() {
+                            adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+                        }
+                        
+                        Box::new(adapter)
                     }
-                    
-                    Box::new(adapter)
+                    #[cfg(not(feature = "llama"))]
+                    {
+                        let adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+                        Box::new(adapter)
+                    }
                 };
                 
                 let mut enhanced_state = AppState::new(
@@ -600,7 +614,7 @@ mod tests {
         let manual_count = registry.list().len();
 
         // Test condition for auto-registration
-        let should_auto_register = manual_count <= 1;
+        let _should_auto_register = manual_count <= 1;
 
         // This will be true in test environment with no models
         // Either auto-registration path is valid - test that logic works
@@ -832,7 +846,7 @@ mod tests {
 
         // Validate state is properly created
         assert_ne!(std::mem::size_of_val(&state), 0);
-        let models = state.registry.list();
+        let _models = state.registry.list();
         // Models vec was created successfully
     }
 
@@ -930,7 +944,7 @@ mod tests {
 
         let engine: Box<dyn engine::InferenceEngine> = Box::new(InferenceEngineAdapter::new());
         let registry = Registry::with_discovery();
-        let state = AppState::new(engine, registry);
+        let _state = AppState::new(engine, registry);
 
         // Registry was created successfully
     }
@@ -1031,7 +1045,7 @@ mod tests {
             ctx_len: Some(2048),
             n_threads: None,
         });
-        let engine = MockEngine;
+        let _engine = MockEngine;
         let state = Arc::new(AppState::new(
             Box::new(engine::adapter::InferenceEngineAdapter::new()),
             reg,
@@ -1328,7 +1342,7 @@ mod tests {
         }
 
         // Test list_all_available (lines 115, 647, etc.)
-        let all_available = registry.list_all_available();
+        let _all_available = registry.list_all_available();
         // Available models list was created
     }
 
@@ -1423,7 +1437,7 @@ mod tests {
             // Test non-empty discovery path (lines 134-146)
             for (name, model) in discovered {
                 // Test size calculation (line 137)
-                let size_mb = model.size_bytes / (1024 * 1024);
+                let _size_mb = model.size_bytes / (1024 * 1024);
                 // File size was calculated
 
                 // Test lora info logic (line 145)
@@ -1534,8 +1548,6 @@ mod tests {
         let test_vars = vec![
             "SHIMMY_BASE_GGUF",
             "SHIMMY_LORA_GGUF",
-            "HOME",
-            "USERPROFILE",
         ];
 
         // Save original values
@@ -1551,7 +1563,7 @@ mod tests {
 
         // Verify test values are set
         for var in &test_vars {
-            assert_eq!(env::var(var).unwrap(), "/test/path");
+            assert_eq!(env::var(var).expect(&format!("Environment variable {} should be set", var)), "/test/path");
         }
 
         // Restore original values
