@@ -2973,3 +2973,8 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[patch.unused]]
+name = "shimmy-llama-cpp-2"
+version = "0.1.123"
+source = "git+https://github.com/Michael-A-Kuykendall/llama-cpp-rs?branch=main#1e727967a25b38eb4958de13080d0647d3d64fde"
