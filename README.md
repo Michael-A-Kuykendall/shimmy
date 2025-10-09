@@ -199,7 +199,7 @@ Shimmy supports multiple GPU backends for accelerated inference:
 | **CUDA + MOE** | NVIDIA GPUs + CPU | `cargo install shimmy --features llama-cuda,moe` |
 | **Vulkan** | Cross-platform GPUs | `cargo install shimmy --features llama-vulkan` |
 | **OpenCL** | AMD/Intel/Others | `cargo install shimmy --features llama-opencl` |
-| **MLX** | Apple Silicon | `cargo install shimmy --features mlx` |
+| **MLX** | Apple Silicon | `cargo install shimmy --features mlx` *(in development)* |
 | **MOE Hybrid** | Any GPU + CPU | `cargo install shimmy --features moe` |
 | **All Features** | Everything | `cargo install shimmy --features gpu,moe` |
 
@@ -269,9 +269,11 @@ cargo install shimmy
 
 **✅ Verified working:**
 - Intel and Apple Silicon Macs
-- Metal GPU acceleration (automatic)
+- Metal GPU acceleration (via llama.cpp Metal backend)
 - Xcode 17+ compatibility
 - All LoRA adapter features
+
+> **📝 Note on MLX**: Currently uses llama.cpp's Metal backend for Apple Silicon acceleration. Native MLX backend is in development for future releases with .npz model support.
 
 ## Integration Examples
 
