@@ -27,19 +27,17 @@ impl MLXEngine {
         #[cfg(target_os = "macos")]
         {
             // Check if we're on Apple Silicon (ARM64)
-            if std::env::consts::ARCH == "aarch64" {
-                // Try to detect MLX installation
-                // This is a simplified check - in a real implementation,
-                // you'd check for MLX Python packages or native libraries
-                Self::check_mlx_python_available()
-            } else {
-                false
-            }
+            std::env::consts::ARCH == "aarch64"
         }
         #[cfg(not(target_os = "macos"))]
         {
             false
         }
+    }
+
+    /// Check if MLX hardware is supported (Apple Silicon + macOS)
+    pub fn is_hardware_supported() -> bool {
+        Self::check_mlx_availability()
     }
 
     /// Public method to check if MLX is available
@@ -48,7 +46,7 @@ impl MLXEngine {
     }
 
     /// Check if MLX Python packages are available
-    fn check_mlx_python_available() -> bool {
+    pub fn check_mlx_python_available() -> bool {
         // Try to run a simple MLX command to verify installation
         Command::new("python3")
             .args(["-c", "import mlx.core; print('MLX available')"])
