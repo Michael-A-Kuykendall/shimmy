@@ -1194,33 +1194,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 
 [[package]]
-name = "llama-cpp-2"
-version = "0.1.122"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d574d1f43b31c9e3d0e3bf596a31fa628e4b66894eb5db4dfe78e861c7f74275"
-dependencies = [
- "enumflags2",
- "llama-cpp-sys-2",
- "thiserror",
- "tracing",
- "tracing-core",
-]
-
-[[package]]
-name = "llama-cpp-sys-2"
-version = "0.1.122"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e09bdf53b6f486ecaeb96b08cd8a9d9df162f2aafa37efb5b40cf421a419c755"
-dependencies = [
- "bindgen",
- "cc",
- "cmake",
- "find_cuda_helper",
- "glob",
- "walkdir",
-]
-
-[[package]]
 name = "lock_api"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1868,7 +1841,6 @@ dependencies = [
  "dirs",
  "futures-util",
  "lazy_static",
- "llama-cpp-2",
  "memmap2",
  "minijinja",
  "parking_lot",
@@ -1877,6 +1849,7 @@ dependencies = [
  "safetensors",
  "serde",
  "serde_json",
+ "shimmy-llama-cpp-2",
  "sys-info",
  "sysinfo",
  "tempfile",
@@ -1887,6 +1860,33 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+]
+
+[[package]]
+name = "shimmy-llama-cpp-2"
+version = "0.1.123"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7202bdb73b956d4d3126bcd87845d227c7f5b453ba824bfccc3e7d11fdd2b92f"
+dependencies = [
+ "enumflags2",
+ "shimmy-llama-cpp-sys-2",
+ "thiserror",
+ "tracing",
+ "tracing-core",
+]
+
+[[package]]
+name = "shimmy-llama-cpp-sys-2"
+version = "0.1.123"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf105c1264729706662288ec8314a1ad1716071eddd54bdfc305be231786414b"
+dependencies = [
+ "bindgen",
+ "cc",
+ "cmake",
+ "find_cuda_helper",
+ "glob",
+ "walkdir",
 ]
 
 [[package]]
@@ -2973,11 +2973,3 @@ dependencies = [
  "quote",
  "syn",
 ]
-
-[[patch.unused]]
-name = "shimmy-llama-cpp-2"
-version = "0.1.123"
-
-[[patch.unused]]
-name = "shimmy-llama-cpp-sys-2"
-version = "0.1.123"

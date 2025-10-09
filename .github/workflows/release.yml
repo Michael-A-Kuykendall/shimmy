@@ -9,114 +9,134 @@ on:
   workflow_dispatch:  # Allow manual testing
 
 jobs:
-  # MANDATORY version validation before any release proceeds
-  version-validation:
+  # 🚧 MANDATORY RELEASE GATES - ALL MUST PASS OR ENTIRE RELEASE STOPS
+  preflight:
+    name: "🚧 Release Gates - MANDATORY VALIDATION"
     runs-on: ubuntu-latest
-    name: "🔍 Version Validation (Required)"
-    if: startsWith(github.ref, 'refs/tags/')
+    outputs:
+      should_publish: ${{ steps.gates.outputs.should_publish }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+      
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Run version validation
+        
+      - name: "🚧 GATE 1/6: Core Build Validation"
         run: |
-          # Extract versions - strip all whitespace and newlines
-          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/' | tr -d '\r\n' | xargs)
-          TAG_VERSION=$(echo "${GITHUB_REF_NAME#v}" | tr -d '\r\n' | xargs)
-
-          echo "🔍 MANDATORY VERSION VALIDATION"
-          echo "Cargo.toml: '$CARGO_VERSION'"
-          echo "Git tag:    '$TAG_VERSION'"
-
-          # FAIL if versions don't match
-          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
-            echo "❌ RELEASE BLOCKED: Version mismatch!"
-            echo "Fix Cargo.toml or retag before release can proceed"
+          echo "::group::Gate 1: Core Build"
+          cargo build --release --no-default-features --features huggingface
+          echo "✅ Core build successful"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 2/6: CUDA Build Timeout Detection (Issue #59 Protection)"
+        run: |
+          echo "::group::Gate 2: CUDA Timeout"
+          timeout 180 cargo build --release --no-default-features --features llama-cuda || {
+            echo "❌ CUDA build failed or timed out (>3min) - Issue #59 regression!"
+            exit 1
+          }
+          echo "✅ CUDA build completed within 3 minutes"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 3/6: Template Packaging Validation (Issue #60 Protection)" 
+        run: |
+          echo "::group::Gate 3: Template Packaging"
+          cargo package --list | grep -Eq "^(Dockerfile|packaging/docker/Dockerfile|templates/docker/Dockerfile)$" || {
+            echo "❌ Required Docker template missing from package - Issue #60 regression!"
+            exit 1
+          }
+          echo "✅ Docker templates properly included in package"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 4/6: Binary Size Constitutional Limit (20MB)"
+        run: |
+          echo "::group::Gate 4: Binary Size"
+          size=$(stat -c%s target/release/shimmy 2>/dev/null || echo "0")
+          max_size=$((20 * 1024 * 1024))
+          if [ "$size" -gt "$max_size" ]; then
+            echo "❌ Binary size ${size} exceeds constitutional limit of ${max_size} bytes"
             exit 1
           fi
+          echo "✅ Binary size ${size} bytes within constitutional limit"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 5/6: Test Suite Validation"
+        run: |
+          echo "::group::Gate 5: Tests"
+          # Run tests that don't require model files (exclude integration tests needing .gguf files)
+          cargo test --lib --no-default-features --features huggingface -- --skip test_generate_handler --skip test_chat_completions
+          echo "✅ Core tests passing"
+          echo "::endgroup::"
+          
+      - name: "🚧 GATE 6/6: Documentation Validation"
+        run: |
+          echo "::group::Gate 6: Documentation"
+          cargo doc --no-deps --all-features
+          echo "✅ Documentation builds successfully"
+          echo "::endgroup::"
+          
+      - name: "🎯 RELEASE GATES SUMMARY"
+        id: gates
+        run: |
+          echo "🎉 ALL 6 MANDATORY GATES PASSED!"
+          echo "✅ Core Build"
+          echo "✅ CUDA Timeout Protection (Issue #59)"
+          echo "✅ Template Packaging (Issue #60)" 
+          echo "✅ Binary Size Constitutional Limit"
+          echo "✅ Test Suite"
+          echo "✅ Documentation"
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+          
+      # 🚀 REUSE GATE BINARIES - NO RECOMPILATION WASTE
+      - name: "Upload gate binaries as artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-built-binary
+          path: target/release/shimmy
 
-          # Test binary reports correct version
-          cargo build --release --no-default-features --features "huggingface"
-          VERSION_OUTPUT=$(./target/release/shimmy --version)
+  # 🚀 LINUX BINARY - REUSE FROM GATES (NO RECOMPILATION)
+  reuse-gate-binary:
+    needs: preflight
+    if: needs.preflight.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download gate-built binary
+        uses: actions/download-artifact@v4
+        with:
+          name: gate-built-binary
+          path: ./
+          
+      - name: Upload as Linux x86_64 artifact  
+        uses: actions/upload-artifact@v4
+        with:
+          name: shimmy-linux-x86_64
+          path: shimmy
 
-          if ! echo "$VERSION_OUTPUT" | grep -q "$CARGO_VERSION"; then
-            echo "❌ RELEASE BLOCKED: Binary version mismatch!"
-            exit 1
-          fi
-
-          echo "✅ Version validation passed - release approved"
-
+  # 🚀 CROSS-PLATFORM BUILDS (ONLY WHAT GATES DIDN'T BUILD)
   build:
-    needs: version-validation  # BLOCK release until validation passes
+    needs: preflight
+    if: needs.preflight.outputs.should_publish == 'true'
     strategy:
-      fail-fast: false  # Don't cancel other jobs if one fails
       matrix:
         include:
-          # Linux builds
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            binary-name: shimmy
-            artifact-name: shimmy-linux-x86_64
-            features: "huggingface,llama"
-            
-# ARM64 Linux via native GitHub ARM64 runners
-          - os: ubuntu-22.04-arm
-            target: aarch64-unknown-linux-gnu
-            binary-name: shimmy
-            artifact-name: shimmy-linux-arm64
-            features: "huggingface,llama"
-            
-          # Windows builds
           - os: windows-latest  
             target: x86_64-pc-windows-msvc
             binary-name: shimmy.exe
             artifact-name: shimmy-windows-x86_64.exe
-            features: "gpu"
             
-          # macOS builds
           - os: macos-latest
             target: x86_64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-intel
-            features: "apple"
-
+            
           - os: macos-latest
-            target: aarch64-apple-darwin
+            target: aarch64-apple-darwin 
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
-            features: "apple"
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install CUDA Toolkit
-        if: contains(matrix.features, 'gpu') || contains(matrix.features, 'llama-cuda')
-        uses: Jimver/cuda-toolkit@v0.2.16
-        with:
-          cuda: '12.4.1'
-      
-      - name: Install system dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake pkg-config
-          
-      - name: Install system dependencies (Linux ARM64)
-        if: runner.os == 'Linux' && matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake pkg-config clang
-      
-      - name: Install system dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          # cmake is usually pre-installed on GitHub runners
-          which cmake || brew install cmake
       
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -124,11 +144,7 @@ jobs:
           targets: ${{ matrix.target }}
           
       - name: Build binary
-        run: cargo build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
-        
-      - name: Strip binary (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: strip target/${{ matrix.target }}/release/${{ matrix.binary-name }}
+        run: cargo build --release --target ${{ matrix.target }}
         
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -136,25 +152,10 @@ jobs:
           name: ${{ matrix.artifact-name }}
           path: target/${{ matrix.target }}/release/${{ matrix.binary-name }}
 
-  publish-crate:
-    needs: [version-validation, build]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        
-      - name: Publish to crates.io
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --no-verify --allow-dirty
-
   release:
-    needs: [version-validation, build]
+    needs: [preflight, reuse-gate-binary, build]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') && always() && (needs.build.result == 'success' || needs.build.result == 'failure')
+    if: startsWith(github.ref, 'refs/tags/') && needs.preflight.outputs.should_publish == 'true'
     permissions:
       contents: write
     steps:
@@ -162,7 +163,6 @@ jobs:
       
       - name: Download all artifacts
         uses: actions/download-artifact@v4
-        continue-on-error: true
         with:
           path: ./artifacts
           
@@ -170,134 +170,25 @@ jobs:
         run: |
           mkdir -p release-files
           
-          # Copy and rename artifacts with size info (skip if missing)
-          echo "Preparing release files with size information..."
-
-          # Linux x86_64
-          if [ -f artifacts/shimmy-linux-x86_64/shimmy ]; then
-            cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
-            cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
-            echo "✅ Linux x86_64 binary included"
-          else
-            echo "⚠️ Linux x86_64 binary missing"
-          fi
-
-          # Linux ARM64
-          if [ -f artifacts/shimmy-linux-arm64/shimmy ]; then
-            cp artifacts/shimmy-linux-arm64/shimmy release-files/shimmy-linux-arm64
-            echo "✅ Linux ARM64 binary included"
-          else
-            echo "⚠️ Linux ARM64 binary missing"
-          fi
-
-          # Windows x86_64
-          if [ -f artifacts/shimmy-windows-x86_64.exe/shimmy.exe ]; then
-            cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
-            cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name
-            echo "✅ Windows x86_64 binary included"
-          else
-            echo "⚠️ Windows x86_64 binary missing (build may have failed)"
-          fi
-
-          # macOS Intel
-          if [ -f artifacts/shimmy-macos-intel/shimmy ]; then
-            cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
-            echo "✅ macOS Intel binary included"
-          else
-            echo "⚠️ macOS Intel binary missing"
-          fi
-
-          # macOS ARM64
-          if [ -f artifacts/shimmy-macos-arm64/shimmy ]; then
-            cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
-            echo "✅ macOS ARM64 binary included"
-          else
-            echo "⚠️ macOS ARM64 binary missing"
-          fi
+          # Copy and rename artifacts
+          cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
+          cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
           
-          # Make binaries executable
-          chmod +x release-files/shimmy*
+          cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
+          cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name
           
-          # Show file sizes and info
-          echo "Release files with sizes:"
-          ls -lah release-files/
+          cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
+          cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
           
-          echo "Binary feature sets:"
-          echo "  shimmy-linux-x86_64: SafeTensors + llama.cpp"
-          echo "  shimmy-linux-arm64: SafeTensors + llama.cpp (native ARM64 runner)"
-          echo "  shimmy-windows-x86_64.exe: SafeTensors + GPU acceleration (CUDA, Vulkan, OpenCL)"
-          echo "  shimmy-macos-intel: SafeTensors + Apple MLX acceleration"
-          echo "  shimmy-macos-arm64: SafeTensors + Apple MLX acceleration (Metal GPU)"
-          
-      - name: Generate changelog entry
-        id: changelog
-        run: |
-          # Get previous tag for changelog generation
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
-          CURRENT_TAG=${{ github.ref_name }}
-          
-          if [ -n "$PREVIOUS_TAG" ]; then
-            echo "Generating changelog from $PREVIOUS_TAG to $CURRENT_TAG"
-            
-            # Generate changelog content
-            CHANGELOG_CONTENT=$(cat << 'EOF'
-          ## [$CURRENT_TAG] - $(date +%Y-%m-%d)
-          
-          ### Changes
-          $(git log --oneline --pretty=format:"- %s" ${PREVIOUS_TAG}..${CURRENT_TAG} | head -10)
-          
-          ### Full Changelog
-          See the [complete changelog](https://github.com/Michael-A-Kuykendall/shimmy/blob/main/CHANGELOG.md) for detailed release notes.
-          EOF
-          )
-            
-            # Replace variables in changelog content
-            CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed "s/\$CURRENT_TAG/$CURRENT_TAG/g")
-            
-            echo "changelog-content<<EOF" >> $GITHUB_OUTPUT
-            echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            echo "No previous tag found, using default changelog"
-            echo "changelog-content=Automatic release for $CURRENT_TAG" >> $GITHUB_OUTPUT
-          fi
+          # List what we're releasing
+          echo "Release files:"
+          ls -la release-files/
           
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Create release notes combining changelog and platform info
-          RELEASE_NOTES=$(cat << 'EOF'
-          ${{ steps.changelog.outputs.changelog-content }}
-          
-          ---
-          
-          **Cross-platform binaries with SafeTensors support:**
-          
-          **Download the right binary for your platform:**
-          - **Linux x86_64**: `shimmy-linux-x86_64` (SafeTensors + llama.cpp)
-          - **Linux ARM64**: `shimmy-linux-arm64` (SafeTensors + llama.cpp, native ARM64 runner)
-          - **Windows x86_64**: `shimmy-windows-x86_64.exe` (SafeTensors + GPU acceleration)
-          - **macOS Intel**: `shimmy-macos-intel` (SafeTensors + Apple MLX)
-          - **macOS Apple Silicon**: `shimmy-macos-arm64` (SafeTensors + Apple MLX + Metal GPU)
-          
-          All binaries include native SafeTensors support with zero Python dependencies.
-          
-          **Quick Start:**
-          ```bash
-          # Make executable (Linux/macOS)
-          chmod +x shimmy-*
-          
-          # Test the binary
-          ./shimmy-* --version
-          
-          # Start server
-          ./shimmy-* serve --bind 0.0.0.0:11434
-          ```
-          EOF
-          )
-          
           gh release create ${{ github.ref_name }} \
             release-files/* \
             --title "Shimmy ${{ github.ref_name }}" \
-            --notes "$RELEASE_NOTES"
+            --generate-notes

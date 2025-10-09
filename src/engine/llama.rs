@@ -229,7 +229,7 @@ impl InferenceEngine for LlamaEngine {
                 n_gpu_layers, self.gpu_backend
             );
 
-            let mut model_params =
+            let model_params =
                 llama::model::params::LlamaModelParams::default().with_n_gpu_layers(n_gpu_layers);
             
             // Apply MoE CPU offloading if configured
