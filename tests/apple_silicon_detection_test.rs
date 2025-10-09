@@ -9,9 +9,11 @@
 
 #[cfg(test)]
 mod apple_silicon_tests {
+    #[cfg(feature = "mlx")]
     use shimmy::engine::mlx::MLXEngine;
 
     #[test]
+    #[cfg(feature = "mlx")]
     fn test_hardware_detection_independent_of_python_packages() {
         // This test ensures that Apple Silicon hardware detection
         // works regardless of whether MLX Python packages are installed
@@ -46,6 +48,7 @@ mod apple_silicon_tests {
     }
     
     #[test]
+    #[cfg(feature = "mlx")]
     fn test_mlx_engine_creation() {
         // Test that MLXEngine can be created without panicking
         let engine = MLXEngine::new();
@@ -60,6 +63,7 @@ mod apple_silicon_tests {
     }
     
     #[test] 
+    #[cfg(feature = "mlx")]
     fn test_gpu_info_output_regression() {
         // This test ensures that gpu-info command would provide helpful output
         // for Apple Silicon users, even without MLX Python packages
@@ -89,6 +93,7 @@ mod apple_silicon_tests {
     }
     
     #[test]
+    #[cfg(feature = "mlx")]
     fn test_python_detection_graceful_failure() {
         // Ensure MLX Python detection fails gracefully when python3 is not available
         // or when MLX packages are not installed
