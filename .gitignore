@@ -12,6 +12,16 @@
 *.swp
 *.swo
 
+# AI Assistant files (local settings, never commit)
+.claude/
+.copilot/
+.cursor/
+.github/copilot-instructions.md
+copilot-instructions.md
+cursor-rules.md
+.ai-instructions
+ai-context.md
+
 # OS generated files
 .DS_Store
 .DS_Store?
