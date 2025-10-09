@@ -1,0 +1,522 @@
+{
+  "summary": {
+    "deepseek-moe-16b-q2-k": {
+      "baseline": {
+        "runs": 3,
+        "avg_vram_mb": 7458.84,
+        "avg_tokens": 82.0
+      },
+      "cpu-offload": {
+        "runs": 3,
+        "avg_vram_mb": 1643.0700000000004,
+        "avg_tokens": 79.0
+      }
+    },
+    "deepseek-moe-16b-q4-k-m": {
+      "baseline": {
+        "runs": 3,
+        "avg_vram_mb": 11363.5,
+        "avg_tokens": 66.0
+      },
+      "cpu-offload": {
+        "runs": 3,
+        "avg_vram_mb": 1899.75,
+        "avg_tokens": 66.0
+      }
+    },
+    "deepseek-moe-16b-q8-0": {
+      "baseline": {
+        "runs": 3,
+        "avg_vram_mb": 17523.199999999997,
+        "avg_tokens": 70.0
+      },
+      "cpu-offload": {
+        "runs": 3,
+        "avg_vram_mb": 2383.4400000000005,
+        "avg_tokens": 70.0
+      }
+    },
+    "phi-3.5-moe-q2-k": {
+      "baseline": {
+        "runs": 3,
+        "avg_vram_mb": 15131.159999999998,
+        "avg_tokens": 72.0
+      },
+      "cpu-offload": {
+        "runs": 3,
+        "avg_vram_mb": 1369.04,
+        "avg_tokens": 74.0
+      }
+    },
+    "phi-3.5-moe-q4-k-m": {
+      "baseline": {
+        "runs": 3,
+        "avg_vram_mb": 24715.67,
+        "avg_tokens": 71.0
+      },
+      "cpu-offload": {
+        "runs": 3,
+        "avg_vram_mb": 1759.79,
+        "avg_tokens": 71.0
+      }
+    },
+    "phi-3.5-moe-q8-0": {
+      "baseline": {
+        "runs": 3,
+        "avg_vram_mb": 42919.5,
+        "avg_tokens": 73.0
+      },
+      "cpu-offload": {
+        "runs": 3,
+        "avg_vram_mb": 2519.49,
+        "avg_tokens": 73.0
+      }
+    }
+  },
+  "detailed_results": [
+    {
+      "model": null,
+      "config": null,
+      "run": null,
+      "model_size_mb": null,
+      "vram_mb": null,
+      "load_time_s": null,
+      "generated_tokens": 0,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": null
+    },
+    {
+      "model": "deepseek-moe-16b-q2-k",
+      "config": "baseline",
+      "run": 1,
+      "model_size_mb": 92789.0,
+      "vram_mb": 7458.84,
+      "load_time_s": null,
+      "generated_tokens": 82,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum mechanics, a branch of physics that describes the behavior of quantum particles, such as atoms an"
+    },
+    {
+      "model": "deepseek-moe-16b-q2-k",
+      "config": "baseline",
+      "run": 2,
+      "model_size_mb": 92790.0,
+      "vram_mb": 7458.84,
+      "load_time_s": null,
+      "generated_tokens": 82,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum mechanics, a branch of physics that describes the behavior of quantum particles, such as atoms an"
+    },
+    {
+      "model": "deepseek-moe-16b-q2-k",
+      "config": "baseline",
+      "run": 3,
+      "model_size_mb": 92786.0,
+      "vram_mb": 7458.84,
+      "load_time_s": null,
+      "generated_tokens": 82,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum mechanics, a branch of physics that describes the behavior of quantum particles, such as atoms an"
+    },
+    {
+      "model": "deepseek-moe-16b-q2-k",
+      "config": "cpu-offload",
+      "run": 1,
+      "model_size_mb": 92785.0,
+      "vram_mb": 1643.0700000000002,
+      "load_time_s": null,
+      "generated_tokens": 79,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum mechanics to perform calculations.\n\nQuantum mechanics is a branch of physics that deals with phen"
+    },
+    {
+      "model": "deepseek-moe-16b-q2-k",
+      "config": "cpu-offload",
+      "run": 2,
+      "model_size_mb": 93829.0,
+      "vram_mb": 1643.0700000000002,
+      "load_time_s": null,
+      "generated_tokens": 79,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum mechanics to perform calculations.\n\nQuantum mechanics is a branch of physics that deals with phen"
+    },
+    {
+      "model": "deepseek-moe-16b-q2-k",
+      "config": "cpu-offload",
+      "run": 3,
+      "model_size_mb": 93831.0,
+      "vram_mb": 1643.0700000000002,
+      "load_time_s": null,
+      "generated_tokens": 79,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum mechanics to perform calculations.\n\nQuantum mechanics is a branch of physics that deals with phen"
+    },
+    {
+      "model": "deepseek-moe-16b-q4-k-m",
+      "config": "baseline",
+      "run": 1,
+      "model_size_mb": 96212.0,
+      "vram_mb": 11363.5,
+      "load_time_s": null,
+      "generated_tokens": 66,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computin"
+    },
+    {
+      "model": "deepseek-moe-16b-q4-k-m",
+      "config": "baseline",
+      "run": 2,
+      "model_size_mb": 96213.0,
+      "vram_mb": 11363.5,
+      "load_time_s": null,
+      "generated_tokens": 66,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computin"
+    },
+    {
+      "model": "deepseek-moe-16b-q4-k-m",
+      "config": "baseline",
+      "run": 3,
+      "model_size_mb": 96207.0,
+      "vram_mb": 11363.5,
+      "load_time_s": null,
+      "generated_tokens": 66,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computin"
+    },
+    {
+      "model": "deepseek-moe-16b-q4-k-m",
+      "config": "cpu-offload",
+      "run": 1,
+      "model_size_mb": 96205.0,
+      "vram_mb": 1899.75,
+      "load_time_s": null,
+      "generated_tokens": 66,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computin"
+    },
+    {
+      "model": "deepseek-moe-16b-q4-k-m",
+      "config": "cpu-offload",
+      "run": 2,
+      "model_size_mb": 96208.0,
+      "vram_mb": 1899.75,
+      "load_time_s": null,
+      "generated_tokens": 66,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computin"
+    },
+    {
+      "model": "deepseek-moe-16b-q4-k-m",
+      "config": "cpu-offload",
+      "run": 3,
+      "model_size_mb": 96209.0,
+      "vram_mb": 1899.75,
+      "load_time_s": null,
+      "generated_tokens": 66,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computing in simple terms.\n\nExplain quantum computin"
+    },
+    {
+      "model": "deepseek-moe-16b-q8-0",
+      "config": "baseline",
+      "run": 1,
+      "model_size_mb": 93833.0,
+      "vram_mb": 17523.199999999997,
+      "load_time_s": null,
+      "generated_tokens": 70,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum-mechanical phenomena, such as superposition and entanglement, to perform operations on data. Unli"
+    },
+    {
+      "model": "deepseek-moe-16b-q8-0",
+      "config": "baseline",
+      "run": 2,
+      "model_size_mb": 93831.0,
+      "vram_mb": 17523.199999999997,
+      "load_time_s": null,
+      "generated_tokens": 70,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum-mechanical phenomena, such as superposition and entanglement, to perform operations on data. Unli"
+    },
+    {
+      "model": "deepseek-moe-16b-q8-0",
+      "config": "baseline",
+      "run": 3,
+      "model_size_mb": 93830.0,
+      "vram_mb": 17523.199999999997,
+      "load_time_s": null,
+      "generated_tokens": 70,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum-mechanical phenomena, such as superposition and entanglement, to perform operations on data. Unli"
+    },
+    {
+      "model": "deepseek-moe-16b-q8-0",
+      "config": "cpu-offload",
+      "run": 1,
+      "model_size_mb": 93828.0,
+      "vram_mb": 2383.4400000000005,
+      "load_time_s": null,
+      "generated_tokens": 70,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum-mechanical phenomena, such as superposition and entanglement, to perform operations on data. Unli"
+    },
+    {
+      "model": "deepseek-moe-16b-q8-0",
+      "config": "cpu-offload",
+      "run": 2,
+      "model_size_mb": 81752.0,
+      "vram_mb": 2383.4400000000005,
+      "load_time_s": null,
+      "generated_tokens": 70,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum-mechanical phenomena, such as superposition and entanglement, to perform operations on data. Unli"
+    },
+    {
+      "model": "deepseek-moe-16b-q8-0",
+      "config": "cpu-offload",
+      "run": 3,
+      "model_size_mb": 81747.0,
+      "vram_mb": 2383.4400000000005,
+      "load_time_s": null,
+      "generated_tokens": 70,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Explain quantum computing in simple terms.\n\nQuantum computing is a type of computing that uses quantum-mechanical phenomena, such as superposition and entanglement, to perform operations on data. Unli"
+    },
+    {
+      "model": "phi-3.5-moe-q2-k",
+      "config": "baseline",
+      "run": 1,
+      "model_size_mb": 96210.0,
+      "vram_mb": 15131.16,
+      "load_time_s": null,
+      "generated_tokens": 72,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Sure! Imagine you have a magical coin that can land on heads or tails in a super-special way. When you flip it, it can land on both heads and tails at the same time, not just one or the other. This ma"
+    },
+    {
+      "model": "phi-3.5-moe-q2-k",
+      "config": "baseline",
+      "run": 2,
+      "model_size_mb": 96209.0,
+      "vram_mb": 15131.16,
+      "load_time_s": null,
+      "generated_tokens": 72,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Sure! Imagine you have a magical coin that can land on heads or tails in a super-special way. When you flip it, it can land on both heads and tails at the same time, not just one or the other. This ma"
+    },
+    {
+      "model": "phi-3.5-moe-q2-k",
+      "config": "baseline",
+      "run": 3,
+      "model_size_mb": 96208.0,
+      "vram_mb": 15131.16,
+      "load_time_s": null,
+      "generated_tokens": 72,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Sure! Imagine you have a magical coin that can land on heads or tails in a super-special way. When you flip it, it can land on both heads and tails at the same time, not just one or the other. This ma"
+    },
+    {
+      "model": "phi-3.5-moe-q2-k",
+      "config": "cpu-offload",
+      "run": 1,
+      "model_size_mb": 96207.0,
+      "vram_mb": 1369.04,
+      "load_time_s": null,
+      "generated_tokens": 74,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Sure! Imagine you have a magical coin that can land on both heads and tails at the same time. This coin is a bit like a quantum bit, or \"qubit,\" which is the basic building block of quantum computing."
+    },
+    {
+      "model": "phi-3.5-moe-q2-k",
+      "config": "cpu-offload",
+      "run": 2,
+      "model_size_mb": 96206.0,
+      "vram_mb": 1369.04,
+      "load_time_s": null,
+      "generated_tokens": 74,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Sure! Imagine you have a magical coin that can land on both heads and tails at the same time. This coin is a bit like a quantum bit, or \"qubit,\" which is the basic building block of quantum computing."
+    },
+    {
+      "model": "phi-3.5-moe-q2-k",
+      "config": "cpu-offload",
+      "run": 3,
+      "model_size_mb": 96208.0,
+      "vram_mb": 1369.04,
+      "load_time_s": null,
+      "generated_tokens": 74,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Sure! Imagine you have a magical coin that can land on both heads and tails at the same time. This coin is a bit like a quantum bit, or \"qubit,\" which is the basic building block of quantum computing."
+    },
+    {
+      "model": "phi-3.5-moe-q4-k-m",
+      "config": "baseline",
+      "run": 1,
+      "model_size_mb": 96213.0,
+      "vram_mb": 24715.67,
+      "load_time_s": null,
+      "generated_tokens": 71,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q4-k-m",
+      "config": "baseline",
+      "run": 2,
+      "model_size_mb": 96211.0,
+      "vram_mb": 24715.67,
+      "load_time_s": null,
+      "generated_tokens": 71,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q4-k-m",
+      "config": "baseline",
+      "run": 3,
+      "model_size_mb": 96210.0,
+      "vram_mb": 24715.67,
+      "load_time_s": null,
+      "generated_tokens": 71,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q4-k-m",
+      "config": "cpu-offload",
+      "run": 1,
+      "model_size_mb": 96207.0,
+      "vram_mb": 1759.79,
+      "load_time_s": null,
+      "generated_tokens": 71,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q4-k-m",
+      "config": "cpu-offload",
+      "run": 2,
+      "model_size_mb": 96211.0,
+      "vram_mb": 1759.79,
+      "load_time_s": null,
+      "generated_tokens": 71,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q4-k-m",
+      "config": "cpu-offload",
+      "run": 3,
+      "model_size_mb": 96212.0,
+      "vram_mb": 1759.79,
+      "load_time_s": null,
+      "generated_tokens": 71,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q8-0",
+      "config": "baseline",
+      "run": 1,
+      "model_size_mb": 96209.0,
+      "vram_mb": 42919.5,
+      "load_time_s": null,
+      "generated_tokens": 73,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q8-0",
+      "config": "baseline",
+      "run": 2,
+      "model_size_mb": 96209.0,
+      "vram_mb": 42919.5,
+      "load_time_s": null,
+      "generated_tokens": 73,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q8-0",
+      "config": "baseline",
+      "run": 3,
+      "model_size_mb": 96208.0,
+      "vram_mb": 42919.5,
+      "load_time_s": null,
+      "generated_tokens": 73,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q8-0",
+      "config": "cpu-offload",
+      "run": 1,
+      "model_size_mb": 96208.0,
+      "vram_mb": 2519.49,
+      "load_time_s": null,
+      "generated_tokens": 73,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q8-0",
+      "config": "cpu-offload",
+      "run": 2,
+      "model_size_mb": 96212.0,
+      "vram_mb": 2519.49,
+      "load_time_s": null,
+      "generated_tokens": 73,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    },
+    {
+      "model": "phi-3.5-moe-q8-0",
+      "config": "cpu-offload",
+      "run": 3,
+      "model_size_mb": 96212.0,
+      "vram_mb": 2519.49,
+      "load_time_s": null,
+      "generated_tokens": 73,
+      "generation_time_s": null,
+      "tokens_per_second": null,
+      "output_text": "Quantum computing is a type of computing that uses the principles of quantum mechanics, a branch of physics that deals with the behavior of very small particles, like atoms and subatomic particles. In"
+    }
+  ]
+}
