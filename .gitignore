@@ -87,3 +87,4 @@ spec-kit-env/
 json
 shimmy
 shimmy.exe
+.claude/settings.local.json
