@@ -192,8 +192,20 @@ async fn main() -> anyhow::Result<()> {
 
     match cli.cmd {
         cli::Command::Serve { ref bind, .. } => {
-            let bind_address = bind;
-            let addr: SocketAddr = bind_address.parse().expect("bad bind address");
+            // Use smart bind address resolution instead of direct parsing
+            let addr = port_manager::GLOBAL_PORT_ALLOCATOR
+                .resolve_bind_address(bind)
+                .unwrap_or_else(|e| {
+                    eprintln!("❌ Failed to resolve bind address '{}': {}", bind, e);
+                    eprintln!();
+                    eprintln!("💡 Valid bind address examples:");
+                    eprintln!("  auto                    # Auto-allocate (default)");
+                    eprintln!("  127.0.0.1:11435        # Specific address");
+                    eprintln!("  0.0.0.0:8080           # All interfaces");
+                    eprintln!();
+                    eprintln!("🔧 Environment variable: SHIMMY_BIND_ADDRESS=127.0.0.1:11435");
+                    std::process::exit(1);
+                });
 
             // Print startup diagnostics before server starts
             print_startup_diagnostics(
@@ -203,7 +215,7 @@ async fn main() -> anyhow::Result<()> {
                 cli.n_cpu_moe,
                 0, // Will update after model discovery
             );
-            println!("🚀 Starting server on {}", bind_address);
+            println!("🚀 Starting server on {}", addr);
 
             // Auto-register discovered models if we only have the default
             let manual_count = state.registry.list().len();

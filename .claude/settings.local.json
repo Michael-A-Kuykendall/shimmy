@@ -13,7 +13,14 @@
       "Bash(curl:*)",
       "Bash(git commit:*)",
       "Bash(cargo check:*)",
-      "Bash(git stash pop:*)"
+      "Bash(git stash pop:*)",
+      "Bash(cargo update:*)",
+      "Bash(git merge:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(.targetdebugshimmy.exe serve --help)",
+      "Bash(\".\\target\\debug\\shimmy.exe\" serve --help)",
+      "Bash(timeout:*)",
+      "Bash(SHIMMY_BIND_ADDRESS=\"127.0.0.1:7777\" timeout 3 \".\\target\\debug\\shimmy.exe\" serve)"
     ],
     "deny": [],
     "ask": [],
