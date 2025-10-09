@@ -847,7 +847,7 @@ mod tests {
         let state = Arc::new(AppState::new(engine, registry));
 
         // Test models endpoint format required by both platforms
-        let models_response = models(State(state.clone())).await;
+        let _models_response = models(State(state.clone())).await;
         // Both platforms expect this to succeed and return a list
 
         // Test chat completions with system message (common in AnythingLLM)

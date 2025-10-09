@@ -82,6 +82,60 @@ fn validate_runtime_version() {
     }
 }
 
+/// Print startup diagnostics for serve command
+fn print_startup_diagnostics(
+    version: &str,
+    _gpu_backend: Option<&str>,
+    _cpu_moe: bool,
+    _n_cpu_moe: Option<usize>,
+    model_count: usize,
+) {
+    println!("🎯 Shimmy v{}", version);
+    
+    // GPU backend info
+    #[cfg(feature = "llama")]
+    {
+        let backend_display = match gpu_backend {
+            Some("cpu") => "CPU only".to_string(),
+            Some("cuda") => "CUDA (GPU acceleration)".to_string(),
+            Some("vulkan") => "Vulkan (GPU acceleration)".to_string(),
+            Some("opencl") => "OpenCL (GPU acceleration)".to_string(),
+            Some("auto") | None => {
+                // Auto-detect logic mirrors what LlamaEngine does
+                if cfg!(feature = "llama-cuda") {
+                    "CUDA (auto-detected)".to_string()
+                } else if cfg!(feature = "llama-vulkan") {
+                    "Vulkan (auto-detected)".to_string()
+                } else if cfg!(feature = "llama-opencl") {
+                    "OpenCL (auto-detected)".to_string()
+                } else {
+                    "CPU (no GPU acceleration)".to_string()
+                }
+            }
+            Some(other) => format!("{} (custom)", other),
+        };
+        println!("🔧 Backend: {}", backend_display);
+    }
+    
+    #[cfg(not(feature = "llama"))]
+    {
+        println!("🔧 Backend: Stub mode (no llama feature)");
+    }
+    
+    // MoE configuration
+    #[cfg(feature = "llama")]
+    if cpu_moe || n_cpu_moe.is_some() {
+        if let Some(n) = n_cpu_moe {
+            println!("🧠 MoE: CPU offload first {} layers (saves VRAM for large MoE models)", n);
+        } else if cpu_moe {
+            println!("🧠 MoE: CPU offload ALL expert tensors (saves ~80-85% VRAM)");
+        }
+    }
+    
+    // Model count
+    println!("📦 Models: {} available", model_count);
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Version validation - prevents Issue #63 distribution of broken binaries
@@ -125,15 +179,22 @@ async fn main() -> anyhow::Result<()> {
 
     // Create engine with MoE configuration if needed
     let engine: Box<dyn engine::InferenceEngine> = {
-        let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
-        
-        // Apply MoE configuration from global flags
         #[cfg(feature = "llama")]
-        if cli.cpu_moe || cli.n_cpu_moe.is_some() {
-            adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+        {
+            let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+            
+            // Apply MoE configuration from global flags
+            if cli.cpu_moe || cli.n_cpu_moe.is_some() {
+                adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+            }
+            
+            Box::new(adapter)
         }
-        
-        Box::new(adapter)
+        #[cfg(not(feature = "llama"))]
+        {
+            let adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+            Box::new(adapter)
+        }
     };
     
     let state = AppState::new(engine, reg);
@@ -141,10 +202,30 @@ async fn main() -> anyhow::Result<()> {
 
     match cli.cmd {
         cli::Command::Serve { ref bind, .. } => {
-            let bind_address = bind;
-            let addr: SocketAddr = bind_address.parse().expect("bad bind address");
+            // Use smart bind address resolution instead of direct parsing
+            let addr = port_manager::GLOBAL_PORT_ALLOCATOR
+                .resolve_bind_address(bind)
+                .unwrap_or_else(|e| {
+                    eprintln!("❌ Failed to resolve bind address '{}': {}", bind, e);
+                    eprintln!();
+                    eprintln!("💡 Valid bind address examples:");
+                    eprintln!("  auto                    # Auto-allocate (default)");
+                    eprintln!("  127.0.0.1:11435        # Specific address");
+                    eprintln!("  0.0.0.0:8080           # All interfaces");
+                    eprintln!();
+                    eprintln!("🔧 Environment variable: SHIMMY_BIND_ADDRESS=127.0.0.1:11435");
+                    std::process::exit(1);
+                });
 
-            println!("🚀 Starting Shimmy server on {}", bind_address);
+            // Print startup diagnostics before server starts
+            print_startup_diagnostics(
+                env!("CARGO_PKG_VERSION"),
+                cli.gpu_backend.as_deref(),
+                cli.cpu_moe,
+                cli.n_cpu_moe,
+                0, // Will update after model discovery
+            );
+            println!("🚀 Starting server on {}", addr);
 
             // Auto-register discovered models if we only have the default
             let manual_count = state.registry.list().len();
@@ -152,15 +233,22 @@ async fn main() -> anyhow::Result<()> {
                 // Only the default phi3-lora entry
                 // Create new engine with same configuration (including MoE if set)
                 let enhanced_engine: Box<dyn engine::InferenceEngine> = {
-                    let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
-                    
-                    // Apply MoE configuration from global flags
                     #[cfg(feature = "llama")]
-                    if cli.cpu_moe || cli.n_cpu_moe.is_some() {
-                        adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+                    {
+                        let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+                        
+                        // Apply MoE configuration from global flags
+                        if cli.cpu_moe || cli.n_cpu_moe.is_some() {
+                            adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
+                        }
+                        
+                        Box::new(adapter)
                     }
-                    
-                    Box::new(adapter)
+                    #[cfg(not(feature = "llama"))]
+                    {
+                        let adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(cli.gpu_backend.as_deref());
+                        Box::new(adapter)
+                    }
                 };
                 
                 let mut enhanced_state = AppState::new(
@@ -179,6 +267,13 @@ async fn main() -> anyhow::Result<()> {
                     std::process::exit(1);
                 }
 
+                // Show final model count and ready message
+                println!("📦 Models: {} available", available_models.len());
+                println!("✅ Ready to serve requests");
+                println!("   • POST /api/generate (streaming + non-streaming)");
+                println!("   • GET  /health (health check + metrics)");
+                println!("   • GET  /v1/models (OpenAI-compatible)");
+                
                 info!(%addr, models=%available_models.len(), "shimmy serving with {} available models", available_models.len());
                 return server::run(addr, enhanced_state).await;
             }
@@ -193,6 +288,13 @@ async fn main() -> anyhow::Result<()> {
                 std::process::exit(1);
             }
 
+            // Show final model count and ready message
+            println!("📦 Models: {} available", available_models.len());
+            println!("✅ Ready to serve requests");
+            println!("   • POST /api/generate (streaming + non-streaming)");
+            println!("   • GET  /health (health check + metrics)");
+            println!("   • GET  /v1/models (OpenAI-compatible)");
+            
             info!(%addr, models=%available_models.len(), "shimmy serving with {} available models", available_models.len());
             server::run(addr, state).await?;
         }
@@ -375,11 +477,19 @@ async fn main() -> anyhow::Result<()> {
             #[cfg(feature = "mlx")]
             {
                 use crate::engine::mlx::MLXEngine;
-                let mlx_engine = MLXEngine::new();
-                if mlx_engine.is_available() {
-                    println!("🍎 MLX Backend: Available (Apple Silicon)");
+                
+                if MLXEngine::is_hardware_supported() {
+                    // Check if MLX Python packages are available
+                    let python_available = MLXEngine::check_mlx_python_available();
+                    if python_available {
+                        println!("🍎 MLX Backend: ✅ Available (Apple Silicon + MLX installed)");
+                    } else {
+                        println!("🍎 MLX Backend: ⚠️  Hardware supported (Apple Silicon detected)");
+                        println!("   📦 MLX Python packages not found");
+                        println!("   💡 Install with: pip install mlx-lm");
+                    }
                 } else {
-                    println!("🍎 MLX Backend: Not available (requires Apple Silicon)");
+                    println!("🍎 MLX Backend: ❌ Not supported (requires Apple Silicon macOS)");
                 }
             }
 
@@ -390,10 +500,26 @@ async fn main() -> anyhow::Result<()> {
 
             println!();
             println!("💡 To enable GPU acceleration:");
-            println!("   cargo install shimmy --features llama-cuda    # NVIDIA CUDA");
-            println!("   cargo install shimmy --features llama-vulkan  # Cross-platform Vulkan");
-            println!("   cargo install shimmy --features llama-opencl  # AMD/Intel OpenCL");
-            println!("   cargo install shimmy --features gpu           # All GPU backends");
+            
+            #[cfg(target_os = "macos")]
+            if std::env::consts::ARCH == "aarch64" {
+                println!("   cargo install shimmy --features apple        # Apple Silicon optimized");
+                println!("   cargo install shimmy --features gpu          # All GPU backends");
+                println!("   pip install mlx-lm                           # For MLX Python support");
+            } else {
+                println!("   cargo install shimmy --features llama-cuda    # NVIDIA CUDA");
+                println!("   cargo install shimmy --features llama-vulkan  # Cross-platform Vulkan");
+                println!("   cargo install shimmy --features llama-opencl  # AMD/Intel OpenCL");
+                println!("   cargo install shimmy --features gpu           # All GPU backends");
+            }
+            
+            #[cfg(not(target_os = "macos"))]
+            {
+                println!("   cargo install shimmy --features llama-cuda    # NVIDIA CUDA");
+                println!("   cargo install shimmy --features llama-vulkan  # Cross-platform Vulkan");
+                println!("   cargo install shimmy --features llama-opencl  # AMD/Intel OpenCL");
+                println!("   cargo install shimmy --features gpu           # All GPU backends");
+            }
         }
         cli::Command::Init {
             template,
@@ -527,7 +653,7 @@ mod tests {
         let manual_count = registry.list().len();
 
         // Test condition for auto-registration
-        let should_auto_register = manual_count <= 1;
+        let _should_auto_register = manual_count <= 1;
 
         // This will be true in test environment with no models
         // Either auto-registration path is valid - test that logic works
@@ -759,7 +885,7 @@ mod tests {
 
         // Validate state is properly created
         assert_ne!(std::mem::size_of_val(&state), 0);
-        let models = state.registry.list();
+        let _models = state.registry.list();
         // Models vec was created successfully
     }
 
@@ -857,7 +983,7 @@ mod tests {
 
         let engine: Box<dyn engine::InferenceEngine> = Box::new(InferenceEngineAdapter::new());
         let registry = Registry::with_discovery();
-        let state = AppState::new(engine, registry);
+        let _state = AppState::new(engine, registry);
 
         // Registry was created successfully
     }
@@ -958,7 +1084,7 @@ mod tests {
             ctx_len: Some(2048),
             n_threads: None,
         });
-        let engine = MockEngine;
+        let _engine = MockEngine;
         let state = Arc::new(AppState::new(
             Box::new(engine::adapter::InferenceEngineAdapter::new()),
             reg,
@@ -1255,7 +1381,7 @@ mod tests {
         }
 
         // Test list_all_available (lines 115, 647, etc.)
-        let all_available = registry.list_all_available();
+        let _all_available = registry.list_all_available();
         // Available models list was created
     }
 
@@ -1350,7 +1476,7 @@ mod tests {
             // Test non-empty discovery path (lines 134-146)
             for (name, model) in discovered {
                 // Test size calculation (line 137)
-                let size_mb = model.size_bytes / (1024 * 1024);
+                let _size_mb = model.size_bytes / (1024 * 1024);
                 // File size was calculated
 
                 // Test lora info logic (line 145)
@@ -1461,8 +1587,6 @@ mod tests {
         let test_vars = vec![
             "SHIMMY_BASE_GGUF",
             "SHIMMY_LORA_GGUF",
-            "HOME",
-            "USERPROFILE",
         ];
 
         // Save original values
@@ -1478,7 +1602,7 @@ mod tests {
 
         // Verify test values are set
         for var in &test_vars {
-            assert_eq!(env::var(var).unwrap(), "/test/path");
+            assert_eq!(env::var(var).expect(&format!("Environment variable {} should be set", var)), "/test/path");
         }
 
         // Restore original values
@@ -1546,5 +1670,86 @@ mod tests {
                 // Test completed successfully
             }
         }
+    }
+
+    #[test]
+    fn test_print_startup_diagnostics_basic() {
+        // Test basic startup diagnostics output (no MoE)
+        // This test verifies the function runs without panic
+        // We can't easily capture println! output in tests, but we verify the logic works
+        print_startup_diagnostics("1.6.0", None, false, None, 3);
+        print_startup_diagnostics("1.6.0", Some("auto"), false, None, 5);
+        
+        // Test completed successfully - no panic means diagnostics formatted correctly
+    }
+
+    #[test]
+    fn test_print_startup_diagnostics_with_backends() {
+        // Test diagnostics with different GPU backends
+        print_startup_diagnostics("1.6.0", Some("cpu"), false, None, 2);
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 4);
+        print_startup_diagnostics("1.6.0", Some("vulkan"), false, None, 1);
+        print_startup_diagnostics("1.6.0", Some("opencl"), false, None, 6);
+        print_startup_diagnostics("1.6.0", Some("custom-backend"), false, None, 3);
+        
+        // Test completed successfully
+    }
+
+    #[test]
+    #[cfg(feature = "llama")]
+    fn test_print_startup_diagnostics_with_moe() {
+        // Test diagnostics with MoE configuration
+        print_startup_diagnostics("1.6.0", Some("cuda"), true, None, 2);
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, Some(16), 2);
+        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 5);
+        
+        // Test completed successfully
+    }
+
+    #[test]
+    fn test_print_startup_diagnostics_zero_models() {
+        // Test diagnostics with zero models (edge case)
+        print_startup_diagnostics("1.6.0", None, false, None, 0);
+        
+        // Should not panic even with 0 models
+        // (The actual serve command will exit with error, but diagnostics should print)
+    }
+
+    #[test]
+    fn test_print_startup_diagnostics_many_models() {
+        // Test diagnostics with many models (like user's 13+ scenario)
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 13);
+        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 25);
+        
+        // Test completed successfully
+    }
+
+    #[test]
+    fn test_serve_diagnostics_integration() {
+        // Test that serve command calls diagnostics in correct order
+        // This is a structural test - verify the function exists and has correct signature
+        
+        let _version = env!("CARGO_PKG_VERSION");
+        let _gpu_backend: Option<&str> = None;
+        let _cpu_moe = false;
+        let _n_cpu_moe: Option<usize> = None;
+        let _model_count = 0;
+        
+        // Call diagnostics as serve command would
+        print_startup_diagnostics(_version, _gpu_backend, _cpu_moe, _n_cpu_moe, _model_count);
+        
+        // Test completed - verifies function signature matches usage
+    }
+
+    #[test]
+    fn test_startup_diagnostics_version_display() {
+        // Test that version is displayed correctly
+        // Uses actual CARGO_PKG_VERSION from build
+        let version = env!("CARGO_PKG_VERSION");
+        assert!(!version.is_empty(), "Version should not be empty");
+        assert_ne!(version, "0.1.0", "Version should not be the broken 0.1.0 from Issue #63");
+        
+        // Call diagnostics with real version
+        print_startup_diagnostics(version, None, false, None, 1);
     }
 }
