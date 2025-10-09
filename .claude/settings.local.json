@@ -15,7 +15,8 @@
       "Bash(cargo check:*)",
       "Bash(git stash pop:*)",
       "Bash(cargo update:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(cargo:*)"
     ],
     "deny": [],
     "ask": [],

@@ -224,12 +224,13 @@ impl InferenceEngine for LlamaEngine {
                 llama::model::params::LlamaModelParams::default().with_n_gpu_layers(n_gpu_layers);
             
             // Apply MoE CPU offloading if configured
+            // TODO: Re-enable when fork is fixed - these methods require shimmy-llama-cpp-2 fork
             if let Some(n) = self.moe_config.n_cpu_moe {
-                info!("MoE: Offloading first {} expert layers to CPU", n);
-                model_params = model_params.with_n_cpu_moe(n);
+                info!("MoE: Offloading first {} expert layers to CPU (temporarily disabled - fork under repair)", n);
+                // model_params = model_params.with_n_cpu_moe(n);
             } else if self.moe_config.cpu_moe_all {
-                info!("MoE: Offloading ALL expert tensors to CPU");
-                model_params = model_params.with_cpu_moe_all();
+                info!("MoE: Offloading ALL expert tensors to CPU (temporarily disabled - fork under repair)");
+                // model_params = model_params.with_cpu_moe_all();
             }
 
             let model =
