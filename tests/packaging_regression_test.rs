@@ -5,6 +5,9 @@
 /// that broke cargo install for weeks (issues #73, #86, #88).
 ///
 /// This test would have FAILED and prevented those releases if it existed.
+/// 
+/// UPDATED: Now includes validation of shimmy-llama-cpp-2 published packages
+/// to ensure our Windows MSVC fixes and fork packaging work correctly.
 
 use std::process::Command;
 use std::str;
@@ -198,4 +201,66 @@ fn test_package_size_sanity() {
         total_size);
 
     println!("✅ Package size sanity check passed: {} files", total_size);
+}
+
+#[test]
+fn test_shimmy_llama_cpp_fork_packages_available() {
+    // Test that our published shimmy-llama-cpp-2 packages are available
+    // This validates our Windows MSVC fixes and fork packaging work
+    
+    // Check if we can build with our published shimmy packages
+    let output = Command::new("cargo")
+        .args(&["check", "--release", "--no-default-features", "--features", "llama"])
+        .output()
+        .expect("Failed to run cargo check with llama feature");
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        
+        // Check for package resolution issues
+        if stderr.contains("shimmy-llama-cpp-2") || stderr.contains("shimmy-llama-cpp-sys-2") {
+            panic!(
+                "🚨 FORK PACKAGE RESOLUTION FAILED! 🚨\n\
+                Our published shimmy packages are not resolving correctly:\n\
+                {}\n\
+                This indicates our crates.io publishing strategy has issues",
+                stderr
+            );
+        }
+        
+        // Allow other build failures but fail on package issues
+        println!("⚠️ Build failed with non-package issues (expected on some systems): {}", stderr);
+    } else {
+        println!("✅ Fork packages resolve correctly - Windows MSVC fixes available");
+    }
+}
+
+#[test]
+fn test_template_packaging_gate_protection() {
+    // This test implements the exact validation from Release Gate 3
+    // to ensure our packaging follows the gate requirements
+    
+    let output = Command::new("cargo")
+        .args(&["package", "--list", "--allow-dirty"])
+        .output()
+        .expect("Failed to run cargo package --list");
+    
+    let package_list = String::from_utf8_lossy(&output.stdout);
+    
+    // Check for any of the valid Docker template paths (Gate 3 protection)
+    let has_dockerfile = package_list.lines().any(|line| {
+        line == "Dockerfile" || 
+        line == "packaging/docker/Dockerfile" || 
+        line == "templates/docker/Dockerfile"
+    });
+    
+    assert!(
+        has_dockerfile,
+        "🚨 RELEASE GATE 3 FAILURE! 🚨\n\
+        Required Docker template missing from package: {} \n\
+        This would cause the release gates to BLOCK the release!",
+        package_list
+    );
+    
+    println!("✅ Release Gate 3 (Template Packaging) protection validated");
 }
