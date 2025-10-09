@@ -53,7 +53,7 @@ exclude = [
 ]
 
 [features]
-default = ["huggingface"]  # llama feature disabled for deployment due to Windows MSVC stdbool.h issue
+default = ["huggingface", "llama"]  # macOS ARM64 i8mm issues fixed via forked llama-cpp-2
 # Engine backends  
 llama = ["dep:llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
@@ -100,8 +100,10 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-feature
 # llama.cpp bindings (optional) - using forked version with Windows MSVC CUDA + macOS ARM64 fixes
 llama-cpp-2 = { version = "0.1.122", optional = true, default-features = false }
 
-# Use published llama-cpp-2 with MoE CPU offloading support
-# Note: Local patch removed for deployment - using published version
+# Use forked llama-cpp-2 with Windows MSVC CUDA stdbool.h + macOS ARM64 i8mm compatibility fixes
+# MoE CPU offloading feature development
+[patch.crates-io]
+llama-cpp-2 = { path = "../llama-cpp-rs/llama-cpp-2", package = "shimmy-llama-cpp-2" }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"

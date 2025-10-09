@@ -2961,3 +2961,7 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[patch.unused]]
+name = "shimmy-llama-cpp-2"
+version = "0.1.123"
