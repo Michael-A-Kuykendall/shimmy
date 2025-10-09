@@ -12,6 +12,7 @@ lazy_static! {
 #[derive(Debug)]
 pub struct PortAllocator {
     allocated_ports: Arc<Mutex<HashMap<String, u16>>>,
+    #[allow(dead_code)] // Currently unused but may be needed for future port range customization
     port_range: (u16, u16),
 }
 
@@ -23,6 +24,7 @@ impl PortAllocator {
         }
     }
 
+    #[allow(dead_code)] // Currently unused but may be needed for future service management
     pub fn find_available_port(&self, service_name: &str) -> Result<u16> {
         let mut allocated = self.allocated_ports.lock();
 
@@ -67,6 +69,7 @@ impl PortAllocator {
         allocated.retain(|_, &mut v| v != port);
     }
 
+    #[allow(dead_code)] // Used by find_available_port which is currently unused
     fn is_port_available(&self, port: u16) -> bool {
         TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], port))).is_ok()
     }
