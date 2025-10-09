@@ -10,13 +10,17 @@ use tracing::info;
 
 #[derive(Default)]
 pub struct LlamaEngine {
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     gpu_backend: GpuBackend,
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     moe_config: MoeConfig,
 }
 
 #[derive(Debug, Clone, Default)]
 struct MoeConfig {
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     cpu_moe_all: bool,
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     n_cpu_moe: Option<usize>,
 }
 
@@ -34,6 +38,7 @@ enum GpuBackend {
 
 impl GpuBackend {
     /// Parse GPU backend from CLI string
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     fn from_string(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "auto" => Self::detect_best(),
@@ -153,6 +158,7 @@ impl GpuBackend {
     }
 
     /// Get the number of layers to offload to GPU
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     fn gpu_layers(&self) -> u32 {
         999 // Offload all layers to GPU
     }
@@ -167,6 +173,7 @@ impl LlamaEngine {
     }
 
     /// Create engine with specific GPU backend from CLI
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     pub fn new_with_backend(backend_str: Option<&str>) -> Self {
         let gpu_backend = backend_str
             .map(GpuBackend::from_string)
@@ -181,6 +188,7 @@ impl LlamaEngine {
     }
     
     /// Set MoE CPU offloading configuration
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     pub fn with_moe_config(mut self, cpu_moe_all: bool, n_cpu_moe: Option<usize>) -> Self {
         self.moe_config = MoeConfig {
             cpu_moe_all,
@@ -190,6 +198,7 @@ impl LlamaEngine {
     }
 
     /// Get information about the current GPU backend configuration
+    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     pub fn get_backend_info(&self) -> String {
         match self.gpu_backend {
             GpuBackend::Cpu => "CPU".to_string(),
