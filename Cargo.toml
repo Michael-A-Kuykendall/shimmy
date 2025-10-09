@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "1.6.0"
+version = "1.7.0"
 edition = "2021"
 license = "MIT"
 description = "Lightweight sub-5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading. Now with GitHub Spec-Kit integration for systematic development."
@@ -102,8 +102,8 @@ llama-cpp-2 = { version = "0.1.118", optional = true, default-features = false }
 
 # Use forked llama-cpp-2 with Windows MSVC CUDA stdbool.h + macOS ARM64 i8mm compatibility fixes
 # TESTING: Using local path for MoE CPU offloading feature development
-[patch.crates-io]
-llama-cpp-2 = { path = "../llama-cpp-rs/llama-cpp-2" }
+# [patch.crates-io]
+# llama-cpp-2 = { path = "../llama-cpp-rs/llama-cpp-2" }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
