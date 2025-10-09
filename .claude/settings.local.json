@@ -13,7 +13,9 @@
       "Bash(curl:*)",
       "Bash(git commit:*)",
       "Bash(cargo check:*)",
-      "Bash(git stash pop:*)"
+      "Bash(git stash pop:*)",
+      "Bash(cargo update:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": [],
