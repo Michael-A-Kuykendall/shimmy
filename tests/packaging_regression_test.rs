@@ -248,10 +248,11 @@ fn test_template_packaging_gate_protection() {
     let package_list = String::from_utf8_lossy(&output.stdout);
     
     // Check for any of the valid Docker template paths (Gate 3 protection)
+    // Handle both Unix (/) and Windows (\) path separators
     let has_dockerfile = package_list.lines().any(|line| {
         line == "Dockerfile" || 
-        line == "packaging/docker/Dockerfile" || 
-        line == "templates/docker/Dockerfile"
+        line == "packaging/docker/Dockerfile" || line == "packaging\\docker\\Dockerfile" ||
+        line == "templates/docker/Dockerfile" || line == "templates\\docker\\Dockerfile"
     });
     
     assert!(
