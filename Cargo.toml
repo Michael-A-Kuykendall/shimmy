@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "1.6.0"
+version = "1.7.1"
 edition = "2021"
 license = "MIT"
 description = "Lightweight sub-5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading. Now with GitHub Spec-Kit integration for systematic development."
@@ -10,50 +10,18 @@ readme = "README.md"
 keywords = ["llm", "local-ai", "inference", "server", "api"]
 categories = ["command-line-utilities", "web-programming::http-server"]
 authors = ["Michael A. Kuykendall <michaelallenkuykendall@gmail.com>"]
-exclude = [
-    "docs-internal/*",
-    "test-models/*",
-    "target/*",
-    "target-minimal/*",
-    "release-artifacts/*",
-    "libs/*",
-    "shimmy-vscode/*",
-    "tests/*",
-    ".*",
-    "*.sh",
-    "*.ps1",
-    "*.py",
-    "*.log",
-    "*.bat",
-    "*.exe",
-    ".github/*",
-    ".claude/*",
-    ".internal/*",
-    "deployment_failures.log",
-    "shimmy-tui-*/*",
-    "SHIMMY_TUI_*",
-    "shimmy-tui-*",
-    "benchmark_results.json",
-    "Dockerfile*",
-    "ROADMAP.md",
-    "DCO.md",
-    "CODE_OF_CONDUCT.md",
-    "CONTRIBUTING.md",
-    "SPONSORS.md",
-    "assets/*",
-    "benches/*",
-    "docs/*",
-    "shimmy-*/*",
-    "shimmy-*.exe",
-    "shimmy",
-    "shimmy.exe",
-    "spec-kit-env/*",
-    "specs/*",
-    "memory/*"
+include = [
+    "src/**/*",
+    "templates/**/*",
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "LICENSE",
+    "build.rs"
 ]
 
 [features]
-default = ["huggingface", "llama"]  # macOS ARM64 i8mm issues fixed via forked llama-cpp-2
+default = ["huggingface"]  # Temporarily disable llama due to Windows MSVC stdbool.h issue - will fix in v1.7.2
 # Engine backends  
 llama = ["dep:llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
@@ -97,13 +65,8 @@ uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "5.0"
 reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
 
-# llama.cpp bindings (optional) - using forked version with Windows MSVC CUDA + macOS ARM64 fixes
+# llama.cpp bindings (optional) - using stable version temporarily while fixing fork
 llama-cpp-2 = { version = "0.1.122", optional = true, default-features = false }
-
-# Use forked llama-cpp-2 with Windows MSVC CUDA stdbool.h + macOS ARM64 i8mm compatibility fixes
-# MoE CPU offloading feature development
-[patch.crates-io]
-llama-cpp-2 = { git = "https://github.com/Michael-A-Kuykendall/llama-cpp-rs", branch = "main", package = "shimmy-llama-cpp-2" }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
