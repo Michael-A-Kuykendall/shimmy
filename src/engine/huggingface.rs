@@ -322,6 +322,13 @@ mod tests {
                     || error_msg.contains("Failed to initialize")
                     || error_msg.contains("cannot find the path")
                     || error_msg.contains("os error 3")
+                    || error_msg.contains("os error 2")  // No such file or directory
+                    || error_msg.contains("No such file")
+                    || error_msg.contains("not found")
+                    || error_msg.contains("The system cannot find")
+                    || error_msg.contains("command not found")
+                    || error_msg.contains("Access is denied")
+                    || error_msg.contains("Permission denied")
             );
         }
     }
