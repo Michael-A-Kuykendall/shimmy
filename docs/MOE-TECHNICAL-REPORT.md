@@ -7,7 +7,7 @@
 
 ## ⚠️ Positioning Statement
 
-**This is NOT a research novelty claim.** 
+**This is NOT a research novelty claim.**
 
 llama.cpp implemented native MoE CPU offloading on **August 4, 2025** (PR #15077 by @slaren), two months before we started this work (October 4, 2025).
 
@@ -85,7 +85,7 @@ Oct 8, 2025:  Controlled baseline testing completed
 - **OS**: Ubuntu 22.04 (ARM64)
 
 ### Software
-- **Shimmy**: Branch `feat/moe-cpu-offload` 
+- **Shimmy**: Branch `feat/moe-cpu-offload`
 - **llama-cpp-rs**: Branch `feat/moe-cpu-offload` with MoE bindings
 - **Build Requirement**: `RUSTFLAGS="-L /usr/lib/aarch64-linux-gnu"` for CUDA linking on ARM64
 
@@ -142,7 +142,7 @@ Oct 8, 2025:  Controlled baseline testing completed
 **Evidence**: Expert tensors successfully offloaded to CPU (log excerpt):
 ```
 tensor blk.0.ffn_gate_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host
-tensor blk.0.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host  
+tensor blk.0.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host
 tensor blk.0.ffn_up_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host
 ```
 
@@ -194,7 +194,7 @@ MoE CPU offloading provides **71.5% VRAM reduction** (3.5GB vs 12.3GB) at the co
 **Evidence**: Expert tensors successfully offloaded to CPU (log excerpt):
 ```
 tensor blk.0.ffn_gate_exps.weight buffer type overridden to CUDA_Host
-tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host  
+tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_up_exps.weight buffer type overridden to CUDA_Host
 ```
 
@@ -229,10 +229,10 @@ tensor blk.0.ffn_up_exps.weight buffer type overridden to CUDA_Host
 **Evidence**: Unique dual-expert architecture (64 regular + 2 shared) successfully detected:
 ```
 tensor blk.0.ffn_gate_exps.weight buffer type overridden to CUDA_Host
-tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host  
+tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_up_exps.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_gate_shexp.weight buffer type overridden to CUDA_Host
-tensor blk.0.ffn_down_shexp.weight buffer type overridden to CUDA_Host  
+tensor blk.0.ffn_down_shexp.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_up_shexp.weight buffer type overridden to CUDA_Host
 ```
 
@@ -401,6 +401,6 @@ Mean: VRAM=3.5GB, TTFT=1,490ms, TPS=6.78
 
 ---
 
-*Report Version 1.0 - October 8, 2025*  
-*Author: Michael A. Kuykendall*  
+*Report Version 1.0 - October 8, 2025*
+*Author: Michael A. Kuykendall*
 *Contact: GitHub @Michael-A-Kuykendall*

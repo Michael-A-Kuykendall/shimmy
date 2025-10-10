@@ -8,7 +8,7 @@ This major release introduces the complete **Shimmy Developer Ecosystem** with G
 
 ### GitHub Spec-Kit Integration
 🆕 **Brand-new methodology** (GitHub released Sept 2025)
-- **Professional specification-driven development** workflow  
+- **Professional specification-driven development** workflow
 - **Systematic feature planning**: `/specify` → `/plan` → `/tasks` → implement
 - **Constitutional governance** with built-in validation
 - **AI-native workflow** supporting Claude Code, GitHub Copilot, Gemini

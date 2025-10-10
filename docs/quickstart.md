@@ -12,7 +12,7 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 
 ## 2. Get a Model
 Place any `.gguf` file in one of these locations:
-- `./models/your-model.gguf`  
+- `./models/your-model.gguf`
 - Set `SHIMMY_BASE_GGUF=/path/to/your-model.gguf`
 - Or just put it in `~/Downloads/` - Shimmy will find it
 
@@ -43,7 +43,7 @@ That's it! Shimmy is now running on `http://localhost:11435`
   "models": [{
     "title": "Local Shimmy",
     "provider": "openai",
-    "model": "your-model-name", 
+    "model": "your-model-name",
     "apiBase": "http://localhost:11435/v1"
   }]
 }

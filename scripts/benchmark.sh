@@ -81,13 +81,13 @@ get_system_info() {
     echo "  \"os\": \"$(uname -s)\","
     echo "  \"arch\": \"$(uname -m)\","
     echo "  \"cpu_cores\": $(nproc 2>/dev/null || echo "null"),"
-    
+
     # Memory info
     if command -v free >/dev/null 2>&1; then
         TOTAL_MEM=$(free -b | awk '/^Mem:/ {print $2}')
         echo "  \"memory_total_bytes\": $TOTAL_MEM,"
     fi
-    
+
     # GPU info (if nvidia-smi available)
     if command -v nvidia-smi >/dev/null 2>&1; then
         GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)
@@ -95,7 +95,7 @@ get_system_info() {
         echo "  \"gpu_name\": \"$GPU_NAME\","
         echo "  \"gpu_memory_mb\": $GPU_MEM,"
     fi
-    
+
     echo "  \"shimmy_url\": \"$SHIMMY_URL\","
     echo "  \"model_name\": \"$MODEL_NAME\""
     echo "}"
@@ -104,19 +104,19 @@ get_system_info() {
 # Performance test
 run_performance_test() {
     echo "🧪 Running performance test..."
-    
+
     local total_time=0
     local successful_requests=0
     local failed_requests=0
     local total_tokens=0
-    
+
     echo "["
-    
+
     for i in $(seq 1 $NUM_REQUESTS); do
         echo -n "Request $i/$NUM_REQUESTS... "
-        
+
         start_time=$(date +%s.%N)
-        
+
         # Make request with timeout
         response=$(timeout 30 curl -s -X POST "$SHIMMY_URL/v1/chat/completions" \
             -H "Content-Type: application/json" \
@@ -126,10 +126,10 @@ run_performance_test() {
                 \"max_tokens\": 100,
                 \"temperature\": 0.7
             }" 2>/dev/null)
-        
+
         end_time=$(date +%s.%N)
         request_time=$(echo "$end_time - $start_time" | bc -l 2>/dev/null || echo "0")
-        
+
         if [ $? -eq 0 ] && echo "$response" | grep -q "choices"; then
             # Success
             successful_requests=$((successful_requests + 1))
@@ -137,32 +137,32 @@ run_performance_test() {
             tokens=$((tokens / 10))  # Rough token estimate
             total_tokens=$((total_tokens + tokens))
             echo "✅ ${request_time}s"
-            
+
             [ $i -gt 1 ] && echo ","
             echo "    {\"request\": $i, \"time\": $request_time, \"success\": true, \"tokens\": $tokens}"
         else
             # Failure
             failed_requests=$((failed_requests + 1))
             echo "❌ ${request_time}s"
-            
+
             [ $i -gt 1 ] && echo ","
             echo "    {\"request\": $i, \"time\": $request_time, \"success\": false, \"tokens\": 0}"
         fi
-        
+
         total_time=$(echo "$total_time + $request_time" | bc -l 2>/dev/null || echo "$total_time")
-        
+
         # Small delay
         sleep 0.5
     done
-    
+
     echo "]"
-    
+
     # Calculate averages
     if [ $successful_requests -gt 0 ]; then
         avg_time=$(echo "scale=3; $total_time / $NUM_REQUESTS" | bc -l 2>/dev/null || echo "0")
         tokens_per_sec=$(echo "scale=1; $total_tokens / $total_time" | bc -l 2>/dev/null || echo "0")
         success_rate=$(echo "scale=2; $successful_requests * 100 / $NUM_REQUESTS" | bc -l 2>/dev/null || echo "0")
-        
+
         echo ""
         echo "📊 Results:"
         echo "  Success Rate: ${success_rate}%"
@@ -177,30 +177,30 @@ run_performance_test() {
 # Get baseline system metrics
 get_baseline_metrics() {
     echo "📊 System Metrics:"
-    
+
     # CPU usage
     if command -v top >/dev/null 2>&1; then
         CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
         echo "  CPU Usage: ${CPU_USAGE}%"
     fi
-    
+
     # Memory usage
     if command -v free >/dev/null 2>&1; then
         MEM_USAGE=$(free | grep Mem | awk '{printf "%.1f", $3/$2 * 100.0}')
         echo "  Memory Usage: ${MEM_USAGE}%"
     fi
-    
+
     # GPU metrics (if available)
     if command -v nvidia-smi >/dev/null 2>&1; then
         GPU_UTIL=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | head -1)
         GPU_MEM_USED=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | head -1)
         GPU_POWER=$(nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits | head -1)
-        
+
         echo "  GPU Utilization: ${GPU_UTIL}%"
         echo "  GPU Memory Used: ${GPU_MEM_USED}MB"
         echo "  GPU Power Draw: ${GPU_POWER}W"
     fi
-    
+
     # Shimmy process info
     SHIMMY_PID=$(pgrep shimmy 2>/dev/null || echo "")
     if [ -n "$SHIMMY_PID" ]; then
@@ -217,17 +217,17 @@ main() {
     echo ""
     get_baseline_metrics
     echo ""
-    
+
     # Run the performance test
     RESULTS=$(run_performance_test)
-    
+
     # Generate JSON output
     {
         get_system_info | head -n -1
         echo "  \"benchmark_results\": $RESULTS"
         echo "}"
     } > "$OUTPUT_FILE"
-    
+
     echo ""
     echo "💾 Results saved to: $OUTPUT_FILE"
 }

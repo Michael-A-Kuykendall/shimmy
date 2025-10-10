@@ -1,6 +1,6 @@
 # Model Card Update Plan
 
-**Status**: Active Plan  
+**Status**: Active Plan
 **Date**: October 8, 2025
 
 ---

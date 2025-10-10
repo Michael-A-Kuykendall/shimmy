@@ -92,9 +92,9 @@ import sys
 try:
     print("Loading base model...", file=sys.stderr)
     model = AutoModelForCausalLM.from_pretrained('{}', torch_dtype=torch.float16)
-    
+
     {}
-    
+
     print("SUCCESS: Model loaded", file=sys.stderr)
     print("OK")
 except Exception as e:

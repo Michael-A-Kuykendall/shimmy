@@ -112,10 +112,10 @@ import re
 
 def generate_docs(file_path):
     """Generate documentation for a source file using Shimmy."""
-    
+
     with open(file_path, 'r') as f:
         code = f.read()
-    
+
     prompt = f"""Generate comprehensive documentation for this code file:
 
 {code}
@@ -134,7 +134,7 @@ Documentation:"""
         'max_tokens': 500,
         'temperature': 0.2
     })
-    
+
     return response.json()['choices'][0]['text']
 
 # Usage
@@ -143,16 +143,16 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: python3 doc_generator.py <source_file>")
         sys.exit(1)
-    
+
     file_path = sys.argv[1]
     docs = generate_docs(file_path)
-    
+
     # Save documentation
     doc_path = file_path.replace('.rs', '_docs.md').replace('.py', '_docs.md')
     with open(doc_path, 'w') as f:
         f.write(f"# Documentation for {file_path}\n\n")
         f.write(docs)
-    
+
     print(f"Documentation generated: {doc_path}")
 ```
 
@@ -169,12 +169,12 @@ class ShimmyChat {
         this.ws = new WebSocket(url);
         this.setupEventHandlers();
     }
-    
+
     setupEventHandlers() {
         this.ws.on('open', () => {
             console.log('Connected to Shimmy');
         });
-        
+
         this.ws.on('message', (data) => {
             const message = JSON.parse(data);
             if (message.done) {
@@ -183,12 +183,12 @@ class ShimmyChat {
                 process.stdout.write(message.token);
             }
         });
-        
+
         this.ws.on('error', (error) => {
             console.error('WebSocket error:', error);
         });
     }
-    
+
     send(prompt, options = {}) {
         const message = {
             model: 'default',
@@ -196,10 +196,10 @@ class ShimmyChat {
             max_tokens: options.maxTokens || 200,
             temperature: options.temperature || 0.7
         };
-        
+
         this.ws.send(JSON.stringify(message));
     }
-    
+
     close() {
         this.ws.close();
     }
@@ -231,23 +231,23 @@ setTimeout(() => {
 <body>
     <div class="container">
         <h1>Shimmy Code Assistant</h1>
-        
-        <textarea class="input-area" id="codeInput" 
+
+        <textarea class="input-area" id="codeInput"
                   placeholder="Paste your code here..."></textarea>
-        
+
         <button onclick="explainCode()">Explain Code</button>
         <button onclick="findBugs()">Find Bugs</button>
         <button onclick="optimize()">Optimize</button>
-        
+
         <div class="output-area" id="output"></div>
     </div>
 
     <script>
         let ws = null;
-        
+
         function connectWebSocket() {
             ws = new WebSocket('ws://localhost:11435/ws/generate');
-            
+
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (!data.done) {
@@ -255,14 +255,14 @@ setTimeout(() => {
                 }
             };
         }
-        
+
         function sendPrompt(prompt) {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 connectWebSocket();
                 setTimeout(() => sendPrompt(prompt), 1000);
                 return;
             }
-            
+
             document.getElementById('output').innerHTML = '';
             ws.send(JSON.stringify({
                 model: 'default',
@@ -271,25 +271,25 @@ setTimeout(() => {
                 temperature: 0.3
             }));
         }
-        
+
         function explainCode() {
             const code = document.getElementById('codeInput').value;
             const prompt = `Explain what this code does:\n\n${code}`;
             sendPrompt(prompt);
         }
-        
+
         function findBugs() {
             const code = document.getElementById('codeInput').value;
             const prompt = `Find potential bugs in this code:\n\n${code}`;
             sendPrompt(prompt);
         }
-        
+
         function optimize() {
             const code = document.getElementById('codeInput').value;
             const prompt = `Suggest optimizations for this code:\n\n${code}`;
             sendPrompt(prompt);
         }
-        
+
         // Connect on page load
         connectWebSocket();
     </script>
@@ -308,10 +308,10 @@ function! ShimmyGenerate(prompt)
     let l:cmd = "curl -s -X POST http://localhost:11435/api/generate " .
               \ "-H 'Content-Type: application/json' " .
               \ "-d '{\"model\":\"default\",\"prompt\":\"" . a:prompt . "\",\"max_tokens\":200}'"
-    
+
     let l:response = system(l:cmd)
     let l:json = json_decode(l:response)
-    
+
     if has_key(l:json, 'choices') && len(l:json.choices) > 0
         return l:json.choices[0].text
     else
@@ -323,9 +323,9 @@ function! ShimmyExplainSelection()
     let l:selected = getline("'<", "'>")
     let l:code = join(l:selected, "\n")
     let l:prompt = "Explain this code:\n\n" . l:code
-    
+
     let l:explanation = ShimmyGenerate(l:prompt)
-    
+
     " Insert explanation as comments
     call append(line("'>"), "")
     call append(line("'>") + 1, "\" " . l:explanation)
@@ -353,12 +353,12 @@ on:
 jobs:
   ai-review:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
+
     - name: Setup Shimmy
       run: |
         # Download and setup Shimmy
@@ -367,12 +367,12 @@ jobs:
         export SHIMMY_BASE_GGUF=/models/code-review-model.gguf
         ./shimmy-linux serve --bind 127.0.0.1:11435 &
         sleep 10
-    
+
     - name: Generate Review
       run: |
         # Get diff
         git diff origin/main..HEAD > diff.txt
-        
+
         # Generate review with Shimmy
         curl -X POST http://localhost:11435/api/generate \
           -H "Content-Type: application/json" \
@@ -384,14 +384,14 @@ jobs:
           "temperature": 0.3
         }
         EOF
-    
+
     - name: Post Review
       uses: actions/github-script@v6
       with:
         script: |
           const fs = require('fs');
           const review = fs.readFileSync('review.md', 'utf8');
-          
+
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
@@ -425,9 +425,9 @@ total_requests=0
 
 for prompt in "${PROMPTS[@]}"; do
     echo "Testing prompt: $prompt"
-    
+
     start_time=$(date +%s.%N)
-    
+
     response=$(curl -s -X POST "$SHIMMY_URL" \
         -H "Content-Type: application/json" \
         -d "{
@@ -436,22 +436,22 @@ for prompt in "${PROMPTS[@]}"; do
             \"max_tokens\": 100,
             \"temperature\": 0.7
         }")
-    
+
     end_time=$(date +%s.%N)
     duration=$(echo "$end_time - $start_time" | bc)
-    
+
     tokens=$(echo "$response" | jq -r '.usage.completion_tokens // 0')
-    
+
     echo "  Duration: ${duration}s"
     echo "  Tokens: $tokens"
-    
+
     if [ "$tokens" -gt 0 ]; then
         tokens_per_sec=$(echo "scale=2; $tokens / $duration" | bc)
         echo "  Tokens/sec: $tokens_per_sec"
     fi
-    
+
     echo "---"
-    
+
     total_time=$(echo "$total_time + $duration" | bc)
     total_requests=$((total_requests + 1))
 done

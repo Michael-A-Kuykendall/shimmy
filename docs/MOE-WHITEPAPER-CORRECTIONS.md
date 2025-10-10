@@ -1,6 +1,6 @@
 # MoE Whitepaper Corrections Summary
-**Date**: October 8, 2025  
-**Critique Source**: GPT-5 audit of MOE-CPU-OFFLOADING-WHITEPAPER.md  
+**Date**: October 8, 2025
+**Critique Source**: GPT-5 audit of MOE-CPU-OFFLOADING-WHITEPAPER.md
 **Action**: Created corrected version (MOE-TECHNICAL-VALIDATION.md)
 
 ---
@@ -8,7 +8,7 @@
 ## Critical Findings from Audit
 
 ### 1. **OVERCLAIMED NOVELTY** ❌
-**Wrong**: "First Working Implementation", "Revolutionary breakthrough"  
+**Wrong**: "First Working Implementation", "Revolutionary breakthrough"
 **Right**: "Rust bindings for existing llama.cpp functionality (PR #15077, Aug 4, 2025)"
 
 **Evidence**:
@@ -17,7 +17,7 @@
 - Our contribution: Rust bindings + shimmy integration, NOT the core algorithm
 
 ### 2. **MEMORY USAGE CONTRADICTIONS** ❌
-**Wrong**: Executive summary claims "2MB VRAM" but table shows "2.33GB" and logs show "~1.8GB"  
+**Wrong**: Executive summary claims "2MB VRAM" but table shows "2.33GB" and logs show "~1.8GB"
 **Right**: Report measured range (1.8-2.3GB) and quarantine unreproducible 2MB claim
 
 **Contradictions in original whitepaper**:
@@ -28,13 +28,13 @@ Line 572: "≈1818 MiB" (Live logs)
 ```
 
 ### 3. **NO REAL BASELINES** ❌
-**Wrong**: All "baseline" numbers marked *estimated*  
+**Wrong**: All "baseline" numbers marked *estimated*
 **Right**: Need controlled A/B runs (with/without `--cpu-moe`) on same hardware
 
 **Every baseline in original paper**: "~15GB*" with asterisk noting "Estimated based on model size"
 
 ### 4. **TOKEN COUNTING BROKEN** ❌
-**Wrong**: 
+**Wrong**:
 - Non-streaming: word_count × 1.3 (not valid)
 - Streaming: SSE chunk count (chunks ≠ tokens)
 
@@ -47,7 +47,7 @@ ESTIMATED_TOKENS=$(echo "$WORD_COUNT * 1.3" | bc)  # ← NOT VALID
 ```
 
 ### 5. **TTFT IS GUESSED** ❌
-**Wrong**: "TTFT estimation: 10% of total time" (literally made up)  
+**Wrong**: "TTFT estimation: 10% of total time" (literally made up)
 **Right**: Per-token timestamp logging required
 
 **From original methodology**:
@@ -57,11 +57,11 @@ ESTIMATED_TOKENS=$(echo "$WORD_COUNT * 1.3" | bc)  # ← NOT VALID
 ```
 
 ### 6. **SINGLE-RUN MEASUREMENTS** ❌
-**Wrong**: N=1 for all tests (no statistical validity)  
+**Wrong**: N=1 for all tests (no statistical validity)
 **Right**: N≥3 with mean ± σ
 
 ### 7. **MISSING TECHNICAL DETAILS** ❌
-**Wrong**: No SHA256s, no exact commits, no controlled experiments  
+**Wrong**: No SHA256s, no exact commits, no controlled experiments
 **Right**: Full reproduction package with checksums and exact environment
 
 ---
@@ -115,10 +115,10 @@ shimmy serve --n-cpu-moe 10         # Maps to with_n_cpu_moe(10)
 ### Key Changes
 
 #### 1. Honest Positioning
-**Old Title**: "MoE CPU Offloading Research White Paper"  
+**Old Title**: "MoE CPU Offloading Research White Paper"
 **New Title**: "Shimmy MoE CPU Offloading: Technical Validation & User Guide"
 
-**Old Subtitle**: "Enabling Massive Memory Savings... groundbreaking research"  
+**Old Subtitle**: "Enabling Massive Memory Savings... groundbreaking research"
 **New Subtitle**: "Production Integration of llama.cpp MoE Expert Tensor Offloading in Rust"
 
 #### 2. Accurate Executive Summary
@@ -143,8 +143,8 @@ shimmy serve --n-cpu-moe 10         # Maps to with_n_cpu_moe(10)
 #### 3. Upfront Disclosure
 **Added immediately after title**:
 ```markdown
-**This is NOT a research novelty claim.** llama.cpp added native MoE offloading 
-on August 4, 2025 (PR #15077 by @slaren). Our contribution is **Rust bindings** 
+**This is NOT a research novelty claim.** llama.cpp added native MoE offloading
+on August 4, 2025 (PR #15077 by @slaren). Our contribution is **Rust bindings**
 (llama-cpp-2 crate) and **production integration** in Shimmy with comprehensive testing.
 ```
 
@@ -179,9 +179,9 @@ on August 4, 2025 (PR #15077 by @slaren). Our contribution is **Rust bindings**
 **Added transparent disclosure**:
 ```markdown
 ### Discrepancy Investigation: 2MB vs 1.8GB
-**Historical Claim**: Earlier builds (Oct 6) showed ~2MB VRAM usage  
-**Current Measurement**: Oct 7-8 builds show 1.8-2.3GB VRAM usage  
-**Status**: Under investigation. Until reproduced, we report **measured range of 1.8-2.3GB** 
+**Historical Claim**: Earlier builds (Oct 6) showed ~2MB VRAM usage
+**Current Measurement**: Oct 7-8 builds show 1.8-2.3GB VRAM usage
+**Status**: Under investigation. Until reproduced, we report **measured range of 1.8-2.3GB**
 and exclude the 2MB figure from summaries.
 ```
 
@@ -305,11 +305,11 @@ docs/MOE-CPU-OFFLOADING-WHITEPAPER.md   ← Keep for historical record
 5. Transparent disclosures: Known issues documented
 
 ### Impact
-**Before**: Marketing whitepaper that would damage credibility when users discover contradictions  
+**Before**: Marketing whitepaper that would damage credibility when users discover contradictions
 **After**: Technical validation that builds trust through honesty about limitations
 
 ---
 
-*Audit completed: October 8, 2025*  
-*Corrected version: docs/MOE-TECHNICAL-VALIDATION.md*  
+*Audit completed: October 8, 2025*
+*Corrected version: docs/MOE-TECHNICAL-VALIDATION.md*
 *Status: Ready for user deployment with accurate expectations*

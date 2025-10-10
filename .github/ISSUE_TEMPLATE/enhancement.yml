@@ -35,7 +35,7 @@ body:
       description: What benefits would this enhancement provide?
       placeholder: |
         - Performance improvement
-        - Better user experience  
+        - Better user experience
         - Easier configuration
         - More intuitive API
         etc.
@@ -87,8 +87,8 @@ body:
         ```
         Current command/API/behavior
         ```
-        
-        **Enhanced:**  
+
+        **Enhanced:**
         ```
         Improved command/API/behavior
         ```

@@ -24,7 +24,7 @@ Expected: GPU acceleration for model inference
 Actual: "CPU is used (verfied with 100% CPU time)"
 
 Logs show:
-- "layer X assigned to device CPU" 
+- "layer X assigned to device CPU"
 - "tensor 'token_embd.weight' cannot be used with preferred buffer type CPU_REPACK, using CPU instead"
 ```
 
@@ -37,7 +37,7 @@ default = ["huggingface"]
 llama = ["dep:llama-cpp-2"]
 huggingface = []
 console = ["dep:shimmy-console-lib", "dep:tokio-tungstenite", "dep:crossterm", "dep:reqwest"]
-fast = ["huggingface"] 
+fast = ["huggingface"]
 full = ["huggingface", "llama"]
 ```
 
@@ -53,7 +53,7 @@ fn detect_best_gpu_backend() -> GpuBackend {
         }
     }
 
-    #[cfg(feature = "llama-vulkan")]    // ❌ Feature doesn't exist  
+    #[cfg(feature = "llama-vulkan")]    // ❌ Feature doesn't exist
     {
         if Self::is_vulkan_available() {
             return GpuBackend::Vulkan;
@@ -76,10 +76,10 @@ fn detect_best_gpu_backend() -> GpuBackend {
 ```rust
 async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>> {
     let gpu_layers = self.determine_gpu_layers(spec);  // Gets value but detection is broken
-    
+
     let model_params = llama::model::params::LlamaModelParams::default()
         .with_n_gpu_layers(gpu_layers);  // ✅ Correct API call
-        
+
     let model = llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &model_params)?;
 }
 ```
@@ -103,7 +103,7 @@ impl LlamaEngine {
         }
 
         if Self::is_vulkan_available() {
-            info!("Vulkan GPU detected, using Vulkan backend");  
+            info!("Vulkan GPU detected, using Vulkan backend");
             return GpuBackend::Vulkan;
         }
 
@@ -148,7 +148,7 @@ impl LlamaEngine {
 - ✅ **User control** - CLI can override auto-detection
 - ✅ **Robust** - fails gracefully when GPU not available
 
-### Cons  
+### Cons
 - ❌ **External dependencies** - relies on `vulkaninfo`/`clinfo` being installed
 - ❌ **Runtime overhead** - process spawning for detection (one-time cost)
 - ❌ **Platform-specific** - detection commands vary by OS
@@ -176,7 +176,7 @@ impl LlamaEngine {
             gpu_layers: layers,
         }
     }
-    
+
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>> {
         // Use self.gpu_layers directly, no spec.gpu_layers needed
         let model_params = llama::model::params::LlamaModelParams::default()
@@ -213,7 +213,7 @@ pub struct ModelSpec {
 - ✅ **Performance** - no per-model GPU configuration overhead
 
 ### Cons
-- ❌ **Less flexibility** - can't have different GPU settings per model  
+- ❌ **Less flexibility** - can't have different GPU settings per model
 - ❌ **Architectural change** - requires refactoring how engines are created
 - ❌ **Breaking change** - affects existing ModelSpec usage throughout codebase
 
@@ -233,7 +233,7 @@ pub struct ModelSpec {
 default = ["huggingface"]
 llama = ["dep:llama-cpp-2"]
 llama-cuda = ["llama", "llama-cpp-2/cuda"]
-llama-vulkan = ["llama", "llama-cpp-2/vulkan"] 
+llama-vulkan = ["llama", "llama-cpp-2/vulkan"]
 llama-opencl = ["llama", "llama-cpp-2/opencl"]
 huggingface = []
 gpu = ["llama-cuda", "llama-vulkan", "llama-opencl"]  # Convenience
@@ -276,7 +276,7 @@ cargo build --features huggingface,llama-opencl,llama-vulkan
 // How we currently load models
 let model = llama::model::LlamaModel::load_from_file(
     &be,
-    &spec.base_path, 
+    &spec.base_path,
     &model_params,  // This is where GPU layers are configured
 )?;
 
@@ -321,7 +321,7 @@ Please evaluate each option against these criteria:
 
 1. **Implementation Complexity**: How much code needs to change?
 2. **Performance Impact**: Runtime costs vs compile-time optimization
-3. **User Experience**: Build complexity vs runtime flexibility  
+3. **User Experience**: Build complexity vs runtime flexibility
 4. **Maintainability**: Long-term code clarity and debugging
 5. **Reliability**: Failure modes and graceful degradation
 6. **Constitutional Compliance**: Binary size, startup time, release gates
@@ -331,7 +331,7 @@ Please evaluate each option against these criteria:
 **Provide a detailed recommendation with**:
 1. **Primary choice** and reasoning
 2. **Implementation roadmap** with specific steps
-3. **Risk assessment** and mitigation strategies  
+3. **Risk assessment** and mitigation strategies
 4. **Testing strategy** to prevent regressions
 5. **Migration path** from current broken state
 
