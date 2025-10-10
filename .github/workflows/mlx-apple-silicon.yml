@@ -68,10 +68,10 @@ jobs:
         run: |
           echo "💨 Running MLX smoke test..."
           # Build and run a basic MLX functionality test
-          cargo run --features mlx -- --help
+          cargo run --bin shimmy --features mlx -- --help
           
           # Test MLX backend detection
-          cargo run --features mlx -- gpu-info | grep -i mlx || echo "MLX backend not detected"
+          cargo run --bin shimmy --features mlx -- gpu-info | grep -i mlx || echo "MLX backend not detected"
 
       - name: Verify MLX integration
         run: |
