@@ -117,15 +117,15 @@ set TOTAL_TIME=0
 
 for /L %%i in (1,1,%NUM_REQUESTS%) do (
     echo Request %%i/%NUM_REQUESTS%...
-    
+
     REM Create JSON payload
     echo {"model":"%MODEL_NAME%","messages":[{"role":"user","content":"Hello, how are you?"}],"max_tokens":100,"temperature":0.7} > temp_request.json
-    
+
     REM Make request with timing
     set START_TIME=!time!
     curl -s -X POST %SHIMMY_URL%/v1/chat/completions -H "Content-Type: application/json" -d @temp_request.json > temp_response.json 2>nul
     set END_TIME=!time!
-    
+
     REM Check if request was successful
     findstr "choices" temp_response.json >nul 2>&1
     if not errorlevel 1 (
@@ -135,7 +135,7 @@ for /L %%i in (1,1,%NUM_REQUESTS%) do (
         set /a FAILED+=1
         echo   ❌ Failed
     )
-    
+
     timeout /t 1 /nobreak >nul
 )
 

@@ -34,12 +34,12 @@ Shimmy includes an **optional usage analytics system** to understand how it's us
     "models_used_count": 2,
     "api_endpoints_used": ["/v1/chat/completions", "/v1/models"],
     "integration_type": "vscode",
-    
+
     // Market segmentation
     "deployment_type": "development",
-    "hardware_tier": "workstation", 
+    "hardware_tier": "workstation",
     "region_indicator": "americas",
-    
+
     // Performance metrics
     "avg_response_time_ms": 1250,
     "peak_requests_per_hour": 15,
@@ -79,13 +79,13 @@ Shimmy includes an **optional usage analytics system** to understand how it's us
 🚀 Welcome to Shimmy!
 
 📊 Help Improve Shimmy
-Shimmy can collect anonymous usage metrics to help improve performance 
+Shimmy can collect anonymous usage metrics to help improve performance
 and reliability. This data helps prioritize features and fix issues.
 
 What's collected: Performance metrics, error rates, feature usage
 What's NOT collected: Your prompts, responses, or personal data
 
-Enable metrics? [Y/n]: 
+Enable metrics? [Y/n]:
 ```
 
 ### Settings Management
@@ -93,7 +93,7 @@ Enable metrics? [Y/n]:
 # Enable metrics
 shimmy config --metrics enable
 
-# Disable metrics  
+# Disable metrics
 shimmy config --metrics disable
 
 # View current setting
@@ -120,7 +120,7 @@ Location: `~/.config/shimmy/config.json` (Linux/macOS) or `%APPDATA%\shimmy\conf
 
 ### Core Product Improvements
 - **Performance optimization**: Focus development on real bottlenecks
-- **Platform priorities**: Support the platforms users actually use  
+- **Platform priorities**: Support the platforms users actually use
 - **Feature development**: Build what developers need most
 - **Bug fixes**: Target issues affecting the most users
 - **Compatibility**: Optimize for popular hardware configurations
@@ -131,7 +131,7 @@ Location: `~/.config/shimmy/config.json` (Linux/macOS) or `%APPDATA%\shimmy\conf
 - **Investor relations**: Demonstrate product-market fit and growth
 - **Strategic decisions**: Data-driven product roadmap planning
 
-### Community Benefits  
+### Community Benefits
 - **Public insights**: Anonymized usage trends shared with community
 - **Performance data**: Real-world benchmarks and recommendations
 - **Hardware guidance**: "Tested best on..." recommendations based on data

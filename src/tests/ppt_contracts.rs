@@ -156,6 +156,7 @@ mod property_tests {
     use super::*;
 
     #[test]
+    #[serial_test::serial]
     fn test_model_name_property() {
         // Property: Valid model names are never empty and contain reasonable characters
         let test_names = vec!["phi3", "llama2-7b", "mistral-v0.1", "gpt-3.5-turbo"];
@@ -222,6 +223,7 @@ mod property_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_backend_routing_property() {
         // Property: File extensions always map to correct backends
         let test_cases = vec![

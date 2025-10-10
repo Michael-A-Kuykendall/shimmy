@@ -1,5 +1,5 @@
 //! Smart Model Preloading & Warmup System
-//! 
+//!
 //! This module implements intelligent model preloading to minimize latency by:
 //! - Tracking model usage patterns
 //! - Preloading frequently used models
@@ -100,7 +100,7 @@ impl SmartPreloader {
     pub async fn register_model(&self, name: String, spec: ModelSpec) {
         let mut specs = self.available_specs.write().await;
         specs.insert(name.clone(), spec);
-        
+
         // Initialize usage stats if not present
         let mut stats = self.usage_stats.write().await;
         stats.entry(name).or_default();
@@ -109,7 +109,7 @@ impl SmartPreloader {
     /// Record model usage and trigger preloading decisions
     pub async fn record_usage(&self, model_name: &str) -> Result<()> {
         let now = SystemTime::now();
-        
+
         // Update usage statistics
         {
             let mut stats = self.usage_stats.write().await;
@@ -150,7 +150,7 @@ impl SmartPreloader {
         // Load the model
         info!("Loading model {} on demand", model_name);
         let start_time = Instant::now();
-        
+
         let spec = {
             let specs = self.available_specs.read().await;
             specs.get(model_name)
@@ -166,7 +166,7 @@ impl SmartPreloader {
             let mut stats = self.usage_stats.write().await;
             let entry = stats.entry(model_name.to_string()).or_default();
             entry.load_count += 1;
-            
+
             // Update average load time
             if entry.load_count == 1 {
                 entry.avg_load_time = load_duration;
@@ -222,7 +222,7 @@ impl SmartPreloader {
             Ok(_) => {
                 let warmup_duration = warmup_start.elapsed();
                 debug!("Model {} warmed up in {:?}", model_name, warmup_duration);
-                
+
                 // Mark warmup as completed
                 let mut stats = self.usage_stats.write().await;
                 if let Some(stat) = stats.get_mut(model_name) {
@@ -241,11 +241,11 @@ impl SmartPreloader {
     /// Evaluate which models should be preloaded
     async fn evaluate_preloading_opportunities(&self) -> Result<()> {
         let candidates = self.identify_preloading_candidates().await;
-        
+
         for candidate in candidates {
             if !self.is_model_loaded(&candidate).await {
                 info!("Preloading model {} based on usage patterns", candidate);
-                
+
                 // Load in background to avoid blocking current request
                 let preloader = Arc::new(Self {
                     config: self.config.clone(),
@@ -255,7 +255,7 @@ impl SmartPreloader {
                     available_specs: Arc::clone(&self.available_specs),
                     engine: Arc::clone(&self.engine),
                 });
-                
+
                 let model_name = candidate.clone();
                 tokio::spawn(async move {
                     if let Err(e) = preloader.preload_model(&model_name).await {
@@ -295,7 +295,7 @@ impl SmartPreloader {
         // Limit to available memory slots
         let loaded_count = self.loaded_models.read().await.len();
         let available_slots = self.config.max_loaded_models.saturating_sub(loaded_count);
-        
+
         candidates.truncate(available_slots);
         candidates
     }
@@ -309,7 +309,7 @@ impl SmartPreloader {
     /// Preload a specific model in the background
     async fn preload_model(&self, model_name: &str) -> Result<()> {
         let start_time = Instant::now();
-        
+
         let spec = {
             let specs = self.available_specs.read().await;
             specs.get(model_name)
@@ -341,12 +341,12 @@ impl SmartPreloader {
     /// Enforce memory limits by evicting least recently used models
     async fn enforce_memory_limits(&self) -> Result<()> {
         let mut loaded = self.loaded_models.write().await;
-        
+
         while loaded.len() > self.config.max_loaded_models {
             // Find least recently used model
             let mut oldest_time = SystemTime::now();
             let mut oldest_model = String::new();
-            
+
             for (model_name, (_, load_time)) in loaded.iter() {
                 if *load_time < oldest_time {
                     oldest_time = *load_time;
@@ -389,7 +389,7 @@ impl SmartPreloader {
             let mut lru = self.lru_queue.lock().await;
             lru.clear();
         }
-        
+
         info!("Cleared all preloaded models and statistics");
         Ok(())
     }
@@ -439,7 +439,7 @@ mod tests {
         let config = PreloadingConfig::default();
         let engine = Arc::new(MockEngine);
         let preloader = SmartPreloader::new(config, engine);
-        
+
         assert_eq!(preloader.loaded_model_count().await, 0);
     }
 
@@ -459,7 +459,7 @@ mod tests {
         };
 
         preloader.register_model("test-model".to_string(), spec).await;
-        
+
         let stats = preloader.usage_stats().await;
         assert!(stats.contains_key("test-model"));
     }
@@ -480,21 +480,21 @@ mod tests {
         };
 
         preloader.register_model("cache-test".to_string(), spec).await;
-        
+
         // First load should actually load the model
         let start = Instant::now();
         let model1 = preloader.model("cache-test").await.unwrap();
         let first_load_time = start.elapsed();
-        
+
         // Second load should be faster (cached)
         let start = Instant::now();
         let model2 = preloader.model("cache-test").await.unwrap();
         let second_load_time = start.elapsed();
-        
+
         // Verify caching worked
         assert!(second_load_time < first_load_time);
         assert_eq!(preloader.loaded_model_count().await, 1);
-        
+
         // Test generation works
         let result = model1.generate("test", GenOptions::default(), None).await.unwrap();
         assert!(result.contains("Generated from cache-test"));
@@ -516,15 +516,15 @@ mod tests {
         };
 
         preloader.register_model("usage-test".to_string(), spec).await;
-        
+
         // Use the model multiple times
         for _ in 0..3 {
             preloader.model("usage-test").await.unwrap();
         }
-        
+
         let stats = preloader.usage_stats().await;
         let usage_stat = stats.get("usage-test").unwrap();
-        
+
         assert_eq!(usage_stat.total_requests, 3);
         assert_eq!(usage_stat.load_count, 1); // Should only load once due to caching
         assert!(usage_stat.warmup_completed);
@@ -558,7 +558,7 @@ mod tests {
             // Small delay to ensure different load times
             tokio::time::sleep(Duration::from_millis(1)).await;
         }
-        
+
         // Should only have 2 models loaded due to memory limit
         assert_eq!(preloader.loaded_model_count().await, 2);
     }
@@ -596,7 +596,7 @@ mod tests {
         preloader.record_usage("candidate-2").await.unwrap();
 
         let candidates = preloader.identify_preloading_candidates().await;
-        
+
         // candidate-0 and candidate-1 should be candidates (>= min_usage_threshold)
         // candidate-2 should not be (only 1 usage)
         assert_eq!(candidates.len(), 2);
@@ -622,17 +622,17 @@ mod tests {
 
         preloader.register_model("clear-test".to_string(), spec).await;
         preloader.model("clear-test").await.unwrap();
-        
+
         assert_eq!(preloader.loaded_model_count().await, 1);
         assert!(!preloader.usage_stats().await.is_empty());
-        
+
         preloader.clear().await.unwrap();
-        
+
         assert_eq!(preloader.loaded_model_count().await, 0);
         assert!(preloader.usage_stats().await.is_empty());
     }
 
-    #[tokio::test] 
+    #[tokio::test]
     async fn test_concurrent_access() {
         let config = PreloadingConfig::default();
         let engine = Arc::new(MockEngine);

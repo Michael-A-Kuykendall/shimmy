@@ -5,7 +5,15 @@
 This document outlines comprehensive stress testing protocols for validating MoE models with CPU offloading across three validated architectures:
 
 1. **GPT-OSS 20B**: 32 experts, 4 active per token
+<<<<<<< HEAD
+<<<<<<< HEAD
+2. **Phi-3.5-MoE 41.9B**: 16 experts, 2 active per token
+=======
 2. **Phi-3.5-MoE 41.9B**: 16 experts, 2 active per token  
+>>>>>>> main
+=======
+2. **Phi-3.5-MoE 41.9B**: 16 experts, 2 active per token  
+>>>>>>> main
 3. **DeepSeek MoE 16B**: 64 experts + 2 shared experts, 6 active per token
 
 ## Test Categories
@@ -38,7 +46,15 @@ This document outlines comprehensive stress testing protocols for validating MoE
 - **Objective**: Test full context window utilization
 - **Tests**:
   - GPT-OSS: 131K context utilization
+<<<<<<< HEAD
+<<<<<<< HEAD
+  - Phi-3.5-MoE: 128K context utilization
+=======
   - Phi-3.5-MoE: 128K context utilization  
+>>>>>>> main
+=======
+  - Phi-3.5-MoE: 128K context utilization  
+>>>>>>> main
   - DeepSeek: 4K context utilization
 - **Metrics**: Memory scaling, performance at max context
 
@@ -189,7 +205,15 @@ This document outlines comprehensive stress testing protocols for validating MoE
 
 ### Real-Time Dashboards
 - Live performance metrics
+<<<<<<< HEAD
+<<<<<<< HEAD
+- Memory usage graphs
+=======
 - Memory usage graphs  
+>>>>>>> main
+=======
+- Memory usage graphs  
+>>>>>>> main
 - Expert activation heatmaps
 - Quality trend analysis
 
@@ -221,4 +245,12 @@ This document outlines comprehensive stress testing protocols for validating MoE
 
 ---
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 This protocol provides comprehensive validation that MoE CPU offloading is production-ready for real-world AI assistant workloads, demonstrating both technical innovation and practical utility.
+=======
+This protocol provides comprehensive validation that MoE CPU offloading is production-ready for real-world AI assistant workloads, demonstrating both technical innovation and practical utility.
+>>>>>>> main
+=======
+This protocol provides comprehensive validation that MoE CPU offloading is production-ready for real-world AI assistant workloads, demonstrating both technical innovation and practical utility.
+>>>>>>> main

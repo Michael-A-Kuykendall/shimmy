@@ -181,12 +181,12 @@ impl LlamaEngine {
 
         info!("GPU backend configured: {:?}", gpu_backend);
 
-        Self { 
+        Self {
             gpu_backend,
             moe_config: MoeConfig::default(),
         }
     }
-    
+
     /// Set MoE CPU offloading configuration
     #[allow(dead_code)] // Temporarily unused while fork is being fixed
     pub fn with_moe_config(mut self, cpu_moe_all: bool, n_cpu_moe: Option<usize>) -> Self {
@@ -218,7 +218,7 @@ impl InferenceEngine for LlamaEngine {
         #[cfg(feature = "llama")]
         {
             use anyhow::anyhow;
-            use llama_cpp_2 as llama;
+            use shimmy_llama_cpp_2 as llama;
             use std::num::NonZeroU32;
             let be = llama::llama_backend::LlamaBackend::init()?;
 
@@ -229,9 +229,9 @@ impl InferenceEngine for LlamaEngine {
                 n_gpu_layers, self.gpu_backend
             );
 
-            let mut model_params =
+            let model_params =
                 llama::model::params::LlamaModelParams::default().with_n_gpu_layers(n_gpu_layers);
-            
+
             // Apply MoE CPU offloading if configured
             // TODO: Re-enable when fork is fixed - these methods require shimmy-llama-cpp-2 fork
             if let Some(n) = self.moe_config.n_cpu_moe {
@@ -302,9 +302,9 @@ impl InferenceEngine for LlamaEngine {
 
 #[cfg(feature = "llama")]
 struct LlamaLoaded {
-    _be: llama_cpp_2::llama_backend::LlamaBackend,
-    model: llama_cpp_2::model::LlamaModel,
-    ctx: Mutex<llama_cpp_2::context::LlamaContext<'static>>,
+    _be: shimmy_llama_cpp_2::llama_backend::LlamaBackend,
+    model: shimmy_llama_cpp_2::model::LlamaModel,
+    ctx: Mutex<shimmy_llama_cpp_2::context::LlamaContext<'static>>,
 }
 
 #[cfg(feature = "llama")]
@@ -324,7 +324,7 @@ impl LoadedModel for LlamaLoaded {
         opts: GenOptions,
         mut on_token: Option<Box<dyn FnMut(String) + Send>>,
     ) -> Result<String> {
-        use llama_cpp_2::{
+        use shimmy_llama_cpp_2::{
             llama_batch::LlamaBatch,
             model::{AddBos, Special},
             sampling::LlamaSampler,

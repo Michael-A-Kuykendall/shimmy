@@ -50,7 +50,15 @@ llama_model_loader: - type q4_K:  223 tensors
 llama_model_loader: - type q6_K:   28 tensors
 print_info: file format = GGUF V3 (latest)
 print_info: file type   = Q4_K - Medium
+<<<<<<< HEAD
+<<<<<<< HEAD
+print_info: file size   = 10.10 GiB (5.30 BPW)
+=======
 print_info: file size   = 10.10 GiB (5.30 BPW) 
+>>>>>>> main
+=======
+print_info: file size   = 10.10 GiB (5.30 BPW) 
+>>>>>>> main
 init_tokenizer: initializing tokenizer for type 2
 load: control token: 100001 '<｜end▁of▁sentence｜>' is not marked as EOG
 load: control token: 100000 '<｜begin▁of▁sentence｜>' is not marked as EOG
@@ -589,4 +597,11 @@ Explain quantum computing in simple terms.
 Explain quantum computing in simple terms.
 
 Explain quantum computing in simple terms.
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> main
+=======
+
+>>>>>>> main

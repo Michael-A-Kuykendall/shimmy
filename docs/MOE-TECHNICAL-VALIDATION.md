@@ -26,7 +26,15 @@ This is a **technical validation** of MoE CPU offloading in Shimmy, demonstratin
 
 ### Measured Results (NVIDIA GH200 480GB)
 - **GPT-OSS 20B**: ~1.8-2.3GB VRAM with `--cpu-moe` vs ~15GB estimated baseline
+<<<<<<< HEAD
+<<<<<<< HEAD
+- **Phi-3.5-MoE 42B**: ~2.8GB VRAM with `--cpu-moe` vs ~80GB estimated baseline
+=======
 - **Phi-3.5-MoE 42B**: ~2.8GB VRAM with `--cpu-moe` vs ~80GB estimated baseline  
+>>>>>>> main
+=======
+- **Phi-3.5-MoE 42B**: ~2.8GB VRAM with `--cpu-moe` vs ~80GB estimated baseline  
+>>>>>>> main
 - **DeepSeek 16B**: Full CPU offloading confirmed via tensor buffer logs
 
 ### Known Limitations
@@ -121,9 +129,21 @@ pub fn with_n_cpu_moe(mut self, n: usize) -> Self {
 
 ### Model 1: GPT-OSS 20B
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Architecture**: 32 experts per layer, 4 active per token, 24 layers
+**File**: `gpt-oss-20b-f16.gguf` (13.8GB)
+**Source**: https://huggingface.co/tensorblock/GPT-OSS-20B-GGUF
+=======
 **Architecture**: 32 experts per layer, 4 active per token, 24 layers  
 **File**: `gpt-oss-20b-f16.gguf` (13.8GB)  
 **Source**: https://huggingface.co/tensorblock/GPT-OSS-20B-GGUF  
+>>>>>>> main
+=======
+**Architecture**: 32 experts per layer, 4 active per token, 24 layers  
+**File**: `gpt-oss-20b-f16.gguf` (13.8GB)  
+**Source**: https://huggingface.co/tensorblock/GPT-OSS-20B-GGUF  
+>>>>>>> main
 **SHA256**: *(not recorded - add in reproduction)*
 
 #### Memory Usage (Measured)
@@ -167,9 +187,21 @@ Average                 100     324         31.68
 
 ### Model 2: Phi-3.5-MoE 41.9B
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Architecture**: 16 experts per layer, 2 active per token, 32 layers
+**File**: `phi-3.5-moe-f16.gguf` (79GB)
+**Source**: Converted from https://huggingface.co/microsoft/Phi-3.5-MoE-instruct
+=======
 **Architecture**: 16 experts per layer, 2 active per token, 32 layers  
 **File**: `phi-3.5-moe-f16.gguf` (79GB)  
 **Source**: Converted from https://huggingface.co/microsoft/Phi-3.5-MoE-instruct  
+>>>>>>> main
+=======
+**Architecture**: 16 experts per layer, 2 active per token, 32 layers  
+**File**: `phi-3.5-moe-f16.gguf` (79GB)  
+**Source**: Converted from https://huggingface.co/microsoft/Phi-3.5-MoE-instruct  
+>>>>>>> main
 **Conversion Command**: *(see Reproduction section)*
 
 #### Memory Usage (Measured)
@@ -195,8 +227,18 @@ Average                 100     612         15.03
 
 ### Model 3: DeepSeek MoE 16B
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Architecture**: 64 regular experts + 2 shared experts, 6 active per token
+**File**: `deepseek-moe-16b-f16.gguf` (30.51GB)
+=======
 **Architecture**: 64 regular experts + 2 shared experts, 6 active per token  
 **File**: `deepseek-moe-16b-f16.gguf` (30.51GB)  
+>>>>>>> main
+=======
+**Architecture**: 64 regular experts + 2 shared experts, 6 active per token  
+**File**: `deepseek-moe-16b-f16.gguf` (30.51GB)  
+>>>>>>> main
 **Source**: https://huggingface.co/MikeKuykendall/deepseek-moe-16b-cpu-offload-gguf
 
 #### Memory Usage (Measured)
@@ -404,8 +446,18 @@ GGUF files hosted on HuggingFace under our account are **derivative works** of o
 - [ ] Document CPU pinning semantics (page-locked host memory)
 
 ### Discrepancy Investigation: 2MB vs 1.8GB
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Historical Claim**: Earlier builds (Oct 6) showed ~2MB VRAM usage
+**Current Measurement**: Oct 7-8 builds show 1.8-2.3GB VRAM usage
+=======
 **Historical Claim**: Earlier builds (Oct 6) showed ~2MB VRAM usage  
 **Current Measurement**: Oct 7-8 builds show 1.8-2.3GB VRAM usage  
+>>>>>>> main
+=======
+**Historical Claim**: Earlier builds (Oct 6) showed ~2MB VRAM usage  
+**Current Measurement**: Oct 7-8 builds show 1.8-2.3GB VRAM usage  
+>>>>>>> main
 **Possible Causes**:
 1. Earlier measurement excluded CUDA allocator pools / KV cache
 2. Different flash-attn or graph reservation flags
@@ -453,9 +505,21 @@ load_tensors: CUDA0 model buffer size = XXXX MiB
 
 ## Contact & Support
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Repository**: https://github.com/Michael-A-Kuykendall/shimmy
+**Branch**: feat/moe-cpu-offload
+**Issues**: https://github.com/Michael-A-Kuykendall/shimmy/issues
+=======
 **Repository**: https://github.com/Michael-A-Kuykendall/shimmy  
 **Branch**: feat/moe-cpu-offload  
 **Issues**: https://github.com/Michael-A-Kuykendall/shimmy/issues  
+>>>>>>> main
+=======
+**Repository**: https://github.com/Michael-A-Kuykendall/shimmy  
+**Branch**: feat/moe-cpu-offload  
+**Issues**: https://github.com/Michael-A-Kuykendall/shimmy/issues  
+>>>>>>> main
 **HuggingFace Models**:
 - GPT-OSS 20B: https://huggingface.co/MikeKuykendall/gpt-oss-20b-moe-cpu-offload-gguf
 - Phi-3.5-MoE: https://huggingface.co/MikeKuykendall/phi-3.5-moe-cpu-offload-gguf
@@ -463,6 +527,16 @@ load_tensors: CUDA0 model buffer size = XXXX MiB
 
 ---
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+*Document Version: 1.0*
+*Last Updated: October 8, 2025*
+=======
 *Document Version: 1.0*  
 *Last Updated: October 8, 2025*  
+>>>>>>> main
+=======
+*Document Version: 1.0*  
+*Last Updated: October 8, 2025*  
+>>>>>>> main
 *Status: Technical validation for production use. Limitations and future work clearly documented.*

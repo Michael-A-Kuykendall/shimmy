@@ -12,7 +12,15 @@
 ### What Changed:
 1. **Upstream Attribution Added**: llama.cpp PR #15077 (Aug 4, 2025) implemented core MoE offloading BEFORE our work started (Oct 4, 2025)
 2. **Our Actual Contribution**: Rust bindings (`with_cpu_moe_all()`, `with_n_cpu_moe(n)`) in llama-cpp-2 crate + shimmy CLI integration
+<<<<<<< HEAD
+<<<<<<< HEAD
+3. **Memory Claims Corrected**:
+=======
 3. **Memory Claims Corrected**: 
+>>>>>>> main
+=======
+3. **Memory Claims Corrected**: 
+>>>>>>> main
    - ❌ OLD: "99.9% VRAM savings (2MB vs 15GB)" - based on estimates
    - ✅ NEW: "71.5% VRAM savings (3.5GB vs 12.3GB)" - controlled A/B baseline (Oct 8, 2025)
 4. **Performance Data Corrected**:
@@ -96,14 +104,30 @@ GPU VRAM: 12,666 MiB (12.3GB)
 Compute process: shimmy serve (PID varies)
 
 # With --cpu-moe: Expert tensors offloaded to CPU
+<<<<<<< HEAD
+<<<<<<< HEAD
+GPU VRAM: 3,602 MiB (3.5GB)
+=======
 GPU VRAM: 3,602 MiB (3.5GB)  
+>>>>>>> main
+=======
+GPU VRAM: 3,602 MiB (3.5GB)  
+>>>>>>> main
 VRAM reduction: 71.5% (9,064 MiB saved)
 ```
 
 Expert tensors successfully offloaded (log excerpt):
 ```
 tensor blk.0.ffn_gate_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host
+<<<<<<< HEAD
+<<<<<<< HEAD
+tensor blk.0.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host
+=======
 tensor blk.0.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host  
+>>>>>>> main
+=======
+tensor blk.0.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host  
+>>>>>>> main
 tensor blk.0.ffn_up_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host
 ```
 
@@ -275,7 +299,15 @@ All raw benchmark outputs preserved in repository for audit verification:
 
 ```
 docs/benchmark-evidence/phi35-streaming-bench.log           # Phi-3.5-MoE streaming vs non-streaming
+<<<<<<< HEAD
+<<<<<<< HEAD
+docs/benchmark-evidence/gpt-oss-streaming-bench.log         # GPT-OSS streaming vs non-streaming
+=======
 docs/benchmark-evidence/gpt-oss-streaming-bench.log         # GPT-OSS streaming vs non-streaming  
+>>>>>>> main
+=======
+docs/benchmark-evidence/gpt-oss-streaming-bench.log         # GPT-OSS streaming vs non-streaming  
+>>>>>>> main
 docs/benchmark-evidence/deepseek-streaming-bench.log        # DeepSeek streaming vs non-streaming
 ```
 
@@ -293,7 +325,15 @@ docs/benchmark-evidence/shimmy-deepseek.log   # DeepSeek loading and offloading 
 llama_model_loader: - kv XX: <model>.expert_count u32 = <count>
 llama_model_loader: - kv XX: <model>.expert_used_count u32 = <active>
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+# CPU offloading confirmation
+=======
 # CPU offloading confirmation  
+>>>>>>> main
+=======
+# CPU offloading confirmation  
+>>>>>>> main
 tensor blk.X.ffn_gate_exps.weight (...) buffer type overridden to CUDA_Host
 tensor blk.X.ffn_down_exps.weight (...) buffer type overridden to CUDA_Host
 tensor blk.X.ffn_up_exps.weight (...) buffer type overridden to CUDA_Host
@@ -403,20 +443,48 @@ Following official HuggingFace model release checklist, our publication includes
 
 ### Phase 3: Alternative Model Testing - ✅ MISSION COMPLETE
 - [x] **Microsoft Phi-3.5-MoE-instruct**: Successfully converted and tested with CPU offloading
+<<<<<<< HEAD
+<<<<<<< HEAD
+  - ✅ 41.9B parameters (16 experts, 2 active per token)
+=======
   - ✅ 41.9B parameters (16 experts, 2 active per token) 
+>>>>>>> main
+=======
+  - ✅ 41.9B parameters (16 experts, 2 active per token) 
+>>>>>>> main
   - ✅ 97.1% VRAM savings (2.8GB vs ~80GB expected)
   - ✅ Generation quality excellent, produces coherent responses
   - ✅ Load time ~45 seconds, within acceptable range
   - ✅ Professional HuggingFace upload completed with comprehensive documentation
+<<<<<<< HEAD
+<<<<<<< HEAD
+- [x] **DeepSeek MoE 16B**: Successfully converted and validated with CPU offloading
+  - ✅ 16.38B parameters (64 experts + 2 shared experts, 6 active per token)
+  - ✅ Unique dual-expert architecture (regular + shared experts)
+=======
 - [x] **DeepSeek MoE 16B**: Successfully converted and validated with CPU offloading  
   - ✅ 16.38B parameters (64 experts + 2 shared experts, 6 active per token)
   - ✅ Unique dual-expert architecture (regular + shared experts) 
+>>>>>>> main
+=======
+- [x] **DeepSeek MoE 16B**: Successfully converted and validated with CPU offloading  
+  - ✅ 16.38B parameters (64 experts + 2 shared experts, 6 active per token)
+  - ✅ Unique dual-expert architecture (regular + shared experts) 
+>>>>>>> main
   - ✅ CPU offloading working perfectly (all expert tensors moved to CPU)
   - ✅ Model loads successfully and generates coherent text
   - ✅ 32.8GB GGUF converted from HuggingFace format
 - [x] **GRIN-MoE**: Investigated but requires custom code support (deprioritized)
 - [x] **Three-Model Validation**: Successfully proven MoE CPU offloading across diverse architectures
+<<<<<<< HEAD
+<<<<<<< HEAD
+- [x] **Professional Documentation**: All working models published with YAML-compliant metadata
+=======
 - [x] **Professional Documentation**: All working models published with YAML-compliant metadata  
+>>>>>>> main
+=======
+- [x] **Professional Documentation**: All working models published with YAML-compliant metadata  
+>>>>>>> main
 - [x] **Comprehensive Testing**: Systematic validation across 16B-41.9B parameter models
 
 ## Comprehensive Technical Findings
@@ -439,7 +507,15 @@ Successfully conducted rigorous baseline comparison with CUDA-enabled shimmy bui
 Our modified llama.cpp successfully identifies and offloads expert tensors across three completely different MoE architectures:
 
 1. **Standard 32-Expert MoE (GPT-OSS)**: Traditional MoE with 4 active experts per token
+<<<<<<< HEAD
+<<<<<<< HEAD
+2. **Standard 16-Expert MoE (Phi-3.5-MoE)**: Efficient MoE with 2 active experts per token
+=======
 2. **Standard 16-Expert MoE (Phi-3.5-MoE)**: Efficient MoE with 2 active experts per token  
+>>>>>>> main
+=======
+2. **Standard 16-Expert MoE (Phi-3.5-MoE)**: Efficient MoE with 2 active experts per token  
+>>>>>>> main
 3. **Dual Architecture MoE (DeepSeek)**: Innovative design with 64 regular experts + 2 shared experts, 6 active per token
 
 ### Massive VRAM Reduction Across All Architectures
@@ -473,7 +549,15 @@ Systematic benchmarking was conducted on all three models across both streaming 
 
 #### Test Methodology
 - **4 Test Prompts**: Short (7 tokens), Medium (6 tokens), Long (10 tokens), Very Long (27 tokens)
+<<<<<<< HEAD
+<<<<<<< HEAD
+- **Measurement Approach**:
+=======
 - **Measurement Approach**: 
+>>>>>>> main
+=======
+- **Measurement Approach**: 
+>>>>>>> main
   - Non-streaming: Total request time with token estimation (word_count × 1.3)
   - Streaming: SSE event counting with actual token counts and real TTFT measurement
 - **Parameters**: max_tokens=100, temperature=0.3 (consistent across all tests)
@@ -573,7 +657,15 @@ This research demonstrates **Rust language bindings** for llama.cpp's MoE expert
 
 **Achievement**: Successfully validated three diverse MoE architectures proving universal applicability:
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+1. **GPT-OSS 20B**: Standard 32-expert MoE → 99.9% VRAM reduction
+=======
 1. **GPT-OSS 20B**: Standard 32-expert MoE → 99.9% VRAM reduction 
+>>>>>>> main
+=======
+1. **GPT-OSS 20B**: Standard 32-expert MoE → 99.9% VRAM reduction 
+>>>>>>> main
 2. **Phi-3.5-MoE 41.9B**: Efficient 16-expert MoE → 97.1% VRAM reduction
 3. **DeepSeek MoE 16B**: Dual-expert architecture (64+2 shared) → Full CPU offloading verified
 
@@ -588,7 +680,15 @@ This research demonstrates **Rust language bindings** for llama.cpp's MoE expert
 
 ### HuggingFace Model Publications
 - **GPT-OSS 20B**: https://huggingface.co/MikeKuykendall/gpt-oss-20b-moe-cpu-offload-gguf ✅
+<<<<<<< HEAD
+<<<<<<< HEAD
+- **Phi-3.5-MoE 41.9B**: https://huggingface.co/MikeKuykendall/phi-3.5-moe-cpu-offload-gguf ✅
+=======
 - **Phi-3.5-MoE 41.9B**: https://huggingface.co/MikeKuykendall/phi-3.5-moe-cpu-offload-gguf ✅  
+>>>>>>> main
+=======
+- **Phi-3.5-MoE 41.9B**: https://huggingface.co/MikeKuykendall/phi-3.5-moe-cpu-offload-gguf ✅  
+>>>>>>> main
 - **DeepSeek MoE 16B**: https://huggingface.co/MikeKuykendall/deepseek-moe-16b-cpu-offload-gguf ✅
 
 ### Research Impact
@@ -616,7 +716,15 @@ This represents the **first successful implementation** of MoE expert tensor CPU
 *Document created: October 6, 2025*
 *Last updated: October 8, 2025 - Added comprehensive streaming vs non-streaming performance benchmarks*
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+## Live Runtime Data Snapshot (Oct 7, 2025)
+=======
 ## Live Runtime Data Snapshot (Oct 7, 2025)  
+>>>>>>> main
+=======
+## Live Runtime Data Snapshot (Oct 7, 2025)  
+>>>>>>> main
 Captured AFTER sampler chain revert and during ongoing quality investigation. This section logs raw, unedited telemetry for transparency. Earlier claims (e.g. 2MB GPU usage) reflect a prior experimental build / measurement method and are being re‑validated. Do NOT discard; treat this as an addendum pending reconciliation.
 
 ### Environment
@@ -647,7 +755,15 @@ Note: This is far higher than the earlier 2MB claim. Hypotheses under investigat
 1. Prior measurement captured only incremental allocation (excluding base context + CUDA allocator pools).
 2. Build/runtime flags (e.g. flash attention / graph reservation) now allocate additional persistent buffers.
 3. Differences in sampler / KV cache configuration (SWA, full-size KV) increasing baseline.
+<<<<<<< HEAD
+<<<<<<< HEAD
+4. Earlier run may have forced expert tensors + most non-attention layers to CPU via a more aggressive mapping patch (since reverted).
+=======
 4. Earlier run may have forced expert tensors + most non-attention layers to CPU via a more aggressive mapping patch (since reverted).  
+>>>>>>> main
+=======
+4. Earlier run may have forced expert tensors + most non-attention layers to CPU via a more aggressive mapping patch (since reverted).  
+>>>>>>> main
 Action: Reproduce earlier minimal 2MB condition and document methodology or amend claims.
 
 ### Single-Model Validator Results (scripts/validate_single_model_clean.py)
@@ -669,7 +785,15 @@ Validator JSON excerpt (factorial test shows repetition artifacts):
 ```
 
 ### Quality Degradation Observation
+<<<<<<< HEAD
+<<<<<<< HEAD
+Repetition / token fragmentation present (e.g. repeated substrings, punctuation duplication). Indicates sampler or penalty configuration still not optimal post‑revert. Earlier white paper “Good / No degradation” statements are provisional until this is resolved.
+=======
 Repetition / token fragmentation present (e.g. repeated substrings, punctuation duplication). Indicates sampler or penalty configuration still not optimal post‑revert. Earlier white paper “Good / No degradation” statements are provisional until this is resolved.  
+>>>>>>> main
+=======
+Repetition / token fragmentation present (e.g. repeated substrings, punctuation duplication). Indicates sampler or penalty configuration still not optimal post‑revert. Earlier white paper “Good / No degradation” statements are provisional until this is resolved.  
+>>>>>>> main
 Action Items:
 1. Re-evaluate sampler chain vs upstream default (verify penalties window + greedy ordering).
 2. Capture baseline output with temperature=0.0 to test deterministic decode vs artifact persistence.
@@ -682,7 +806,15 @@ Action Items:
 - [ ] Insert reconciled Memory Usage table (Raw Oct 7 vs Prior Claim) or amend claim if irreproducible.
 
 ---
+<<<<<<< HEAD
+<<<<<<< HEAD
+*Live data addendum inserted Oct 7, 2025 (pending reconciliation with earlier published metrics).*
+=======
 *Live data addendum inserted Oct 7, 2025 (pending reconciliation with earlier published metrics).* 
+>>>>>>> main
+=======
+*Live data addendum inserted Oct 7, 2025 (pending reconciliation with earlier published metrics).* 
+>>>>>>> main
 
 ### GPT-OSS 20B Validation Run (Run 2 - 2025-10-07T00:32Z)
 Command:
@@ -704,4 +836,12 @@ Arithmetic fragment: 333)33 (33333333 step3 -333333 Show3 /333333 ...
 Factorial fragment: factorial error with inputsPython handling for negative non)...
 Architecture fragment: a-sharing paste storage. paste. architecture-sharing ...
 ```
+<<<<<<< HEAD
+<<<<<<< HEAD
 Observation: High repetition and token boundary noise persists. Pending root cause analysis before declaring quality parity.
+=======
+Observation: High repetition and token boundary noise persists. Pending root cause analysis before declaring quality parity.
+>>>>>>> main
+=======
+Observation: High repetition and token boundary noise persists. Pending root cause analysis before declaring quality parity.
+>>>>>>> main

@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
         Thanks for reporting a performance issue! Performance is crucial for Shimmy's local-first philosophy.
-        
+
         Please provide detailed information to help us identify and optimize the bottleneck.
 
   - type: dropdown
@@ -57,7 +57,7 @@ body:
         - Model loading times
         - Tokens per second
         - Binary size (if relevant)
-        
+
         Use tools like `time`, `htop`, or browser dev tools for measurements.
     validations:
       required: true

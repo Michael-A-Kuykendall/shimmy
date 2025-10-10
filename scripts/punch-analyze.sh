@@ -33,22 +33,22 @@ else
     echo "   3. Re-run this script"
     echo ""
     echo "📊 For now, running basic Rust analysis with cargo..."
-    
+
     # Fallback to basic cargo analysis
     echo ""
     echo "🦀 Basic Rust Analysis (Fallback):"
     echo "  📋 Checking compilation..."
     cargo check --all-features --quiet && echo "    ✅ Compilation: PASS" || echo "    ❌ Compilation: FAIL"
-    
+
     echo "  🧪 Running tests..."
     cargo test --all-features --quiet >/dev/null 2>&1 && echo "    ✅ Tests: PASS" || echo "    ❌ Tests: FAIL"
-    
+
     echo "  📏 Code formatting..."
     cargo fmt -- --check >/dev/null 2>&1 && echo "    ✅ Formatting: PASS" || echo "    ❌ Formatting: FAIL"
-    
+
     echo "  🔍 Clippy lints..."
     cargo clippy --all-features -- -D warnings >/dev/null 2>&1 && echo "    ✅ Lints: PASS" || echo "    ❌ Lints: FAIL"
-    
+
     echo ""
     echo "🎯 For advanced PUNCH analysis, install the PUNCH systems tool"
     exit 0

@@ -80,7 +80,7 @@ pub fn contract_test(name: &str, required_invariants: &[&str]) {
     );
 }
 
-/// Exploration test helper - for temporary tests during development  
+/// Exploration test helper - for temporary tests during development
 pub fn explore_test<F>(name: &str, test_fn: F)
 where
     F: Fn() -> bool,
@@ -149,7 +149,7 @@ pub mod shimmy_invariants {
         }
     }
 
-    /// Generation invariants  
+    /// Generation invariants
     pub fn assert_generation_valid(prompt: &str, response: &str) {
         assert_invariant(
             !prompt.is_empty(),

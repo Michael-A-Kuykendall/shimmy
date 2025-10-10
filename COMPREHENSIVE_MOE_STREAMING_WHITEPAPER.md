@@ -10,7 +10,15 @@ This white paper documents **comprehensive local validation** of MoE (Mixture of
 ### Key Breakthroughs
 
 1. **Streaming Solves UX Problem**: CPU offloading went from "unusable" to "viable" with streaming enabled
+<<<<<<< HEAD
+<<<<<<< HEAD
+2. **Temperature Fix Validated**: Temperature 0.3 eliminates repetition across all tested architectures
+=======
 2. **Temperature Fix Validated**: Temperature 0.3 eliminates repetition across all tested architectures  
+>>>>>>> main
+=======
+2. **Temperature Fix Validated**: Temperature 0.3 eliminates repetition across all tested architectures  
+>>>>>>> main
 3. **Universal Compatibility**: CPU offloading works across 16B-41.9B parameter models
 4. **Production Ready**: Memory savings match H100 results (97-99% VRAM reduction)
 
@@ -19,7 +27,15 @@ This white paper documents **comprehensive local validation** of MoE (Mixture of
 **Hardware Configuration**:
 - **CPU**: AMD/Intel (local workstation)
 - **RAM**: 131GB available (sufficient for expert tensor storage)
+<<<<<<< HEAD
+<<<<<<< HEAD
+- **GPU**: NVIDIA with limited VRAM
+=======
 - **GPU**: NVIDIA with limited VRAM  
+>>>>>>> main
+=======
+- **GPU**: NVIDIA with limited VRAM  
+>>>>>>> main
 - **Storage**: 75GB available for models
 - **Platform**: Windows with MSYS2/Bash environment
 
@@ -83,7 +99,15 @@ def factorial(n):
 
 **Performance Metrics**:
 - **Generation Speed**: ~1-2 tokens/second
+<<<<<<< HEAD
+<<<<<<< HEAD
+- **First Token Latency**: ~2-3 seconds
+=======
 - **First Token Latency**: ~2-3 seconds  
+>>>>>>> main
+=======
+- **First Token Latency**: ~2-3 seconds  
+>>>>>>> main
 - **Streaming Responsiveness**: Excellent (tokens appear steadily)
 - **Quality**: ✅ Perfect code generation, no repetition
 - **Temperature 0.3**: ✅ Eliminates repetition issues completely
@@ -109,13 +133,29 @@ def factorial(n):
 
 **Architecture Specifications**:
 - **Parameters**: 41.9B total (16 experts, 2 active per token)
+<<<<<<< HEAD
+<<<<<<< HEAD
+- **Expert Configuration**: Efficient MoE design
+=======
 - **Expert Configuration**: Efficient MoE design  
+>>>>>>> main
+=======
+- **Expert Configuration**: Efficient MoE design  
+>>>>>>> main
 - **Model Size**: ~79GB GGUF (requires download)
 - **Context Length**: 131K tokens
 - **Status**: Awaiting GPT-OSS completion
 
 **Expected Results** (based on H100 validation):
+<<<<<<< HEAD
+<<<<<<< HEAD
+- **VRAM Savings**: 97.1% (H100 confirmed)
+=======
 - **VRAM Savings**: 97.1% (H100 confirmed) 
+>>>>>>> main
+=======
+- **VRAM Savings**: 97.1% (H100 confirmed) 
+>>>>>>> main
 - **Memory Distribution**: 2.8GB GPU, ~76GB CPU
 - **Quality**: Excellent (H100 confirmed)
 - **Challenge**: Large download size (may require additional cleanup)
@@ -221,7 +261,15 @@ def factorial(n):
 **API Configuration**:
 ```json
 {
+<<<<<<< HEAD
+<<<<<<< HEAD
+  "model": "model-name",
+=======
   "model": "model-name", 
+>>>>>>> main
+=======
+  "model": "model-name", 
+>>>>>>> main
   "temperature": 0.3,
   "stream": true,
   "max_tokens": 1000
@@ -235,7 +283,15 @@ def factorial(n):
 This work represents the **first successful production validation** of MoE CPU offloading with streaming support. Key achievements:
 
 1. **Universal Compatibility**: Proven across 16B-41.9B parameter models
+<<<<<<< HEAD
+<<<<<<< HEAD
+2. **Architecture Agnostic**: Works with standard, efficient, and dual expert designs
+=======
 2. **Architecture Agnostic**: Works with standard, efficient, and dual expert designs  
+>>>>>>> main
+=======
+2. **Architecture Agnostic**: Works with standard, efficient, and dual expert designs  
+>>>>>>> main
 3. **Streaming Integration**: Transforms unusable performance into viable deployment
 4. **Parameter Optimization**: Temperature tuning eliminates quality issues
 
@@ -261,7 +317,15 @@ This work represents the **first successful production validation** of MoE CPU o
 ### Advanced Features
 
 1. **Quantization Integration**: Mixed-precision expert offloading
+<<<<<<< HEAD
+<<<<<<< HEAD
+2. **Multi-GPU Scaling**: Expert distribution across multiple devices
+=======
 2. **Multi-GPU Scaling**: Expert distribution across multiple devices  
+>>>>>>> main
+=======
+2. **Multi-GPU Scaling**: Expert distribution across multiple devices  
+>>>>>>> main
 3. **Adaptive Routing**: Smart expert selection for CPU offloading
 4. **Compression**: Runtime expert tensor compression
 
@@ -305,7 +369,15 @@ Result: Perfect code generation, no repetition, clean streaming
 ```
 Expert tensor loading output:
 tensor blk.X.ffn_gate_exps.weight (352 MiB f16) buffer type overridden to CPU
+<<<<<<< HEAD
+<<<<<<< HEAD
+tensor blk.X.ffn_down_exps.weight (352 MiB f16) buffer type overridden to CPU
+=======
 tensor blk.X.ffn_down_exps.weight (352 MiB f16) buffer type overridden to CPU  
+>>>>>>> main
+=======
+tensor blk.X.ffn_down_exps.weight (352 MiB f16) buffer type overridden to CPU  
+>>>>>>> main
 tensor blk.X.ffn_up_exps.weight (352 MiB f16) buffer type overridden to CPU
 
 Status: All expert tensors successfully moved to CPU across all layers
@@ -314,4 +386,12 @@ Status: All expert tensors successfully moved to CPU across all layers
 ---
 
 *Document Status: In Progress - GPT-OSS and Phi-3.5-MoE testing pending*
+<<<<<<< HEAD
+<<<<<<< HEAD
 *Next Update: Upon completion of all three model validations*
+=======
+*Next Update: Upon completion of all three model validations*
+>>>>>>> main
+=======
+*Next Update: Upon completion of all three model validations*
+>>>>>>> main

@@ -123,7 +123,7 @@ Shimmy automatically detects and supports GPU acceleration through llama.cpp:
 
 **Supported GPU Vendors:**
 - **NVIDIA**: CUDA acceleration (automatic detection via `nvidia-smi`)
-- **AMD**: ROCm acceleration (detection via `rocm-smi`, `rocminfo`, or Windows device enumeration)  
+- **AMD**: ROCm acceleration (detection via `rocm-smi`, `rocminfo`, or Windows device enumeration)
 - **Intel**: GPU acceleration via Intel GPU drivers
 - **Apple**: Metal acceleration (automatic on macOS with supported GPUs)
 
