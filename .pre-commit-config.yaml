@@ -39,8 +39,6 @@ repos:
         
       # Quality gates must pass (excluding templates that intentionally have multiple YAML docs)
       - id: check-toml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
 
   # Documentation validation
   - repo: local

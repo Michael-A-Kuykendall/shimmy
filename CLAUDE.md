@@ -5,6 +5,7 @@ Shimmy is a lightweight sub-5MB Rust inference engine serving as an optimal shim
 
 ## Critical Development Rules
 
+**NO BYPASSING QUALITY GATES**: NEVER skip tests, pre-commit hooks, or linting without explicit human approval. When pre-commit hooks fail, diagnose and fix the actual issues - that's precisely why we have them. Bypassing defeats the entire purpose of quality gates.
 **READ BEFORE WRITE**: Always read a file before editing or writing to it (Claude Code requirement)
 **FOLLOW INTEGRATION PLAN**: Check integration plans before implementation decisions
 **MANDATORY RELEASE APPROVAL**: NEVER create releases, tags, or version bumps without explicit human authorization. Always ask "Should I proceed with creating release v[X.X.X]?" before any release actions
