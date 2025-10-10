@@ -70,8 +70,17 @@ jobs:
           # Build and run a basic MLX functionality test
           cargo run --bin shimmy --features mlx -- --help
           
-          # Test MLX backend detection
-          cargo run --bin shimmy --features mlx -- gpu-info | grep -i mlx || echo "MLX backend not detected"
+          # Test MLX backend detection - this is the core Issue #100 test
+          echo "🔍 Testing MLX backend detection on Apple Silicon..."
+          cargo run --bin shimmy --features mlx -- gpu-info
+          
+          # Specifically check if MLX is available (should be "yes" on Apple Silicon)
+          if cargo run --bin shimmy --features mlx -- gpu-info | grep -i "mlx backend.*available"; then
+            echo "✅ MLX backend detected as available"
+          else
+            echo "❌ Issue #100 reproduced: MLX backend not available on Apple Silicon"
+            exit 1
+          fi
 
       - name: Verify MLX integration
         run: |
