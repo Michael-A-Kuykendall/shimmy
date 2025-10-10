@@ -9,8 +9,7 @@ use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
 use crate::{engine::GenOptions, templates::TemplateFamily, AppState};
-// TODO: Fix PPT integration for production
-// use crate::invariant_ppt::shimmy_invariants;
+use crate::invariant_ppt::shimmy_invariants;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -290,16 +289,14 @@ pub async fn discover_models(State(_state): State<Arc<AppState>>) -> impl IntoRe
             let response_body = response_json.to_string();
             
             // PPT Invariant: Validate API response before returning
-            // TODO: Fix PPT integration for production
-            // shimmy_invariants::assert_api_response_valid(200, &response_body);
+            shimmy_invariants::assert_api_response_valid(200, &response_body);
             
             Json(response_json).into_response()
         }
         Err(_e) => {
             // PPT Invariant: Validate error response
             let error_response = r#"{"error":"Discovery failed"}"#;
-            // TODO: Fix PPT integration for production
-            // shimmy_invariants::assert_api_response_valid(500, error_response);
+            shimmy_invariants::assert_api_response_valid(500, error_response);
             
             axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
