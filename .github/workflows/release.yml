@@ -178,21 +178,31 @@ jobs:
             target: x86_64-unknown-linux-musl
             binary-name: shimmy
             artifact-name: shimmy-linux-x86_64-universal
+            features: huggingface
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary-name: shimmy.exe
             artifact-name: shimmy-windows-x86_64.exe
+            features: huggingface  # CPU-only version
+            
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary-name: shimmy.exe
+            artifact-name: shimmy-windows-x86_64-gpu.exe
+            features: gpu  # GPU-enabled version with OpenCL/Vulkan support
 
           - os: macos-latest
             target: x86_64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-intel
+            features: apple
 
           - os: macos-latest
             target: aarch64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
+            features: apple
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -208,7 +218,15 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
       - name: Build binary
-        run: cargo build --release --target ${{ matrix.target }}
+        shell: bash
+        run: |
+          if [ -n "${{ matrix.features }}" ]; then
+            echo "Building with features: ${{ matrix.features }}"
+            cargo build --release --target ${{ matrix.target }} --features ${{ matrix.features }}
+          else
+            echo "Building with default features"
+            cargo build --release --target ${{ matrix.target }} --features huggingface
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -240,6 +258,9 @@ jobs:
 
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name
+          
+          # GPU-enabled Windows binary
+          cp artifacts/shimmy-windows-x86_64-gpu.exe/shimmy.exe release-files/shimmy-windows-x86_64-gpu.exe
 
           cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
           cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
