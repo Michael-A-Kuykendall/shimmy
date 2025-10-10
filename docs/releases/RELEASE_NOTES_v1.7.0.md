@@ -1,6 +1,10 @@
 # Shimmy v1.7.0 - Mixture of Experts CPU Offloading Release
 
+<<<<<<< HEAD
+**Released:** January 9, 2025
+=======
 **Released:** January 9, 2025  
+>>>>>>> main
 **Branch:** `feat/moe-cpu-offload`
 
 ---
@@ -165,7 +169,11 @@ llama.cpp MoE Offloading (native C++)
 - **Phase 1 (I2 Pattern):** Renamed 22 Java-style getters to Rust conventions
   - `get_model()` → `model()`, `get_metrics()` → `metrics()`, etc.
   - All call sites updated, 295/295 tests passing
+<<<<<<< HEAD
+
+=======
   
+>>>>>>> main
 - **Phase 2 (N5 Pattern):** Fixed 14 production unwraps with proper error handling
   - `src/metrics.rs` (5 unwraps), `src/openai_compat.rs` (3 unwraps)
   - Replaced with `match`, `unwrap_or_else`, `unwrap_or` patterns

@@ -1,10 +1,10 @@
 # Predictive Property-Based Testing (PPT) + Invariant System
 ## A Production-Ready Framework for High-Visibility Development
 
-**Authors**: Michael A. Kuykendall  
-**Implementation**: Shimmy AI Inference Engine  
-**Status**: Production-Ready ✅  
-**License**: MIT  
+**Authors**: Michael A. Kuykendall
+**Implementation**: Shimmy AI Inference Engine
+**Status**: Production-Ready ✅
+**License**: MIT
 
 ---
 
@@ -21,7 +21,7 @@ The system has been battle-tested in **Shimmy**, a high-visibility AI inference 
 ### The Problem with Traditional Testing
 
 1. **Brittle Implementation-Based Tests** - Break with every refactor
-2. **Mock-Heavy Test Suites** - Test fake behavior, not real systems  
+2. **Mock-Heavy Test Suites** - Test fake behavior, not real systems
 3. **Test Maintenance Overhead** - More time spent on tests than features
 4. **Silent Failure Drift** - Critical invariants stop being checked over time
 
@@ -49,15 +49,15 @@ The system has been battle-tested in **Shimmy**, a high-visibility AI inference 
 ```rust
 // Embed semantic contracts directly in business logic
 assert_invariant(
-    payment.amount > 0, 
-    "Payment must be positive", 
+    payment.amount > 0,
+    "Payment must be positive",
     Some("checkout_flow")
 );
 ```
 
 **Benefits:**
 - ✅ **Immediate Feedback** - Violations crash fast with context
-- ✅ **Semantic Logging** - All checks are recorded for contract validation  
+- ✅ **Semantic Logging** - All checks are recorded for contract validation
 - ✅ **Zero Overhead** - Compiles to simple assertions in release builds
 - ✅ **AI-Resistant** - Contracts survive code generation and refactoring
 
@@ -75,11 +75,11 @@ pub fn assert_model_loaded(model_name: &str, success: bool) {
         "Model name must not be empty",
         Some("model_loading")
     );
-    
+
     if success {
         assert_invariant(
             true,
-            "Model loaded successfully", 
+            "Model loaded successfully",
             Some(&format!("model_loading:{}", model_name))
         );
     }
@@ -93,11 +93,11 @@ pub fn assert_model_loaded(model_name: &str, success: bool) {
 fn test_model_loading_property() {
     property_test("model_names_always_valid", || {
         let test_names = vec!["phi3", "llama2-7b", "mistral-v0.1"];
-        
+
         for name in test_names {
             clear_invariant_log();
             assert_model_loaded(name, true);
-            
+
             // Verify the invariant was actually checked
             let checked = get_checked_invariants();
             if !checked.iter().any(|inv| inv.contains("Model name must not be empty")) {
@@ -112,13 +112,13 @@ fn test_model_loading_property() {
 ### Contract Validation
 
 ```rust
-#[test] 
+#[test]
 fn test_model_loading_contracts() {
     clear_invariant_log();
-    
+
     // Simulate the actual workflow
     assert_model_loaded("test-model", true);
-    
+
     // Verify ALL required invariants were checked
     contract_test("model_loading_integrity", &[
         "Model name must not be empty",
@@ -141,7 +141,7 @@ fn test_model_loading_contracts() {
 ### Quality Gates Enforced
 
 1. **🧪 PPT Contract Tests** - All semantic invariants verified
-2. **🔍 Property Tests** - Behavioral consistency across input ranges  
+2. **🔍 Property Tests** - Behavioral consistency across input ranges
 3. **🚀 Exploration Tests** - Edge case discovery and validation
 4. **📈 Coverage Gates** - 95%+ coverage requirement enforced
 5. **🔒 Security Audits** - Zero-vulnerability deployment
@@ -153,7 +153,7 @@ fn test_model_loading_contracts() {
 - name: 🧪 Run PPT Contract Tests
   run: cargo test ppt_contracts --features "huggingface" -- --nocapture
 
-- name: 📋 Run Property Tests  
+- name: 📋 Run Property Tests
   run: cargo test property_tests --features "huggingface" -- --nocapture
 ```
 
@@ -163,24 +163,24 @@ fn test_model_loading_contracts() {
 
 ### For High-Visibility Projects
 
-✅ **Confidence Under Scrutiny** - Every commit validates semantic correctness  
-✅ **Rapid Iteration Safety** - Refactor fearlessly with invariant protection  
-✅ **AI-Assisted Development** - Properties guide code generation correctly  
-✅ **Zero Silent Failures** - Critical contracts can't be accidentally removed  
+✅ **Confidence Under Scrutiny** - Every commit validates semantic correctness
+✅ **Rapid Iteration Safety** - Refactor fearlessly with invariant protection
+✅ **AI-Assisted Development** - Properties guide code generation correctly
+✅ **Zero Silent Failures** - Critical contracts can't be accidentally removed
 
 ### For Development Teams
 
-✅ **Reduced Test Maintenance** - Properties are stable across refactors  
-✅ **Clear Failure Modes** - Invariant violations provide immediate context  
-✅ **Semantic Documentation** - Invariants serve as executable specifications  
-✅ **Regression Protection** - Contract tests prevent invariant removal  
+✅ **Reduced Test Maintenance** - Properties are stable across refactors
+✅ **Clear Failure Modes** - Invariant violations provide immediate context
+✅ **Semantic Documentation** - Invariants serve as executable specifications
+✅ **Regression Protection** - Contract tests prevent invariant removal
 
 ### For System Reliability
 
-✅ **Production Monitoring** - Same invariants run in production (optional)  
-✅ **Behavioral Consistency** - Properties ensure stable system behavior  
-✅ **Edge Case Discovery** - Exploration tests reveal unexpected scenarios  
-✅ **Quality Metrics** - Invariant coverage provides meaningful quality measurement  
+✅ **Production Monitoring** - Same invariants run in production (optional)
+✅ **Behavioral Consistency** - Properties ensure stable system behavior
+✅ **Edge Case Discovery** - Exploration tests reveal unexpected scenarios
+✅ **Quality Metrics** - Invariant coverage provides meaningful quality measurement
 
 ---
 
@@ -205,7 +205,7 @@ use invariant_ppt::*;
 ```rust
 fn process_payment(amount: f64) -> Result<PaymentResult> {
     assert_invariant(amount > 0.0, "Payment amount must be positive", Some("payments"));
-    
+
     // Your business logic here
     Ok(PaymentResult::Success)
 }
@@ -217,10 +217,10 @@ fn process_payment(amount: f64) -> Result<PaymentResult> {
 #[test]
 fn test_payment_contracts() {
     clear_invariant_log();
-    
+
     // Exercise your system
     process_payment(100.0).unwrap();
-    
+
     // Verify the contracts were checked
     contract_test("payment_processing", &["Payment amount must be positive"]);
 }
@@ -243,7 +243,7 @@ fn test_payment_contracts() {
 ### Philosophical Alignment
 
 - **Embrace Change** - Properties are stable while implementations evolve
-- **Fail Fast** - Invariant violations provide immediate, actionable feedback  
+- **Fail Fast** - Invariant violations provide immediate, actionable feedback
 - **Document Behavior** - Executable contracts are always up-to-date
 - **Trust but Verify** - Contract tests ensure promises are kept
 
@@ -257,7 +257,7 @@ fn test_payment_contracts() {
 // System-level invariant
 assert_invariant(system_is_initialized(), "System must be initialized", Some("system"));
 
-// Subsystem-level invariant  
+// Subsystem-level invariant
 assert_invariant(database_is_connected(), "Database must be connected", Some("system:database"));
 
 // Operation-level invariant
@@ -270,7 +270,7 @@ assert_invariant(user_is_authenticated(), "User must be authenticated", Some("sy
 // Service A
 assert_invariant(request_is_valid(), "Request format valid", Some("service_a:input"));
 
-// Service B  
+// Service B
 contract_test("service_integration", &[
     "Request format valid",  // Verify Service A's guarantee
     "Response format valid"  // Verify our own guarantee
@@ -283,11 +283,11 @@ contract_test("service_integration", &[
 property_test("input_validation_robustness", || {
     // Generate random inputs
     let test_inputs = generate_random_inputs(100);
-    
+
     for input in test_inputs {
         clear_invariant_log();
         let result = process_input(input);
-        
+
         // Verify invariants held regardless of input
         let checked = get_checked_invariants();
         if !checked.iter().any(|inv| inv.contains("Input validation")) {
@@ -304,19 +304,19 @@ property_test("input_validation_robustness", || {
 
 ### Do's
 
-✅ **Start Small** - Begin with 2-3 critical invariants  
-✅ **Focus on Contracts** - Test what the system promises, not how it works  
-✅ **Use Descriptive Messages** - Invariant failures should be immediately actionable  
-✅ **Test the Tests** - Use contract tests to verify invariants are actually checked  
-✅ **Embrace Exploration** - Use E-tests to discover edge cases and new properties  
+✅ **Start Small** - Begin with 2-3 critical invariants
+✅ **Focus on Contracts** - Test what the system promises, not how it works
+✅ **Use Descriptive Messages** - Invariant failures should be immediately actionable
+✅ **Test the Tests** - Use contract tests to verify invariants are actually checked
+✅ **Embrace Exploration** - Use E-tests to discover edge cases and new properties
 
 ### Don'ts
 
-❌ **Don't Mock Reality** - Test real behavior with real data when possible  
-❌ **Don't Test Implementation** - Properties should survive complete rewrites  
-❌ **Don't Ignore Failures** - Invariant violations indicate real semantic problems  
-❌ **Don't Skip Contracts** - Contract tests prevent silent invariant removal  
-❌ **Don't Over-Engineer** - Start simple, add complexity only when needed  
+❌ **Don't Mock Reality** - Test real behavior with real data when possible
+❌ **Don't Test Implementation** - Properties should survive complete rewrites
+❌ **Don't Ignore Failures** - Invariant violations indicate real semantic problems
+❌ **Don't Skip Contracts** - Contract tests prevent silent invariant removal
+❌ **Don't Over-Engineer** - Start simple, add complexity only when needed
 
 ---
 
@@ -325,7 +325,7 @@ property_test("input_validation_robustness", || {
 ### Influences
 
 - **Property-Based Testing** (QuickCheck, PropTest) - Random input generation
-- **Design by Contract** (Eiffel, Ada) - Formal pre/post conditions  
+- **Design by Contract** (Eiffel, Ada) - Formal pre/post conditions
 - **Behavioral Testing** (Cucumber, RSpec) - Focus on system behavior
 - **Invariant-Based Programming** (SPARK, Dafny) - Mathematical correctness proofs
 
@@ -333,7 +333,7 @@ property_test("input_validation_robustness", || {
 
 1. **Runtime Integration** - Invariants execute in production code, not just tests
 2. **AI-Assisted Compatibility** - Properties guide and validate generated code
-3. **Lightweight Implementation** - No complex frameworks or mathematical proofs required  
+3. **Lightweight Implementation** - No complex frameworks or mathematical proofs required
 4. **High-Change Tolerance** - System designed for rapid iteration and refactoring
 
 ---
@@ -361,7 +361,7 @@ property_test("input_validation_robustness", || {
 **PPT + Invariant Testing** transforms software quality from a testing problem into a design problem. By embedding semantic contracts directly into business logic and validating them through property-based testing, we achieve:
 
 - **🔒 Semantic Integrity** - Systems behave correctly by construction
-- **⚡ Rapid Iteration** - Refactor fearlessly with invariant protection  
+- **⚡ Rapid Iteration** - Refactor fearlessly with invariant protection
 - **🤖 AI Compatibility** - Properties guide and validate generated code
 - **📈 Quality Metrics** - Invariant coverage provides meaningful measurement
 - **🚀 Production Confidence** - High-visibility deployment without fear

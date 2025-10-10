@@ -18,9 +18,9 @@ echo "[DEBUG] Log file initialized" | tee -a debug-regression.log
 # Function to log results
 log_result() {
     local test_name="$1"
-    local status="$2" 
+    local status="$2"
     local details="$3"
-    
+
     echo "[$status] $test_name: $details" | tee -a "$RESULTS_LOG"
     if [ "$status" = "FAIL" ]; then
         REGRESSION_SUCCESS=false
@@ -43,7 +43,7 @@ fi
 echo "[DEBUG] Phase 1 completed at $(date)" | tee -a debug-regression.log
 
 echo ""
-echo "🧪 Phase 2: Regression Test Suite" 
+echo "🧪 Phase 2: Regression Test Suite"
 echo "================================="
 echo "[DEBUG] Starting Phase 2 at $(date)" | tee -a debug-regression.log
 if cargo test --test regression_tests --features huggingface > regression-test-output.log 2>&1; then
@@ -77,7 +77,7 @@ echo ""
 echo "🔍 Phase 4: API Compatibility Tests"
 echo "==================================="
 echo "🔄 Testing model discovery functionality..."
-if cargo test test_model_discovery --features huggingface > api-test-output.log 2>&1; then
+if cargo test --test regression_tests test_model_discovery_functionality --features huggingface > api-test-output.log 2>&1; then
     log_result "Model Discovery API" "PASS" "Discovery API functional"
     echo "✅ Model Discovery API: Functional"
 else
@@ -86,11 +86,11 @@ else
 fi
 
 echo "🔄 Testing OpenAI API compatibility..."
-if cargo test test_openai_api --features huggingface >> api-test-output.log 2>&1; then
+if cargo test --test regression_tests test_openai_api_structures_serialization --features huggingface >> api-test-output.log 2>&1; then
     log_result "OpenAI API Compatibility" "PASS" "API responses compatible"
     echo "✅ OpenAI API: Compatible"
 else
-    log_result "OpenAI API Compatibility" "FAIL" "API compatibility issues"  
+    log_result "OpenAI API Compatibility" "FAIL" "API compatibility issues"
     echo "❌ OpenAI API: Issues (see api-test-output.log)"
 fi
 
@@ -99,7 +99,7 @@ echo "🎯 Phase 5: Issue-Specific Regression Tests"
 echo "==========================================="
 
 echo "🔄 Testing Issue #13 fix (Qwen model template detection)..."
-if cargo test test_qwen_model_template_detection --features huggingface > issue-fix-output.log 2>&1; then
+if cargo test --test regression_tests test_qwen_model_template_detection --features huggingface > issue-fix-output.log 2>&1; then
     log_result "Issue #13 Fix" "PASS" "Qwen models use correct templates"
     echo "✅ Issue #13 (Qwen VSCode): Fixed"
 else
@@ -108,7 +108,7 @@ else
 fi
 
 echo "🔄 Testing Issue #12 fix (Custom model directories)..."
-if cargo test test_custom_model_directory_environment_variables --features huggingface >> issue-fix-output.log 2>&1; then
+if cargo test --test regression_tests test_custom_model_directory_environment_variables --features huggingface >> issue-fix-output.log 2>&1; then
     log_result "Issue #12 Fix" "PASS" "Custom directories detected"
     echo "✅ Issue #12 (Custom dirs): Fixed"
 else
@@ -117,7 +117,7 @@ else
 fi
 
 echo "🔄 Testing CLI compatibility (new --model-dirs option)..."
-if cargo test test_cli_model_dirs_option_compatibility --features huggingface >> issue-fix-output.log 2>&1; then
+if cargo test --test regression_tests test_cli_model_dirs_option_compatibility --features huggingface >> issue-fix-output.log 2>&1; then
     log_result "CLI Compatibility" "PASS" "CLI options working"
     echo "✅ CLI Options: Working"
 else
@@ -138,7 +138,7 @@ echo ""
 echo "🔒 Phase 6: Security & Error Handling"
 echo "====================================="
 echo "🔄 Testing error handling robustness..."
-if cargo test test_error_handling_robustness --features huggingface > security-output.log 2>&1; then
+if cargo test --test regression_tests test_error_handling_robustness --features huggingface > security-output.log 2>&1; then
     log_result "Error Handling" "PASS" "Error handling robust"
     echo "✅ Error Handling: Robust"
 else

@@ -19,7 +19,7 @@ log_result() {
     local test_name="$1"
     local status="$2"
     local details="$3"
-    
+
     echo "[$status] $test_name: $details" | tee -a "$RESULTS_LOG"
     if [ "$status" = "FAIL" ]; then
         OVERALL_SUCCESS=false
@@ -39,7 +39,7 @@ else
 fi
 echo ""
 
-echo "🧪 Phase 2: Property Tests"  
+echo "🧪 Phase 2: Property Tests"
 echo "=========================="
 if timeout 60s cargo test property_tests --features huggingface -- --nocapture > property-output.log 2>&1; then
     PROPERTY_TESTS=$(grep -c "Property test.*passed" property-output.log || echo "0")
@@ -70,13 +70,13 @@ if timeout 300s cargo tarpaulin --features huggingface --out xml --output-dir co
     if [ -f "coverage/cobertura.xml" ]; then
         COVERAGE_PERCENT=$(grep -o 'line-rate="[^"]*"' coverage/cobertura.xml | head -1 | grep -o '[0-9.]*' || echo "0")
         COVERAGE_FORMATTED=$(echo "$COVERAGE_PERCENT * 100" | bc -l 2>/dev/null | xargs printf "%.1f" 2>/dev/null || echo "0.0")
-        
+
         MEETS_STANDARD=$(echo "$COVERAGE_PERCENT >= 0.95" | bc -l 2>/dev/null || echo "0")
         if [ "$MEETS_STANDARD" -eq 1 ]; then
             log_result "Code Coverage" "PASS" "${COVERAGE_FORMATTED}% (meets 95% standard)"
             echo "✅ Code Coverage: ${COVERAGE_FORMATTED}% (meets 95% standard)"
         else
-            log_result "Code Coverage" "FAIL" "${COVERAGE_FORMATTED}% (below 95% standard)" 
+            log_result "Code Coverage" "FAIL" "${COVERAGE_FORMATTED}% (below 95% standard)"
             echo "⚠️  Code Coverage: ${COVERAGE_FORMATTED}% (below 95% standard)"
         fi
     else
@@ -89,7 +89,7 @@ else
 fi
 echo ""
 
-echo "🔒 Phase 5: Security Scanning" 
+echo "🔒 Phase 5: Security Scanning"
 echo "============================="
 echo "🔍 Checking for known vulnerabilities..."
 if cargo audit > audit-output.log 2>&1; then
@@ -164,7 +164,7 @@ if cargo bench --version >/dev/null 2>&1; then
         log_result "Performance Benchmarks" "PASS" "Benchmarks completed"
         echo "✅ Performance Benchmarks: Completed (see bench-output.log)"
     else
-        log_result "Performance Benchmarks" "FAIL" "Benchmarks failed or timed out"  
+        log_result "Performance Benchmarks" "FAIL" "Benchmarks failed or timed out"
         echo "⚠️  Performance Benchmarks: Failed or timed out"
     fi
 else
@@ -182,7 +182,7 @@ cat "$RESULTS_LOG" | while read line; do
     if [[ $line == *"[PASS]"* ]]; then
         echo "  ✅ $line"
     elif [[ $line == *"[FAIL]"* ]]; then
-        echo "  ❌ $line" 
+        echo "  ❌ $line"
     else
         echo "  ℹ️  $line"
     fi

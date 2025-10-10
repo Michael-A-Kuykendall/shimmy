@@ -5,7 +5,9 @@
 /// that broke cargo install for weeks (issues #73, #86, #88).
 ///
 /// This test would have FAILED and prevented those releases if it existed.
-
+///
+/// UPDATED: Now includes validation of shimmy-llama-cpp-2 published packages
+/// to ensure our Windows MSVC fixes and fork packaging work correctly.
 use std::process::Command;
 use std::str;
 
@@ -17,9 +19,11 @@ fn test_crates_io_package_includes_all_required_files() {
         .output()
         .expect("Failed to run cargo package --list");
 
-    assert!(output.status.success(), 
-        "cargo package --list failed: {}", 
-        String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "cargo package --list failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     let package_files = String::from_utf8_lossy(&output.stdout);
     let files: Vec<&str> = package_files.lines().collect();
@@ -28,24 +32,20 @@ fn test_crates_io_package_includes_all_required_files() {
     let required_template_files = vec![
         // Docker templates - these were the primary failure point
         "templates/docker/Dockerfile",
-        "templates/docker/docker-compose.yml", 
+        "templates/docker/docker-compose.yml",
         "templates/docker/nginx.conf",
-        
         // Kubernetes templates
         "templates/kubernetes/deployment.yaml",
         "templates/kubernetes/service.yaml",
         "templates/kubernetes/configmap.yaml",
-        
         // Framework templates
         "templates/frameworks/fastapi/main.py",
         "templates/frameworks/fastapi/requirements.txt",
         "templates/frameworks/express/app.js",
         "templates/frameworks/express/package.json",
-        
         // Cloud deployment templates
         "templates/railway/railway.toml",
         "templates/fly/fly.toml",
-        
         // Core source files
         "src/templates.rs",
         "Cargo.toml",
@@ -58,11 +58,11 @@ fn test_crates_io_package_includes_all_required_files() {
     for required_file in &required_template_files {
         // Normalize path separators for cross-platform compatibility
         let normalized_required = required_file.replace("/", "\\");
-        
-        let found = files.iter().any(|&file| {
-            file == *required_file || file == normalized_required
-        });
-        
+
+        let found = files
+            .iter()
+            .any(|&file| file == *required_file || file == normalized_required);
+
         if !found {
             missing_files.push(*required_file);
         }
@@ -87,18 +87,23 @@ fn test_crates_io_package_includes_all_required_files() {
     }
 
     // Additional validation: Ensure we have a reasonable number of files
-    assert!(files.len() >= 30, 
-        "Package contains too few files ({}), likely missing directories", 
-        files.len());
+    assert!(
+        files.len() >= 30,
+        "Package contains too few files ({}), likely missing directories",
+        files.len()
+    );
 
     // Ensure template directory is properly included
-    let template_file_count = files.iter()
+    let template_file_count = files
+        .iter()
         .filter(|file| file.contains("templates"))
         .count();
-    
-    assert!(template_file_count >= 14, 
-        "Missing template files - expected at least 14, found {}", 
-        template_file_count);
+
+    assert!(
+        template_file_count >= 14,
+        "Missing template files - expected at least 14, found {}",
+        template_file_count
+    );
 
     println!("✅ Packaging regression test PASSED");
     println!("📦 Package contains {} files", files.len());
@@ -109,22 +114,22 @@ fn test_crates_io_package_includes_all_required_files() {
 fn test_include_str_macros_would_compile() {
     // Test that all include_str!() macros in templates.rs can find their files
     // This test runs at compile time, so if it compiles, the files exist
-    
+
     // These are the exact include_str!() calls that were failing in production
     let _docker_dockerfile = include_str!("../templates/docker/Dockerfile");
     let _docker_compose = include_str!("../templates/docker/docker-compose.yml");
     let _docker_nginx = include_str!("../templates/docker/nginx.conf");
-    
+
     let _k8s_deployment = include_str!("../templates/kubernetes/deployment.yaml");
     let _k8s_service = include_str!("../templates/kubernetes/service.yaml");
     let _k8s_configmap = include_str!("../templates/kubernetes/configmap.yaml");
-    
+
     let _fastapi_main = include_str!("../templates/frameworks/fastapi/main.py");
     let _fastapi_requirements = include_str!("../templates/frameworks/fastapi/requirements.txt");
-    
+
     let _express_app = include_str!("../templates/frameworks/express/app.js");
     let _express_package = include_str!("../templates/frameworks/express/package.json");
-    
+
     let _railway_config = include_str!("../templates/railway/railway.toml");
     let _fly_config = include_str!("../templates/fly/fly.toml");
 
@@ -132,7 +137,7 @@ fn test_include_str_macros_would_compile() {
     assert!(!_docker_dockerfile.is_empty(), "Docker Dockerfile is empty");
     assert!(!_fastapi_main.is_empty(), "FastAPI main.py is empty");
     assert!(!_express_app.is_empty(), "Express app.js is empty");
-    
+
     println!("✅ All include_str!() macros compile successfully");
 }
 
@@ -140,7 +145,7 @@ fn test_include_str_macros_would_compile() {
 fn test_cargo_install_simulation() {
     // Simulate the conditions that cargo install would face
     // by trying to run cargo check on the packaged source
-    
+
     // This test ensures that a fresh cargo install would succeed
     let output = Command::new("cargo")
         .args(&["check", "--release", "--quiet"])
@@ -149,7 +154,7 @@ fn test_cargo_install_simulation() {
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Look for the specific template file errors that plagued users
         if stderr.contains("couldn't read") && stderr.contains("templates/") {
             panic!(
@@ -160,7 +165,7 @@ fn test_cargo_install_simulation() {
                 stderr
             );
         }
-        
+
         // Allow other types of build failures (like missing dependencies)
         // but fail hard on template file issues
         if stderr.contains("No such file or directory") && stderr.contains("include_str") {
@@ -184,18 +189,95 @@ fn test_package_size_sanity() {
         .expect("Failed to run cargo package --list");
 
     let package_files = String::from_utf8_lossy(&output.stdout);
-    let total_size: usize = package_files.lines()
+    let total_size: usize = package_files
+        .lines()
         .filter(|line| !line.is_empty())
         .map(|_| 1) // Count files
         .sum();
 
     // Based on our investigation, we know we need at least:
     // - ~50+ source files
-    // - 14+ template files  
+    // - 14+ template files
     // - Core files (Cargo.toml, README, LICENSE, etc.)
-    assert!(total_size >= 50, 
-        "Package is suspiciously small ({} files) - likely missing directories", 
-        total_size);
+    assert!(
+        total_size >= 50,
+        "Package is suspiciously small ({} files) - likely missing directories",
+        total_size
+    );
 
     println!("✅ Package size sanity check passed: {} files", total_size);
+}
+
+#[test]
+fn test_shimmy_llama_cpp_fork_packages_available() {
+    // Test that our published shimmy-llama-cpp-2 packages are available
+    // This validates our Windows MSVC fixes and fork packaging work
+
+    // Check if we can build with our published shimmy packages
+    let output = Command::new("cargo")
+        .args(&[
+            "check",
+            "--release",
+            "--no-default-features",
+            "--features",
+            "llama",
+        ])
+        .output()
+        .expect("Failed to run cargo check with llama feature");
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+
+        // Check for package resolution issues
+        if stderr.contains("shimmy-llama-cpp-2") || stderr.contains("shimmy-llama-cpp-sys-2") {
+            panic!(
+                "🚨 FORK PACKAGE RESOLUTION FAILED! 🚨\n\
+                Our published shimmy packages are not resolving correctly:\n\
+                {}\n\
+                This indicates our crates.io publishing strategy has issues",
+                stderr
+            );
+        }
+
+        // Allow other build failures but fail on package issues
+        println!(
+            "⚠️ Build failed with non-package issues (expected on some systems): {}",
+            stderr
+        );
+    } else {
+        println!("✅ Fork packages resolve correctly - Windows MSVC fixes available");
+    }
+}
+
+#[test]
+fn test_template_packaging_gate_protection() {
+    // This test implements the exact validation from Release Gate 3
+    // to ensure our packaging follows the gate requirements
+
+    let output = Command::new("cargo")
+        .args(&["package", "--list", "--allow-dirty"])
+        .output()
+        .expect("Failed to run cargo package --list");
+
+    let package_list = String::from_utf8_lossy(&output.stdout);
+
+    // Check for any of the valid Docker template paths (Gate 3 protection)
+    // Handle both Unix (/) and Windows (\) path separators
+    let has_dockerfile = package_list.lines().any(|line| {
+        line == "Dockerfile"
+            || line == "packaging/docker/Dockerfile"
+            || line == "packaging\\docker\\Dockerfile"
+            || line == "templates/docker/Dockerfile"
+            || line == "templates\\docker\\Dockerfile"
+    });
+
+    assert!(
+        has_dockerfile,
+        "🚨 RELEASE GATE 3 FAILURE! 🚨\n\
+        Required Docker template missing from package: {} \n\
+        This would cause the release gates to BLOCK the release!",
+        package_list
+    );
+
+    println!("✅ Release Gate 3 (Template Packaging) protection validated");
 }

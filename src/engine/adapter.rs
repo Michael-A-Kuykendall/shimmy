@@ -188,6 +188,7 @@ enum BackendChoice {
     #[cfg(feature = "huggingface")]
     HuggingFace,
     #[cfg(feature = "mlx")]
+    #[allow(clippy::upper_case_acronyms)]
     MLX,
     SafeTensors,
 }

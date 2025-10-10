@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Cache dependencies
       uses: actions/cache@v4
       with:
@@ -28,12 +28,12 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-ppt-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
+
     - name: Run PPT Contract Tests (Critical Path)
       run: |
         echo "🧪 Running PPT Contract Tests - Critical Quality Gate"
         timeout 300s cargo test invariant_ppt::tests --no-default-features --features huggingface -- --nocapture
-        
+
     - name: Verify PPT Coverage
       run: |
         if [ -f "./scripts/verify-ppt-coverage.sh" ]; then
@@ -50,10 +50,10 @@ jobs:
     needs: ppt-contracts  # PPT contracts must pass first
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Cache dependencies
       uses: actions/cache@v4
       with:
@@ -62,20 +62,20 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-test-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
+
     - name: Run Property Tests
       run: |
         echo "Running Property Tests"
         timeout 180s cargo test property_tests --no-default-features --features huggingface -- --nocapture
-        
+
     - name: Run Unit Tests (HuggingFace)
       run: |
         echo "Running Unit Tests - HuggingFace Feature"
         timeout 300s cargo test --lib --no-default-features --features huggingface --verbose
-      
+
     - name: Run Unit Tests (All Features)
       run: |
-        echo "Running Unit Tests - All Features" 
+        echo "Running Unit Tests - All Features"
         timeout 600s cargo test --lib --all-features --verbose
 
   # Code Coverage Analysis
@@ -85,14 +85,14 @@ jobs:
     needs: test
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Install coverage tools
       run: |
         cargo install cargo-tarpaulin
-        
+
     - name: Cache dependencies
       uses: actions/cache@v4
       with:
@@ -101,7 +101,7 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-coverage-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
+
     - name: Generate coverage report
       run: |
         echo "Generating coverage report"
@@ -112,14 +112,14 @@ jobs:
           --output-dir coverage \
           --timeout 300 \
           --verbose
-        
+
     - name: Check coverage standards
       run: |
         if [ -f "coverage/cobertura.xml" ]; then
           COVERAGE_PERCENT=$(grep -o 'line-rate="[^"]*"' coverage/cobertura.xml | head -1 | grep -o '[0-9.]*' || echo "0")
           COVERAGE_FORMATTED=$(echo "$COVERAGE_PERCENT * 100" | bc -l | xargs printf "%.1f")
           echo "📊 Code Coverage: ${COVERAGE_FORMATTED}%"
-          
+
           MEETS_STANDARD=$(echo "$COVERAGE_PERCENT >= 0.95" | bc -l 2>/dev/null || echo "0")
           if [ "$MEETS_STANDARD" -eq 1 ]; then
             echo "✅ Coverage meets professional standard (≥95%)"
@@ -131,7 +131,7 @@ jobs:
           echo "❌ Coverage report generation failed"
           exit 1
         fi
-        
+
     - name: Upload coverage reports
       uses: codecov/codecov-action@v4
       with:
@@ -140,20 +140,20 @@ jobs:
         name: shimmy-coverage
         fail_ci_if_error: false
 
-  # Security Scanning  
+  # Security Scanning
   security:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Install security tools
       run: |
         cargo install cargo-audit cargo-deny
-        
+
     - name: Cache dependencies
       uses: actions/cache@v4
       with:
@@ -162,12 +162,12 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-security-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
+
     - name: Run vulnerability audit
       run: |
         echo "🔒 Scanning for known vulnerabilities"
         cargo audit --color always
-        
+
     - name: Run supply chain security checks
       run: |
         echo "🛡️ Checking supply chain security"
@@ -179,26 +179,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt, clippy
-        
+
     - name: Cache dependencies
       uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/registry
-          ~/.cargo/git  
+          ~/.cargo/git
           target
         key: ${{ runner.os }}-lint-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
+
     - name: Check code formatting
       run: |
         echo "🎨 Checking code formatting"
         cargo fmt -- --check
-      
+
     - name: Run clippy lints
       run: |
         echo "🔍 Running clippy lints with professional standards"
@@ -213,7 +213,7 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             features: "huggingface,llama"
-          - os: windows-latest  
+          - os: windows-latest
             target: x86_64-pc-windows-msvc
             features: "huggingface,llama"
           - os: macos-latest
@@ -224,26 +224,26 @@ jobs:
             features: "huggingface,llama"
     runs-on: ${{ matrix.os }}
     needs: [ppt-contracts, security, lint]  # Must pass quality gates
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install system dependencies (Linux)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential cmake pkg-config
-    
+
     - name: Install system dependencies (macOS)
       if: runner.os == 'macOS'
       run: |
         which cmake || brew install cmake
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
         targets: ${{ matrix.target }}
-        
+
     - name: Cache dependencies
       uses: actions/cache@v4
       with:
@@ -252,12 +252,12 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-${{ matrix.target }}-build-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
+
     - name: Build with professional standards
       run: |
         echo "🔨 Building ${{ matrix.target }} with features: ${{ matrix.features }}"
         cargo build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
-        
+
     - name: Verify binary
       run: |
         echo "✅ Build verification complete for ${{ matrix.target }}"
@@ -274,7 +274,7 @@ jobs:
       run: |
         echo "🎯 Professional Quality Gate Summary"
         echo "=================================="
-        
+
         # Check if all critical jobs passed
         if [[ "${{ needs.ppt-contracts.result }}" == "success" && \
               "${{ needs.test.result }}" == "success" && \

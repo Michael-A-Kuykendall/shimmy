@@ -198,4 +198,12 @@ This model follows the original DeepSeek license terms. Please refer to the [bas
 
 ---
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 *Model converted and optimized as part of comprehensive MoE CPU offloading research - October 2025*
+=======
+*Model converted and optimized as part of comprehensive MoE CPU offloading research - October 2025*
+>>>>>>> main
+=======
+*Model converted and optimized as part of comprehensive MoE CPU offloading research - October 2025*
+>>>>>>> main

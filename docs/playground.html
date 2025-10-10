@@ -195,7 +195,7 @@
             .playground {
                 grid-template-columns: 1fr;
             }
-            
+
             .grid-2 {
                 grid-template-columns: 1fr;
             }
@@ -228,7 +228,7 @@
         <div class="examples">
             <h2>Quick Examples</h2>
             <p style="margin-bottom: 1rem;">Click any example to load it into the playground:</p>
-            
+
             <button class="example-button" onclick="loadExample('simple')">Simple Generation</button>
             <button class="example-button" onclick="loadExample('streaming')">Streaming Response</button>
             <button class="example-button" onclick="loadExample('chat')">Chat Completion</button>
@@ -239,7 +239,7 @@
         <div class="playground">
             <div class="panel">
                 <h2>API Request</h2>
-                
+
                 <div class="form-group">
                     <label for="endpoint">Endpoint URL</label>
                     <input type="text" id="endpoint" value="http://localhost:11434" placeholder="http://localhost:11434">
@@ -286,7 +286,7 @@
                             <option value="true">Enabled</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="timeout">Timeout (seconds)</label>
                         <input type="number" id="timeout" value="30" min="5" max="300">
@@ -301,9 +301,9 @@
 
             <div class="panel">
                 <h2>API Response</h2>
-                
+
                 <div id="status"></div>
-                
+
                 <div class="response-area" id="response">Ready to send your first request! 🚀
 
 Try the examples above or customize your own request.
@@ -321,7 +321,7 @@ Shimmy supports:
         <div class="panel">
             <h2>API Documentation</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                
+
                 <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
                     <h3 style="color: #667eea; margin-bottom: 0.5rem;">Text Generation</h3>
                     <code style="font-size: 0.8rem; color: #4a5568;">POST /api/generate</code>
@@ -380,7 +380,7 @@ Shimmy supports:
                     }
                 },
                 streaming: {
-                    method: 'POST', 
+                    method: 'POST',
                     path: '/api/generate',
                     payload: {
                         model: 'default',
@@ -427,7 +427,7 @@ Shimmy supports:
             document.getElementById('method').value = example.method;
             document.getElementById('path').value = example.path;
             document.getElementById('payload').value = JSON.stringify(example.payload, null, 2);
-            
+
             updateFullUrl();
         }
 
@@ -436,16 +436,16 @@ Shimmy supports:
             const button = event.target;
             const status = document.getElementById('status');
             const response = document.getElementById('response');
-            
+
             // Get form values
             const endpoint = document.getElementById('endpoint').value;
             const method = document.getElementById('method').value;
             const path = document.getElementById('path').value;
             const payload = document.getElementById('payload').value;
             const timeout = parseInt(document.getElementById('timeout').value) * 1000;
-            
+
             const url = endpoint.replace(/\/$/, '') + path;
-            
+
             // Update UI
             button.disabled = true;
             status.innerHTML = '<div class="status loading">Sending request...</div>';
@@ -455,7 +455,7 @@ Shimmy supports:
                 // Parse payload if it's a POST request
                 let requestBody = null;
                 let headers = {};
-                
+
                 if (method === 'POST' && payload.trim()) {
                     try {
                         requestBody = JSON.parse(payload);
@@ -485,19 +485,19 @@ Shimmy supports:
 
                     const reader = response_fetch.body.getReader();
                     const decoder = new TextDecoder();
-                    
+
                     status.innerHTML = '<div class="status loading">Streaming response...</div>';
                     response.innerHTML = '<div class="streaming-output">Streaming response:\n\n</div>';
-                    
+
                     let streamContent = '';
-                    
+
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
-                        
+
                         const chunk = decoder.decode(value);
                         const lines = chunk.split('\n');
-                        
+
                         for (const line of lines) {
                             if (line.trim()) {
                                 try {
@@ -512,10 +512,10 @@ Shimmy supports:
                             }
                         }
                     }
-                    
+
                     const endTime = Date.now();
                     status.innerHTML = `<div class="status success">Stream completed in ${endTime - startTime}ms</div>`;
-                    
+
                 } else {
                     // Handle regular response
                     const response_fetch = await fetch(url, {
@@ -527,7 +527,7 @@ Shimmy supports:
 
                     const endTime = Date.now();
                     const responseText = await response_fetch.text();
-                    
+
                     // Try to format as JSON
                     let formattedResponse;
                     try {
@@ -536,16 +536,16 @@ Shimmy supports:
                     } catch {
                         formattedResponse = responseText;
                     }
-                    
+
                     response.textContent = formattedResponse;
-                    
+
                     if (response_fetch.ok) {
                         status.innerHTML = `<div class="status success">Success (${response_fetch.status}) - ${endTime - startTime}ms</div>`;
                     } else {
                         status.innerHTML = `<div class="status error">Error ${response_fetch.status}: ${response_fetch.statusText}</div>`;
                     }
                 }
-                
+
             } catch (error) {
                 status.innerHTML = `<div class="status error">Error: ${error.message}</div>`;
                 response.textContent = `Request failed: ${error.message}`;

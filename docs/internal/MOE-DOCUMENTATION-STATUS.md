@@ -1,5 +1,13 @@
 # MoE CPU Offloading - Documentation Status & Readiness Assessment
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Date**: October 8, 2025
+=======
 **Date**: October 8, 2025  
+>>>>>>> main
+=======
+**Date**: October 8, 2025  
+>>>>>>> main
 **Purpose**: Assess documentation completeness before finalizing shimmy feature and upstream PRs
 
 ---
@@ -13,14 +21,30 @@
 
 **Test Coverage**:
 1. ✅ Non-streaming benchmarks (4 prompts × 3 models = 12 tests)
+<<<<<<< HEAD
+<<<<<<< HEAD
+2. ✅ Streaming benchmarks (4 prompts × 3 models = 12 tests)
+=======
 2. ✅ Streaming benchmarks (4 prompts × 3 models = 12 tests)  
+>>>>>>> main
+=======
+2. ✅ Streaming benchmarks (4 prompts × 3 models = 12 tests)  
+>>>>>>> main
 3. ✅ Streaming vs non-streaming comparison (all 3 models)
 4. ✅ Real TTFT measurements (not estimates)
 5. ✅ Actual token counts from SSE events
 
 **Performance Data Captured**:
 - Tokens per second (TPS) for both modes
+<<<<<<< HEAD
+<<<<<<< HEAD
+- Time to first token (TTFT)
+=======
 - Time to first token (TTFT) 
+>>>>>>> main
+=======
+- Time to first token (TTFT) 
+>>>>>>> main
 - Total generation time
 - Performance deltas (streaming vs non-streaming)
 - Token counts (estimated for non-streaming, actual for streaming)
@@ -56,7 +80,15 @@
 #### 1. **MOE-CPU-OFFLOADING-WHITEPAPER.md** (PRIMARY)
 - **Status**: ⚠️ HAS CORRUPTION (lines 78-119)
 - **Size**: 392 lines
+<<<<<<< HEAD
+<<<<<<< HEAD
+- **Content**:
+=======
 - **Content**: 
+>>>>>>> main
+=======
+- **Content**: 
+>>>>>>> main
   - Executive summary ✅
   - Test environment details ✅
   - Technical implementation ✅
@@ -317,7 +349,15 @@ Before finalizing, we should address:
 
 **Option A: Documentation-First Approach** (Recommended)
 1. Fix whitepaper corruption NOW
+<<<<<<< HEAD
+<<<<<<< HEAD
+2. Add performance data NOW
+=======
 2. Add performance data NOW  
+>>>>>>> main
+=======
+2. Add performance data NOW  
+>>>>>>> main
 3. Review/update all docs
 4. Then prepare upstream PRs
 
