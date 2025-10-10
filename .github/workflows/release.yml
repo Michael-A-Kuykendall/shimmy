@@ -98,7 +98,7 @@ jobs:
             echo "🔄 Building documentation without CUDA features..."
             
             # Build docs without CUDA features to avoid build failures
-            cargo doc --no-deps --features "huggingface,llama,moe,mlx"
+            cargo doc --no-deps --features "huggingface,llama,mlx"
             echo "✅ Documentation built successfully (CUDA features excluded)"
             echo "📝 Note: CUDA documentation skipped - this is expected on standard GitHub runners"
           fi
