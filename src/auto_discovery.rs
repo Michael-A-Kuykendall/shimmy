@@ -2,6 +2,8 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+// TODO: Fix PPT integration for production
+// use crate::invariant_ppt::shimmy_invariants;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveredModel {
@@ -149,6 +151,17 @@ impl ModelAutoDiscovery {
         // Remove duplicates based on file hash or path
         discovered.sort_by(|a, b| a.path.cmp(&b.path));
         discovered.dedup_by(|a, b| a.path == b.path);
+
+        // PPT Invariant: Validate discovery results before returning
+        // TODO: Fix PPT integration for production
+        // shimmy_invariants::assert_discovery_valid(discovered.len());
+
+        // PPT Invariant: Validate each discovered model
+        // TODO: Fix PPT integration for production
+        // for model in &discovered {
+        //     let path_str = model.path.to_string_lossy();
+        //     shimmy_invariants::assert_backend_selection_valid(&path_str, &model.model_type);
+        // }
 
         Ok(discovered)
     }

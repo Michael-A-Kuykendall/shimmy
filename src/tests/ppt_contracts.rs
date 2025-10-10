@@ -1,7 +1,6 @@
 // PPT Contract Tests for Shimmy
 // These tests ensure that critical invariants are always checked during execution
 
-use crate::invariant_ppt::shimmy_invariants::*;
 use crate::invariant_ppt::*;
 
 // PPT tests require actual model loading, which needs a compiled backend

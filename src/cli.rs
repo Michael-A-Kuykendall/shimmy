@@ -116,6 +116,7 @@ mod tests {
     fn test_get_bind_address_auto() {
         let command = Command::Serve {
             bind: "auto".to_string(),
+            model_path: None,
         };
 
         // Test that we can access the bind field
@@ -131,6 +132,7 @@ mod tests {
     fn test_get_bind_address_manual() {
         let command = Command::Serve {
             bind: "192.168.1.100:9000".to_string(),
+            model_path: None,
         };
 
         match command {
@@ -185,7 +187,7 @@ mod tests {
     #[test]
     fn test_cli_discover_command() {
         let cli = Cli::try_parse_from(["shimmy", "discover"]).unwrap();
-        matches!(cli.cmd, Command::Discover);
+        matches!(cli.cmd, Command::Discover { llm_only: _ });
     }
 
     #[test]
