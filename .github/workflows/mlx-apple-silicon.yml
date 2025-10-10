@@ -2,7 +2,7 @@ name: MLX Apple Silicon Testing
 
 on:
   push:
-    branches: [ main, 'feature/mlx*' ]
+    branches: [ main, 'feature/mlx*', 'issue-100-*' ]
   pull_request:
     branches: [ main ]
 
