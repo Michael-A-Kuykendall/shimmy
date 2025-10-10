@@ -25,7 +25,11 @@
 
 ### Priority 1: Get Additional MoE Models
 - [ ] Download Mixtral-8x7B-Instruct GGUF
+<<<<<<< HEAD
 - [ ] Download DeepSeek-V2 GGUF
+=======
+- [ ] Download DeepSeek-V2 GGUF  
+>>>>>>> main
 - [ ] Verify models are actual MoE architecture
 - [ ] Test each with MoE CPU offloading
 
@@ -57,8 +61,16 @@
 ## PREREQUISITES FOR COMPLETION
 
 1. **Model Collection** - Need actual MoE models downloaded and verified
+<<<<<<< HEAD
 2. **Baseline Testing** - Need non-MoE performance data for comparison
 3. **Systematic Testing** - Need consistent test protocol across models
 4. **Data Collection** - Need organized performance metrics
 
 **Current Status: We have proven MoE CPU offloading works with GPT-OSS 20B. Now we need more models and systematic testing.**
+=======
+2. **Baseline Testing** - Need non-MoE performance data for comparison  
+3. **Systematic Testing** - Need consistent test protocol across models
+4. **Data Collection** - Need organized performance metrics
+
+**Current Status: We have proven MoE CPU offloading works with GPT-OSS 20B. Now we need more models and systematic testing.**
+>>>>>>> main

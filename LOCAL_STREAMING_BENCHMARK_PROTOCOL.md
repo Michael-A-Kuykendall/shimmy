@@ -7,7 +7,11 @@
 
 **Hardware**:
 - **CPU**: AMD/Intel (to be documented)
+<<<<<<< HEAD
 - **RAM**: 131GB available
+=======
+- **RAM**: 131GB available  
+>>>>>>> main
 - **GPU**: NVIDIA (to be documented)
 - **Storage**: 45GB available for models
 - **Platform**: Windows with MSYS2
@@ -24,7 +28,11 @@ Replicate H100 methodology for memory distribution:
 
 **Metrics**:
 - GPU VRAM usage with `--cpu-moe`
+<<<<<<< HEAD
 - CPU RAM usage
+=======
+- CPU RAM usage 
+>>>>>>> main
 - Model load time
 - Expert tensor distribution verification
 
@@ -55,7 +63,11 @@ Based on H100 whitepaper categories, adapted for streaming:
 | System Design | "Design a simple chat application architecture" | 400 | Coherent design, realistic components |
 | Algorithm Analysis | "Compare bubble sort and quicksort algorithms" | 350 | Accurate comparison, technical depth |
 
+<<<<<<< HEAD
 #### 2.3 Long-form Generation Tests
+=======
+#### 2.3 Long-form Generation Tests  
+>>>>>>> main
 **Purpose**: Stress test streaming with extended generation
 
 | Test | Prompt | Max Tokens | Success Criteria |
@@ -69,12 +81,20 @@ Based on H100 whitepaper categories, adapted for streaming:
 For each test, collect:
 
 #### 3.1 Timing Metrics
+<<<<<<< HEAD
 - **Total Generation Time**: Start to [DONE]
+=======
+- **Total Generation Time**: Start to [DONE] 
+>>>>>>> main
 - **First Token Latency**: Request to first token
 - **Average Tokens/Second**: Total tokens ÷ generation time
 - **Streaming Responsiveness**: Subjective feel of real-time progress
 
+<<<<<<< HEAD
 #### 3.2 Quality Metrics
+=======
+#### 3.2 Quality Metrics  
+>>>>>>> main
 - **Repetition Score**: Using our validated algorithm
 - **Completion Rate**: Successfully completed vs timeout
 - **Content Quality**: Subjective assessment (1-5 scale)
@@ -82,7 +102,11 @@ For each test, collect:
 
 #### 3.3 Resource Metrics
 - **Peak GPU Memory**: During generation
+<<<<<<< HEAD
 - **Peak CPU Memory**: During generation
+=======
+- **Peak CPU Memory**: During generation  
+>>>>>>> main
 - **CPU Utilization**: Average during generation
 
 ## Test Execution Framework
@@ -145,7 +169,11 @@ Based on H100 results, local hardware expectations:
 
 ### Memory Savings (Should Match H100)
 - **DeepSeek 16B**: ~95-99% VRAM savings
+<<<<<<< HEAD
 - **GPT-OSS 20B**: ~99% VRAM savings
+=======
+- **GPT-OSS 20B**: ~99% VRAM savings  
+>>>>>>> main
 - **Phi-3.5-MoE 41.9B**: ~97% VRAM savings
 
 ### Performance (Expected Lower Than H100)
@@ -166,7 +194,11 @@ Based on H100 results, local hardware expectations:
 - ✅ No repetition issues with temperature 0.3
 - ✅ Streaming works smoothly for all test cases
 
+<<<<<<< HEAD
 ### Performance Success
+=======
+### Performance Success  
+>>>>>>> main
 - ✅ Consistent generation speed (no significant degradation during long tests)
 - ✅ Reasonable completion times (<5 minutes for 1000 tokens)
 - ✅ Good streaming responsiveness (tokens appear steadily)
@@ -184,15 +216,27 @@ Based on H100 results, local hardware expectations:
 | Model | Parameters | VRAM Saved | Avg Tokens/Sec | Quality Score | Repetition Score |
 |-------|------------|-------------|----------------|---------------|------------------|
 | DeepSeek 16B | 16.38B | XX% | X.X | X/5 | X.XXX |
+<<<<<<< HEAD
 | GPT-OSS 20B | 20B | XX% | X.X | X/5 | X.XXX |
+=======
+| GPT-OSS 20B | 20B | XX% | X.X | X/5 | X.XXX |  
+>>>>>>> main
 | Phi-3.5-MoE 41.9B | 41.9B | XX% | X.X | X/5 | X.XXX |
 ```
 
 ### Detailed Analysis Report
 - Performance comparison across models
+<<<<<<< HEAD
 - Hardware bottleneck identification
+=======
+- Hardware bottleneck identification  
+>>>>>>> main
 - Streaming vs non-streaming UX analysis
 - Quality preservation validation
 - Production readiness assessment
 
+<<<<<<< HEAD
 This protocol will generate comprehensive data for the white paper demonstrating MoE CPU offloading with streaming is production-ready for Shimmy 1.7.0 release.
+=======
+This protocol will generate comprehensive data for the white paper demonstrating MoE CPU offloading with streaming is production-ready for Shimmy 1.7.0 release.
+>>>>>>> main
