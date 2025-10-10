@@ -15,7 +15,11 @@ def parse_result_file(filepath):
     with open(filepath, 'r') as f:
         content = f.read()
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -32,7 +36,11 @@ def parse_result_file(filepath):
         'output_text': None
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -44,7 +52,11 @@ def parse_result_file(filepath):
         metrics['config'] = 'cpu-offload' if '-cpu-offload-' in filename else 'baseline'
         metrics['run'] = int(parts[1])
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -57,24 +69,34 @@ def parse_result_file(filepath):
             size *= 1024
         metrics['model_size_mb'] = size
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     # Extract VRAM usage (CUDA0 buffer sizes only - avoid counting per-layer allocations)
     # We want: model buffer + KV cache buffer + compute buffer
     vram_total = 0
 
 =======
+=======
+>>>>>>> main
     
     # Extract VRAM usage (CUDA0 buffer sizes only - avoid counting per-layer allocations)
     # We want: model buffer + KV cache buffer + compute buffer
     vram_total = 0
     
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
     # Model buffer
     model_buf = re.search(r'CUDA0 model buffer size\s*=\s*(\d+(?:\.\d+)?)\s*MiB', content)
     if model_buf:
         vram_total += float(model_buf.group(1))
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -83,7 +105,11 @@ def parse_result_file(filepath):
     if kv_buf:
         vram_total += float(kv_buf.group(1))
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -92,15 +118,21 @@ def parse_result_file(filepath):
     if compute_buf:
         vram_total += float(compute_buf.group(1))
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     if vram_total > 0:
         metrics['vram_mb'] = vram_total
 
 =======
+=======
+>>>>>>> main
     
     if vram_total > 0:
         metrics['vram_mb'] = vram_total
     
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
     # Extract generation metrics
     # Look for token generation in output
@@ -111,22 +143,32 @@ def parse_result_file(filepath):
         metrics['output_text'] = output_text[:200]  # First 200 chars
         metrics['generated_tokens'] = len(output_text.split())
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     # Try to estimate TPS from timing if available
     # This is rough - llama.cpp doesn't always output timing
 
 =======
+=======
+>>>>>>> main
     
     # Try to estimate TPS from timing if available
     # This is rough - llama.cpp doesn't always output timing
     
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
     return metrics
 
 def main():
     results = []
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -138,7 +180,11 @@ def main():
         results.append(metrics)
         print(f"Parsed: {filepath.name}")
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -148,7 +194,11 @@ def main():
         if r['model']:
             grouped[r['model']][r['config']].append(r)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -157,7 +207,11 @@ def main():
     print("QUANTIZATION TEST RESULTS SUMMARY")
     print("="*80)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main
@@ -166,7 +220,11 @@ def main():
         print(f"MODEL: {model}")
         print(f"{'='*80}")
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> main
 =======
         
 >>>>>>> main
@@ -174,6 +232,7 @@ def main():
             runs = grouped[model][config]
             if not runs:
                 continue
+<<<<<<< HEAD
 <<<<<<< HEAD
 
             print(f"\n  {config.upper()}:")
@@ -191,6 +250,8 @@ def main():
                 print(f"    Sample output: {runs[0]['output_text'][:100]}...")
 
 =======
+=======
+>>>>>>> main
             
             print(f"\n  {config.upper()}:")
             
@@ -206,6 +267,9 @@ def main():
             if runs[0]['output_text']:
                 print(f"    Sample output: {runs[0]['output_text'][:100]}...")
     
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
     # Save detailed results
     output_file = RESULTS_DIR / "analysis.json"
@@ -219,7 +283,11 @@ def main():
             'detailed_results': results
         }, f, indent=2)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> main
 =======
     
 >>>>>>> main

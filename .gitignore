@@ -12,16 +12,6 @@
 *.swp
 *.swo
 
-# AI Assistant files (local settings, never commit)
-.claude/
-.copilot/
-.cursor/
-.github/copilot-instructions.md
-copilot-instructions.md
-cursor-rules.md
-.ai-instructions
-ai-context.md
-
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -82,7 +72,7 @@ NEXT_PHASE_PLAN.md
 shimmy_rust_golden_record_implementation_bible.md
 test_*.yaml
 
-# Coverage and profiling artifacts
+# Coverage and profiling artifacts  
 coverage/
 *.profraw
 
@@ -97,8 +87,4 @@ spec-kit-env/
 json
 shimmy
 shimmy.exe
-<<<<<<< HEAD
 .claude/settings.local.json
-=======
-.claude/settings.local.json
->>>>>>> main

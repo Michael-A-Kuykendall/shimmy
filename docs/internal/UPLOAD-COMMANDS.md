@@ -30,7 +30,11 @@ huggingface-cli upload Michael-A-Kuykendall/gpt-oss-20b-moe-cpu-offload-gguf /ho
 - **Type**: F16 GGUF with MoE CPU offloading support
 - **Special Feature**: Works with shimmy feat/moe-cpu-offload branch
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **Memory Savings**: 99.9% VRAM reduction (2MB vs 15GB)
+=======
+- **Memory Savings**: 99.9% VRAM reduction (2MB vs 15GB)
+>>>>>>> main
 =======
 - **Memory Savings**: 99.9% VRAM reduction (2MB vs 15GB)
 >>>>>>> main

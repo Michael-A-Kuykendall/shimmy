@@ -1,7 +1,12 @@
 # MoE Whitepaper Corrections Summary
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Date**: October 8, 2025
 **Critique Source**: GPT-5 audit of MOE-CPU-OFFLOADING-WHITEPAPER.md
+=======
+**Date**: October 8, 2025  
+**Critique Source**: GPT-5 audit of MOE-CPU-OFFLOADING-WHITEPAPER.md  
+>>>>>>> main
 =======
 **Date**: October 8, 2025  
 **Critique Source**: GPT-5 audit of MOE-CPU-OFFLOADING-WHITEPAPER.md  
@@ -14,7 +19,11 @@
 
 ### 1. **OVERCLAIMED NOVELTY** ❌
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Wrong**: "First Working Implementation", "Revolutionary breakthrough"
+=======
+**Wrong**: "First Working Implementation", "Revolutionary breakthrough"  
+>>>>>>> main
 =======
 **Wrong**: "First Working Implementation", "Revolutionary breakthrough"  
 >>>>>>> main
@@ -27,7 +36,11 @@
 
 ### 2. **MEMORY USAGE CONTRADICTIONS** ❌
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Wrong**: Executive summary claims "2MB VRAM" but table shows "2.33GB" and logs show "~1.8GB"
+=======
+**Wrong**: Executive summary claims "2MB VRAM" but table shows "2.33GB" and logs show "~1.8GB"  
+>>>>>>> main
 =======
 **Wrong**: Executive summary claims "2MB VRAM" but table shows "2.33GB" and logs show "~1.8GB"  
 >>>>>>> main
@@ -42,7 +55,11 @@ Line 572: "≈1818 MiB" (Live logs)
 
 ### 3. **NO REAL BASELINES** ❌
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Wrong**: All "baseline" numbers marked *estimated*
+=======
+**Wrong**: All "baseline" numbers marked *estimated*  
+>>>>>>> main
 =======
 **Wrong**: All "baseline" numbers marked *estimated*  
 >>>>>>> main
@@ -52,7 +69,11 @@ Line 572: "≈1818 MiB" (Live logs)
 
 ### 4. **TOKEN COUNTING BROKEN** ❌
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Wrong**:
+=======
+**Wrong**: 
+>>>>>>> main
 =======
 **Wrong**: 
 >>>>>>> main
@@ -69,7 +90,11 @@ ESTIMATED_TOKENS=$(echo "$WORD_COUNT * 1.3" | bc)  # ← NOT VALID
 
 ### 5. **TTFT IS GUESSED** ❌
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Wrong**: "TTFT estimation: 10% of total time" (literally made up)
+=======
+**Wrong**: "TTFT estimation: 10% of total time" (literally made up)  
+>>>>>>> main
 =======
 **Wrong**: "TTFT estimation: 10% of total time" (literally made up)  
 >>>>>>> main
@@ -83,17 +108,23 @@ ESTIMATED_TOKENS=$(echo "$WORD_COUNT * 1.3" | bc)  # ← NOT VALID
 
 ### 6. **SINGLE-RUN MEASUREMENTS** ❌
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Wrong**: N=1 for all tests (no statistical validity)
 **Right**: N≥3 with mean ± σ
 
 ### 7. **MISSING TECHNICAL DETAILS** ❌
 **Wrong**: No SHA256s, no exact commits, no controlled experiments
 =======
+=======
+>>>>>>> main
 **Wrong**: N=1 for all tests (no statistical validity)  
 **Right**: N≥3 with mean ± σ
 
 ### 7. **MISSING TECHNICAL DETAILS** ❌
 **Wrong**: No SHA256s, no exact commits, no controlled experiments  
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
 **Right**: Full reproduction package with checksums and exact environment
 
@@ -149,15 +180,21 @@ shimmy serve --n-cpu-moe 10         # Maps to with_n_cpu_moe(10)
 
 #### 1. Honest Positioning
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Old Title**: "MoE CPU Offloading Research White Paper"
 **New Title**: "Shimmy MoE CPU Offloading: Technical Validation & User Guide"
 
 **Old Subtitle**: "Enabling Massive Memory Savings... groundbreaking research"
 =======
+=======
+>>>>>>> main
 **Old Title**: "MoE CPU Offloading Research White Paper"  
 **New Title**: "Shimmy MoE CPU Offloading: Technical Validation & User Guide"
 
 **Old Subtitle**: "Enabling Massive Memory Savings... groundbreaking research"  
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
 **New Subtitle**: "Production Integration of llama.cpp MoE Expert Tensor Offloading in Rust"
 
@@ -184,8 +221,13 @@ shimmy serve --n-cpu-moe 10         # Maps to with_n_cpu_moe(10)
 **Added immediately after title**:
 ```markdown
 <<<<<<< HEAD
+<<<<<<< HEAD
 **This is NOT a research novelty claim.** llama.cpp added native MoE offloading
 on August 4, 2025 (PR #15077 by @slaren). Our contribution is **Rust bindings**
+=======
+**This is NOT a research novelty claim.** llama.cpp added native MoE offloading 
+on August 4, 2025 (PR #15077 by @slaren). Our contribution is **Rust bindings** 
+>>>>>>> main
 =======
 **This is NOT a research novelty claim.** llama.cpp added native MoE offloading 
 on August 4, 2025 (PR #15077 by @slaren). Our contribution is **Rust bindings** 
@@ -225,9 +267,15 @@ on August 4, 2025 (PR #15077 by @slaren). Our contribution is **Rust bindings**
 ```markdown
 ### Discrepancy Investigation: 2MB vs 1.8GB
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Historical Claim**: Earlier builds (Oct 6) showed ~2MB VRAM usage
 **Current Measurement**: Oct 7-8 builds show 1.8-2.3GB VRAM usage
 **Status**: Under investigation. Until reproduced, we report **measured range of 1.8-2.3GB**
+=======
+**Historical Claim**: Earlier builds (Oct 6) showed ~2MB VRAM usage  
+**Current Measurement**: Oct 7-8 builds show 1.8-2.3GB VRAM usage  
+**Status**: Under investigation. Until reproduced, we report **measured range of 1.8-2.3GB** 
+>>>>>>> main
 =======
 **Historical Claim**: Earlier builds (Oct 6) showed ~2MB VRAM usage  
 **Current Measurement**: Oct 7-8 builds show 1.8-2.3GB VRAM usage  
@@ -357,7 +405,11 @@ docs/MOE-CPU-OFFLOADING-WHITEPAPER.md   ← Keep for historical record
 
 ### Impact
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Before**: Marketing whitepaper that would damage credibility when users discover contradictions
+=======
+**Before**: Marketing whitepaper that would damage credibility when users discover contradictions  
+>>>>>>> main
 =======
 **Before**: Marketing whitepaper that would damage credibility when users discover contradictions  
 >>>>>>> main
@@ -366,8 +418,13 @@ docs/MOE-CPU-OFFLOADING-WHITEPAPER.md   ← Keep for historical record
 ---
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 *Audit completed: October 8, 2025*
 *Corrected version: docs/MOE-TECHNICAL-VALIDATION.md*
+=======
+*Audit completed: October 8, 2025*  
+*Corrected version: docs/MOE-TECHNICAL-VALIDATION.md*  
+>>>>>>> main
 =======
 *Audit completed: October 8, 2025*  
 *Corrected version: docs/MOE-TECHNICAL-VALIDATION.md*  

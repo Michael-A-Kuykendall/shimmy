@@ -82,23 +82,30 @@ use llama_cpp_2::model::LlamaModel;
 fn main() {
     let backend = LlamaBackend::init().unwrap();
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     // Enable MoE CPU offloading
     let model_params = LlamaModelParams::default()
         .with_cpu_moe_all();  // Offload all inactive experts to CPU
 
 =======
+=======
+>>>>>>> main
     
     // Enable MoE CPU offloading
     let model_params = LlamaModelParams::default()
         .with_cpu_moe_all();  // Offload all inactive experts to CPU
     
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
     let model = LlamaModel::load_from_file(
         &backend,
         "deepseek-moe-16b-Q4_K_M.gguf",
         &model_params
     ).unwrap();
+<<<<<<< HEAD
 <<<<<<< HEAD
 
     let ctx_params = LlamaContextParams::default()
@@ -107,12 +114,17 @@ fn main() {
     let mut ctx = model.new_context(&backend, ctx_params).unwrap();
 
 =======
+=======
+>>>>>>> main
     
     let ctx_params = LlamaContextParams::default()
         .with_n_ctx(2048);
     
     let mut ctx = model.new_context(&backend, ctx_params).unwrap();
     
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
     // ... tokenize and generate as normal
 }
@@ -201,8 +213,13 @@ If you use this model in your work, please cite the original DeepSeek paper:
 ---
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **License**: Apache 2.0 (inherited from base model)
 **Quantized by**: MikeKuykendall
+=======
+**License**: Apache 2.0 (inherited from base model)  
+**Quantized by**: MikeKuykendall  
+>>>>>>> main
 =======
 **License**: Apache 2.0 (inherited from base model)  
 **Quantized by**: MikeKuykendall  
