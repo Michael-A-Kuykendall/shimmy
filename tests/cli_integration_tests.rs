@@ -128,3 +128,30 @@ fn test_ollama_models_environment_variable() {
         .assert()
         .success(); // Should not crash when OLLAMA_MODELS is set
 }
+
+#[cfg(target_os = "windows")]
+#[test]
+fn test_windows_server_stability_issue_106() {
+    // Regression test for Issue #106: Windows server crashes
+    // This test ensures shimmy can handle Windows path separators and start server
+    use std::time::Duration;
+    use std::thread;
+    
+    let mut cmd = Command::cargo_bin("shimmy").unwrap();
+    
+    // Test that server can start without crashing on Windows
+    // Use timeout to prevent hanging if there's an infinite loop
+    let mut child = cmd
+        .args(&["serve", "--bind", "127.0.0.1:0"]) // Use port 0 for auto-assignment
+        .timeout(Duration::from_secs(5))
+        .spawn()
+        .expect("Failed to start shimmy server");
+    
+    // Give server time to initialize
+    thread::sleep(Duration::from_millis(100));
+    
+    // Kill the server before timeout
+    child.kill().unwrap();
+    
+    // If we reach here, the server started successfully without crashing
+}

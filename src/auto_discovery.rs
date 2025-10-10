@@ -156,7 +156,12 @@ impl ModelAutoDiscovery {
 
         // PPT Invariant: Validate each discovered model
         for model in &discovered {
-            let path_str = model.path.to_string_lossy();
+            // Windows path normalization for Issue #106
+            let path_str = if cfg!(target_os = "windows") {
+                model.path.to_string_lossy().replace('\\', "/")
+            } else {
+                model.path.to_string_lossy().to_string()
+            };
             shimmy_invariants::assert_backend_selection_valid(&path_str, &model.model_type);
         }
 

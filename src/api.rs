@@ -46,11 +46,16 @@ pub async fn generate(
     Json(req): Json<GenerateRequest>,
 ) -> impl IntoResponse {
     let Some(spec) = state.registry.to_spec(&req.model) else {
+        tracing::error!("Model '{}' not found in registry", req.model);
         return axum::http::StatusCode::NOT_FOUND.into_response();
     };
     let engine = &state.engine;
-    let Ok(loaded) = engine.load(&spec).await else {
-        return axum::http::StatusCode::BAD_GATEWAY.into_response();
+    let loaded = match engine.load(&spec).await {
+        Ok(loaded) => loaded,
+        Err(e) => {
+            tracing::error!("Failed to load model '{}': {} (Issue #106 Windows debugging)", req.model, e);
+            return axum::http::StatusCode::BAD_GATEWAY.into_response();
+        }
     };
 
     // Construct prompt
@@ -110,8 +115,14 @@ pub async fn generate(
         Sse::new(stream).into_response()
     } else {
         match loaded.generate(&prompt, opts, None).await {
-            Ok(full) => Json(GenerateResponse { response: full }).into_response(),
-            Err(_) => axum::http::StatusCode::BAD_GATEWAY.into_response(),
+            Ok(full) => {
+                tracing::debug!("Generation completed successfully for model '{}'", req.model);
+                Json(GenerateResponse { response: full }).into_response()
+            },
+            Err(e) => {
+                tracing::error!("Generation failed for model '{}': {} (Issue #106 Windows debugging)", req.model, e);
+                axum::http::StatusCode::BAD_GATEWAY.into_response()
+            },
         }
     }
 }
