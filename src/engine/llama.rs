@@ -4,6 +4,35 @@ use async_trait::async_trait;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
+/// Smart thread detection optimized for inference performance
+/// Matches Ollama's approach: use physical cores with intelligent limits
+fn get_optimal_thread_count() -> i32 {
+    let total_cores = std::thread::available_parallelism()
+        .map(|n| n.get() as i32)
+        .unwrap_or(4);
+    
+    // Ollama logic: Use physical cores, not logical (hyperthreading) cores
+    // Intel i7 typically has 4-8 physical cores but 8-16 logical cores
+    let physical_cores = match total_cores {
+        1..=2 => total_cores,      // Single/dual core: use all
+        3..=4 => total_cores,      // Quad core: use all physical
+        5..=8 => (total_cores / 2).max(4),  // 6-8 core: assume hyperthreading, use physical
+        9..=16 => (total_cores / 2).max(6), // 8+ core: definitely hyperthreaded, use ~half
+        _ => 8, // High-end systems: cap at 8 threads for stability
+    };
+    
+    // Further optimization: leave some cores for system
+    let optimal = match physical_cores {
+        1..=2 => physical_cores,
+        3..=4 => physical_cores - 1,     // Leave 1 core for system  
+        5..=8 => physical_cores - 2,     // Leave 2 cores for system
+        _ => physical_cores * 3 / 4,   // Use 75% of physical cores
+    }.max(1); // Always use at least 1 thread
+    
+    tracing::info!("Threading: {} total cores detected, using {} optimal threads", total_cores, optimal);
+    optimal
+}
+
 #[cfg(feature = "llama")]
 use std::sync::Mutex;
 use tracing::info;
@@ -249,18 +278,10 @@ impl InferenceEngine for LlamaEngine {
                 .with_n_batch(2048)
                 .with_n_ubatch(512)
                 .with_n_threads(
-                    spec.n_threads.unwrap_or(
-                        std::thread::available_parallelism()
-                            .map(|n| n.get() as i32)
-                            .unwrap_or(4),
-                    ),
+                    spec.n_threads.unwrap_or_else(get_optimal_thread_count),
                 )
                 .with_n_threads_batch(
-                    spec.n_threads.unwrap_or(
-                        std::thread::available_parallelism()
-                            .map(|n| n.get() as i32)
-                            .unwrap_or(4),
-                    ),
+                    spec.n_threads.unwrap_or_else(get_optimal_thread_count),
                 );
             let ctx_tmp = model.new_context(&be, ctx_params)?;
             if let Some(ref lora) = spec.lora_path {
