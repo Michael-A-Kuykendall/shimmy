@@ -41,6 +41,9 @@ pub enum Command {
     Serve {
         #[arg(long, default_value = "auto")]
         bind: String,
+        /// Direct path to a specific model file (bypasses auto-discovery)
+        #[arg(long)]
+        model_path: Option<String>,
     },
     /// List registered and auto-discovered models
     List {
@@ -49,7 +52,11 @@ pub enum Command {
         short: bool,
     },
     /// Refresh auto-discovery and list all available models
-    Discover,
+    Discover {
+        /// Show only LLM models (filter out text-to-image, video, clip models, etc.)
+        #[arg(long)]
+        llm_only: bool,
+    },
     /// Load a model once (verifies base + optional LoRA)
     Probe { name: String },
     /// Simple throughput benchmark

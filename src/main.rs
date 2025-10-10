@@ -20,6 +20,7 @@ mod util {
 
 use clap::Parser;
 use model_registry::{ModelEntry, Registry};
+use std::path::PathBuf;
 use std::sync::Arc;
 use tracing::info;
 
@@ -205,6 +206,35 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
+    // Handle model-path registration for serve command
+    if let cli::Command::Serve { ref model_path, .. } = cli.cmd {
+        if let Some(ref path) = model_path {
+            let path_buf = PathBuf::from(path);
+            if path_buf.exists() {
+                let model_name = path_buf
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("direct-model")
+                    .to_string();
+                
+                // Register the direct model before creating AppState
+                reg.register(ModelEntry {
+                    name: model_name.clone(),
+                    base_path: path_buf.clone(),
+                    lora_path: None,
+                    template: None,
+                    ctx_len: None,
+                    n_threads: None,
+                });
+                
+                println!("🎯 Direct model loaded: {} -> {}", model_name, path);
+            } else {
+                eprintln!("❌ Model file not found: {}", path);
+                std::process::exit(1);
+            }
+        }
+    }
+
     let state = AppState::new(engine, reg);
     let state = Arc::new(state);
 
@@ -363,19 +393,44 @@ async fn main() -> anyhow::Result<()> {
                 }
             }
         }
-        cli::Command::Discover => {
+        cli::Command::Discover { llm_only } => {
             println!("🔍 Refreshing model discovery...");
             let registry = Registry::with_discovery();
 
-            let discovered = registry.discovered_models.clone();
+            let mut discovered = registry.discovered_models.clone();
+            
+            // Apply LLM-only filtering if requested
+            if llm_only {
+                discovered.retain(|name, _| {
+                    let name_lower = name.to_lowercase();
+                    // Filter out known non-LLM model types
+                    !name_lower.contains("clip") &&
+                    !name_lower.contains("text-to-image") &&
+                    !name_lower.contains("vision") &&
+                    !name_lower.contains("image") &&
+                    !name_lower.contains("video") &&
+                    !name_lower.contains("audio") &&
+                    !name_lower.contains("tts") &&
+                    !name_lower.contains("stt") &&
+                    !name_lower.contains("embedding") &&
+                    !name_lower.contains("encoder")
+                });
+                println!("🎯 Filtering to LLM models only...");
+            }
+            
             if discovered.is_empty() {
-                println!("❌ No models found in search paths:");
-                let discovery = crate::auto_discovery::ModelAutoDiscovery::new();
-                for path in &discovery.search_paths {
-                    println!("   • {:?}", path);
+                if llm_only {
+                    println!("❌ No LLM models found after filtering");
+                    println!("💡 Try running without --llm-only to see all models");
+                } else {
+                    println!("❌ No models found in search paths:");
+                    let discovery = crate::auto_discovery::ModelAutoDiscovery::new();
+                    for path in &discovery.search_paths {
+                        println!("   • {:?}", path);
+                    }
+                    println!("   • Ollama models (if installed)");
+                    println!("\n💡 Try downloading a GGUF model or setting SHIMMY_BASE_GGUF");
                 }
-                println!("   • Ollama models (if installed)");
-                println!("\n💡 Try downloading a GGUF model or setting SHIMMY_BASE_GGUF");
             } else {
                 println!("✅ Found {} models:", discovered.len());
                 for (name, model) in discovered {

@@ -104,14 +104,40 @@ jobs:
           fi
           echo "::endgroup::"
 
+      - name: "🚧 GATE 7/7: Regression Test Suite"
+        run: |
+          echo "::group::Gate 7: Regression Tests"
+          echo "🧪 Running comprehensive regression test suite..."
+          echo "📋 This validates all critical functionality and prevents regressions"
+          
+          chmod +x scripts/run-regression-tests.sh
+          if ./scripts/run-regression-tests.sh; then
+            echo "✅ All regression tests passed"
+            echo "🔒 No regressions detected in:"
+            echo "   • Issue #13 (Qwen model templates)"
+            echo "   • Issue #12 (Custom model directories)" 
+            echo "   • Issue #72 (GPU backend flags)"
+            echo "   • Issue #101 (Performance & streaming)"
+            echo "   • OpenAI API compatibility"
+            echo "   • CLI functionality"
+            echo "   • Error handling"
+          else
+            echo "❌ Regression tests failed - blocking release"
+            exit 1
+          fi
+          echo "::endgroup::"
+
       - name: "🎯 RELEASE GATES SUMMARY"
         id: gates
         run: |
-          echo "🎉 ALL 6 MANDATORY GATES PASSED!"
+          echo "🎉 ALL 7 MANDATORY GATES PASSED!"
           echo "✅ Core Build"
           echo "✅ CUDA Timeout Protection (Issue #59)"
           echo "✅ Template Packaging (Issue #60)"
           echo "✅ Binary Size Constitutional Limit"
+          echo "✅ Test Suite Validation"
+          echo "✅ Documentation Build"
+          echo "✅ Regression Test Suite"
           echo "✅ Test Suite"
           echo "✅ Documentation"
           echo "should_publish=true" >> $GITHUB_OUTPUT
