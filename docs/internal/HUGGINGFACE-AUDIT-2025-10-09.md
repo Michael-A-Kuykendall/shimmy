@@ -1,7 +1,12 @@
 # HuggingFace Model Repository Audit Report
 
+<<<<<<< HEAD
 **Date**: October 9, 2025
 **Auditor**: AI Assistant
+=======
+**Date**: October 9, 2025  
+**Auditor**: AI Assistant  
+>>>>>>> main
 **Scope**: All 6 quantized MoE CPU offload model repositories
 
 ---
@@ -50,7 +55,11 @@
 ### ❌ phi-3.5-moe-q4-k-m-cpu-offload-gguf
 **Status**: CRITICAL ISSUE - MODEL CARD NOT RENDERING ❌
 
+<<<<<<< HEAD
 **Problem**:
+=======
+**Problem**: 
+>>>>>>> main
 - Page shows "No model card" message
 - README.md file exists (6.08 kB)
 - Metadata is present but not rendering
@@ -59,11 +68,19 @@
 - ⚠️ Limited tags: GGUF, conversational (missing other tags!)
 - ✅ File present: phi-3.5-moe-Q4_K_M.gguf (25.3 GB)
 
+<<<<<<< HEAD
 **Root Cause**:
 - Likely YAML parsing error in metadata
 - Or caching issue on HuggingFace side
 
 **Action Required**:
+=======
+**Root Cause**: 
+- Likely YAML parsing error in metadata
+- Or caching issue on HuggingFace side
+
+**Action Required**: 
+>>>>>>> main
 - Re-upload README.md with verified YAML syntax
 - Check for any invisible characters or formatting issues
 
