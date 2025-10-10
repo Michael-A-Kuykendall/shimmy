@@ -1905,7 +1905,7 @@ dependencies = [
 
 [[package]]
 name = "shimmy"
-version = "1.7.1"
+version = "1.7.2"
 dependencies = [
  "anyhow",
  "async-trait",
