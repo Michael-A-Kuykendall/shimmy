@@ -40,7 +40,9 @@ jobs:
           echo "Architecture: $(uname -m)"
           echo "Platform: $(uname -s)"
           
-          # Install Python MLX for model conversion testing
+          # Install Python MLX for model conversion testing (use virtual environment)
+          python3 -m venv mlx-venv
+          source mlx-venv/bin/activate
           python3 -m pip install --upgrade pip
           python3 -m pip install mlx-lm
 
