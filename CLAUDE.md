@@ -5,6 +5,7 @@ Shimmy is a lightweight sub-5MB Rust inference engine serving as an optimal shim
 
 ## Critical Development Rules
 
+**NO BYPASSING QUALITY GATES**: NEVER skip tests, pre-commit hooks, or linting without explicit human approval. When pre-commit hooks fail, diagnose and fix the actual issues - that's precisely why we have them. Bypassing defeats the entire purpose of quality gates.
 **READ BEFORE WRITE**: Always read a file before editing or writing to it (Claude Code requirement)
 **FOLLOW INTEGRATION PLAN**: Check integration plans before implementation decisions
 **MANDATORY RELEASE APPROVAL**: NEVER create releases, tags, or version bumps without explicit human authorization. Always ask "Should I proceed with creating release v[X.X.X]?" before any release actions
@@ -38,7 +39,7 @@ This environment variable override fixes Unicode encoding issues that cause cras
 
 ### Core Workflow
 1. `/specify` - Create detailed feature specification (defines WHAT and WHY)
-2. `/plan` - Generate technical implementation plan (translates to HOW)  
+2. `/plan` - Generate technical implementation plan (translates to HOW)
 3. `/tasks` - Break down into actionable implementation tasks
 4. `implement <path_to_plan>` - Execute the structured implementation
 
@@ -90,7 +91,7 @@ project/
 
 ## Architecture Priorities
 1. 🔥 Smart Model Preloading & Warmup System
-2. ⚡ Response Caching & Deduplication Engine  
+2. ⚡ Response Caching & Deduplication Engine
 3. 🔧 Integration Templates & Auto-Configuration
 4. 🎛️ Request Routing & Connection Intelligence
 5. 📊 Advanced Observability & Self-Optimization

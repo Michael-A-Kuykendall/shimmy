@@ -17,7 +17,7 @@ body:
       description: What type of documentation is needed?
       options:
         - Missing documentation
-        - Incorrect/outdated information  
+        - Incorrect/outdated information
         - Unclear/confusing content
         - New feature documentation
         - API reference improvements
@@ -95,7 +95,7 @@ body:
       description: What type of content would be most helpful? (Select all that apply)
       options:
         - label: Step-by-step instructions
-        - label: Code examples  
+        - label: Code examples
         - label: Configuration samples
         - label: Command-line examples
         - label: API request/response examples

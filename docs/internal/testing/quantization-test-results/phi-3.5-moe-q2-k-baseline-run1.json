@@ -50,7 +50,15 @@ llama_model_loader: - type q4_K:   32 tensors
 llama_model_loader: - type q6_K:    1 tensors
 print_info: file format = GGUF V3 (latest)
 print_info: file type   = Q2_K - Medium
+<<<<<<< HEAD
+<<<<<<< HEAD
+print_info: file size   = 14.22 GiB (2.92 BPW)
+=======
 print_info: file size   = 14.22 GiB (2.92 BPW) 
+>>>>>>> main
+=======
+print_info: file size   = 14.22 GiB (2.92 BPW) 
+>>>>>>> main
 init_tokenizer: initializing tokenizer for type 1
 load: control token:  32008 '<|placeholder5|>' is not marked as EOG
 load: control token:  32006 '<|system|>' is not marked as EOG

@@ -25,11 +25,11 @@ pub struct Cli {
         help = "GPU backend: auto, cpu, cuda, vulkan, opencl"
     )]
     pub gpu_backend: Option<String>,
-    
+
     /// Offload ALL MoE expert tensors to CPU (saves VRAM for large MoE models)
     #[arg(long, global = true)]
     pub cpu_moe: bool,
-    
+
     /// Offload first N MoE layers' expert tensors to CPU
     #[arg(long, global = true, value_name = "N", conflicts_with = "cpu_moe")]
     pub n_cpu_moe: Option<usize>,

@@ -2,7 +2,7 @@ name: Experimental ARM64
 
 on:
   workflow_dispatch:  # Manual trigger only
-  
+
 jobs:
   # Experimental job - not required for releases
   macos-arm64-llama-experimental:
@@ -11,7 +11,7 @@ jobs:
     env:
       # Forward individual CMAKE_* vars that build.rs actually processes
       CMAKE_C_FLAGS: "-mno-i8mm"
-      CMAKE_CXX_FLAGS: "-mno-i8mm" 
+      CMAKE_CXX_FLAGS: "-mno-i8mm"
       CMAKE_OSX_ARCHITECTURES: "arm64"
       # Keep LTO off to avoid inline conflicts
       CARGO_PROFILE_RELEASE_LTO: "off"

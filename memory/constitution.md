@@ -29,7 +29,7 @@
 ## Article IX: Specification-Driven Development
 **REQUIREMENT**: All new features must follow GitHub Spec-Kit methodology:
 1. `/specify` - Create detailed specification
-2. `/plan` - Generate implementation plan  
+2. `/plan` - Generate implementation plan
 3. `/tasks` - Break into actionable items
 4. Implementation with continuous validation
 

@@ -94,7 +94,7 @@ run:
 
 ### Recommended
 - **CPU**: 1 vCPU
-- **Memory**: 1GB RAM  
+- **Memory**: 1GB RAM
 - **Storage**: 1GB+ (for model caching)
 
 ### High Performance

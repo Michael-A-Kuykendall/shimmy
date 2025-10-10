@@ -1,6 +1,14 @@
 # Complete Execution Plan: Quantization Testing → HuggingFace Publishing
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Date**: October 9, 2025
+=======
 **Date**: October 9, 2025  
+>>>>>>> main
+=======
+**Date**: October 9, 2025  
+>>>>>>> main
 **Status**: Testing Complete ✅ | Analysis In Progress ⏳
 
 ---
@@ -23,14 +31,30 @@
 ## ⏳ IN PROGRESS: Performance Analysis
 
 ### Step 1: Extract Metrics from Test Results
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Script**: `analyze-results.py`
+=======
 **Script**: `analyze-results.py`  
+>>>>>>> main
+=======
+**Script**: `analyze-results.py`  
+>>>>>>> main
 **Status**: Needs refinement (VRAM calculation overcounting)
 
 **Metrics to Extract**:
 - Model size (on disk)
 - VRAM usage (baseline vs CPU offload)
 - Tokens per second (TPS)
+<<<<<<< HEAD
+<<<<<<< HEAD
+- Time to first token (TTFT)
+=======
 - Time to first token (TTFT) 
+>>>>>>> main
+=======
+- Time to first token (TTFT) 
+>>>>>>> main
 - Generation quality (sample outputs)
 - VRAM reduction % (baseline → offload)
 - Speed penalty (baseline TPS → offload TPS)
@@ -141,14 +165,30 @@ Based on our professional template (`TEMPLATE-QUANTIZATION.md`):
 - `MikeKuykendall/deepseek-moe-16b-q4-k-m-cpu-offload-gguf`
 - `MikeKuykendall/deepseek-moe-16b-q8-0-cpu-offload-gguf`
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Pros**: Clean, focused cards per quant level
+=======
 **Pros**: Clean, focused cards per quant level  
+>>>>>>> main
+=======
+**Pros**: Clean, focused cards per quant level  
+>>>>>>> main
 **Cons**: 6 repos to manage
 
 **Option B: Multi-Quant Repos**
 - `MikeKuykendall/phi-3.5-moe-cpu-offload-gguf` (all 3 quants)
 - `MikeKuykendall/deepseek-moe-16b-cpu-offload-gguf` (all 3 quants)
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Pros**: Easier management, single card covers all quants
+=======
 **Pros**: Easier management, single card covers all quants  
+>>>>>>> main
+=======
+**Pros**: Easier management, single card covers all quants  
+>>>>>>> main
 **Cons**: Large model card, users see all files
 
 ### Upload Commands (for each model)

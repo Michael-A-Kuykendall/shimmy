@@ -1,8 +1,8 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
+**Feature Branch**: `[###-feature-name]`
+**Created**: [DATE]
+**Status**: Draft
 **Shimmy Version**: 1.4.0+
 
 ## Constitutional Compliance Check
@@ -10,7 +10,7 @@
 Before proceeding, verify this feature complies with Shimmy's immutable principles:
 
 - [ ] **5MB Binary Limit**: Feature won't increase core binary beyond 5MB
-- [ ] **Sub-2-Second Startup**: Feature won't degrade startup performance  
+- [ ] **Sub-2-Second Startup**: Feature won't degrade startup performance
 - [ ] **Zero Python Dependencies**: Feature uses only Rust implementations
 - [ ] **OpenAI API Compatibility**: Feature maintains API compatibility
 - [ ] **Library-First**: Feature will be implemented as standalone library first
@@ -60,7 +60,7 @@ Before proceeding, verify this feature complies with Shimmy's immutable principl
 
 ### Compatibility Requirements
 - **OpenAI API**: Which endpoints must remain compatible
-- **Model Formats**: Which model types must be supported  
+- **Model Formats**: Which model types must be supported
 - **Platforms**: Windows/Linux/macOS compatibility requirements
 
 ---
@@ -102,7 +102,7 @@ Before proceeding, verify this feature complies with Shimmy's immutable principl
 - **Primary Metric**: [How we measure user value]
 - **Secondary Metrics**: [Additional success indicators]
 
-### Technical Success  
+### Technical Success
 - **Performance**: [Specific performance targets]
 - **Reliability**: [Error rate or uptime targets]
 - **Adoption**: [Usage or integration targets]

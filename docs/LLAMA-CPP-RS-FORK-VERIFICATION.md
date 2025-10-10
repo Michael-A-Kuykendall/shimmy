@@ -1,11 +1,11 @@
 # llama-cpp-rs Fork Verification Report
 ## Windows MSVC CUDA/Vulkan/OpenCL Bindgen Fix
 
-**Date**: October 4, 2025  
-**Investigator**: Michael A. Kuykendall  
-**Fork**: Michael-A-Kuykendall/llama-cpp-rs  
-**Branch**: fix-windows-msvc-cuda-stdbool  
-**Commit**: 3997cc135259a01968b68d58ffecb6132ff223ba  
+**Date**: October 4, 2025
+**Investigator**: Michael A. Kuykendall
+**Fork**: Michael-A-Kuykendall/llama-cpp-rs
+**Branch**: fix-windows-msvc-cuda-stdbool
+**Commit**: 3997cc135259a01968b68d58ffecb6132ff223ba
 **Upstream**: utilityai/llama-cpp-rs (main branch)
 
 ---
@@ -14,9 +14,9 @@
 
 **VERIFIED**: Our fork solves a real, reproducible bug in upstream llama-cpp-rs that prevents building with any GPU backend (CUDA/Vulkan/OpenCL) on Windows MSVC.
 
-**Problem**: bindgen's libclang cannot find MSVC standard C headers (stdbool.h, stddef.h, etc.)  
-**Root Cause**: bindgen needs -isystem paths to MSVC include directories  
-**Solution**: Use cc crate to discover MSVC environment, extract INCLUDE paths, pass to bindgen  
+**Problem**: bindgen's libclang cannot find MSVC standard C headers (stdbool.h, stddef.h, etc.)
+**Root Cause**: bindgen needs -isystem paths to MSVC include directories
+**Solution**: Use cc crate to discover MSVC environment, extract INCLUDE paths, pass to bindgen
 **Impact**: Enables Windows MSVC + GPU backends for entire Rust + llama.cpp ecosystem
 
 **Upstream Status**: NOT FIXED - Their CI only tests Windows with `--features sampler` (empty feature, no GPU)
@@ -36,7 +36,7 @@ cargo build --package llama-cpp-sys-2 --features cuda
 
 **Result**: ❌ **BUILD FAILS**
 ```
-C:\Users\micha\repos\llama-cpp-rs\llama-cpp-sys-2\llama.cpp\ggml/include\ggml.h:207:10: 
+C:\Users\micha\repos\llama-cpp-rs\llama-cpp-sys-2\llama.cpp\ggml/include\ggml.h:207:10:
 fatal error: 'stdbool.h' file not found
 
 thread 'main' panicked at llama-cpp-sys-2\build.rs:425:10:
@@ -71,8 +71,8 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 5m 26s
 
 ### What the Fix Does
 
-**File**: `llama-cpp-sys-2/build.rs`  
-**Lines**: +38 insertions after line 420  
+**File**: `llama-cpp-sys-2/build.rs`
+**Lines**: +38 insertions after line 420
 **Scope**: Applies to ALL Windows MSVC builds (not just CUDA)
 
 **Mechanism**:
@@ -159,7 +159,7 @@ if matches!(target_os, TargetOs::Windows(WindowsVariant::Msvc)) {
 
 ### PR Search Results
 
-**Searched merged PRs for**: windows, msvc, bindgen  
+**Searched merged PRs for**: windows, msvc, bindgen
 **Found**:
 - #823: bindgen version bump (unrelated)
 - #796: bindgen target triple mapping (unrelated)
@@ -192,7 +192,7 @@ windows:
 sampler = []  # Empty feature - does nothing
 ```
 
-**CI Status**: Recent runs show Windows job PASSING ✅  
+**CI Status**: Recent runs show Windows job PASSING ✅
 **Conclusion**: **Upstream CI does NOT test Windows + GPU backends**
 
 This is why the bug exists undetected - they never build with cuda/vulkan/opencl on Windows.
@@ -220,7 +220,7 @@ cargo build --package llama-cpp-sys-2 --features cuda 2>&1 | tail -10
 **Result**:
 ```
 --- stderr
-C:\Users\micha\repos\llama-cpp-rs\llama-cpp-sys-2\llama.cpp\ggml/include\ggml.h:207:10: 
+C:\Users\micha\repos\llama-cpp-rs\llama-cpp-sys-2\llama.cpp\ggml/include\ggml.h:207:10:
 fatal error: 'stdbool.h' file not found
 
 thread 'main' (200132) panicked at llama-cpp-sys-2\build.rs:425:10:
@@ -258,8 +258,8 @@ cargo build --release --features llama-cuda
 Finished `release` profile [optimized] target(s) in 0.37s
 ```
 
-**Binary Size**: 24.1 MB  
-**All Tests**: 295/295 passing  
+**Binary Size**: 24.1 MB
+**All Tests**: 295/295 passing
 **GPU Inference**: Verified working with CUDA backend
 
 ---
@@ -448,7 +448,7 @@ Before any PR:
 
 ---
 
-**Verified by**: Michael A. Kuykendall  
-**Date**: October 4, 2025  
-**Confidence**: EXTREMELY HIGH  
+**Verified by**: Michael A. Kuykendall
+**Date**: October 4, 2025
+**Confidence**: EXTREMELY HIGH
 **Ready for upstream**: YES (after commit message amendment)

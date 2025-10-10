@@ -32,13 +32,13 @@ Shimmy is a sub-5MB, zero-config, OpenAI-compatible inference server targeting t
 
 ## 🎯 Q4 2025 Milestones
 - [ ] **Enterprise Embeddings** - `/v1/embeddings` endpoint (targeting RAG workloads)
-- [ ] **Sub-50ms Startup** - Micro-benchmarking and optimization 
+- [ ] **Sub-50ms Startup** - Micro-benchmarking and optimization
 - [ ] **Model Marketplace** - Discovery improvements with popularity rankings
 - [ ] **Container-First** - Docker packaging and multi-platform binaries
 - [ ] **Enterprise Analytics** - Optional usage metrics and monitoring hooks
 - [ ] **10,000 User Milestone** - Community growth and feedback integration
 
-## 🚀 2026 Strategic Initiatives  
+## 🚀 2026 Strategic Initiatives
 - [ ] **Shimmy Console** - Terminal UI frontend with retro aesthetics and advanced controls
 - [ ] **Proprietary Integration** - Enhanced inference capabilities via custom Rust toolchain
 - [ ] **Developer Experience Suite** - Integrated development environment for AI workflows
@@ -55,7 +55,7 @@ Shimmy is a sub-5MB, zero-config, OpenAI-compatible inference server targeting t
 - **Hardware Optimization** - SIMD/GPU acceleration within size constraints
 - **Enterprise Reliability** - 99.99% uptime, consumer simplicity
 
-### Market Expansion  
+### Market Expansion
 - **1M+ Active Developers** - Become the standard for local AI
 - **Product Suite Leadership** - Shimmy Console and Cloud ecosystem dominance
 - **Enterprise Standard** - Default choice for privacy-conscious organizations
@@ -78,7 +78,7 @@ Shimmy is a sub-5MB, zero-config, OpenAI-compatible inference server targeting t
 ---
 
 ## Governance
-- **Lead Maintainer:** Michael A. Kuykendall  
-- Contributions are welcome via Pull Requests  
+- **Lead Maintainer:** Michael A. Kuykendall
+- Contributions are welcome via Pull Requests
 - The roadmap is set by the lead maintainer to preserve project vision
 - All changes must align with Shimmy's core philosophy: lightweight, zero-config, invisible infrastructure

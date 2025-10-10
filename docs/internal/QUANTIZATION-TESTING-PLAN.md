@@ -1,5 +1,13 @@
 # Quantization Testing Plan - MoE CPU Offloading
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Date**: October 8, 2025
+=======
 **Date**: October 8, 2025  
+>>>>>>> main
+=======
+**Date**: October 8, 2025  
+>>>>>>> main
 **Goal**: Validate MoE CPU offloading performance across multiple quantization levels
 
 ## Overview
@@ -15,7 +23,15 @@ Testing MoE CPU offloading feature with quantized models to:
 1. **Phi-3.5-MoE 42B** (79GB F16)
    - 16 experts, 4096 hidden dim
    - Excellent for testing at multiple quant levels
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+=======
    
+>>>>>>> main
+=======
+   
+>>>>>>> main
 2. **DeepSeek MoE 16B** (31GB F16)
    - 64 regular + 2 shared experts
    - Unique dual-expert architecture
@@ -136,12 +152,27 @@ Professional HuggingFace model cards for each quantization:
 - Include recommendations for users
 
 ## Success Criteria
+<<<<<<< HEAD
+<<<<<<< HEAD
+✅ All 6 quantizations complete successfully
+✅ All 36 baseline tests run without errors
+✅ VRAM measurements accurate (no 0MB/3MB issues)
+✅ CPU offload shows consistent VRAM reduction across quant levels
+✅ Model cards professional and accurate
+✅ Files uploaded to HuggingFace with proper documentation
+=======
+=======
+>>>>>>> main
 ✅ All 6 quantizations complete successfully  
 ✅ All 36 baseline tests run without errors  
 ✅ VRAM measurements accurate (no 0MB/3MB issues)  
 ✅ CPU offload shows consistent VRAM reduction across quant levels  
 ✅ Model cards professional and accurate  
 ✅ Files uploaded to HuggingFace with proper documentation  
+<<<<<<< HEAD
+>>>>>>> main
+=======
+>>>>>>> main
 
 ## Notes
 - **GPT-OSS 20B excluded**: Original OpenAI model uses MXFP4 quantization by design, cannot requantize

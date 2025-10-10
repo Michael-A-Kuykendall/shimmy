@@ -39,14 +39,14 @@ class Shimmy < Formula
 
   def install
     bin.install Dir["*"].first => "shimmy"
-    
+
     # Create shell completions directory
     generate_completions_from_executable(bin/"shimmy", "--help")
   end
 
   test do
     assert_match version.to_s, shell_output("#{bin}/shimmy --version")
-    
+
     # Test that the binary is functional
     output = shell_output("#{bin}/shimmy list 2>&1", 0)
     assert_match "No models", output

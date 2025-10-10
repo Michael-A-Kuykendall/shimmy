@@ -100,7 +100,7 @@ Transform Shimmy into the go-to foundation for developers building AI applicatio
 
 ### For Marketing/Growth
 1. **"What are you building?"** positioning
-2. **Developer-focused messaging** 
+2. **Developer-focused messaging**
 3. **Free forever** emphasis
 4. **Cornerstone positioning** - encourage deep integration
 5. **Fanfare campaign** to resume star growth

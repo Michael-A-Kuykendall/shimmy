@@ -8,10 +8,10 @@ services:
     image: shimmy:latest
     container_name: shimmy-ai
     restart: unless-stopped
-    
+
     ports:
       - "11435:11435"
-    
+
     volumes:
       # Mount models directory
       - ./models:/app/models:ro
@@ -19,20 +19,20 @@ services:
       - shimmy_cache:/app/cache
       # Optional: HuggingFace cache
       - huggingface_cache:/home/shimmy/.cache/huggingface
-    
+
     environment:
       - SHIMMY_HOST=0.0.0.0
       - SHIMMY_PORT=11435
       - RUST_LOG=info
       - SHIMMY_MODEL_PATHS=/app/models
-      
+
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:11435/v1/models"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-    
+
     # Resource limits
     deploy:
       resources:

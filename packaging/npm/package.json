@@ -4,7 +4,7 @@
   "description": "Lightweight 5MB Ollama alternative for local AI inference. Fast startup, reliable inference engine.",
   "keywords": [
     "ai",
-    "llm", 
+    "llm",
     "inference",
     "local",
     "server",
@@ -45,7 +45,7 @@
   },
   "os": [
     "win32",
-    "darwin", 
+    "darwin",
     "linux"
   ],
   "cpu": [

@@ -102,7 +102,7 @@ Shimmy adopts GitHub's cutting-edge Spec-Kit methodology (released just weeks ag
 
 ### Strategic Benefits
 - **Cutting-Edge Positioning**: Demonstrates adoption of latest development practices
-- **Community Leadership**: Shows innovation in AI infrastructure space  
+- **Community Leadership**: Shows innovation in AI infrastructure space
 - **Enterprise Credibility**: GitHub's backing adds legitimacy
 - **Developer Experience**: Systematic onboarding and contribution processes
 
@@ -165,7 +165,7 @@ Shimmy adopts GitHub's cutting-edge Spec-Kit methodology (released just weeks ag
 By adopting GitHub Spec-Kit, Shimmy becomes:
 
 - **🏆 Innovation Leader**: First AI inference engine with systematic development
-- **🛡️ Enterprise Ready**: Constitutional governance and predictable evolution  
+- **🛡️ Enterprise Ready**: Constitutional governance and predictable evolution
 - **🚀 Developer Friendly**: Clear specifications and integration templates
 - **📈 Growth Oriented**: Systematic feature development without architectural drift
 

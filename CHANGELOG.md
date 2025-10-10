@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐛 Bug Fixes
 
-**Issue #22: Windows EXE Availability**  
+**Issue #22: Windows EXE Availability**
 - Fixed missing Windows executable in GitHub releases
 - Added `shimmy-windows-x86_64.exe` to all releases for direct download
 - Improved Windows installation documentation for libclang.dll dependency
@@ -115,7 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Current Release Platforms:**
 - ✅ Linux x86_64 (native build)
-- ✅ Windows x86_64 (native build) 
+- ✅ Windows x86_64 (native build)
 - ✅ macOS Intel (native build)
 - ✅ macOS ARM64 (native build)
 - 🔄 Linux ARM64 (Docker QEMU build - documented process available)
@@ -367,7 +367,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added better error logging for model loading failures in OpenAI-compatible API
 - Improved error handling with detailed diagnostics for troubleshooting
 
-**Issue #12: Custom Model Directory Detection** 
+**Issue #12: Custom Model Directory Detection**
 - Added support for custom model directories via `SHIMMY_MODEL_PATHS` environment variable
 - Added support for `OLLAMA_MODELS` environment variable for Ollama model directories
 - Added `--model-dirs` global command-line option for specifying custom directories
@@ -379,7 +379,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multi-Drive Support**: Automatic scanning of common Ollama paths across multiple Windows drives
 - **Template Detection**: Enhanced model template inference with better support for:
   - Qwen models → ChatML template
-  - ChatGLM models → ChatML template  
+  - ChatGLM models → ChatML template
   - Llama models → Llama3 template
   - Improved fallback to OpenChat template
 - **Error Handling**: Added comprehensive error logging for debugging model loading issues
@@ -395,7 +395,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 📖 Documentation
 
 **Issue #15: Homebrew Formula Improvements**
-- Created improved Homebrew formula using pre-built binaries instead of source compilation  
+- Created improved Homebrew formula using pre-built binaries instead of source compilation
 - Generated installation script for faster Homebrew installations
 - Provided migration path from source-based to binary-based Homebrew formula
 
@@ -420,7 +420,7 @@ shimmy --model-dirs "/path/to/models" list
 
 - Enhanced `ModelDiscovery` and `ModelAutoDiscovery` systems
 - Improved OpenAI API compatibility layer
-- Better template selection algorithm  
+- Better template selection algorithm
 - Comprehensive Windows drive scanning
 - Added regression testing infrastructure
 
@@ -449,7 +449,7 @@ shimmy --model-dirs "/path/to/models" list
   - Auto-discovery from filesystem
 - **Template system**:
   - ChatML template support
-  - Llama3 template support  
+  - Llama3 template support
   - OpenChat template support
 - **Cross-platform support**:
   - Linux (x86_64, ARM64)

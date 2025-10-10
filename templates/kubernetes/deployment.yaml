@@ -23,7 +23,7 @@ spec:
         - containerPort: 11435
           name: http
           protocol: TCP
-        
+
         env:
         - name: SHIMMY_HOST
           value: "0.0.0.0"
@@ -33,7 +33,7 @@ spec:
           value: "info"
         - name: SHIMMY_MODEL_PATHS
           value: "/app/models"
-        
+
         resources:
           requests:
             memory: "2Gi"
@@ -41,14 +41,14 @@ spec:
           limits:
             memory: "8Gi"
             cpu: "4000m"
-        
+
         volumeMounts:
         - name: models-volume
           mountPath: /app/models
           readOnly: true
         - name: cache-volume
           mountPath: /app/cache
-        
+
         livenessProbe:
           httpGet:
             path: /v1/models
@@ -57,7 +57,7 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-        
+
         readinessProbe:
           httpGet:
             path: /v1/models
@@ -66,7 +66,7 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-        
+
         startupProbe:
           httpGet:
             path: /v1/models
@@ -75,7 +75,7 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 30
-      
+
       volumes:
       - name: models-volume
         persistentVolumeClaim:
@@ -83,10 +83,10 @@ spec:
       - name: cache-volume
         emptyDir:
           sizeLimit: 5Gi
-      
+
       securityContext:
         runAsUser: 1001
         runAsGroup: 1001
         fsGroup: 1001
-      
+
       restartPolicy: Always

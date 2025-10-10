@@ -7,7 +7,7 @@ This directory contains GitHub issue templates following industry standards and 
 ### 🐛 Bug Report (`bug_report.yml`)
 For reporting bugs, unexpected behavior, or errors. Includes fields for reproduction steps, environment details, and system information.
 
-### ✨ Feature Request (`feature_request.yml`)  
+### ✨ Feature Request (`feature_request.yml`)
 For proposing new features or functionality. Includes problem statement, solution proposal, use cases, and technical details.
 
 ### 🛠️ Enhancement (`enhancement.yml`)
@@ -28,9 +28,9 @@ Redirects users to private vulnerability reporting. Follows responsible disclosu
 ## Configuration (`config.yml`)
 
 - **Blank Issues**: Disabled to encourage structured reporting
-- **Contact Links**: 
+- **Contact Links**:
   - Discussions for general questions
-  - Private security reporting for vulnerabilities  
+  - Private security reporting for vulnerabilities
   - Documentation links for self-service help
   - Direct maintainer contact for other inquiries
 
@@ -47,7 +47,7 @@ Redirects users to private vulnerability reporting. Follows responsible disclosu
 
 The templates use these consistent labels:
 - `bug` - Bug reports
-- `enhancement` - Feature requests and improvements  
+- `enhancement` - Feature requests and improvements
 - `documentation` - Documentation issues
 - `question` - Help and support requests
 - `performance` - Performance-related issues
