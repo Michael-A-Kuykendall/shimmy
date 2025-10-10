@@ -1,6 +1,10 @@
 # MoE CPU Offloading - Complete Validation Checklist
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Date**: October 8, 2025
+=======
+**Date**: October 8, 2025  
+>>>>>>> main
 =======
 **Date**: October 8, 2025  
 >>>>>>> main

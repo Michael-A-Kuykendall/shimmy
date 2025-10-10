@@ -8,7 +8,11 @@
 ## ⚠️ Positioning Statement
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **This is NOT a research novelty claim.**
+=======
+**This is NOT a research novelty claim.** 
+>>>>>>> main
 =======
 **This is NOT a research novelty claim.** 
 >>>>>>> main
@@ -90,7 +94,11 @@ Oct 8, 2025:  Controlled baseline testing completed
 
 ### Software
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **Shimmy**: Branch `feat/moe-cpu-offload`
+=======
+- **Shimmy**: Branch `feat/moe-cpu-offload` 
+>>>>>>> main
 =======
 - **Shimmy**: Branch `feat/moe-cpu-offload` 
 >>>>>>> main
@@ -151,7 +159,11 @@ Oct 8, 2025:  Controlled baseline testing completed
 ```
 tensor blk.0.ffn_gate_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host
 <<<<<<< HEAD
+<<<<<<< HEAD
 tensor blk.0.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host
+=======
+tensor blk.0.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host  
+>>>>>>> main
 =======
 tensor blk.0.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CUDA_Host  
 >>>>>>> main
@@ -207,7 +219,11 @@ MoE CPU offloading provides **71.5% VRAM reduction** (3.5GB vs 12.3GB) at the co
 ```
 tensor blk.0.ffn_gate_exps.weight buffer type overridden to CUDA_Host
 <<<<<<< HEAD
+<<<<<<< HEAD
 tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host
+=======
+tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host  
+>>>>>>> main
 =======
 tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host  
 >>>>>>> main
@@ -246,15 +262,21 @@ tensor blk.0.ffn_up_exps.weight buffer type overridden to CUDA_Host
 ```
 tensor blk.0.ffn_gate_exps.weight buffer type overridden to CUDA_Host
 <<<<<<< HEAD
+<<<<<<< HEAD
 tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_up_exps.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_gate_shexp.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_down_shexp.weight buffer type overridden to CUDA_Host
 =======
+=======
+>>>>>>> main
 tensor blk.0.ffn_down_exps.weight buffer type overridden to CUDA_Host  
 tensor blk.0.ffn_up_exps.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_gate_shexp.weight buffer type overridden to CUDA_Host
 tensor blk.0.ffn_down_shexp.weight buffer type overridden to CUDA_Host  
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
 tensor blk.0.ffn_up_shexp.weight buffer type overridden to CUDA_Host
 ```
@@ -425,8 +447,13 @@ Mean: VRAM=3.5GB, TTFT=1,490ms, TPS=6.78
 ---
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 *Report Version 1.0 - October 8, 2025*
 *Author: Michael A. Kuykendall*
+=======
+*Report Version 1.0 - October 8, 2025*  
+*Author: Michael A. Kuykendall*  
+>>>>>>> main
 =======
 *Report Version 1.0 - October 8, 2025*  
 *Author: Michael A. Kuykendall*  

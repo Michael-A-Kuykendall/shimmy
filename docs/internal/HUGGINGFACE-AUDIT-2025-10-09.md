@@ -1,8 +1,13 @@
 # HuggingFace Model Repository Audit Report
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Date**: October 9, 2025
 **Auditor**: AI Assistant
+=======
+**Date**: October 9, 2025  
+**Auditor**: AI Assistant  
+>>>>>>> main
 =======
 **Date**: October 9, 2025  
 **Auditor**: AI Assistant  
@@ -56,7 +61,11 @@
 **Status**: CRITICAL ISSUE - MODEL CARD NOT RENDERING ❌
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Problem**:
+=======
+**Problem**: 
+>>>>>>> main
 =======
 **Problem**: 
 >>>>>>> main
@@ -69,17 +78,23 @@
 - ✅ File present: phi-3.5-moe-Q4_K_M.gguf (25.3 GB)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Root Cause**:
 - Likely YAML parsing error in metadata
 - Or caching issue on HuggingFace side
 
 **Action Required**:
 =======
+=======
+>>>>>>> main
 **Root Cause**: 
 - Likely YAML parsing error in metadata
 - Or caching issue on HuggingFace side
 
 **Action Required**: 
+<<<<<<< HEAD
+>>>>>>> main
+=======
 >>>>>>> main
 - Re-upload README.md with verified YAML syntax
 - Check for any invisible characters or formatting issues

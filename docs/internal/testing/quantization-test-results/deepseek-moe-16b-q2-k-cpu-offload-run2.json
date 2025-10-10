@@ -51,7 +51,11 @@ llama_model_loader: - type iq4_nl:   28 tensors
 print_info: file format = GGUF V3 (latest)
 print_info: file type   = Q2_K - Medium
 <<<<<<< HEAD
+<<<<<<< HEAD
 print_info: file size   = 6.24 GiB (3.27 BPW)
+=======
+print_info: file size   = 6.24 GiB (3.27 BPW) 
+>>>>>>> main
 =======
 print_info: file size   = 6.24 GiB (3.27 BPW) 
 >>>>>>> main
