@@ -36,7 +36,7 @@ if ! cargo check --no-default-features --features huggingface >/dev/null 2>&1; t
     echo "   Fix compilation errors before committing"
     CHECKS_FAILED=true
 else
-    echo "✅ Compilation: OK"  
+    echo "✅ Compilation: OK"
 fi
 
 # 3. Critical PPT Contract Tests (Medium)
@@ -134,7 +134,7 @@ else
 fi
 EOF
 
-# Make pre-push hook executable  
+# Make pre-push hook executable
 chmod +x .git/hooks/pre-push
 
 echo ""

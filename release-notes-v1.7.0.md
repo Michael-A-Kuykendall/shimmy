@@ -10,7 +10,7 @@
 
 ### ⚡ MoE CPU Offloading Technology
 Transform impossible into possible:
-- **`--cpu-moe`**: Automatically offload MoE layers to CPU 
+- **`--cpu-moe`**: Automatically offload MoE layers to CPU
 - **`--n-cpu-moe N`**: Fine-tune performance with precise layer control
 - **Massive Memory Savings**: 15GB models → 4GB VRAM usage
 - **Enterprise Ready**: Deploy 42B parameter models on 8GB consumer cards
@@ -33,11 +33,11 @@ Transform impossible into possible:
 
 ### 🏢 Enterprise Deployment
 - **Cost Revolution**: Run large models without GPU farm investments
-- **Scalable AI**: Deploy expert models on existing infrastructure  
+- **Scalable AI**: Deploy expert models on existing infrastructure
 - **Flexible Performance**: Balance speed vs. memory for any workload
 - **On-Premises Ready**: Keep sensitive data in-house with minimal hardware
 
-### 🔬 Research & Development  
+### 🔬 Research & Development
 - **Democratized Access**: Test large models on developer laptops
 - **Rapid Iteration**: Prototype MoE architectures efficiently
 - **Educational Power**: Advanced AI models accessible to everyone
@@ -83,7 +83,7 @@ huggingface-cli download MikeKuykendall/deepseek-moe-16b-q4-k-m-cpu-offload-gguf
 
 #### 🎯 **Model Selection Guide**
 - **🥇 First Time?** → Phi-3.5-MoE Q4 K-M (best balance)
-- **💪 High-End GPU (8GB+)?** → Phi-3.5-MoE Q8.0 (maximum quality)  
+- **💪 High-End GPU (8GB+)?** → Phi-3.5-MoE Q8.0 (maximum quality)
 - **💻 Limited VRAM (4GB)?** → DeepSeek-MoE Q4 K-M (budget friendly)
 - **⚡ Speed Critical?** → DeepSeek-MoE Q2 K (blazing fast)
 - **🔬 Research/Validation?** → GPT-OSS 21B (proven baseline)
@@ -137,7 +137,7 @@ This isn't just an update - it's **sustainable AI democratization**. Organizatio
 ## 📈 Validated & Transparent
 
 - **Multi-Model Testing**: 3 models validated across all platforms
-- **Real Baselines**: Controlled A/B testing with actual measurements  
+- **Real Baselines**: Controlled A/B testing with actual measurements
 - **Production Quality**: Comprehensive release gate system
 - **Open Development**: [Technical validation report](docs/MOE-TECHNICAL-VALIDATION.md) available
 

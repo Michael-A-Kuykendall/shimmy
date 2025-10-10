@@ -46,7 +46,7 @@ For MoE CPU offloading with Shimmy:
   "model": "deepseek-moe-16b-f16",
   "prompt": "Your prompt here",
   "max_tokens": 100,
-  "temperature": 0.3,  // KEY: Use 0.3 instead of 0.7+ 
+  "temperature": 0.3,  // KEY: Use 0.3 instead of 0.7+
   "stream": false
 }
 ```

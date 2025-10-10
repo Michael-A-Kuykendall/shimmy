@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
         Thanks for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
-        
+
         **💡 Tip:** Check existing issues and our [roadmap](https://github.com/Michael-A-Kuykendall/shimmy/blob/main/ROADMAP.md) to see if this is already planned.
 
   - type: textarea

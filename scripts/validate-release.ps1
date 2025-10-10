@@ -20,7 +20,7 @@ $job = Start-Job { cargo build --release --no-default-features --features llama-
 if (Wait-Job $job -Timeout 180) {
     if ($job.State -eq "Completed") { Pass "CUDA build succeeded" }
     else { Fail "CUDA build failed" }
-} else { 
+} else {
     Stop-Job $job; Fail "CUDA build timeout (over 3min)"
 }
 Remove-Job $job
@@ -33,7 +33,7 @@ if (Test-Path $binary) {
     else { Fail "Binary too large: ${sizeMB}MB" }
 } else { Fail "Binary not found" }
 
-# 3. ESSENTIAL COMMANDS  
+# 3. ESSENTIAL COMMANDS
 Info "Testing essential commands..."
 & $binary --version | Out-Null
 if ($LASTEXITCODE -eq 0) { Pass "Version command works" } else { Fail "Version command failed" }

@@ -102,7 +102,7 @@ async function generateWithShimmy(prompt: string): Promise<string> {
             stream: false
         })
     });
-    
+
     const data = await response.json();
     return data.choices[0].text;
 }
@@ -151,7 +151,7 @@ import json
 class ShimmyClient:
     def __init__(self, base_url="http://localhost:11435"):
         self.base_url = base_url
-    
+
     def generate(self, prompt, max_tokens=100, temperature=0.7):
         response = requests.post(
             f"{self.base_url}/api/generate",
@@ -164,7 +164,7 @@ class ShimmyClient:
             }
         )
         return response.json()["choices"][0]["text"]
-    
+
     def stream_generate(self, prompt, max_tokens=100):
         response = requests.post(
             f"{self.base_url}/api/generate",
@@ -176,7 +176,7 @@ class ShimmyClient:
             },
             stream=True
         )
-        
+
         for line in response.iter_lines():
             if line.startswith(b"data: "):
                 data = line[6:].decode()
@@ -199,7 +199,7 @@ class ShimmyClient {
     constructor(baseUrl = 'http://localhost:11435') {
         this.baseUrl = baseUrl;
     }
-    
+
     async generate(prompt, options = {}) {
         const response = await axios.post(`${this.baseUrl}/api/generate`, {
             model: 'default',
@@ -208,7 +208,7 @@ class ShimmyClient {
             temperature: options.temperature || 0.7,
             stream: false
         });
-        
+
         return response.data.choices[0].text;
     }
 }
@@ -255,13 +255,13 @@ CMD ["shimmy", "serve", "--bind", "0.0.0.0:11435"]
 server {
     listen 80;
     server_name shimmy.example.com;
-    
+
     location / {
         proxy_pass http://localhost:11435;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        
+
         # For WebSocket support
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -286,7 +286,7 @@ For high-availability setups, run multiple Shimmy instances:
 # Instance 1
 SHIMMY_BASE_GGUF=/models/model.gguf shimmy serve --bind 127.0.0.1:11435
 
-# Instance 2  
+# Instance 2
 SHIMMY_BASE_GGUF=/models/model.gguf shimmy serve --bind 127.0.0.1:11436
 
 # Instance 3

@@ -38,7 +38,7 @@ Please provide the following information in your report:
 - **Description**: Clear description of the vulnerability
 - **Impact**: What could an attacker accomplish?
 - **Reproduction**: Step-by-step instructions to reproduce the issue
-- **Environment**: 
+- **Environment**:
   - Shimmy version
   - Operating system
   - Rust version (if building from source)
@@ -51,7 +51,7 @@ Please provide the following information in your report:
 We aim to respond to security reports according to the following timeline:
 
 - **Initial Response**: Within 48 hours of report
-- **Triage**: Within 7 days - confirm/deny vulnerability 
+- **Triage**: Within 7 days - confirm/deny vulnerability
 - **Resolution**: Within 30 days for critical issues, 90 days for others
 - **Disclosure**: Public disclosure after fix is released and users have time to update
 
@@ -64,7 +64,7 @@ We use the following criteria to classify vulnerabilities:
 - Privilege escalation to system level
 - Authentication bypass allowing admin access
 
-#### High  
+#### High
 - Local privilege escalation
 - SQL injection or similar injection attacks
 - Authentication bypass for user accounts
@@ -72,7 +72,7 @@ We use the following criteria to classify vulnerabilities:
 
 #### Medium
 - Cross-site scripting (XSS)
-- Cross-site request forgery (CSRF) 
+- Cross-site request forgery (CSRF)
 - Information disclosure (non-sensitive)
 - Denial of service attacks
 
@@ -96,7 +96,7 @@ We believe in recognizing security researchers who help keep Shimmy secure:
 
 For critical vulnerabilities that are being actively exploited:
 
-- **Email**: security-urgent@shimmy-ai.dev  
+- **Email**: security-urgent@shimmy-ai.dev
 - **Subject**: "URGENT SECURITY - [Brief Description]"
 - **Response**: Within 12 hours
 
@@ -105,7 +105,7 @@ For critical vulnerabilities that are being actively exploited:
 ### For Users
 
 1. **Keep Updated**: Always use the latest supported version
-2. **Network Security**: 
+2. **Network Security**:
    - Run Shimmy behind a firewall in production
    - Use HTTPS/TLS for external access
    - Limit network access to necessary ports only
@@ -120,7 +120,7 @@ For critical vulnerabilities that are being actively exploited:
 
 ### For Developers
 
-1. **Dependencies**: 
+1. **Dependencies**:
    - Regularly audit and update dependencies
    - Use `cargo audit` to check for known vulnerabilities
 2. **Input Validation**:
@@ -136,7 +136,7 @@ For critical vulnerabilities that are being actively exploited:
 Shimmy includes several built-in security features:
 
 - **Input Sanitization**: All API inputs are validated and sanitized
-- **Path Traversal Protection**: File access is restricted to configured directories  
+- **Path Traversal Protection**: File access is restricted to configured directories
 - **Memory Safety**: Built with Rust for memory-safe execution
 - **Sandboxed Execution**: Model inference runs in isolated contexts
 - **Audit Logging**: Security events are logged for monitoring

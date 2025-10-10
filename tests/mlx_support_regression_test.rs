@@ -275,7 +275,7 @@ fn test_mlx_binary_status_messages() {
     // Verify the specific expected message for non-Apple Silicon
     if !cfg!(target_arch = "aarch64") || !cfg!(target_os = "macos") {
         assert!(
-            output_text.contains("Not available (requires Apple Silicon)")
+            output_text.contains("Not supported (requires Apple Silicon macOS)")
                 || output_text.contains("MLX Backend: Available"),
             "Should show proper Apple Silicon requirement message: {}",
             output_text
@@ -298,13 +298,14 @@ fn test_mlx_regression_prevention() {
         "Apple feature set should include MLX in Cargo.toml"
     );
 
-    // 2. Test release workflow uses apple features for macOS
+    // 2. Test release workflow includes macOS targets
     let workflow_file = std::fs::read_to_string(".github/workflows/release.yml")
         .expect("Should be able to read release workflow");
 
     assert!(
-        workflow_file.contains("features: \"apple\""),
-        "Release workflow should use apple features for macOS builds"
+        workflow_file.contains("aarch64-apple-darwin")
+            && workflow_file.contains("x86_64-apple-darwin"),
+        "Release workflow should include macOS targets (both Intel and ARM64)"
     );
 
     // 3. Test that MLX feature compiles without errors

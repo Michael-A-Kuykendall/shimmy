@@ -1,6 +1,6 @@
 # MoE CPU Offloading Benchmark Evidence
 
-**Date**: October 8, 2025  
+**Date**: October 8, 2025
 **Purpose**: Raw benchmark data and logs for audit verification
 
 ## Contents

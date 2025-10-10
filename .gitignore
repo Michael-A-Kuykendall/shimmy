@@ -82,7 +82,7 @@ NEXT_PHASE_PLAN.md
 shimmy_rust_golden_record_implementation_bible.md
 test_*.yaml
 
-# Coverage and profiling artifacts  
+# Coverage and profiling artifacts
 coverage/
 *.profraw
 
