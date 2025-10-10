@@ -11,7 +11,11 @@ This white paper documents **comprehensive local validation** of MoE (Mixture of
 
 1. **Streaming Solves UX Problem**: CPU offloading went from "unusable" to "viable" with streaming enabled
 <<<<<<< HEAD
+<<<<<<< HEAD
 2. **Temperature Fix Validated**: Temperature 0.3 eliminates repetition across all tested architectures
+=======
+2. **Temperature Fix Validated**: Temperature 0.3 eliminates repetition across all tested architectures  
+>>>>>>> main
 =======
 2. **Temperature Fix Validated**: Temperature 0.3 eliminates repetition across all tested architectures  
 >>>>>>> main
@@ -24,7 +28,11 @@ This white paper documents **comprehensive local validation** of MoE (Mixture of
 - **CPU**: AMD/Intel (local workstation)
 - **RAM**: 131GB available (sufficient for expert tensor storage)
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **GPU**: NVIDIA with limited VRAM
+=======
+- **GPU**: NVIDIA with limited VRAM  
+>>>>>>> main
 =======
 - **GPU**: NVIDIA with limited VRAM  
 >>>>>>> main
@@ -92,7 +100,11 @@ def factorial(n):
 **Performance Metrics**:
 - **Generation Speed**: ~1-2 tokens/second
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **First Token Latency**: ~2-3 seconds
+=======
+- **First Token Latency**: ~2-3 seconds  
+>>>>>>> main
 =======
 - **First Token Latency**: ~2-3 seconds  
 >>>>>>> main
@@ -122,7 +134,11 @@ def factorial(n):
 **Architecture Specifications**:
 - **Parameters**: 41.9B total (16 experts, 2 active per token)
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **Expert Configuration**: Efficient MoE design
+=======
+- **Expert Configuration**: Efficient MoE design  
+>>>>>>> main
 =======
 - **Expert Configuration**: Efficient MoE design  
 >>>>>>> main
@@ -132,7 +148,11 @@ def factorial(n):
 
 **Expected Results** (based on H100 validation):
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **VRAM Savings**: 97.1% (H100 confirmed)
+=======
+- **VRAM Savings**: 97.1% (H100 confirmed) 
+>>>>>>> main
 =======
 - **VRAM Savings**: 97.1% (H100 confirmed) 
 >>>>>>> main
@@ -242,7 +262,11 @@ def factorial(n):
 ```json
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
   "model": "model-name",
+=======
+  "model": "model-name", 
+>>>>>>> main
 =======
   "model": "model-name", 
 >>>>>>> main
@@ -260,7 +284,11 @@ This work represents the **first successful production validation** of MoE CPU o
 
 1. **Universal Compatibility**: Proven across 16B-41.9B parameter models
 <<<<<<< HEAD
+<<<<<<< HEAD
 2. **Architecture Agnostic**: Works with standard, efficient, and dual expert designs
+=======
+2. **Architecture Agnostic**: Works with standard, efficient, and dual expert designs  
+>>>>>>> main
 =======
 2. **Architecture Agnostic**: Works with standard, efficient, and dual expert designs  
 >>>>>>> main
@@ -290,7 +318,11 @@ This work represents the **first successful production validation** of MoE CPU o
 
 1. **Quantization Integration**: Mixed-precision expert offloading
 <<<<<<< HEAD
+<<<<<<< HEAD
 2. **Multi-GPU Scaling**: Expert distribution across multiple devices
+=======
+2. **Multi-GPU Scaling**: Expert distribution across multiple devices  
+>>>>>>> main
 =======
 2. **Multi-GPU Scaling**: Expert distribution across multiple devices  
 >>>>>>> main
@@ -338,7 +370,11 @@ Result: Perfect code generation, no repetition, clean streaming
 Expert tensor loading output:
 tensor blk.X.ffn_gate_exps.weight (352 MiB f16) buffer type overridden to CPU
 <<<<<<< HEAD
+<<<<<<< HEAD
 tensor blk.X.ffn_down_exps.weight (352 MiB f16) buffer type overridden to CPU
+=======
+tensor blk.X.ffn_down_exps.weight (352 MiB f16) buffer type overridden to CPU  
+>>>>>>> main
 =======
 tensor blk.X.ffn_down_exps.weight (352 MiB f16) buffer type overridden to CPU  
 >>>>>>> main
@@ -351,7 +387,11 @@ Status: All expert tensors successfully moved to CPU across all layers
 
 *Document Status: In Progress - GPT-OSS and Phi-3.5-MoE testing pending*
 <<<<<<< HEAD
+<<<<<<< HEAD
 *Next Update: Upon completion of all three model validations*
+=======
+*Next Update: Upon completion of all three model validations*
+>>>>>>> main
 =======
 *Next Update: Upon completion of all three model validations*
 >>>>>>> main

@@ -47,7 +47,11 @@ For MoE CPU offloading with Shimmy:
   "prompt": "Your prompt here",
   "max_tokens": 100,
 <<<<<<< HEAD
+<<<<<<< HEAD
   "temperature": 0.3,  // KEY: Use 0.3 instead of 0.7+
+=======
+  "temperature": 0.3,  // KEY: Use 0.3 instead of 0.7+ 
+>>>>>>> main
 =======
   "temperature": 0.3,  // KEY: Use 0.3 instead of 0.7+ 
 >>>>>>> main
@@ -89,7 +93,11 @@ The interaction between CPU offloading and high temperature settings appears to 
 The original repetition issues encountered during extensive testing were **not hardware limitations** but **parameter interaction effects**. This explains why the problem persisted even on large Lambda instances - it was a configuration issue, not a resource issue.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **VALIDATED**: MoE CPU offloading + temperature 0.3 = Clean, efficient inference
+=======
+**VALIDATED**: MoE CPU offloading + temperature 0.3 = Clean, efficient inference
+>>>>>>> main
 =======
 **VALIDATED**: MoE CPU offloading + temperature 0.3 = Clean, efficient inference
 >>>>>>> main

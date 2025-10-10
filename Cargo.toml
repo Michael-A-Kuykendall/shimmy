@@ -21,13 +21,13 @@ include = [
 ]
 
 [features]
-default = ["huggingface", "llama"]  # Now with working Windows MSVC support via shimmy-llama-cpp-2
-# Engine backends
-llama = ["dep:shimmy-llama-cpp-2"]
+default = ["huggingface"]  # Temporarily disable llama due to Windows MSVC stdbool.h issue - will fix in v1.7.2
+# Engine backends  
+llama = ["dep:llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
 mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
 # GPU acceleration backends for llama.cpp
-llama-cuda = ["llama", "shimmy-llama-cpp-2/cuda"] # NVIDIA CUDA GPU acceleration
+llama-cuda = ["llama", "llama-cpp-2/cuda"] # NVIDIA CUDA GPU acceleration
 llama-vulkan = ["llama"] # Vulkan GPU acceleration (cross-platform)
 llama-opencl = ["llama"] # OpenCL GPU acceleration (AMD, Intel, etc.)
 # Convenience feature sets
@@ -65,10 +65,6 @@ uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "5.0"
 reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
 
-<<<<<<< HEAD
-# llama.cpp bindings (optional) - using published shimmy packages with Windows MSVC CUDA + macOS ARM64 + MoE CPU offloading fixes
-shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = false }
-=======
 # llama.cpp bindings (optional) - using forked version with Windows MSVC CUDA + macOS ARM64 + MoE CPU offloading fixes
 llama-cpp-2 = { version = "0.1.122", git = "https://github.com/Michael-A-Kuykendall/llama-cpp-rs", branch = "feat/moe-cpu-offload", optional = true, default-features = false }
 
@@ -76,12 +72,10 @@ llama-cpp-2 = { version = "0.1.122", git = "https://github.com/Michael-A-Kuykend
 # TESTING: Using local path for MoE CPU offloading feature development
 # [patch.crates-io]
 # llama-cpp-2 = { path = "../llama-cpp-rs/llama-cpp-2" }
->>>>>>> main
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
 criterion = { version = "0.5", features = ["html_reports"] }
-serial_test = "3.0"  # For serializing tests that use global state
 # Additional dependencies for mock testing infrastructure
 tempfile = "3"  # For creating temporary test directories
 rand = "0.8"    # For randomized testing scenarios (already in main deps)
@@ -102,7 +96,7 @@ debug = true
 opt-level = 2
 debug = false
 
-# Benchmark configuration
+# Benchmark configuration  
 [[bench]]
 name = "model_loading"
 harness = false

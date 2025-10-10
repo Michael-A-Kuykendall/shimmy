@@ -1,7 +1,11 @@
 # Complete Execution Plan: Quantization Testing → HuggingFace Publishing
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Date**: October 9, 2025
+=======
+**Date**: October 9, 2025  
+>>>>>>> main
 =======
 **Date**: October 9, 2025  
 >>>>>>> main
@@ -28,7 +32,11 @@
 
 ### Step 1: Extract Metrics from Test Results
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Script**: `analyze-results.py`
+=======
+**Script**: `analyze-results.py`  
+>>>>>>> main
 =======
 **Script**: `analyze-results.py`  
 >>>>>>> main
@@ -39,7 +47,11 @@
 - VRAM usage (baseline vs CPU offload)
 - Tokens per second (TPS)
 <<<<<<< HEAD
+<<<<<<< HEAD
 - Time to first token (TTFT)
+=======
+- Time to first token (TTFT) 
+>>>>>>> main
 =======
 - Time to first token (TTFT) 
 >>>>>>> main
@@ -154,7 +166,11 @@ Based on our professional template (`TEMPLATE-QUANTIZATION.md`):
 - `MikeKuykendall/deepseek-moe-16b-q8-0-cpu-offload-gguf`
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Pros**: Clean, focused cards per quant level
+=======
+**Pros**: Clean, focused cards per quant level  
+>>>>>>> main
 =======
 **Pros**: Clean, focused cards per quant level  
 >>>>>>> main
@@ -165,7 +181,11 @@ Based on our professional template (`TEMPLATE-QUANTIZATION.md`):
 - `MikeKuykendall/deepseek-moe-16b-cpu-offload-gguf` (all 3 quants)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Pros**: Easier management, single card covers all quants
+=======
+**Pros**: Easier management, single card covers all quants  
+>>>>>>> main
 =======
 **Pros**: Easier management, single card covers all quants  
 >>>>>>> main

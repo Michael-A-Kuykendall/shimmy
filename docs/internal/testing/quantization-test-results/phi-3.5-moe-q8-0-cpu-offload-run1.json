@@ -47,7 +47,11 @@ llama_model_loader: - type  f32:  293 tensors
 llama_model_loader: - type q8_0:  226 tensors
 print_info: file format = GGUF V3 (latest)
 print_info: file type   = Q8_0
+<<<<<<< HEAD
 print_info: file size   = 41.44 GiB (8.50 BPW)
+=======
+print_info: file size   = 41.44 GiB (8.50 BPW) 
+>>>>>>> main
 init_tokenizer: initializing tokenizer for type 1
 load: control token:  32008 '<|placeholder5|>' is not marked as EOG
 load: control token:  32006 '<|system|>' is not marked as EOG

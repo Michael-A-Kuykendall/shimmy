@@ -51,7 +51,11 @@ llama_model_loader: - type q6_K:   28 tensors
 print_info: file format = GGUF V3 (latest)
 print_info: file type   = Q4_K - Medium
 <<<<<<< HEAD
+<<<<<<< HEAD
 print_info: file size   = 10.10 GiB (5.30 BPW)
+=======
+print_info: file size   = 10.10 GiB (5.30 BPW) 
+>>>>>>> main
 =======
 print_info: file size   = 10.10 GiB (5.30 BPW) 
 >>>>>>> main
@@ -675,6 +679,10 @@ Explain quantum computing in simple terms.
 
 Explain quantum computing in simple terms.
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 =======
 
 >>>>>>> main

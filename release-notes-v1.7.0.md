@@ -10,7 +10,11 @@
 
 ### ⚡ MoE CPU Offloading Technology
 Transform impossible into possible:
+<<<<<<< HEAD
 - **`--cpu-moe`**: Automatically offload MoE layers to CPU
+=======
+- **`--cpu-moe`**: Automatically offload MoE layers to CPU 
+>>>>>>> main
 - **`--n-cpu-moe N`**: Fine-tune performance with precise layer control
 - **Massive Memory Savings**: 15GB models → 4GB VRAM usage
 - **Enterprise Ready**: Deploy 42B parameter models on 8GB consumer cards
@@ -33,11 +37,19 @@ Transform impossible into possible:
 
 ### 🏢 Enterprise Deployment
 - **Cost Revolution**: Run large models without GPU farm investments
+<<<<<<< HEAD
 - **Scalable AI**: Deploy expert models on existing infrastructure
 - **Flexible Performance**: Balance speed vs. memory for any workload
 - **On-Premises Ready**: Keep sensitive data in-house with minimal hardware
 
 ### 🔬 Research & Development
+=======
+- **Scalable AI**: Deploy expert models on existing infrastructure  
+- **Flexible Performance**: Balance speed vs. memory for any workload
+- **On-Premises Ready**: Keep sensitive data in-house with minimal hardware
+
+### 🔬 Research & Development  
+>>>>>>> main
 - **Democratized Access**: Test large models on developer laptops
 - **Rapid Iteration**: Prototype MoE architectures efficiently
 - **Educational Power**: Advanced AI models accessible to everyone
@@ -83,7 +95,11 @@ huggingface-cli download MikeKuykendall/deepseek-moe-16b-q4-k-m-cpu-offload-gguf
 
 #### 🎯 **Model Selection Guide**
 - **🥇 First Time?** → Phi-3.5-MoE Q4 K-M (best balance)
+<<<<<<< HEAD
 - **💪 High-End GPU (8GB+)?** → Phi-3.5-MoE Q8.0 (maximum quality)
+=======
+- **💪 High-End GPU (8GB+)?** → Phi-3.5-MoE Q8.0 (maximum quality)  
+>>>>>>> main
 - **💻 Limited VRAM (4GB)?** → DeepSeek-MoE Q4 K-M (budget friendly)
 - **⚡ Speed Critical?** → DeepSeek-MoE Q2 K (blazing fast)
 - **🔬 Research/Validation?** → GPT-OSS 21B (proven baseline)
@@ -137,7 +153,11 @@ This isn't just an update - it's **sustainable AI democratization**. Organizatio
 ## 📈 Validated & Transparent
 
 - **Multi-Model Testing**: 3 models validated across all platforms
+<<<<<<< HEAD
 - **Real Baselines**: Controlled A/B testing with actual measurements
+=======
+- **Real Baselines**: Controlled A/B testing with actual measurements  
+>>>>>>> main
 - **Production Quality**: Comprehensive release gate system
 - **Open Development**: [Technical validation report](docs/MOE-TECHNICAL-VALIDATION.md) available
 
@@ -152,4 +172,8 @@ This isn't just an update - it's **sustainable AI democratization**. Organizatio
 
 ---
 
+<<<<<<< HEAD
 **Ready to revolutionize your AI deployment?** The future of efficient model serving is here. Download Shimmy v1.7.0 and experience the MoE revolution! 🚀
+=======
+**Ready to revolutionize your AI deployment?** The future of efficient model serving is here. Download Shimmy v1.7.0 and experience the MoE revolution! 🚀
+>>>>>>> main

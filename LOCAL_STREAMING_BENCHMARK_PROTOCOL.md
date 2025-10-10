@@ -8,7 +8,11 @@
 **Hardware**:
 - **CPU**: AMD/Intel (to be documented)
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **RAM**: 131GB available
+=======
+- **RAM**: 131GB available  
+>>>>>>> main
 =======
 - **RAM**: 131GB available  
 >>>>>>> main
@@ -29,7 +33,11 @@ Replicate H100 methodology for memory distribution:
 **Metrics**:
 - GPU VRAM usage with `--cpu-moe`
 <<<<<<< HEAD
+<<<<<<< HEAD
 - CPU RAM usage
+=======
+- CPU RAM usage 
+>>>>>>> main
 =======
 - CPU RAM usage 
 >>>>>>> main
@@ -64,7 +72,11 @@ Based on H100 whitepaper categories, adapted for streaming:
 | Algorithm Analysis | "Compare bubble sort and quicksort algorithms" | 350 | Accurate comparison, technical depth |
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #### 2.3 Long-form Generation Tests
+=======
+#### 2.3 Long-form Generation Tests  
+>>>>>>> main
 =======
 #### 2.3 Long-form Generation Tests  
 >>>>>>> main
@@ -82,7 +94,11 @@ For each test, collect:
 
 #### 3.1 Timing Metrics
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **Total Generation Time**: Start to [DONE]
+=======
+- **Total Generation Time**: Start to [DONE] 
+>>>>>>> main
 =======
 - **Total Generation Time**: Start to [DONE] 
 >>>>>>> main
@@ -91,7 +107,11 @@ For each test, collect:
 - **Streaming Responsiveness**: Subjective feel of real-time progress
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #### 3.2 Quality Metrics
+=======
+#### 3.2 Quality Metrics  
+>>>>>>> main
 =======
 #### 3.2 Quality Metrics  
 >>>>>>> main
@@ -103,7 +123,11 @@ For each test, collect:
 #### 3.3 Resource Metrics
 - **Peak GPU Memory**: During generation
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **Peak CPU Memory**: During generation
+=======
+- **Peak CPU Memory**: During generation  
+>>>>>>> main
 =======
 - **Peak CPU Memory**: During generation  
 >>>>>>> main
@@ -170,7 +194,11 @@ Based on H100 results, local hardware expectations:
 ### Memory Savings (Should Match H100)
 - **DeepSeek 16B**: ~95-99% VRAM savings
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **GPT-OSS 20B**: ~99% VRAM savings
+=======
+- **GPT-OSS 20B**: ~99% VRAM savings  
+>>>>>>> main
 =======
 - **GPT-OSS 20B**: ~99% VRAM savings  
 >>>>>>> main
@@ -195,7 +223,11 @@ Based on H100 results, local hardware expectations:
 - ✅ Streaming works smoothly for all test cases
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### Performance Success
+=======
+### Performance Success  
+>>>>>>> main
 =======
 ### Performance Success  
 >>>>>>> main
@@ -217,7 +249,11 @@ Based on H100 results, local hardware expectations:
 |-------|------------|-------------|----------------|---------------|------------------|
 | DeepSeek 16B | 16.38B | XX% | X.X | X/5 | X.XXX |
 <<<<<<< HEAD
+<<<<<<< HEAD
 | GPT-OSS 20B | 20B | XX% | X.X | X/5 | X.XXX |
+=======
+| GPT-OSS 20B | 20B | XX% | X.X | X/5 | X.XXX |  
+>>>>>>> main
 =======
 | GPT-OSS 20B | 20B | XX% | X.X | X/5 | X.XXX |  
 >>>>>>> main
@@ -227,7 +263,11 @@ Based on H100 results, local hardware expectations:
 ### Detailed Analysis Report
 - Performance comparison across models
 <<<<<<< HEAD
+<<<<<<< HEAD
 - Hardware bottleneck identification
+=======
+- Hardware bottleneck identification  
+>>>>>>> main
 =======
 - Hardware bottleneck identification  
 >>>>>>> main
@@ -236,7 +276,11 @@ Based on H100 results, local hardware expectations:
 - Production readiness assessment
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 This protocol will generate comprehensive data for the white paper demonstrating MoE CPU offloading with streaming is production-ready for Shimmy 1.7.0 release.
+=======
+This protocol will generate comprehensive data for the white paper demonstrating MoE CPU offloading with streaming is production-ready for Shimmy 1.7.0 release.
+>>>>>>> main
 =======
 This protocol will generate comprehensive data for the white paper demonstrating MoE CPU offloading with streaming is production-ready for Shimmy 1.7.0 release.
 >>>>>>> main

@@ -1,6 +1,10 @@
 # MoE Baseline Testing Progress
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Date**: October 8, 2025
+=======
+**Date**: October 8, 2025  
+>>>>>>> main
 =======
 **Date**: October 8, 2025  
 >>>>>>> main
@@ -131,9 +135,15 @@ docs/benchmark-evidence/                        # Copy baseline logs here
 ## Current Status
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Running**: GPT-OSS A/B baseline test
 **Script**: `/home/ubuntu/shimmy/scripts/baseline-ab-testing.sh`
 **Output**: Will be in `baseline-ab-gpt-oss-20b-*.log`
+=======
+**Running**: GPT-OSS A/B baseline test  
+**Script**: `/home/ubuntu/shimmy/scripts/baseline-ab-testing.sh`  
+**Output**: Will be in `baseline-ab-gpt-oss-20b-*.log`  
+>>>>>>> main
 =======
 **Running**: GPT-OSS A/B baseline test  
 **Script**: `/home/ubuntu/shimmy/scripts/baseline-ab-testing.sh`  

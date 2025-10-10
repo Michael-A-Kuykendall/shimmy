@@ -1,6 +1,10 @@
 # MoE CPU Offloading - Documentation Status & Readiness Assessment
 <<<<<<< HEAD
+<<<<<<< HEAD
 **Date**: October 8, 2025
+=======
+**Date**: October 8, 2025  
+>>>>>>> main
 =======
 **Date**: October 8, 2025  
 >>>>>>> main
@@ -18,7 +22,11 @@
 **Test Coverage**:
 1. ✅ Non-streaming benchmarks (4 prompts × 3 models = 12 tests)
 <<<<<<< HEAD
+<<<<<<< HEAD
 2. ✅ Streaming benchmarks (4 prompts × 3 models = 12 tests)
+=======
+2. ✅ Streaming benchmarks (4 prompts × 3 models = 12 tests)  
+>>>>>>> main
 =======
 2. ✅ Streaming benchmarks (4 prompts × 3 models = 12 tests)  
 >>>>>>> main
@@ -29,7 +37,11 @@
 **Performance Data Captured**:
 - Tokens per second (TPS) for both modes
 <<<<<<< HEAD
+<<<<<<< HEAD
 - Time to first token (TTFT)
+=======
+- Time to first token (TTFT) 
+>>>>>>> main
 =======
 - Time to first token (TTFT) 
 >>>>>>> main
@@ -69,7 +81,11 @@
 - **Status**: ⚠️ HAS CORRUPTION (lines 78-119)
 - **Size**: 392 lines
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **Content**:
+=======
+- **Content**: 
+>>>>>>> main
 =======
 - **Content**: 
 >>>>>>> main
@@ -334,7 +350,11 @@ Before finalizing, we should address:
 **Option A: Documentation-First Approach** (Recommended)
 1. Fix whitepaper corruption NOW
 <<<<<<< HEAD
+<<<<<<< HEAD
 2. Add performance data NOW
+=======
+2. Add performance data NOW  
+>>>>>>> main
 =======
 2. Add performance data NOW  
 >>>>>>> main

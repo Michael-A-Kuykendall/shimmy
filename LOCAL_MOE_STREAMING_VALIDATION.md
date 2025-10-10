@@ -14,7 +14,11 @@ MoE CPU offloading has been successfully validated locally with streaming enable
 - **User Impact**: Real-time feedback makes the technology practical for actual use
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### 🌡️ Temperature Configuration Solution
+=======
+### 🌡️ Temperature Configuration Solution  
+>>>>>>> main
 =======
 ### 🌡️ Temperature Configuration Solution  
 >>>>>>> main
@@ -40,7 +44,11 @@ MoE CPU offloading has been successfully validated locally with streaming enable
 
 ### ⚠️ GPT-OSS 20B (LOADING CONFIRMED, PERFORMANCE PENDING)
 <<<<<<< HEAD
+<<<<<<< HEAD
 - **Size**: 12.8GB GGUF file
+=======
+- **Size**: 12.8GB GGUF file  
+>>>>>>> main
 =======
 - **Size**: 12.8GB GGUF file  
 >>>>>>> main
@@ -62,7 +70,11 @@ MoE CPU offloading has been successfully validated locally with streaming enable
 load_tensors: layer X assigned to device CPU, is_swa = 1/0
 tensor blk.X.ffn_gate_exps.weight (134 MiB mxfp4) buffer type overridden to CPU
 <<<<<<< HEAD
+<<<<<<< HEAD
 tensor blk.X.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CPU
+=======
+tensor blk.X.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CPU  
+>>>>>>> main
 =======
 tensor blk.X.ffn_down_exps.weight (134 MiB mxfp4) buffer type overridden to CPU  
 >>>>>>> main
@@ -120,7 +132,11 @@ Based on H100 whitepaper methodology but adapted for local hardware:
 ### Test Categories
 1. **Basic Functionality**: Simple greetings and responses
 <<<<<<< HEAD
+<<<<<<< HEAD
 2. **Code Generation**: Python functions and algorithms
+=======
+2. **Code Generation**: Python functions and algorithms  
+>>>>>>> main
 =======
 2. **Code Generation**: Python functions and algorithms  
 >>>>>>> main
@@ -156,7 +172,11 @@ Based on H100 whitepaper methodology but adapted for local hardware:
 The combination of:
 - ✅ CPU offloading (97-99% VRAM savings)
 <<<<<<< HEAD
+<<<<<<< HEAD
 - ✅ Streaming enabled (real-time UX)
+=======
+- ✅ Streaming enabled (real-time UX)  
+>>>>>>> main
 =======
 - ✅ Streaming enabled (real-time UX)  
 >>>>>>> main
@@ -165,7 +185,11 @@ The combination of:
 Delivers a working, practical solution for running large MoE models on consumer hardware.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 **RECOMMENDATION**: Proceed with Shimmy 1.7.0 release including MoE CPU offloading feature.
+=======
+**RECOMMENDATION**: Proceed with Shimmy 1.7.0 release including MoE CPU offloading feature.
+>>>>>>> main
 =======
 **RECOMMENDATION**: Proceed with Shimmy 1.7.0 release including MoE CPU offloading feature.
 >>>>>>> main
