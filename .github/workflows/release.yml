@@ -51,12 +51,13 @@ jobs:
         run: |
           echo "::group::Gate 3: Template Packaging"
           # Check for Docker templates with OS-agnostic path handling
-          if cargo package --list | grep -E "(^|[/\\\\])templates[/\\\\]docker[/\\\\]Dockerfile$" > /dev/null; then
+          # Use --allow-dirty to handle uncommitted Cargo.lock changes from dependency resolution
+          if cargo package --allow-dirty --list | grep -E "(^|[/\\\\])templates[/\\\\]docker[/\\\\]Dockerfile$" > /dev/null; then
             echo "✅ Docker templates properly included in package"
           else
             echo "❌ Required Docker template missing from package - Issue #60 regression!"
             echo "Package contents:"
-            cargo package --list | grep -i docker || echo "No docker files found"
+            cargo package --allow-dirty --list | grep -i docker || echo "No docker files found"
             exit 1
           fi
           echo "::endgroup::"
