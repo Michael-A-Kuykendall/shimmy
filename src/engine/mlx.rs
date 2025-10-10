@@ -41,6 +41,7 @@ impl MLXEngine {
     }
 
     /// Public method to check if MLX is available
+    #[allow(dead_code)]
     pub fn is_available(&self) -> bool {
         self.mlx_available
     }
@@ -114,6 +115,7 @@ impl InferenceEngine for MLXEngine {
 /// MLX-loaded model instance
 struct MLXModel {
     name: String,
+    #[allow(dead_code)]
     model_path: std::path::PathBuf,
     _ctx_len: usize,
 }
@@ -199,11 +201,13 @@ pub mod utils {
     use super::*;
 
     /// Check if current system supports MLX
+    #[allow(dead_code)]
     pub fn is_mlx_supported() -> bool {
         MLXEngine::check_mlx_availability()
     }
 
     /// Get MLX system information
+    #[allow(dead_code)]
     pub fn mlx_info() -> Result<String> {
         if !is_mlx_supported() {
             return Ok("MLX not supported on this system".to_string());
@@ -219,6 +223,7 @@ pub mod utils {
     }
 
     /// Convert HuggingFace model to MLX format (placeholder)
+    #[allow(dead_code)]
     pub async fn convert_to_mlx(model_path: &Path, output_path: &Path) -> Result<()> {
         // Real implementation would use MLX conversion tools
         tracing::info!(

@@ -25,7 +25,7 @@
 
 ### Priority 1: Get Additional MoE Models
 - [ ] Download Mixtral-8x7B-Instruct GGUF
-- [ ] Download DeepSeek-V2 GGUF  
+- [ ] Download DeepSeek-V2 GGUF
 - [ ] Verify models are actual MoE architecture
 - [ ] Test each with MoE CPU offloading
 
@@ -57,7 +57,7 @@
 ## PREREQUISITES FOR COMPLETION
 
 1. **Model Collection** - Need actual MoE models downloaded and verified
-2. **Baseline Testing** - Need non-MoE performance data for comparison  
+2. **Baseline Testing** - Need non-MoE performance data for comparison
 3. **Systematic Testing** - Need consistent test protocol across models
 4. **Data Collection** - Need organized performance metrics
 

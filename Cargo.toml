@@ -22,7 +22,7 @@ include = [
 
 [features]
 default = ["huggingface", "llama"]  # Now with working Windows MSVC support via shimmy-llama-cpp-2
-# Engine backends  
+# Engine backends
 llama = ["dep:shimmy-llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
 mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
@@ -71,6 +71,7 @@ shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
 criterion = { version = "0.5", features = ["html_reports"] }
+serial_test = "3.0"  # For serializing tests that use global state
 # Additional dependencies for mock testing infrastructure
 tempfile = "3"  # For creating temporary test directories
 rand = "0.8"    # For randomized testing scenarios (already in main deps)
@@ -91,7 +92,7 @@ debug = true
 opt-level = 2
 debug = false
 
-# Benchmark configuration  
+# Benchmark configuration
 [[bench]]
 name = "model_loading"
 harness = false
@@ -99,4 +100,3 @@ harness = false
 [[bench]]
 name = "generation_performance"
 harness = false
-

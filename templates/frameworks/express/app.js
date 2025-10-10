@@ -53,13 +53,13 @@ app.get('/models', async (req, res) => {
 app.post('/chat/completions', async (req, res) => {
   try {
     const { model, messages, max_tokens = 100, temperature = 0.7, stream = false } = req.body;
-    
+
     if (!model || !messages) {
       return res.status(400).json({
         error: 'Missing required fields: model and messages'
       });
     }
-    
+
     const response = await shimmyClient.post('/v1/chat/completions', {
       model,
       messages,
@@ -67,11 +67,11 @@ app.post('/chat/completions', async (req, res) => {
       temperature,
       stream
     });
-    
+
     res.json(response.data);
   } catch (error) {
     console.error('Error in chat completion:', error.message);
-    
+
     if (error.response) {
       res.status(error.response.status).json({
         error: 'Shimmy API error',
@@ -90,17 +90,17 @@ app.post('/chat/completions', async (req, res) => {
 app.post('/simple-chat', async (req, res) => {
   try {
     const { prompt, model = 'phi3-mini', max_tokens = 150 } = req.body;
-    
+
     if (!prompt) {
       return res.status(400).json({ error: 'Missing prompt' });
     }
-    
+
     const response = await shimmyClient.post('/v1/chat/completions', {
       model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens
     });
-    
+
     res.json(response.data);
   } catch (error) {
     console.error('Error in simple chat:', error.message);
@@ -115,7 +115,7 @@ app.post('/simple-chat', async (req, res) => {
 app.post('/chat/stream', async (req, res) => {
   try {
     const { model, messages, max_tokens = 100, temperature = 0.7 } = req.body;
-    
+
     // Set up SSE headers
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -123,7 +123,7 @@ app.post('/chat/stream', async (req, res) => {
       'Connection': 'keep-alive',
       'Access-Control-Allow-Origin': '*'
     });
-    
+
     const response = await shimmyClient.post('/v1/chat/completions', {
       model,
       messages,
@@ -133,16 +133,16 @@ app.post('/chat/stream', async (req, res) => {
     }, {
       responseType: 'stream'
     });
-    
+
     response.data.on('data', (chunk) => {
       res.write(`data: ${chunk}\n\n`);
     });
-    
+
     response.data.on('end', () => {
       res.write('data: [DONE]\n\n');
       res.end();
     });
-    
+
   } catch (error) {
     console.error('Error in streaming chat:', error.message);
     res.write(`data: {"error": "${error.message}"}\n\n`);
@@ -162,7 +162,7 @@ app.use((error, req, res, next) => {
 // Start server
 app.listen(PORT, async () => {
   console.log(`🚀 Shimmy Express server running on port ${PORT}`);
-  
+
   // Test Shimmy connection
   try {
     await shimmyClient.get('/v1/models');

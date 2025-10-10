@@ -17,17 +17,17 @@ jobs:
       should_publish: ${{ steps.gates.outputs.should_publish }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        
+
       - name: "🚧 GATE 1/6: Core Build Validation"
         run: |
           echo "::group::Gate 1: Core Build"
           cargo build --release --no-default-features --features huggingface
           echo "✅ Core build successful"
           echo "::endgroup::"
-          
+
       - name: "🚧 GATE 2/6: CUDA Build Timeout Detection (Issue #59 Protection)"
         run: |
           echo "::group::Gate 2: CUDA Timeout"
@@ -37,8 +37,8 @@ jobs:
           }
           echo "✅ CUDA build completed within 3 minutes"
           echo "::endgroup::"
-          
-      - name: "🚧 GATE 3/6: Template Packaging Validation (Issue #60 Protection)" 
+
+      - name: "🚧 GATE 3/6: Template Packaging Validation (Issue #60 Protection)"
         run: |
           echo "::group::Gate 3: Template Packaging"
           cargo package --list | grep -Eq "^(Dockerfile|packaging/docker/Dockerfile|templates/docker/Dockerfile)$" || {
@@ -47,7 +47,7 @@ jobs:
           }
           echo "✅ Docker templates properly included in package"
           echo "::endgroup::"
-          
+
       - name: "🚧 GATE 4/6: Binary Size Constitutional Limit (20MB)"
         run: |
           echo "::group::Gate 4: Binary Size"
@@ -59,7 +59,7 @@ jobs:
           fi
           echo "✅ Binary size ${size} bytes within constitutional limit"
           echo "::endgroup::"
-          
+
       - name: "🚧 GATE 5/6: Test Suite Validation"
         run: |
           echo "::group::Gate 5: Tests"
@@ -67,26 +67,26 @@ jobs:
           cargo test --lib --no-default-features --features huggingface -- --skip test_generate_handler --skip test_chat_completions
           echo "✅ Core tests passing"
           echo "::endgroup::"
-          
+
       - name: "🚧 GATE 6/6: Documentation Validation"
         run: |
           echo "::group::Gate 6: Documentation"
           cargo doc --no-deps --all-features
           echo "✅ Documentation builds successfully"
           echo "::endgroup::"
-          
+
       - name: "🎯 RELEASE GATES SUMMARY"
         id: gates
         run: |
           echo "🎉 ALL 6 MANDATORY GATES PASSED!"
           echo "✅ Core Build"
           echo "✅ CUDA Timeout Protection (Issue #59)"
-          echo "✅ Template Packaging (Issue #60)" 
+          echo "✅ Template Packaging (Issue #60)"
           echo "✅ Binary Size Constitutional Limit"
           echo "✅ Test Suite"
           echo "✅ Documentation"
           echo "should_publish=true" >> $GITHUB_OUTPUT
-          
+
       # 🚀 REUSE GATE BINARIES - NO RECOMPILATION WASTE
       - name: "Upload gate binaries as artifacts"
         uses: actions/upload-artifact@v4
@@ -105,8 +105,8 @@ jobs:
         with:
           name: gate-built-binary
           path: ./
-          
-      - name: Upload as Linux x86_64 artifact  
+
+      - name: Upload as Linux x86_64 artifact
         uses: actions/upload-artifact@v4
         with:
           name: shimmy-linux-x86_64
@@ -119,33 +119,33 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest  
+          - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary-name: shimmy.exe
             artifact-name: shimmy-windows-x86_64.exe
-            
+
           - os: macos-latest
             target: x86_64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-intel
-            
+
           - os: macos-latest
-            target: aarch64-apple-darwin 
+            target: aarch64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-          
+
       - name: Build binary
         run: cargo build --release --target ${{ matrix.target }}
-        
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -160,30 +160,30 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
-          
+
       - name: Prepare release files
         run: |
           mkdir -p release-files
-          
+
           # Copy and rename artifacts
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
-          
+
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name
-          
+
           cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
           cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
-          
+
           # List what we're releasing
           echo "Release files:"
           ls -la release-files/
-          
+
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

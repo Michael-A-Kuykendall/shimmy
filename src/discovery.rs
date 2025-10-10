@@ -133,52 +133,100 @@ impl ModelDiscovery {
         }
         false
     }
-    
+
     /// Filter to detect LLM models vs other GGUF types (Issue #80)
     fn is_llm_model(&self, path: &Path) -> bool {
-        let filename = path.file_name()
+        let filename = path
+            .file_name()
             .and_then(|f| f.to_str())
             .unwrap_or("")
             .to_lowercase();
-            
+
         // Exclude known non-LLM model types
         let non_llm_patterns = [
             // Text-to-image models
-            "flux", "sd", "stable-diffusion", "sdxl", "dalle", "midjourney",
-            // Video models  
-            "video", "vid", "animate", "motion",
+            "flux",
+            "sd",
+            "stable-diffusion",
+            "sdxl",
+            "dalle",
+            "midjourney",
+            // Video models
+            "video",
+            "vid",
+            "animate",
+            "motion",
             // Audio models
-            "whisper", "audio", "speech", "tts", "voice",
+            "whisper",
+            "audio",
+            "speech",
+            "tts",
+            "voice",
             // CLIP and embedding models
-            "clip", "embed", "encoder", "vision",
+            "clip",
+            "embed",
+            "encoder",
+            "vision",
             // Specific model architectures that aren't text generation
-            "vae", "unet", "controlnet", "lora", "adapter",
+            "vae",
+            "unet",
+            "controlnet",
+            "lora",
+            "adapter",
         ];
-        
+
         // If filename contains any non-LLM patterns, exclude it
-        if non_llm_patterns.iter().any(|pattern| filename.contains(pattern)) {
+        if non_llm_patterns
+            .iter()
+            .any(|pattern| filename.contains(pattern))
+        {
             return false;
         }
-        
+
         // For SafeTensors, be more permissive as they're usually LLMs
         if path.extension().and_then(|s| s.to_str()) == Some("safetensors") {
             return true;
         }
-        
+
         // For GGUF files, include if they look like LLM models
         // Common LLM model patterns
         let llm_patterns = [
-            "llama", "mistral", "qwen", "phi", "gemma", "codellama", "vicuna", 
-            "alpaca", "orca", "falcon", "mpt", "gpt", "claude", "chatglm",
-            "baichuan", "yi", "deepseek", "mixtral", "solar", "openchat",
-            "starling", "wizardlm", "dolphin", "nous", "hermes", "airoboros"
+            "llama",
+            "mistral",
+            "qwen",
+            "phi",
+            "gemma",
+            "codellama",
+            "vicuna",
+            "alpaca",
+            "orca",
+            "falcon",
+            "mpt",
+            "gpt",
+            "claude",
+            "chatglm",
+            "baichuan",
+            "yi",
+            "deepseek",
+            "mixtral",
+            "solar",
+            "openchat",
+            "starling",
+            "wizardlm",
+            "dolphin",
+            "nous",
+            "hermes",
+            "airoboros",
         ];
-        
+
         // If filename contains LLM patterns, include it
-        if llm_patterns.iter().any(|pattern| filename.contains(pattern)) {
+        if llm_patterns
+            .iter()
+            .any(|pattern| filename.contains(pattern))
+        {
             return true;
         }
-        
+
         // Default: include GGUF files unless they match exclusion patterns
         // This errs on the side of inclusion for unknown models
         true
@@ -719,7 +767,7 @@ mod tests {
         assert!(discovery.is_llm_model(&PathBuf::from("llama-mistral-hybrid.gguf")));
         assert!(discovery.is_llm_model(&PathBuf::from("phi-gemma-merged.safetensors")));
 
-        // Test models that could be ambiguous  
+        // Test models that could be ambiguous
         assert!(discovery.is_llm_model(&PathBuf::from("gpt-4-turbo.gguf"))); // GPT pattern clearly LLM
         assert!(!discovery.is_llm_model(&PathBuf::from("vision-gpt-clip.gguf"))); // CLIP pattern excludes
 
@@ -730,7 +778,9 @@ mod tests {
         // Test complex filenames with versions and metadata
         assert!(discovery.is_llm_model(&PathBuf::from("llama-2-7b-chat-hf-q4_0.gguf")));
         assert!(discovery.is_llm_model(&PathBuf::from("mistral-7b-instruct-v0.1-fp16.safetensors")));
-        assert!(!discovery.is_llm_model(&PathBuf::from("stable-diffusion-xl-base-1.0-fp16.safetensors")));
+        assert!(!discovery.is_llm_model(&PathBuf::from(
+            "stable-diffusion-xl-base-1.0-fp16.safetensors"
+        )));
     }
 
     #[test]
@@ -739,11 +789,23 @@ mod tests {
 
         // Create a mix of LLM and non-LLM model files
         fs::write(temp_dir.path().join("llama-2-7b.gguf"), "llm content")?;
-        fs::write(temp_dir.path().join("mistral-instruct.safetensors"), "llm content")?;
+        fs::write(
+            temp_dir.path().join("mistral-instruct.safetensors"),
+            "llm content",
+        )?;
         fs::write(temp_dir.path().join("flux-dev.gguf"), "image model content")?;
-        fs::write(temp_dir.path().join("whisper-large.gguf"), "audio model content")?;
-        fs::write(temp_dir.path().join("clip-vit.safetensors"), "vision model content")?;
-        fs::write(temp_dir.path().join("unknown-model.gguf"), "unknown content")?;
+        fs::write(
+            temp_dir.path().join("whisper-large.gguf"),
+            "audio model content",
+        )?;
+        fs::write(
+            temp_dir.path().join("clip-vit.safetensors"),
+            "vision model content",
+        )?;
+        fs::write(
+            temp_dir.path().join("unknown-model.gguf"),
+            "unknown content",
+        )?;
 
         let mut discovery = ModelDiscovery::new();
         discovery.add_search_path(temp_dir.path().to_path_buf());

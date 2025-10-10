@@ -44,7 +44,7 @@ All CLI commands work perfectly:
 
 ```bash
 ./target/release/shimmy --help           # ✅ Works
-./target/release/shimmy list             # ✅ Works  
+./target/release/shimmy list             # ✅ Works
 ./target/release/shimmy discover         # ✅ Works
 ./target/release/shimmy probe phi3-mini  # ✅ Works (with Metal GPU)
 ./target/release/shimmy generate --prompt "Hello" phi3-mini  # ✅ Works
@@ -57,7 +57,7 @@ All CLI commands work perfectly:
 Shimmy correctly discovers models from all documented locations:
 
 1. **`./models/` directory**: ✅ Working
-2. **Hugging Face cache** (`~/.cache/huggingface/hub/`): ✅ Working  
+2. **Hugging Face cache** (`~/.cache/huggingface/hub/`): ✅ Working
 3. **Environment variables**: ✅ Working
    - `SHIMMY_BASE_GGUF` - base model path
    - `SHIMMY_LORA_GGUF` - LoRA adapter path
@@ -143,7 +143,7 @@ curl -X POST http://127.0.0.1:11435/v1/chat/completions \
 
 **Integration ready for:**
 - VSCode extensions
-- Cursor editor  
+- Cursor editor
 - Continue.dev
 - Any OpenAI-compatible tool
 
@@ -172,7 +172,7 @@ curl -X POST http://127.0.0.1:11435/v1/chat/completions \
 
 | Feature | Shimmy | Ollama |
 |---------|--------|--------|
-| **Binary Size** | 5.1MB ✅ | 680MB |  
+| **Binary Size** | 5.1MB ✅ | 680MB |
 | **Startup Time** | <100ms ✅ | 5-10s |
 | **Memory Usage** | 50MB ✅ | 200MB+ |
 | **LoRA Support** | First-class ✅ | Limited |
@@ -185,7 +185,7 @@ curl -X POST http://127.0.0.1:11435/v1/chat/completions \
 
 **Recommended for:**
 - macOS developers wanting a lightweight Ollama alternative
-- Users with LoRA fine-tuned models  
+- Users with LoRA fine-tuned models
 - Anyone needing 100% OpenAI API compatibility
 - Teams wanting zero-config model serving
 

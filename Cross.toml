@@ -1,0 +1,18 @@
+# Cross-compilation configuration for MLX development
+[build.env]
+passthrough = [
+    "CARGO_INCREMENTAL",
+    "CARGO_NET_RETRY", 
+    "CARGO_NET_TIMEOUT",
+]
+
+[target.aarch64-apple-darwin]
+# MLX requires Apple Silicon - this only tests compilation
+pre-build = [
+    "echo 'Testing MLX compilation for Apple Silicon'",
+    "echo 'Note: Execution requires real Apple hardware'",
+]
+
+[target.aarch64-apple-darwin.env]
+# Environment for MLX compilation testing
+MACOSX_DEPLOYMENT_TARGET = "11.0"  # MLX minimum macOS version

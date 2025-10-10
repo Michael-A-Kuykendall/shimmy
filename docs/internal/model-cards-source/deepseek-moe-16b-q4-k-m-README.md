@@ -81,22 +81,22 @@ use llama_cpp_2::model::LlamaModel;
 
 fn main() {
     let backend = LlamaBackend::init().unwrap();
-    
+
     // Enable MoE CPU offloading
     let model_params = LlamaModelParams::default()
         .with_cpu_moe_all();  // Offload all inactive experts to CPU
-    
+
     let model = LlamaModel::load_from_file(
         &backend,
         "deepseek-moe-16b-Q4_K_M.gguf",
         &model_params
     ).unwrap();
-    
+
     let ctx_params = LlamaContextParams::default()
         .with_n_ctx(2048);
-    
+
     let mut ctx = model.new_context(&backend, ctx_params).unwrap();
-    
+
     // ... tokenize and generate as normal
 }
 ```
@@ -183,6 +183,6 @@ If you use this model in your work, please cite the original DeepSeek paper:
 
 ---
 
-**License**: Apache 2.0 (inherited from base model)  
-**Quantized by**: MikeKuykendall  
+**License**: Apache 2.0 (inherited from base model)
+**Quantized by**: MikeKuykendall
 **Date**: October 2025

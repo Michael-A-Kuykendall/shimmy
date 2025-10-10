@@ -7,7 +7,7 @@
 
 **Hardware**:
 - **CPU**: AMD/Intel (to be documented)
-- **RAM**: 131GB available  
+- **RAM**: 131GB available
 - **GPU**: NVIDIA (to be documented)
 - **Storage**: 45GB available for models
 - **Platform**: Windows with MSYS2
@@ -24,7 +24,7 @@ Replicate H100 methodology for memory distribution:
 
 **Metrics**:
 - GPU VRAM usage with `--cpu-moe`
-- CPU RAM usage 
+- CPU RAM usage
 - Model load time
 - Expert tensor distribution verification
 
@@ -55,7 +55,7 @@ Based on H100 whitepaper categories, adapted for streaming:
 | System Design | "Design a simple chat application architecture" | 400 | Coherent design, realistic components |
 | Algorithm Analysis | "Compare bubble sort and quicksort algorithms" | 350 | Accurate comparison, technical depth |
 
-#### 2.3 Long-form Generation Tests  
+#### 2.3 Long-form Generation Tests
 **Purpose**: Stress test streaming with extended generation
 
 | Test | Prompt | Max Tokens | Success Criteria |
@@ -69,12 +69,12 @@ Based on H100 whitepaper categories, adapted for streaming:
 For each test, collect:
 
 #### 3.1 Timing Metrics
-- **Total Generation Time**: Start to [DONE] 
+- **Total Generation Time**: Start to [DONE]
 - **First Token Latency**: Request to first token
 - **Average Tokens/Second**: Total tokens ÷ generation time
 - **Streaming Responsiveness**: Subjective feel of real-time progress
 
-#### 3.2 Quality Metrics  
+#### 3.2 Quality Metrics
 - **Repetition Score**: Using our validated algorithm
 - **Completion Rate**: Successfully completed vs timeout
 - **Content Quality**: Subjective assessment (1-5 scale)
@@ -82,7 +82,7 @@ For each test, collect:
 
 #### 3.3 Resource Metrics
 - **Peak GPU Memory**: During generation
-- **Peak CPU Memory**: During generation  
+- **Peak CPU Memory**: During generation
 - **CPU Utilization**: Average during generation
 
 ## Test Execution Framework
@@ -145,7 +145,7 @@ Based on H100 results, local hardware expectations:
 
 ### Memory Savings (Should Match H100)
 - **DeepSeek 16B**: ~95-99% VRAM savings
-- **GPT-OSS 20B**: ~99% VRAM savings  
+- **GPT-OSS 20B**: ~99% VRAM savings
 - **Phi-3.5-MoE 41.9B**: ~97% VRAM savings
 
 ### Performance (Expected Lower Than H100)
@@ -166,7 +166,7 @@ Based on H100 results, local hardware expectations:
 - ✅ No repetition issues with temperature 0.3
 - ✅ Streaming works smoothly for all test cases
 
-### Performance Success  
+### Performance Success
 - ✅ Consistent generation speed (no significant degradation during long tests)
 - ✅ Reasonable completion times (<5 minutes for 1000 tokens)
 - ✅ Good streaming responsiveness (tokens appear steadily)
@@ -184,13 +184,13 @@ Based on H100 results, local hardware expectations:
 | Model | Parameters | VRAM Saved | Avg Tokens/Sec | Quality Score | Repetition Score |
 |-------|------------|-------------|----------------|---------------|------------------|
 | DeepSeek 16B | 16.38B | XX% | X.X | X/5 | X.XXX |
-| GPT-OSS 20B | 20B | XX% | X.X | X/5 | X.XXX |  
+| GPT-OSS 20B | 20B | XX% | X.X | X/5 | X.XXX |
 | Phi-3.5-MoE 41.9B | 41.9B | XX% | X.X | X/5 | X.XXX |
 ```
 
 ### Detailed Analysis Report
 - Performance comparison across models
-- Hardware bottleneck identification  
+- Hardware bottleneck identification
 - Streaming vs non-streaming UX analysis
 - Quality preservation validation
 - Production readiness assessment

@@ -18,9 +18,9 @@ echo "[DEBUG] Log file initialized" | tee -a debug-regression.log
 # Function to log results
 log_result() {
     local test_name="$1"
-    local status="$2" 
+    local status="$2"
     local details="$3"
-    
+
     echo "[$status] $test_name: $details" | tee -a "$RESULTS_LOG"
     if [ "$status" = "FAIL" ]; then
         REGRESSION_SUCCESS=false
@@ -43,7 +43,7 @@ fi
 echo "[DEBUG] Phase 1 completed at $(date)" | tee -a debug-regression.log
 
 echo ""
-echo "🧪 Phase 2: Regression Test Suite" 
+echo "🧪 Phase 2: Regression Test Suite"
 echo "================================="
 echo "[DEBUG] Starting Phase 2 at $(date)" | tee -a debug-regression.log
 if cargo test --test regression_tests --features huggingface > regression-test-output.log 2>&1; then
@@ -90,7 +90,7 @@ if cargo test test_openai_api --features huggingface >> api-test-output.log 2>&1
     log_result "OpenAI API Compatibility" "PASS" "API responses compatible"
     echo "✅ OpenAI API: Compatible"
 else
-    log_result "OpenAI API Compatibility" "FAIL" "API compatibility issues"  
+    log_result "OpenAI API Compatibility" "FAIL" "API compatibility issues"
     echo "❌ OpenAI API: Issues (see api-test-output.log)"
 fi
 

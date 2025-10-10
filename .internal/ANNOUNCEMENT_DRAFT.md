@@ -15,7 +15,7 @@ With **2300+ stars in just 12 days** and meteoric growth, Shimmy has proven itse
 
 **[💝 Sponsor Shimmy Development](https://github.com/sponsors/Michael-A-Kuykendall)** – 100% of support goes toward keeping Shimmy free and building better tools for developers like you.
 
-- **$5/month**: Coffee tier ☕ - Eternal gratitude + sponsor badge  
+- **$5/month**: Coffee tier ☕ - Eternal gratitude + sponsor badge
 - **$25/month**: Priority support 🐛 - Your issues get priority attention
 - **$100/month**: Corporate backer 🏢 - Logo placement + monthly office hours
 
@@ -45,7 +45,7 @@ With **2300+ stars in just 12 days** and meteoric growth, Shimmy has proven itse
 We've built everything you need to develop with Shimmy systematically and reliably:
 
 - **🔧 Integration Templates**: Copy-paste code for TypeScript, Python, CLI, Docker
-- **📋 Development Specifications**: GitHub Spec-Kit methodology adapted for Shimmy projects  
+- **📋 Development Specifications**: GitHub Spec-Kit methodology adapted for Shimmy projects
 - **🛡️ Constitutional Guarantees**: Architectural principles protecting your investment
 - **📖 Comprehensive Documentation**: Everything from quick start to enterprise deployment
 
@@ -84,7 +84,7 @@ cat memory/constitution.md
 When you develop with Shimmy, you get architectural guarantees:
 
 - **🔒 5MB Binary Limit**: We'll never bloat beyond our core advantage
-- **⚡ Sub-2-Second Startup**: Performance guarantees you can rely on  
+- **⚡ Sub-2-Second Startup**: Performance guarantees you can rely on
 - **🚫 Zero Python Dependencies**: Pure Rust implementation maintained
 - **🔄 OpenAI API Compatibility**: Drop-in replacement promise preserved
 
@@ -132,7 +132,7 @@ Using GitHub Spec-Kit methodology adapted for Shimmy:
 ### **For Your Applications**
 - **Reliability**: Constitutional guarantees protect your investment
 - **Performance**: 5MB binary, sub-2-second startup maintained
-- **Compatibility**: OpenAI API drop-in replacement promise preserved  
+- **Compatibility**: OpenAI API drop-in replacement promise preserved
 - **Future-Proof**: Systematic development ensures stable evolution
 
 ## 📊 The Numbers Tell the Story
@@ -183,7 +183,7 @@ With the **Shimmy Developer Ecosystem**, we're not just providing an inference e
 
 Whether you're:
 - 🔌 **Integrating** Shimmy into your web app
-- 🍴 **Forking** Shimmy for specialized use cases  
+- 🍴 **Forking** Shimmy for specialized use cases
 - 🏢 **Deploying** Shimmy in enterprise environments
 - 🚀 **Building** the next breakthrough AI application
 

@@ -122,12 +122,12 @@ TEST_PROMPTS = {
 
 class GPUMonitor:
     """Monitor GPU memory usage"""
-    
+
     def __init__(self):
         self.peak_memory = 0
         self.monitoring = False
         self.thread = None
-    
+
     def start_monitoring(self):
         """Start GPU memory monitoring in background thread"""
         self.monitoring = True
@@ -135,22 +135,22 @@ class GPUMonitor:
         self.thread = threading.Thread(target=self._monitor_loop)
         self.thread.daemon = True
         self.thread.start()
-    
+
     def stop_monitoring(self) -> float:
         """Stop monitoring and return peak memory usage"""
         self.monitoring = False
         if self.thread:
             self.thread.join(timeout=5)
         return self.peak_memory
-    
+
     def _monitor_loop(self):
         """Background monitoring loop"""
         while self.monitoring:
             try:
                 result = subprocess.run(
                     ['nvidia-smi', '--query-gpu=memory.used', '--format=csv,noheader,nounits'],
-                    capture_output=True, 
-                    text=True, 
+                    capture_output=True,
+                    text=True,
                     timeout=5
                 )
                 if result.returncode == 0:
@@ -162,19 +162,19 @@ class GPUMonitor:
 
 class ShimmyClient:
     """Client for interacting with shimmy server"""
-    
+
     def __init__(self, base_url: str = "http://localhost:11435"):
         self.base_url = base_url
         self.session = None
-    
+
     async def __aenter__(self):
         self.session = aiohttp.ClientSession()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             await self.session.close()
-    
+
     async def generate(self, model: str, prompt: str, max_tokens: int = 500, stream: bool = False) -> Dict:
         """Generate text using shimmy API"""
         payload = {
@@ -184,9 +184,9 @@ class ShimmyClient:
             "stream": stream,
             "temperature": 0.7
         }
-        
+
         start_time = time.time()
-        
+
         try:
             async with self.session.post(
                 f"{self.base_url}/api/generate",
@@ -196,10 +196,10 @@ class ShimmyClient:
                 if response.status != 200:
                     error_text = await response.text()
                     raise Exception(f"API error {response.status}: {error_text}")
-                
+
                 result = await response.json()
                 end_time = time.time()
-                
+
                 return {
                     "success": True,
                     "response": result.get("response", ""),
@@ -207,7 +207,7 @@ class ShimmyClient:
                     "response_time": end_time - start_time,
                     "error": None
                 }
-        
+
         except Exception as e:
             end_time = time.time()
             return {
@@ -220,31 +220,31 @@ class ShimmyClient:
 
 class StressTester:
     """Main stress testing orchestrator"""
-    
+
     def __init__(self, shimmy_path: str = "/home/ubuntu/shimmy"):
         self.shimmy_path = Path(shimmy_path)
         self.results: List[TestMetrics] = []
         self.server_process = None
         self.gpu_monitor = GPUMonitor()
-    
+
     def start_shimmy_server(self, model: ModelConfig, port: int = 11435) -> bool:
         """Start shimmy server with specified model"""
         try:
             # Stop any existing server
             self.stop_shimmy_server()
-            
+
             # Set environment variables
             env = {
                 "SHIMMY_BASE_GGUF": model.gguf_path,
                 **dict(os.environ)
             }
-            
+
             # Start server
             cmd = [
                 "cargo", "run", "--release", "--features", "llama", "--",
                 "serve", "--bind", f"127.0.0.1:{port}", "--cpu-moe"
             ]
-            
+
             logger.info(f"Starting shimmy server for {model.display_name}")
             self.server_process = subprocess.Popen(
                 cmd,
@@ -253,10 +253,10 @@ class StressTester:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-            
+
             # Wait for server to start
             time.sleep(10)
-            
+
             # Test server health
             import requests
             response = requests.get(f"http://localhost:{port}/health", timeout=5)
@@ -266,11 +266,11 @@ class StressTester:
             else:
                 logger.error(f"Server health check failed: {response.status_code}")
                 return False
-                
+
         except Exception as e:
             logger.error(f"Failed to start shimmy server: {e}")
             return False
-    
+
     def stop_shimmy_server(self):
         """Stop shimmy server"""
         if self.server_process:
@@ -282,19 +282,19 @@ class StressTester:
                 self.server_process.wait()
             finally:
                 self.server_process = None
-    
+
     async def run_basic_generation_test(self, model: ModelConfig) -> TestMetrics:
         """Test basic generation capabilities"""
         logger.info(f"Running basic generation test for {model.display_name}")
-        
+
         start_time = datetime.now()
         self.gpu_monitor.start_monitoring()
         initial_cpu_memory = psutil.virtual_memory().used / 1024 / 1024
-        
+
         total_tokens = 0
         total_time = 0
         successful_requests = 0
-        
+
         async with ShimmyClient() as client:
             for category, prompts in TEST_PROMPTS.items():
                 for prompt in prompts[:2]:  # Test 2 prompts per category
@@ -303,18 +303,18 @@ class StressTester:
                         prompt=prompt,
                         max_tokens=200
                     )
-                    
+
                     if result["success"]:
                         total_tokens += result["tokens"]
                         total_time += result["response_time"]
                         successful_requests += 1
                     else:
                         logger.warning(f"Generation failed: {result['error']}")
-        
+
         peak_gpu_memory = self.gpu_monitor.stop_monitoring()
         final_cpu_memory = psutil.virtual_memory().used / 1024 / 1024
         end_time = datetime.now()
-        
+
         return TestMetrics(
             model_name=model.name,
             test_name="basic_generation",
@@ -329,25 +329,25 @@ class StressTester:
             success_rate=successful_requests / (len(TEST_PROMPTS) * 2),
             quality_score=0.9  # Placeholder - would implement quality assessment
         )
-    
+
     async def run_long_form_generation_test(self, model: ModelConfig) -> TestMetrics:
         """Test long-form generation capabilities"""
         logger.info(f"Running long-form generation test for {model.display_name}")
-        
+
         start_time = datetime.now()
         self.gpu_monitor.start_monitoring()
         initial_cpu_memory = psutil.virtual_memory().used / 1024 / 1024
-        
+
         long_prompts = [
             "Write a comprehensive analysis of renewable energy technologies, covering solar, wind, hydroelectric, and emerging technologies. Include economic considerations, environmental impact, and future prospects.",
             "Create a detailed technical specification for a distributed microservices architecture that can handle millions of users. Include database design, caching strategies, load balancing, and monitoring.",
             "Develop a complete business plan for a sustainable agriculture startup, including market analysis, technology requirements, financial projections, and scaling strategy."
         ]
-        
+
         total_tokens = 0
         total_time = 0
         successful_requests = 0
-        
+
         async with ShimmyClient() as client:
             for prompt in long_prompts:
                 result = await client.generate(
@@ -355,7 +355,7 @@ class StressTester:
                     prompt=prompt,
                     max_tokens=2000  # Long-form generation
                 )
-                
+
                 if result["success"]:
                     total_tokens += result["tokens"]
                     total_time += result["response_time"]
@@ -363,11 +363,11 @@ class StressTester:
                     logger.info(f"Generated {result['tokens']} tokens in {result['response_time']:.2f}s")
                 else:
                     logger.warning(f"Long-form generation failed: {result['error']}")
-        
+
         peak_gpu_memory = self.gpu_monitor.stop_monitoring()
         final_cpu_memory = psutil.virtual_memory().used / 1024 / 1024
         end_time = datetime.now()
-        
+
         return TestMetrics(
             model_name=model.name,
             test_name="long_form_generation",
@@ -382,15 +382,15 @@ class StressTester:
             success_rate=successful_requests / len(long_prompts),
             quality_score=0.85  # Placeholder
         )
-    
+
     async def run_concurrent_load_test(self, model: ModelConfig) -> TestMetrics:
         """Test concurrent request handling"""
         logger.info(f"Running concurrent load test for {model.display_name}")
-        
+
         start_time = datetime.now()
         self.gpu_monitor.start_monitoring()
         initial_cpu_memory = psutil.virtual_memory().used / 1024 / 1024
-        
+
         # Create concurrent tasks
         concurrent_requests = []
         async with ShimmyClient() as client:
@@ -403,25 +403,25 @@ class StressTester:
                         max_tokens=300
                     )
                     concurrent_requests.append(task)
-            
+
             # Execute all requests concurrently
             results = await asyncio.gather(*concurrent_requests, return_exceptions=True)
-        
+
         # Process results
         total_tokens = 0
         total_time = 0
         successful_requests = 0
-        
+
         for result in results:
             if isinstance(result, dict) and result["success"]:
                 total_tokens += result["tokens"]
                 total_time = max(total_time, result["response_time"])  # Max time for concurrent
                 successful_requests += 1
-        
+
         peak_gpu_memory = self.gpu_monitor.stop_monitoring()
         final_cpu_memory = psutil.virtual_memory().used / 1024 / 1024
         end_time = datetime.now()
-        
+
         return TestMetrics(
             model_name=model.name,
             test_name="concurrent_load",
@@ -436,79 +436,79 @@ class StressTester:
             success_rate=successful_requests / len(concurrent_requests),
             quality_score=0.8  # Placeholder
         )
-    
+
     async def run_all_tests_for_model(self, model: ModelConfig) -> List[TestMetrics]:
         """Run complete test suite for a model"""
         logger.info(f"Starting comprehensive testing for {model.display_name}")
-        
+
         if not self.start_shimmy_server(model):
             logger.error(f"Failed to start server for {model.display_name}")
             return []
-        
+
         try:
             results = []
-            
+
             # Run basic generation test
             result = await self.run_basic_generation_test(model)
             results.append(result)
             self.results.append(result)
-            
+
             # Run long-form generation test
             result = await self.run_long_form_generation_test(model)
             results.append(result)
             self.results.append(result)
-            
+
             # Run concurrent load test
             result = await self.run_concurrent_load_test(model)
             results.append(result)
             self.results.append(result)
-            
+
             logger.info(f"Completed testing for {model.display_name}")
             return results
-            
+
         finally:
             self.stop_shimmy_server()
-    
+
     def generate_report(self, output_path: str = "moe_stress_test_report.html"):
         """Generate comprehensive HTML report"""
         if not self.results:
             logger.warning("No test results to report")
             return
-        
+
         # Convert results to DataFrame
         df = pd.DataFrame([asdict(result) for result in self.results])
-        
+
         # Create visualizations
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-        
+
         # Tokens per second by model and test
         pivot_tps = df.pivot(index='model_name', columns='test_name', values='tokens_per_second')
         pivot_tps.plot(kind='bar', ax=axes[0, 0], title='Tokens per Second by Model and Test')
         axes[0, 0].set_ylabel('Tokens/Second')
         axes[0, 0].legend(rotation=45)
-        
+
         # GPU memory usage
         df.groupby('model_name')['peak_gpu_memory_mb'].mean().plot(
             kind='bar', ax=axes[0, 1], title='Average Peak GPU Memory Usage'
         )
         axes[0, 1].set_ylabel('Memory (MB)')
-        
+
         # Success rates
         df.groupby('model_name')['success_rate'].mean().plot(
             kind='bar', ax=axes[1, 0], title='Average Success Rate'
         )
         axes[1, 0].set_ylabel('Success Rate')
         axes[1, 0].set_ylim(0, 1)
-        
+
         # Response times
         df.groupby('model_name')['average_response_time_ms'].mean().plot(
             kind='bar', ax=axes[1, 1], title='Average Response Time'
         )
         axes[1, 1].set_ylabel('Response Time (ms)')
-        
+
         plt.tight_layout()
         plt.savefig('moe_stress_test_charts.png', dpi=300, bbox_inches='tight')
-        
+
         # Generate HTML report
         html_content = f"""
         <!DOCTYPE html>
@@ -534,7 +534,7 @@ class StressTester:
                 <p>Total Models Tested: {len(MODELS)}</p>
                 <p>Total Tests Run: {len(self.results)}</p>
             </div>
-            
+
             <div class="summary">
                 <h2>Executive Summary</h2>
                 <div class="metric">
@@ -550,13 +550,13 @@ class StressTester:
                     <strong>Average Response Time:</strong> {df['average_response_time_ms'].mean():.0f} ms
                 </div>
             </div>
-            
+
             <div class="charts">
                 <h2>Performance Charts</h2>
                 <img src="moe_stress_test_charts.png" alt="Performance Charts" style="max-width: 100%;">
             </div>
         """
-        
+
         # Add model-specific sections
         for model in MODELS:
             model_results = df[df['model_name'] == model.name]
@@ -566,7 +566,7 @@ class StressTester:
                     <h2>{model.display_name}</h2>
                     <p><strong>Architecture:</strong> {model.experts_total} experts, {model.experts_active} active per token</p>
                     <p><strong>Context Length:</strong> {model.context_length:,} tokens</p>
-                    
+
                     <h3>Test Results</h3>
                     <table>
                         <tr>
@@ -578,7 +578,7 @@ class StressTester:
                             <th>Avg Response Time (ms)</th>
                         </tr>
                 """
-                
+
                 for _, row in model_results.iterrows():
                     html_content += f"""
                         <tr>
@@ -590,12 +590,12 @@ class StressTester:
                             <td>{row['average_response_time_ms']:.0f}</td>
                         </tr>
                     """
-                
+
                 html_content += """
                     </table>
                 </div>
                 """
-        
+
         html_content += """
             <div class="summary">
                 <h2>Conclusions</h2>
@@ -609,49 +609,49 @@ class StressTester:
         </body>
         </html>
         """
-        
+
         with open(output_path, 'w') as f:
             f.write(html_content)
-        
+
         logger.info(f"Report generated: {output_path}")
         logger.info(f"Charts saved: moe_stress_test_charts.png")
 
 async def main():
     """Main test execution function"""
     parser = argparse.ArgumentParser(description='MoE CPU Offloading Stress Testing Suite')
-    parser.add_argument('--models', nargs='+', choices=[m.name for m in MODELS], 
+    parser.add_argument('--models', nargs='+', choices=[m.name for m in MODELS],
                        help='Specific models to test (default: all)')
-    parser.add_argument('--tests', nargs='+', 
+    parser.add_argument('--tests', nargs='+',
                        choices=['basic', 'longform', 'concurrent'],
                        default=['basic', 'longform', 'concurrent'],
                        help='Specific tests to run')
     parser.add_argument('--output', default='moe_stress_test_report.html',
                        help='Output report filename')
-    
+
     args = parser.parse_args()
-    
+
     # Determine which models to test
     models_to_test = MODELS if not args.models else [m for m in MODELS if m.name in args.models]
-    
+
     logger.info(f"Starting comprehensive stress testing for {len(models_to_test)} models")
     logger.info(f"Tests to run: {', '.join(args.tests)}")
-    
+
     tester = StressTester()
-    
+
     try:
         for model in models_to_test:
             logger.info(f"Testing {model.display_name}...")
             await tester.run_all_tests_for_model(model)
-            
+
             # Brief pause between models
             time.sleep(5)
-        
+
         # Generate comprehensive report
         tester.generate_report(args.output)
-        
+
         logger.info("Stress testing completed successfully!")
         logger.info(f"Results saved to: {args.output}")
-        
+
     except KeyboardInterrupt:
         logger.info("Testing interrupted by user")
     except Exception as e:

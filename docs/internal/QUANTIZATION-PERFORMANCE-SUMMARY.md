@@ -1,8 +1,8 @@
 # Quantization Performance Summary
 
-**Test Date**: October 9, 2025  
-**Environment**: Lambda Cloud GH200 (96GB VRAM, 480GB RAM, CUDA 12.8)  
-**Tool**: shimmy v1.6.0 with llama.cpp b6686  
+**Test Date**: October 9, 2025
+**Environment**: Lambda Cloud GH200 (96GB VRAM, 480GB RAM, CUDA 12.8)
+**Tool**: shimmy v1.6.0 with llama.cpp b6686
 **Runs per config**: N=3 (averaged below)
 
 ---

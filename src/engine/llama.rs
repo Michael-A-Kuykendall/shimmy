@@ -181,12 +181,12 @@ impl LlamaEngine {
 
         info!("GPU backend configured: {:?}", gpu_backend);
 
-        Self { 
+        Self {
             gpu_backend,
             moe_config: MoeConfig::default(),
         }
     }
-    
+
     /// Set MoE CPU offloading configuration
     #[allow(dead_code)] // Temporarily unused while fork is being fixed
     pub fn with_moe_config(mut self, cpu_moe_all: bool, n_cpu_moe: Option<usize>) -> Self {
@@ -231,7 +231,7 @@ impl InferenceEngine for LlamaEngine {
 
             let model_params =
                 llama::model::params::LlamaModelParams::default().with_n_gpu_layers(n_gpu_layers);
-            
+
             // Apply MoE CPU offloading if configured
             // TODO: Re-enable when fork is fixed - these methods require shimmy-llama-cpp-2 fork
             if let Some(n) = self.moe_config.n_cpu_moe {

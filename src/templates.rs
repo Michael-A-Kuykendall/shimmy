@@ -109,10 +109,7 @@ README.md
 }
 
 /// Generate Kubernetes deployment template
-pub fn generate_kubernetes_template(
-    output_dir: &str,
-    project_name: Option<&str>,
-) -> Result<()> {
+pub fn generate_kubernetes_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
 
@@ -142,10 +139,7 @@ pub fn generate_kubernetes_template(
 }
 
 /// Generate Railway deployment template
-pub fn generate_railway_template(
-    output_dir: &str,
-    _project_name: Option<&str>,
-) -> Result<()> {
+pub fn generate_railway_template(output_dir: &str, _project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
 
@@ -180,10 +174,7 @@ pub fn generate_fly_template(output_dir: &str, project_name: Option<&str>) -> Re
 }
 
 /// Generate FastAPI integration template
-pub fn generate_fastapi_template(
-    output_dir: &str,
-    _project_name: Option<&str>,
-) -> Result<()> {
+pub fn generate_fastapi_template(output_dir: &str, _project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;
 
@@ -196,7 +187,7 @@ pub fn generate_fastapi_template(
     Ok(())
 }
 
-/// Generate Express.js integration template  
+/// Generate Express.js integration template
 pub fn generate_express_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
     let output_path = Path::new(output_dir);
     fs::create_dir_all(output_path)?;

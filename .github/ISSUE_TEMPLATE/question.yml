@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
         Thanks for asking a question! We're here to help you get the most out of Shimmy.
-        
+
         **💡 Tip:** Check our [documentation](https://github.com/Michael-A-Kuykendall/shimmy/tree/main/docs) and [discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions) first to see if your question has been answered.
 
   - type: dropdown

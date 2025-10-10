@@ -4,7 +4,7 @@
 # Mark Rust files as detectable and prioritize them
 *.rs linguist-detectable=true
 
-# Exclude build artifacts and dependency files from language detection  
+# Exclude build artifacts and dependency files from language detection
 *.d linguist-detectable=false
 Makefile linguist-detectable=false
 makefile linguist-detectable=false

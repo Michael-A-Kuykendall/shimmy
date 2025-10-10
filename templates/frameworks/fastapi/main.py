@@ -69,7 +69,7 @@ async def chat_completions(request: ChatRequest):
                 "temperature": request.temperature,
                 "stream": request.stream
             }
-            
+
             response = await client.post(
                 f"{SHIMMY_BASE_URL}/v1/chat/completions",
                 json=shimmy_request,
@@ -81,7 +81,7 @@ async def chat_completions(request: ChatRequest):
             )
             response.raise_for_status()
             return response.json()
-            
+
         except httpx.RequestError as e:
             raise HTTPException(status_code=503, detail=f"Shimmy service unavailable: {e}")
         except httpx.HTTPStatusError as e:

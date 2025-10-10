@@ -9,7 +9,7 @@ Shimmy's GPU usage is comparable to Ollama since both use llama.cpp as the infer
 - **Model-dependent**: GPU memory usage depends on model size and quantization level, not the inference server
 - **Typical usage**:
   - **7B models (Q4_0)**: ~4-5GB VRAM
-  - **13B models (Q4_0)**: ~8-10GB VRAM  
+  - **13B models (Q4_0)**: ~8-10GB VRAM
   - **70B models (Q4_0)**: ~40-45GB VRAM
 
 ### Power Consumption
@@ -39,11 +39,11 @@ Model: Phi-3-mini-4k (Q4_0)
 - CPU RAM: ~1GB + 50MB Shimmy overhead
 ```
 
-### Medium Models (7B-13B parameters)  
+### Medium Models (7B-13B parameters)
 ```
 Model: Llama-3.2-7B (Q4_0)
 - GPU Memory: ~4-5GB
-- GPU Power: ~100-150W during inference  
+- GPU Power: ~100-150W during inference
 - CPU RAM: ~2GB + 50MB Shimmy overhead
 ```
 
@@ -124,7 +124,7 @@ curl http://localhost:11434/health
 - **Inference engine**: Both use llama.cpp, identical GPU utilization
 - **Model compatibility**: Same models work in both systems
 
-### Shimmy Advantages  
+### Shimmy Advantages
 - **Lower system overhead**: 50MB vs 200MB+ base memory usage
 - **Faster startup**: <100ms vs 5-10s startup time
 - **Smaller footprint**: 5MB binary vs 680MB installation
@@ -141,7 +141,7 @@ Scenario: Running Llama-3.2-7B for 1 hour
 
 ### For Maximum Efficiency
 1. **Use appropriate quantization**: Q4_0 for most use cases
-2. **Monitor GPU memory**: Don't exceed 90% VRAM capacity  
+2. **Monitor GPU memory**: Don't exceed 90% VRAM capacity
 3. **Batch requests**: Let Shimmy handle request queuing
 4. **Close unused models**: Free VRAM when switching between large models
 

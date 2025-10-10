@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to report a bug! Please fill out the information below to help us reproduce and fix the issue.
-        
+
         **⚠️ Important:** For security vulnerabilities, please use [private reporting](https://github.com/Michael-A-Kuykendall/shimmy/security/advisories/new) instead of public issues.
 
   - type: textarea
@@ -55,7 +55,7 @@ body:
         - Latest (main branch)
         - v1.4.0 or newer
         - v1.3.x
-        - v1.2.x  
+        - v1.2.x
         - v1.1.x
         - v1.0.x
         - Other/Unknown (specify in additional context)
@@ -98,7 +98,7 @@ body:
       label: 🌍 Environment Details
       description: Additional environment information
       placeholder: |
-        - Rust version (if applicable): 
+        - Rust version (if applicable):
         - Model being used:
         - Hardware specs:
         - Any relevant configuration:

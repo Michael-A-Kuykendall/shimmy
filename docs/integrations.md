@@ -31,7 +31,7 @@ Shimmy works with any tool that supports the OpenAI API. Here are the most popul
   }],
   "tabAutocompleteModel": {
     "title": "Local Shimmy Tab",
-    "provider": "openai", 
+    "provider": "openai",
     "model": "your-model-name",
     "apiBase": "http://localhost:11435/v1"
   }
@@ -123,9 +123,9 @@ import (
 func main() {
     config := openai.DefaultConfig("not-needed")
     config.BaseURL = "http://localhost:11435/v1"
-    
+
     client := openai.NewClientWithConfig(config)
-    
+
     resp, err := client.CreateChatCompletion(
         context.Background(),
         openai.ChatCompletionRequest{
@@ -135,11 +135,11 @@ func main() {
             },
         },
     )
-    
+
     if err != nil {
         panic(err)
     }
-    
+
     fmt.Println(resp.Choices[0].Message.Content)
 }
 ```
@@ -201,7 +201,7 @@ curl -X POST http://localhost:11435/v1/chat/completions \
 curl -X POST http://localhost:11435/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "your-model-name", 
+    "model": "your-model-name",
     "messages": [{"role": "user", "content": "Count to 5"}],
     "max_tokens": 20,
     "stream": true

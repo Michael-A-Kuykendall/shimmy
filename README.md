@@ -1,8 +1,8 @@
 <div align="center">
   <img src="assets/shimmy-logo.png" alt="Shimmy Logo" width="300" height="auto" />
-  
+
   # The Privacy-First Alternative to Ollama
-  
+
   ### 🔒 Local AI Without the Lock-in 🚀
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -11,7 +11,7 @@
   [![Downloads](https://img.shields.io/crates/d/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
   [![GitHub Stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=social)](https://github.com/Michael-A-Kuykendall/shimmy/stargazers)
-  
+
   [![💝 Sponsor this project](https://img.shields.io/badge/💝_Sponsor_this_project-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/Michael-A-Kuykendall)
 </div>
 
@@ -21,9 +21,9 @@
 
 🚀 **If Shimmy helps you, consider [sponsoring](https://github.com/sponsors/Michael-A-Kuykendall) — 100% of support goes to keeping it free forever.**
 
-- **$5/month**: Coffee tier ☕ - Eternal gratitude + sponsor badge  
+- **$5/month**: Coffee tier ☕ - Eternal gratitude + sponsor badge
 - **$25/month**: Bug prioritizer 🐛 - Priority support + name in [SPONSORS.md](SPONSORS.md)
-- **$100/month**: Corporate backer 🏢 - Logo placement + monthly office hours  
+- **$100/month**: Corporate backer 🏢 - Logo placement + monthly office hours
 - **$500/month**: Infrastructure partner 🚀 - Direct support + roadmap input
 
 [**🎯 Become a Sponsor**](https://github.com/sponsors/Michael-A-Kuykendall) | See our amazing [sponsors](SPONSORS.md) 🙏
@@ -79,7 +79,7 @@ curl -s http://127.0.0.1:11435/v1/chat/completions \
 **No code changes needed** - just change the API endpoint:
 
 - **VSCode Extensions**: Point to `http://localhost:11435`
-- **Cursor Editor**: Built-in OpenAI compatibility  
+- **Cursor Editor**: Built-in OpenAI compatibility
 - **Continue.dev**: Drop-in model provider
 - **Any OpenAI client**: Python, Node.js, curl, etc.
 
@@ -132,7 +132,7 @@ print(resp.choices[0].message.content)
 **Run 70B+ models on consumer hardware** with intelligent CPU/GPU hybrid processing:
 
 - **🔄 CPU MOE Offloading**: Automatically distribute model layers across CPU and GPU
-- **🧮 Intelligent Layer Placement**: Optimizes which layers run where for maximum performance  
+- **🧮 Intelligent Layer Placement**: Optimizes which layers run where for maximum performance
 - **💾 Memory Efficiency**: Fit larger models in limited VRAM by using system RAM strategically
 - **⚡ Hybrid Acceleration**: Get GPU speed where it matters most, CPU reliability everywhere else
 - **🎛️ Configurable**: `--cpu-moe` and `--n-cpu-moe` flags for fine control
@@ -152,7 +152,7 @@ shimmy serve --cpu-moe --n-cpu-moe 8
 ## 🎯 Perfect for Local Development
 
 - **Privacy**: Your code never leaves your machine
-- **Cost**: No API keys, no per-token billing  
+- **Cost**: No API keys, no per-token billing
 - **Speed**: Local inference, sub-second responses
 - **Reliability**: No rate limits, no downtime
 
@@ -175,7 +175,7 @@ cargo install shimmy --features moe
 cargo install shimmy --features llama-cuda,moe
 ```
 
-> **⚠️ Windows Notes**: 
+> **⚠️ Windows Notes**:
 > - **Pre-built binary recommended** to avoid build dependency issues
 > - **MSVC compatibility**: Uses `shimmy-llama-cpp-2` packages for better Windows support
 > - If Windows Defender flags the binary, add an exclusion or use `cargo install`
@@ -199,7 +199,7 @@ Shimmy supports multiple GPU backends for accelerated inference:
 | **CUDA + MOE** | NVIDIA GPUs + CPU | `cargo install shimmy --features llama-cuda,moe` |
 | **Vulkan** | Cross-platform GPUs | `cargo install shimmy --features llama-vulkan` |
 | **OpenCL** | AMD/Intel/Others | `cargo install shimmy --features llama-opencl` |
-| **MLX** | Apple Silicon | `cargo install shimmy --features mlx` *(in development)* |
+| **MLX** | Apple Silicon | `cargo install shimmy --features mlx` |
 | **MOE Hybrid** | Any GPU + CPU | `cargo install shimmy --features moe` |
 | **All Features** | Everything | `cargo install shimmy --features gpu,moe` |
 
@@ -269,11 +269,10 @@ cargo install shimmy
 
 **✅ Verified working:**
 - Intel and Apple Silicon Macs
-- Metal GPU acceleration (via llama.cpp Metal backend)
+- Metal GPU acceleration (automatic)
+- MLX native acceleration for Apple Silicon
 - Xcode 17+ compatibility
 - All LoRA adapter features
-
-> **📝 Note on MLX**: Currently uses llama.cpp's Metal backend for Apple Silicon acceleration. Native MLX backend is in development for future releases with .npz model support.
 
 ## Integration Examples
 
@@ -291,7 +290,7 @@ cargo install shimmy
 {
   "models": [{
     "title": "Local Shimmy",
-    "provider": "openai", 
+    "provider": "openai",
     "model": "your-model-name",
     "apiBase": "http://localhost:11435/v1"
   }]
@@ -363,9 +362,9 @@ shimmy gpu-info                 # Show GPU backend status
 
 ### 🚀 Momentum Snapshot
 
-📦 **Sub-5MB single binary** (142x smaller than Ollama)  
-🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**  
-⏱ **<1s startup**  
+📦 **Sub-5MB single binary** (142x smaller than Ollama)
+🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**
+⏱ **<1s startup**
 🦀 **100% Rust, no Python**
 
 ### 📰 As Featured On
@@ -405,6 +404,6 @@ MIT License - forever and always.
 
 ---
 
-**Forever maintainer**: Michael A. Kuykendall  
-**Promise**: This will never become a paid product  
+**Forever maintainer**: Michael A. Kuykendall
+**Promise**: This will never become a paid product
 **Mission**: Making local AI development frictionless

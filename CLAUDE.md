@@ -38,7 +38,7 @@ This environment variable override fixes Unicode encoding issues that cause cras
 
 ### Core Workflow
 1. `/specify` - Create detailed feature specification (defines WHAT and WHY)
-2. `/plan` - Generate technical implementation plan (translates to HOW)  
+2. `/plan` - Generate technical implementation plan (translates to HOW)
 3. `/tasks` - Break down into actionable implementation tasks
 4. `implement <path_to_plan>` - Execute the structured implementation
 
@@ -90,7 +90,7 @@ project/
 
 ## Architecture Priorities
 1. 🔥 Smart Model Preloading & Warmup System
-2. ⚡ Response Caching & Deduplication Engine  
+2. ⚡ Response Caching & Deduplication Engine
 3. 🔧 Integration Templates & Auto-Configuration
 4. 🎛️ Request Routing & Connection Intelligence
 5. 📊 Advanced Observability & Self-Optimization

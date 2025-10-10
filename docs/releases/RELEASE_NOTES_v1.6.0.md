@@ -17,7 +17,7 @@ Previous versions accepted the `--gpu-backend` flag but ignored it completely, a
 
 **What was broken:**
 - CLI parsed `--gpu-backend auto|vulkan|opencl|cuda` ✅
-- Engine had `gpu_backend` field ✅  
+- Engine had `gpu_backend` field ✅
 - **BUT:** Field was never used in model loading ❌
 - **AND:** CLI value was never passed to engine constructor ❌
 
@@ -38,7 +38,7 @@ Fixed an infinite hang when 20+ concurrent model loading operations occurred.
 
 **Solution:** Extract data with locks, then drop locks before calling other functions. Simple pattern, massive impact.
 
-**Before:** `test_concurrent_load_unload` hung indefinitely  
+**Before:** `test_concurrent_load_unload` hung indefinitely
 **After:** Passes in 0.00s
 
 ### Fixed All Test Failures Across Feature Combinations
