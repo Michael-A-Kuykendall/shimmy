@@ -33,17 +33,19 @@ jobs:
           echo "::group::Gate 2: CUDA Build"
           echo "⏳ CUDA compilation can take 19+ hours - letting it run to natural completion"
           
-          # Try CUDA build first
-          if cargo build --release --no-default-features --features llama-cuda 2>&1; then
+          # Check if CUDA Toolkit is available first
+          if command -v nvcc >/dev/null 2>&1; then
+            echo "✅ CUDA Toolkit found, attempting CUDA build..."
+            cargo build --release --no-default-features --features llama-cuda
             echo "✅ CUDA build completed successfully"
           else
-            echo "⚠️ CUDA build failed (likely missing CUDA Toolkit on runner)"
-            echo "🔄 Falling back to CPU-only llama build validation..."
+            echo "⚠️ CUDA Toolkit not found on runner (nvcc not available)"
+            echo "🔄 Validating CPU-only llama build instead..."
             
             # Validate that CPU-only llama build works
             cargo build --release --no-default-features --features llama
             echo "✅ CPU-only llama build completed successfully"
-            echo "📝 Note: CUDA validation skipped due to missing CUDA Toolkit on GitHub runner"
+            echo "📝 Note: CUDA validation skipped - this is expected on standard GitHub runners"
           fi
           echo "::endgroup::"
 
