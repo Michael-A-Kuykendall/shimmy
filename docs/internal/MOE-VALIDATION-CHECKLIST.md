@@ -1,5 +1,9 @@
 # MoE CPU Offloading - Complete Validation Checklist
+<<<<<<< HEAD
 **Date**: October 8, 2025
+=======
+**Date**: October 8, 2025  
+>>>>>>> main
 **Mission**: Systematic validation and benchmarking of all 3 MoE models with complete metrics for whitepaper
 
 ---

@@ -80,22 +80,39 @@ use llama_cpp_2::model::LlamaModel;
 
 fn main() {
     let backend = LlamaBackend::init().unwrap();
+<<<<<<< HEAD
 
     // Enable MoE CPU offloading
     let model_params = LlamaModelParams::default()
         .with_cpu_moe_all();  // Offload all inactive experts to CPU
 
+=======
+    
+    // Enable MoE CPU offloading
+    let model_params = LlamaModelParams::default()
+        .with_cpu_moe_all();  // Offload all inactive experts to CPU
+    
+>>>>>>> main
     let model = LlamaModel::load_from_file(
         &backend,
         "phi-3.5-moe-Q8_0.gguf",
         &model_params
     ).unwrap();
+<<<<<<< HEAD
 
     let ctx_params = LlamaContextParams::default()
         .with_n_ctx(2048);
 
     let mut ctx = model.new_context(&backend, ctx_params).unwrap();
 
+=======
+    
+    let ctx_params = LlamaContextParams::default()
+        .with_n_ctx(2048);
+    
+    let mut ctx = model.new_context(&backend, ctx_params).unwrap();
+    
+>>>>>>> main
     // ... tokenize and generate as normal
 }
 ```
@@ -186,6 +203,11 @@ If you use this model in your work, please cite the original Phi-3.5 paper and a
 
 ---
 
+<<<<<<< HEAD
 **License**: MIT (inherited from base model)
 **Quantized by**: MikeKuykendall
+=======
+**License**: MIT (inherited from base model)  
+**Quantized by**: MikeKuykendall  
+>>>>>>> main
 **Date**: October 2025

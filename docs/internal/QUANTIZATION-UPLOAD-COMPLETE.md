@@ -1,6 +1,10 @@
 # Quantization Upload Completion Report
 
+<<<<<<< HEAD
 **Date**: October 9, 2025
+=======
+**Date**: October 9, 2025  
+>>>>>>> main
 **Status**: ✅ **COMPLETE** - All 6 quantizations uploaded to HuggingFace
 
 ---
@@ -132,6 +136,11 @@
 
 ---
 
+<<<<<<< HEAD
 **Completion Time**: October 9, 2025 01:45 UTC
 **Status**: ✅ **PRODUCTION READY**
+=======
+**Completion Time**: October 9, 2025 01:45 UTC  
+**Status**: ✅ **PRODUCTION READY**  
+>>>>>>> main
 **Quality**: All model cards have proper metadata, no warnings
