@@ -40,11 +40,10 @@ fn test_apple_feature_set_compilation() {
 
 #[test]
 fn test_gpu_info_with_mlx_compiled() {
-    // Build with apple features and test gpu-info output
+    // Build with apple features and test gpu-info output (debug build for speed)
     let build_output = Command::new("cargo")
         .args(&[
             "build",
-            "--release",
             "--no-default-features",
             "--features",
             "apple",
@@ -59,7 +58,7 @@ fn test_gpu_info_with_mlx_compiled() {
     );
 
     // Test gpu-info command
-    let gpu_info_output = Command::new("./target/release/shimmy")
+    let gpu_info_output = Command::new("./target/debug/shimmy")
         .arg("gpu-info")
         .output()
         .expect("Failed to run shimmy gpu-info");
@@ -221,11 +220,10 @@ fn test_mlx_status_messages_comprehensive() {
 
 #[test]
 fn test_mlx_binary_status_messages() {
-    // Build binary with apple features (includes MLX)
+    // Build binary with apple features (includes MLX) - debug build for speed
     let build_output = Command::new("cargo")
         .args(&[
-            "build",
-            "--release",
+            "build", 
             "--no-default-features",
             "--features",
             "apple",
@@ -239,7 +237,7 @@ fn test_mlx_binary_status_messages() {
     );
 
     // Test the gpu-info command output for specific MLX status messages
-    let gpu_info_output = Command::new("./target/release/shimmy")
+    let gpu_info_output = Command::new("./target/debug/shimmy")
         .arg("gpu-info")
         .output()
         .expect("Failed to run shimmy gpu-info");
@@ -329,12 +327,11 @@ mod integration_tests {
 
     #[test]
     fn test_full_apple_feature_build_and_run() {
-        // Full integration test: build and run with apple features
+        // Full integration test: build and run with apple features (debug for speed)
         let build_result = Command::new("cargo")
             .args(&[
                 "build",
-                "--release",
-                "--no-default-features",
+                "--no-default-features", 
                 "--features",
                 "apple",
             ])
@@ -347,7 +344,7 @@ mod integration_tests {
         );
 
         // Test that the binary works
-        let version_result = Command::new("./target/release/shimmy")
+        let version_result = Command::new("./target/debug/shimmy")
             .arg("--version")
             .output()
             .expect("Failed to run shimmy --version");
