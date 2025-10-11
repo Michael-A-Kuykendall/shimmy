@@ -136,7 +136,7 @@ jobs:
           --out xml \
           --output-dir coverage \
           --timeout 600 \
-          --exclude-files tests/mlx_support_regression_test.rs \
+          --lib \
           --verbose
 
     - name: Check coverage standards
