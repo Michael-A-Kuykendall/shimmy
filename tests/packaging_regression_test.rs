@@ -148,7 +148,7 @@ fn test_cargo_install_simulation() {
 
     // This test ensures that a fresh cargo install would succeed
     let output = Command::new("cargo")
-        .args(&["check", "--release", "--quiet"])
+        .args(&["check", "--quiet"])
         .output()
         .expect("Failed to run cargo check");
 
@@ -215,13 +215,7 @@ fn test_shimmy_llama_cpp_fork_packages_available() {
 
     // Check if we can build with our published shimmy packages
     let output = Command::new("cargo")
-        .args(&[
-            "check",
-            "--release",
-            "--no-default-features",
-            "--features",
-            "llama",
-        ])
+        .args(&["check", "--no-default-features", "--features", "llama"])
         .output()
         .expect("Failed to run cargo check with llama feature");
 
