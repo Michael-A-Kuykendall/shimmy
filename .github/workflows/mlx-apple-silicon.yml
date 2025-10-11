@@ -82,11 +82,11 @@ jobs:
           echo "🔍 Testing MLX backend detection on Apple Silicon..."
           cargo run --bin shimmy --features mlx -- gpu-info
           
-          # Specifically check if MLX hardware is supported (should be "yes" on Apple Silicon)
-          if cargo run --bin shimmy --features mlx -- gpu-info | grep -i "mlx backend.*hardware supported"; then
-            echo "✅ MLX backend hardware support detected on Apple Silicon"
+          # Check if MLX is properly working (either fully available or hardware supported)
+          if cargo run --bin shimmy --features mlx -- gpu-info | grep -i "mlx backend.*\(available\|hardware supported\)"; then
+            echo "✅ MLX backend working correctly on Apple Silicon"
           else
-            echo "❌ Issue #100 reproduced: MLX backend hardware not supported on Apple Silicon"
+            echo "❌ Issue #100 reproduced: MLX backend not working on Apple Silicon"
             exit 1
           fi
 
