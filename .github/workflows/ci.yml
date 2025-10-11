@@ -77,7 +77,7 @@ jobs:
     - name: Run Unit Tests (All Features)
       run: |
         echo "Running Unit Tests - All Features"
-        timeout 600s cargo test --lib --all-features --verbose
+        timeout 900s cargo test --lib --all-features --verbose
 
   # Code Coverage Analysis
   coverage:
@@ -260,6 +260,7 @@ jobs:
         cargo build --release --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
 
     - name: Verify binary
+      shell: bash
       run: |
         echo "✅ Build verification complete for ${{ matrix.target }}"
         ls -la target/${{ matrix.target }}/release/
