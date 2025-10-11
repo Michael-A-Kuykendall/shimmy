@@ -1,3 +1,4 @@
+use crate::invariant_ppt::shimmy_invariants;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -149,6 +150,20 @@ impl ModelAutoDiscovery {
         // Remove duplicates based on file hash or path
         discovered.sort_by(|a, b| a.path.cmp(&b.path));
         discovered.dedup_by(|a, b| a.path == b.path);
+
+        // PPT Invariant: Validate discovery results before returning
+        shimmy_invariants::assert_discovery_valid(discovered.len());
+
+        // PPT Invariant: Validate each discovered model
+        for model in &discovered {
+            // Windows path normalization for Issue #106
+            let path_str = if cfg!(target_os = "windows") {
+                model.path.to_string_lossy().replace('\\', "/")
+            } else {
+                model.path.to_string_lossy().to_string()
+            };
+            shimmy_invariants::assert_backend_selection_valid(&path_str, &model.model_type);
+        }
 
         Ok(discovered)
     }
@@ -350,6 +365,14 @@ impl ModelAutoDiscovery {
 
         let (model_type, parameter_count, quantization) = self.parse_filename(&filename);
 
+        // CRITICAL: All GGUF files must use Llama backend (PPT Invariant requirement)
+        // GGUF is the llama.cpp format, regardless of model family name
+        let backend_type = if path.extension().and_then(|s| s.to_str()) == Some("gguf") {
+            "Llama".to_string()
+        } else {
+            model_type
+        };
+
         // Generate a clean model name
         let name = self.generate_model_name(&filename);
 
@@ -361,7 +384,7 @@ impl ModelAutoDiscovery {
             path: path.to_path_buf(),
             lora_path,
             size_bytes: metadata.len(),
-            model_type,
+            model_type: backend_type,
             parameter_count,
             quantization,
         })

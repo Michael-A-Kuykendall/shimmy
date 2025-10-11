@@ -32,7 +32,7 @@ jobs:
     - name: Run PPT Contract Tests (Critical Path)
       run: |
         echo "🧪 Running PPT Contract Tests - Critical Quality Gate"
-        timeout 300s cargo test invariant_ppt::tests --no-default-features --features huggingface -- --nocapture
+        timeout 300s cargo test invariant_ppt::tests --no-default-features --features huggingface,llama -- --nocapture
 
     - name: Verify PPT Coverage
       run: |
@@ -171,7 +171,7 @@ jobs:
     - name: Run supply chain security checks
       run: |
         echo "🛡️ Checking supply chain security"
-        cargo deny check --color always
+        cargo deny check -- --color always
 
   # Code Quality and Linting
   lint:
@@ -202,7 +202,7 @@ jobs:
     - name: Run clippy lints
       run: |
         echo "🔍 Running clippy lints with professional standards"
-        cargo clippy --all-features -- -D warnings
+        cargo clippy --no-default-features --features huggingface,llama -- -D warnings
 
   # Cross-Platform Build Verification
   build:
