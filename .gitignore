@@ -12,6 +12,15 @@
 *.swp
 *.swo
 
+# AI Assistant Configuration (developer-specific, not for distribution)
+CLAUDE.md
+.cursor-instructions
+.copilot-instructions.md
+.github/copilot-instructions.md
+*copilot-instructions*
+*claude-instructions*
+*ai-instructions*
+
 # OS generated files
 .DS_Store
 .DS_Store?
