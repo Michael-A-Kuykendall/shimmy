@@ -7,6 +7,7 @@ mod auto_discovery;
 mod cache;
 mod cli;
 mod engine;
+mod invariant_ppt;
 mod main_integration;
 mod model_registry;
 mod observability;
