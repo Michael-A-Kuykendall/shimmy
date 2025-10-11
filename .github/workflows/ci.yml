@@ -67,11 +67,20 @@ jobs:
     - name: Check for local test results
       id: check-local-tests
       run: |
-        if [ -f ".test-cache/test-success-commit" ] && [ "$(cat .test-cache/test-success-commit)" = "${{ github.sha }}" ]; then
-          echo "cache-hit=true" >> $GITHUB_OUTPUT
-          echo "✅ Found local test results for commit ${{ github.sha }}"
-          echo "📋 Tests completed locally at: $(cat .test-cache/test-success-timestamp)"
-          echo "🚀 Skipping redundant CI test execution"
+        if [ -f ".test-cache/test-success-commit" ]; then
+          CACHED_COMMIT=$(cat .test-cache/test-success-commit)
+          CURRENT_COMMIT="${{ github.sha }}"
+          
+          # Check if cached commit is the same or an ancestor of current commit
+          if [ "$CACHED_COMMIT" = "$CURRENT_COMMIT" ] || git merge-base --is-ancestor "$CACHED_COMMIT" "$CURRENT_COMMIT" 2>/dev/null; then
+            echo "cache-hit=true" >> $GITHUB_OUTPUT
+            echo "✅ Found local test results for commit $CACHED_COMMIT"
+            echo "📋 Tests completed locally at: $(cat .test-cache/test-success-timestamp)"
+            echo "🚀 Skipping redundant CI test execution (cache valid for recent commits)"
+          else
+            echo "cache-hit=false" >> $GITHUB_OUTPUT
+            echo "🧪 Local test cache is outdated (commit $CACHED_COMMIT vs $CURRENT_COMMIT)"
+          fi
         else
           echo "cache-hit=false" >> $GITHUB_OUTPUT
           echo "🧪 No local test cache found, will run tests in CI"
