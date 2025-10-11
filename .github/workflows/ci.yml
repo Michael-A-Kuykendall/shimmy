@@ -32,7 +32,7 @@ jobs:
     - name: Run PPT Contract Tests (Critical Path)
       run: |
         echo "🧪 Running PPT Contract Tests - Critical Quality Gate"
-        timeout 300s cargo test invariant_ppt::tests --no-default-features --features huggingface -- --nocapture
+        timeout 300s cargo test --lib --features llama ppt -- --test-threads=1 --nocapture
 
     - name: Verify PPT Coverage
       run: |
