@@ -42,12 +42,7 @@ fn test_apple_feature_set_compilation() {
 fn test_gpu_info_with_mlx_compiled() {
     // Build with apple features and test gpu-info output (debug build for speed)
     let build_output = Command::new("cargo")
-        .args(&[
-            "build",
-            "--no-default-features",
-            "--features",
-            "apple",
-        ])
+        .args(&["build", "--no-default-features", "--features", "apple"])
         .output()
         .expect("Failed to build with apple features");
 
@@ -222,12 +217,7 @@ fn test_mlx_status_messages_comprehensive() {
 fn test_mlx_binary_status_messages() {
     // Build binary with apple features (includes MLX) - debug build for speed
     let build_output = Command::new("cargo")
-        .args(&[
-            "build", 
-            "--no-default-features",
-            "--features",
-            "apple",
-        ])
+        .args(&["build", "--no-default-features", "--features", "apple"])
         .output()
         .expect("Failed to build with apple features");
 
@@ -329,12 +319,7 @@ mod integration_tests {
     fn test_full_apple_feature_build_and_run() {
         // Full integration test: build and run with apple features (debug for speed)
         let build_result = Command::new("cargo")
-            .args(&[
-                "build",
-                "--no-default-features", 
-                "--features",
-                "apple",
-            ])
+            .args(&["build", "--no-default-features", "--features", "apple"])
             .output()
             .expect("Failed to build with apple features");
 

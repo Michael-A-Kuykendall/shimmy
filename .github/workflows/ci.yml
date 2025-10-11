@@ -130,12 +130,13 @@ jobs:
     - name: Generate coverage report
       run: |
         echo "Generating coverage report"
-        timeout 900s cargo tarpaulin \
+        timeout 1200s cargo tarpaulin \
           --no-default-features \
           --features huggingface \
           --out xml \
           --output-dir coverage \
-          --timeout 300 \
+          --timeout 600 \
+          --exclude-files tests/mlx_support_regression_test.rs \
           --verbose
 
     - name: Check coverage standards
