@@ -2,7 +2,7 @@ name: MLX Apple Silicon Testing
 
 on:
   push:
-    branches: [ main, 'feature/mlx*' ]
+    branches: [ main, 'feature/mlx*', 'issue-100-*' ]
   pull_request:
     branches: [ main ]
 
@@ -62,20 +62,39 @@ jobs:
       - name: Run MLX tests
         run: |
           echo "🧪 Running MLX-specific tests..."
+          # Activate virtual environment for MLX tests
+          source mlx-venv/bin/activate
           cargo test --features mlx mlx -- --nocapture
 
       - name: MLX smoke test
         run: |
           echo "💨 Running MLX smoke test..."
+          # Activate the virtual environment with MLX packages
+          source mlx-venv/bin/activate
+          
+          # Verify MLX Python packages are available
+          python3 -c "import mlx.core; print('✅ MLX Python packages found')" || echo "⚠️ MLX Python import failed"
+          
           # Build and run a basic MLX functionality test
           cargo run --bin shimmy --features mlx -- --help
           
-          # Test MLX backend detection
-          cargo run --bin shimmy --features mlx -- gpu-info | grep -i mlx || echo "MLX backend not detected"
+          # Test MLX backend detection - this is the core Issue #100 test
+          echo "🔍 Testing MLX backend detection on Apple Silicon..."
+          cargo run --bin shimmy --features mlx -- gpu-info
+          
+          # Check if MLX is properly working (either fully available or hardware supported)
+          if cargo run --bin shimmy --features mlx -- gpu-info | grep -i "mlx backend.*\(available\|hardware supported\)"; then
+            echo "✅ MLX backend working correctly on Apple Silicon"
+          else
+            echo "❌ Issue #100 reproduced: MLX backend not working on Apple Silicon"
+            exit 1
+          fi
 
       - name: Verify MLX integration
         run: |
           echo "✅ Verifying MLX integration..."
+          # Activate virtual environment for MLX integration tests
+          source mlx-venv/bin/activate
           # Test that MLX compiles and basic functions work
           cargo test --features mlx test_mlx_engine_creation || echo "MLX engine tests not yet implemented"
           

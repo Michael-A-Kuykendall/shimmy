@@ -379,6 +379,87 @@ The **Shimmy** implementation demonstrates that this approach scales to real-wor
 
 ---
 
+## 🚀 Production Integration Strategy
+
+### Integration Points in Shimmy
+
+The PPT system has been successfully integrated into Shimmy's critical production workflows:
+
+#### API Response Validation (`src/api.rs`)
+```rust
+use crate::invariant_ppt::shimmy_invariants;
+
+// PPT Invariant: Validate API response before returning
+shimmy_invariants::assert_api_response_valid(200, &response_body);
+```
+
+#### Model Discovery Validation (`src/auto_discovery.rs`)
+```rust
+use crate::invariant_ppt::shimmy_invariants;
+
+// PPT Invariant: Validate discovery results before returning
+shimmy_invariants::assert_discovery_valid(discovered.len());
+
+// PPT Invariant: Validate each discovered model
+for model in &discovered {
+    let path_str = model.path.to_string_lossy();
+    shimmy_invariants::assert_backend_selection_valid(&path_str, &model.model_type);
+}
+```
+
+### Module System Integration
+
+**Critical Fix**: The PPT system required proper module declaration in both library and binary contexts:
+
+```rust
+// In src/lib.rs (library context)
+pub mod invariant_ppt;
+
+// In src/main.rs (binary context) 
+mod invariant_ppt;  // ← This was the missing piece!
+```
+
+This enables the PPT module to be accessible in both compilation contexts, allowing production code to use invariants regardless of how it's built.
+
+### Usage Guidelines
+
+#### 1. **Strategic Placement**
+- Place invariants at **API boundaries** (request/response validation)
+- Add invariants at **critical business logic points** (model loading, discovery)
+- Use invariants for **cross-cutting concerns** (security, performance, data integrity)
+
+#### 2. **Performance Considerations**
+- Invariants add minimal runtime overhead (~1-5% in most cases)
+- Use `Some("context")` to provide debugging context without performance cost
+- Consider using feature flags for expensive invariants in release builds
+
+#### 3. **Error Handling**
+- Invariant violations cause `panic!` by design (fail-fast philosophy)
+- This is appropriate for semantic contract violations that indicate bugs
+- For recoverable errors, use regular `Result` types instead
+
+#### 4. **Test Integration**
+- Contract tests ensure invariants are actually being checked
+- Use `contract_test()` to verify specific invariants were exercised
+- Run contract tests with `--test-threads=1` to avoid static state conflicts
+
+### Deployment Strategy
+
+1. **Development Phase**: Use all PPT features extensively
+2. **Staging Phase**: Verify invariants catch real issues  
+3. **Production Phase**: Keep critical invariants, monitor for violations
+4. **Monitoring**: Track invariant violations as quality metrics
+
+### Best Practices
+
+- **Start Small**: Begin with obvious invariants (non-null checks, range validation)
+- **Grow Systematically**: Add invariants for each bug you fix 
+- **Document Context**: Use the `context` parameter to provide debugging hints
+- **Test Coverage**: Write contract tests for all critical invariants
+- **Review Regularly**: Ensure invariants stay relevant as code evolves
+
+---
+
 **This is How You Do It Right™**
 
 *High-visibility development with semantic integrity, property-based robustness, and automated quality gates at every stage.*

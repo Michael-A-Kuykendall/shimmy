@@ -134,6 +134,33 @@ else
     echo "❌ Issue #72 (GPU backend): Regression detected!"
 fi
 
+echo "🔄 Testing Issue #101 fix (Performance & compatibility improvements)..."
+if cargo test --test cli_integration_tests test_threading_optimization_performance --features huggingface >> issue-fix-output.log 2>&1; then
+    log_result "Issue #101 Threading" "PASS" "Smart threading optimization working"
+    echo "✅ Issue #101 (Threading): Fixed"
+else
+    log_result "Issue #101 Threading" "FAIL" "Threading optimization regression"
+    echo "❌ Issue #101 (Threading): Regression detected!"
+fi
+
+echo "🔄 Testing Issue #101 fix (Streaming output functionality)..."
+if cargo test --test cli_integration_tests test_streaming_functionality --features huggingface >> issue-fix-output.log 2>&1; then
+    log_result "Issue #101 Streaming" "PASS" "Streaming output working properly"
+    echo "✅ Issue #101 (Streaming): Fixed"
+else
+    log_result "Issue #101 Streaming" "FAIL" "Streaming output regression"
+    echo "❌ Issue #101 (Streaming): Regression detected!"
+fi
+
+echo "🔄 Testing Issue #101 fix (OLLAMA_MODELS environment variable)..."
+if cargo test --test cli_integration_tests test_ollama_models_environment_variable --features huggingface >> issue-fix-output.log 2>&1; then
+    log_result "Issue #101 OLLAMA_MODELS" "PASS" "OLLAMA_MODELS env var support working"
+    echo "✅ Issue #101 (OLLAMA_MODELS): Fixed"
+else
+    log_result "Issue #101 OLLAMA_MODELS" "FAIL" "OLLAMA_MODELS support regression"
+    echo "❌ Issue #101 (OLLAMA_MODELS): Regression detected!"
+fi
+
 echo ""
 echo "🔒 Phase 6: Security & Error Handling"
 echo "====================================="

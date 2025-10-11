@@ -31,6 +31,7 @@ pub fn assert_invariant(condition: bool, message: &str, context: Option<&str>) {
 }
 
 /// Property-based test helper - tests behaviors across input ranges
+#[cfg(test)]
 pub fn property_test<F>(name: &str, test_fn: F)
 where
     F: Fn() -> bool,
@@ -51,6 +52,7 @@ where
 }
 
 /// Contract test - verifies that specific invariants were actually checked
+#[cfg(test)]
 pub fn contract_test(name: &str, required_invariants: &[&str]) {
     println!("📋 Running contract test: {}", name);
 
@@ -81,6 +83,7 @@ pub fn contract_test(name: &str, required_invariants: &[&str]) {
 }
 
 /// Exploration test helper - for temporary tests during development
+#[cfg(test)]
 pub fn explore_test<F>(name: &str, test_fn: F)
 where
     F: Fn() -> bool,
@@ -94,6 +97,7 @@ where
 }
 
 /// Clear the invariant log (for test isolation)
+#[cfg(test)]
 pub fn clear_invariant_log() {
     // Handle poisoned mutexes by force-clearing the data
     match INVARIANT_LOG.lock() {
@@ -113,6 +117,7 @@ pub fn clear_invariant_log() {
 }
 
 /// Get all invariants that have been checked
+#[cfg(test)]
 pub fn checked_invariants() -> Vec<String> {
     match INVARIANT_LOG.lock() {
         Ok(log) => log.iter().cloned().collect(),
@@ -121,6 +126,7 @@ pub fn checked_invariants() -> Vec<String> {
 }
 
 /// Get all failed invariants
+#[cfg(test)]
 pub fn failed_invariants() -> Vec<String> {
     match FAILED_INVARIANTS.lock() {
         Ok(failed) => failed.clone(),
@@ -133,6 +139,7 @@ pub mod shimmy_invariants {
     use super::assert_invariant;
 
     /// Model loading invariants
+    #[cfg(test)]
     pub fn assert_model_loaded(model_name: &str, success: bool) {
         assert_invariant(
             !model_name.is_empty(),
@@ -150,6 +157,7 @@ pub mod shimmy_invariants {
     }
 
     /// Generation invariants
+    #[cfg(test)]
     pub fn assert_generation_valid(prompt: &str, response: &str) {
         assert_invariant(
             !prompt.is_empty(),

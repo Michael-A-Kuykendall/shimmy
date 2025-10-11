@@ -54,7 +54,6 @@ ollama_test_result.txt
 rustchain.exe
 coverage_run.log
 *.ps1
-*.sh
 SHOWCASE-SUMMARY.md
 
 # Temporary files and analysis
