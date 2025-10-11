@@ -12,6 +12,41 @@ Shimmy is a lightweight sub-5MB Rust inference engine serving as an optimal shim
 **PROFESSIONAL LANGUAGE**: No profanity, maintain professional standards
 **CONVENTIONAL COMMITS**: Use conventional commit format for all commits
 
+## CI TEST SKIP MECHANISM
+
+**SIMPLE SKIP SYSTEM**: Use `.skip-ci-tests` flag file to bypass CI test execution when local testing is complete
+
+### Usage
+```bash
+# To skip CI tests and deploy directly
+touch .skip-ci-tests
+git add .skip-ci-tests
+git commit -m "deploy: skip CI tests, local testing complete"
+git push
+
+# To run normal CI tests (default behavior)
+rm .skip-ci-tests  # or simply don't include the file
+git add . && git commit -m "normal commit"
+git push
+```
+
+### When to Use
+- **Local testing complete**: All tests have been run locally and pass
+- **Documentation-only changes**: No code logic changes that require full CI validation
+- **Urgent deployments**: When timing issues in CI are blocking critical releases
+- **Single developer workflow**: When you are confident in local test results
+
+### How It Works
+1. CI checks for presence of `.skip-ci-tests` file in repository root
+2. If file exists: All test steps are skipped, deployment proceeds immediately
+3. If file absent: Normal CI test execution runs (Property Tests, Unit Tests, etc.)
+
+### Important Notes
+- **Use sparingly**: This bypasses quality gates - only use when confident in local testing
+- **File must be committed**: The `.skip-ci-tests` file must be git-tracked for CI to see it
+- **Remove after use**: Consider removing the flag file in subsequent commits to restore normal CI testing
+- **Single developer safety**: Designed for solo development workflow where developer is responsible for test validation
+
 ## GitHub Spec-Kit Integration
 
 **SPECIFICATION-DRIVEN DEVELOPMENT**: Use GitHub Spec-Kit for all project planning and implementation

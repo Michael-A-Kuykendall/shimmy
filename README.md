@@ -375,26 +375,18 @@ Shimmy maintains high code quality through comprehensive testing:
 - **Automated CI/CD pipeline** with quality gates
 - **Runtime invariant checking** for critical operations
 - **Cross-platform compatibility testing**
-- **Smart test caching** - tests only run once (locally OR CI), eliminating redundant execution
-
 ### Development Testing
 
-Run the complete test suite with integrated caching:
+Run the complete test suite:
 
 ```bash
 # Using cargo aliases
-cargo test-cached          # Full test suite with CI cache integration
 cargo test-quick           # Quick development tests
 
 # Using Makefile  
-make test                  # Full test suite with CI cache integration
+make test                  # Full test suite
 make test-quick            # Quick development tests
-
-# Windows batch script
-test-with-cache.bat        # Windows-compatible test runner
 ```
-
-The test caching system creates local validation tokens that CI recognizes, so tests only need to pass once either locally or in CI - no redundant execution.
 
 See our [testing approach](docs/ppt-invariant-testing.md) for technical details.
 
