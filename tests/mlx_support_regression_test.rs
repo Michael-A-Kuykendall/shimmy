@@ -24,13 +24,13 @@ fn test_mlx_feature_compilation() {
 #[test]
 fn test_apple_feature_set_compilation() {
     // Test that the 'apple' feature set (which includes MLX) compiles
-    
+
     // Skip on non-macOS platforms since MLX is Apple-specific
     if !cfg!(target_os = "macos") {
         println!("ℹ️ Skipping apple feature compilation test on non-macOS platform");
         return;
     }
-    
+
     let output = Command::new("cargo")
         .args(&["check", "--no-default-features", "--features", "apple"])
         .output()
@@ -52,7 +52,7 @@ fn test_gpu_info_with_mlx_compiled() {
         println!("ℹ️ Skipping MLX GPU info test on non-macOS platform");
         return;
     }
-    
+
     // Build with apple features and test gpu-info output (debug build for speed)
     let build_output = Command::new("cargo")
         .args(&["build", "--no-default-features", "--features", "apple"])
@@ -233,7 +233,7 @@ fn test_mlx_binary_status_messages() {
         println!("ℹ️ Skipping MLX binary status test on non-macOS platform");
         return;
     }
-    
+
     // Build binary with apple features (includes MLX) - debug build for speed
     let build_output = Command::new("cargo")
         .args(&["build", "--no-default-features", "--features", "apple"])
@@ -341,7 +341,7 @@ mod integration_tests {
             println!("ℹ️ Skipping full Apple feature test on non-macOS platform");
             return;
         }
-        
+
         // Full integration test: build and run with apple features (debug for speed)
         let build_result = Command::new("cargo")
             .args(&["build", "--no-default-features", "--features", "apple"])
