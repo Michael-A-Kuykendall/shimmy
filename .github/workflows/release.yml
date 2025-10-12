@@ -21,14 +21,14 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: "🚧 GATE 1/6: Core Build Validation"
+      - name: "🚧 GATE 1/7: Core Build Validation"
         run: |
           echo "::group::Gate 1: Core Build"
           cargo build --release --no-default-features --features huggingface
           echo "✅ Core build successful"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 2/6: CUDA Build Validation (No Timeout - Can Take Hours)"
+      - name: "🚧 GATE 2/7: CUDA Build Validation (No Timeout - Can Take Hours)"
         run: |
           echo "::group::Gate 2: CUDA Build"
           echo "⏳ CUDA compilation can take 19+ hours - letting it run to natural completion"
@@ -49,7 +49,7 @@ jobs:
           fi
           echo "::endgroup::"
 
-      - name: "🚧 GATE 3/6: Template Packaging Validation (Issue #60 Protection)"
+      - name: "🚧 GATE 3/7: Template Packaging Validation (Issue #60 Protection)"
         run: |
           echo "::group::Gate 3: Template Packaging"
           # Check for Docker templates with OS-agnostic path handling
@@ -64,7 +64,7 @@ jobs:
           fi
           echo "::endgroup::"
 
-      - name: "🚧 GATE 4/6: Binary Size Constitutional Limit (20MB)"
+      - name: "🚧 GATE 4/7: Binary Size Constitutional Limit (20MB)"
         run: |
           echo "::group::Gate 4: Binary Size"
           size=$(stat -c%s target/release/shimmy 2>/dev/null || echo "0")
@@ -76,7 +76,7 @@ jobs:
           echo "✅ Binary size ${size} bytes within constitutional limit"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 5/6: Test Suite Validation"
+      - name: "🚧 GATE 5/7: Test Suite Validation"
         run: |
           echo "::group::Gate 5: Tests"
           # Run tests that don't require model files (exclude integration tests needing .gguf files)
@@ -84,7 +84,7 @@ jobs:
           echo "✅ Core tests passing"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 6/6: Documentation Validation"
+      - name: "🚧 GATE 6/7: Documentation Validation"
         run: |
           echo "::group::Gate 6: Documentation"
           
@@ -104,16 +104,44 @@ jobs:
           fi
           echo "::endgroup::"
 
+      - name: "🚧 GATE 7/7: Crates.io Publication Validation"
+        run: |
+          echo "::group::Gate 7: Crates.io Validation"
+          echo "🧪 Testing crates.io publication readiness..."
+          
+          # Handle uncommitted Cargo.lock (common issue)
+          if git status --porcelain | grep -q "Cargo.lock"; then
+            echo "⚠️ Cargo.lock has uncommitted changes (expected from dependency resolution)"
+            echo "🔄 Using --allow-dirty flag for crates.io validation"
+            DIRTY_FLAG="--allow-dirty"
+          else
+            echo "✅ No uncommitted changes detected"
+            DIRTY_FLAG=""
+          fi
+          
+          # Dry-run validation to catch issues before real release
+          echo "🔍 Running cargo publish --dry-run..."
+          if cargo publish --dry-run $DIRTY_FLAG; then
+            echo "✅ Crates.io dry-run validation PASSED"
+            echo "📦 Package builds successfully and is ready for publication"
+          else
+            echo "❌ Crates.io dry-run validation FAILED"
+            echo "🚫 Blocking release until crates.io issues are resolved"
+            exit 1
+          fi
+          echo "::endgroup::"
+
       - name: "🎯 RELEASE GATES SUMMARY"
         id: gates
         run: |
-          echo "🎉 ALL 6 MANDATORY GATES PASSED!"
-          echo "✅ Core Build"
-          echo "✅ CUDA Timeout Protection (Issue #59)"
-          echo "✅ Template Packaging (Issue #60)"
-          echo "✅ Binary Size Constitutional Limit"
-          echo "✅ Test Suite"
-          echo "✅ Documentation"
+          echo "🎉 ALL 7 MANDATORY GATES PASSED!"
+          echo "✅ Gate 1: Core Build"
+          echo "✅ Gate 2: CUDA Timeout Protection (Issue #59)"
+          echo "✅ Gate 3: Template Packaging (Issue #60)"
+          echo "✅ Gate 4: Binary Size Constitutional Limit"
+          echo "✅ Gate 5: Test Suite"
+          echo "✅ Gate 6: Documentation"
+          echo "✅ Gate 7: Crates.io Publication Validation"
           echo "should_publish=true" >> $GITHUB_OUTPUT
 
       # 🚀 REUSE GATE BINARIES - NO RECOMPILATION WASTE
@@ -239,3 +267,27 @@ jobs:
             release-files/* \
             --title "Shimmy ${{ github.ref_name }}" \
             --generate-notes
+
+      - name: Install Rust for crates.io publishing
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: "📦 Publish to crates.io"
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          echo "🚀 Publishing shimmy ${{ github.ref_name }} to crates.io..."
+          
+          # Handle uncommitted Cargo.lock (same logic as Gate 7)
+          if git status --porcelain | grep -q "Cargo.lock"; then
+            echo "⚠️ Cargo.lock has uncommitted changes (using --allow-dirty)"
+            DIRTY_FLAG="--allow-dirty"
+          else
+            echo "✅ No uncommitted changes detected"
+            DIRTY_FLAG=""
+          fi
+          
+          # Publish to crates.io (dry-run already validated in Gate 7)
+          cargo publish $DIRTY_FLAG
+          
+          echo "✅ Successfully published shimmy ${{ github.ref_name }} to crates.io!"
+          echo "📦 Users can now install with: cargo install shimmy"

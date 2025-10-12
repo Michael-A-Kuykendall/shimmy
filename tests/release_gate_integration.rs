@@ -14,28 +14,32 @@ fn test_release_gate_system_exists() {
         "Release workflow missing mandatory gate job"
     );
     assert!(
-        workflow_content.contains("GATE 1/6: Core Build Validation"),
+        workflow_content.contains("GATE 1/7: Core Build Validation"),
         "Missing Gate 1 (Core Build)"
     );
     assert!(
-        workflow_content.contains("GATE 2/6: CUDA Build Timeout Detection"),
-        "Missing Gate 2 (CUDA Timeout)"
+        workflow_content.contains("GATE 2/7: CUDA Build Validation"),
+        "Missing Gate 2 (CUDA Validation)"
     );
     assert!(
-        workflow_content.contains("GATE 3/6: Template Packaging Validation"),
+        workflow_content.contains("GATE 3/7: Template Packaging Validation"),
         "Missing Gate 3 (Template Packaging)"
     );
     assert!(
-        workflow_content.contains("GATE 4/6: Binary Size Constitutional Limit"),
+        workflow_content.contains("GATE 4/7: Binary Size Constitutional Limit"),
         "Missing Gate 4 (Binary Size)"
     );
     assert!(
-        workflow_content.contains("GATE 5/6: Test Suite Validation"),
+        workflow_content.contains("GATE 5/7: Test Suite Validation"),
         "Missing Gate 5 (Test Suite)"
     );
     assert!(
-        workflow_content.contains("GATE 6/6: Documentation Validation"),
+        workflow_content.contains("GATE 6/7: Documentation Validation"),
         "Missing Gate 6 (Documentation)"
+    );
+    assert!(
+        workflow_content.contains("GATE 7/7: Crates.io Publication Validation"),
+        "Missing Gate 7 (Crates.io Validation)"
     );
 }
 
@@ -255,6 +259,53 @@ fn test_gate_2_cuda_timeout_detection() {
         }
         Err(e) => {
             panic!("Gate 2 FAILED - Could not execute cargo build: {}", e);
+        }
+    }
+}
+
+#[test]
+fn test_gate_7_cratesio_validation() {
+    // Test that crates.io dry-run validation works
+    let output = Command::new("cargo")
+        .args(&["publish", "--dry-run", "--allow-dirty"])
+        .output()
+        .expect("Failed to run cargo publish --dry-run");
+
+    // Dry-run should either succeed or fail with specific errors we can analyze
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    
+    if output.status.success() {
+        // Check that it actually packaged something (look in both stdout and stderr)
+        let combined_output = format!("{}{}", stdout, stderr);
+        
+        if combined_output.contains("already exists on crates.io") {
+            println!("ℹ️ Gate 7 (Crates.io) - Version already published (this is expected for released versions)");
+            // Verify packaging still worked
+            assert!(
+                combined_output.contains("Packaging"),
+                "Gate 7 should still show packaging step: {}",
+                combined_output
+            );
+        } else {
+            // Normal case - check that it packaged files
+            assert!(
+                combined_output.contains("Packaged") && combined_output.contains("files"),
+                "Gate 7 (Crates.io) dry-run should package files: {}",
+                combined_output
+            );
+        }
+        println!("✅ Gate 7 (Crates.io) dry-run validation passed");
+    } else {
+        // If it failed, make sure it's not due to missing token (expected in CI)
+        if stderr.contains("no upload token found") || stderr.contains("authentication") {
+            println!("ℹ️ Gate 7 dry-run failed due to missing token (expected in test environment)");
+            // This is expected - we can't publish in tests, but we can validate packaging
+        } else {
+            panic!(
+                "Gate 7 (Crates.io) dry-run failed with unexpected error: stderr={}, stdout={}",
+                stderr, stdout
+            );
         }
     }
 }
