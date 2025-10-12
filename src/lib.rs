@@ -1,6 +1,7 @@
 // Suppress function pointer comparison warnings from auto-generated bindings
 #![allow(unpredictable_function_pointer_comparisons)]
 
+pub mod anthropic_compat;
 pub mod api;
 pub mod api_errors;
 pub mod auto_discovery;
