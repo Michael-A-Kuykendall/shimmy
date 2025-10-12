@@ -1,6 +1,11 @@
 ## Description
 Brief description of changes and motivation.
 
+**Branch Naming Convention**: `issue-{number}-{human-readable-description}`  
+**Example**: `issue-101-performance-cpu-usage-streaming-glibc-compatibility`
+
+**Related Issue**: Fixes #___
+
 ## Type of Change
 - [ ] Bug fix (non-breaking change that fixes an issue)
 - [ ] New feature (non-breaking change that adds functionality)
