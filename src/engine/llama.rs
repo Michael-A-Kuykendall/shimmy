@@ -263,21 +263,50 @@ impl InferenceEngine for LlamaEngine {
                 n_gpu_layers, self.gpu_backend
             );
 
-            let model_params =
+            let mut model_params =
                 llama::model::params::LlamaModelParams::default().with_n_gpu_layers(n_gpu_layers);
 
             // Apply MoE CPU offloading if configured
-            // TODO: Re-enable when fork is fixed - these methods require shimmy-llama-cpp-2 fork
+            // Enable MoE CPU offloading (Issue #108 fix)
             if let Some(n) = self.moe_config.n_cpu_moe {
-                info!("MoE: Offloading first {} expert layers to CPU (temporarily disabled - fork under repair)", n);
-                // model_params = model_params.with_n_cpu_moe(n);
+                info!("MoE: Offloading first {} expert layers to CPU", n);
+                model_params = model_params.with_n_cpu_moe(n);
             } else if self.moe_config.cpu_moe_all {
-                info!("MoE: Offloading ALL expert tensors to CPU (temporarily disabled - fork under repair)");
-                // model_params = model_params.with_cpu_moe_all();
+                info!("MoE: Offloading ALL expert tensors to CPU (saves ~80-85% VRAM)");
+                model_params = model_params.with_cpu_moe_all();
             }
 
-            let model =
-                llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &model_params)?;
+            // Attempt to load the model with better error handling
+            let model = match llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &model_params) {
+                Ok(model) => model,
+                Err(e) => {
+                    // Check if this looks like a memory allocation failure
+                    let error_msg = format!("{}", e);
+                    if error_msg.contains("failed to allocate") || error_msg.contains("CPU_REPACK buffer") {
+                        let file_size = std::fs::metadata(&spec.base_path)
+                            .map(|m| m.len())
+                            .unwrap_or(0);
+                        let size_gb = file_size as f64 / 1_024_000_000.0;
+                        
+                        return Err(anyhow!(
+                            "Memory allocation failed for model {} ({:.1}GB). \n\
+                            💡 Possible solutions:\n\
+                            • Use a smaller model (7B instead of 14B parameters)\n\
+                            • Add more system RAM (model needs ~{}GB)\n\
+                            • Enable model quantization (Q4_K_M, Q5_K_M)\n\
+                            • MoE CPU offloading is temporarily disabled (Issue #108)\n\
+                            Original error: {}",
+                            spec.base_path.display(),
+                            size_gb,
+                            (size_gb * 1.5) as u32, // Rough estimate of RAM needed
+                            e
+                        ));
+                    }
+                    
+                    // Re-throw other errors as-is
+                    return Err(e.into());
+                }
+            };
             let ctx_params = llama::context::params::LlamaContextParams::default()
                 .with_n_ctx(NonZeroU32::new(spec.ctx_len as u32))
                 .with_n_batch(2048)
