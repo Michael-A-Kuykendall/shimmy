@@ -184,6 +184,7 @@ jobs:
           sudo apt-get install -y musl-tools musl-dev
 
       - name: Build binary
+        shell: bash
         run: |
           if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
             # For musl builds, use huggingface-only to avoid llama.cpp C++ compilation issues
