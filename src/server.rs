@@ -1,4 +1,4 @@
-use crate::{api, openai_compat, util::diag::diag_handler, AppState};
+use crate::{anthropic_compat, api, openai_compat, util::diag::diag_handler, AppState};
 use axum::extract::Request;
 use axum::{
     extract::State,
@@ -143,6 +143,8 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
             post(openai_compat::chat_completions),
         )
         .route("/v1/models", get(openai_compat::models))
+        // Anthropic Claude API compatibility
+        .route("/v1/messages", post(anthropic_compat::messages))
         .layer(middleware::from_fn(cors_layer))
         .with_state(state);
     axum::serve(listener, app).await?;
