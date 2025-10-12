@@ -8,6 +8,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
+use crate::invariant_ppt::shimmy_invariants;
 use crate::{engine::GenOptions, templates::TemplateFamily, AppState};
 use std::sync::Arc;
 
@@ -45,11 +46,20 @@ pub async fn generate(
     Json(req): Json<GenerateRequest>,
 ) -> impl IntoResponse {
     let Some(spec) = state.registry.to_spec(&req.model) else {
+        tracing::error!("Model '{}' not found in registry", req.model);
         return axum::http::StatusCode::NOT_FOUND.into_response();
     };
     let engine = &state.engine;
-    let Ok(loaded) = engine.load(&spec).await else {
-        return axum::http::StatusCode::BAD_GATEWAY.into_response();
+    let loaded = match engine.load(&spec).await {
+        Ok(loaded) => loaded,
+        Err(e) => {
+            tracing::error!(
+                "Failed to load model '{}': {} (Issue #106 Windows debugging)",
+                req.model,
+                e
+            );
+            return axum::http::StatusCode::BAD_GATEWAY.into_response();
+        }
     };
 
     // Construct prompt
@@ -109,8 +119,21 @@ pub async fn generate(
         Sse::new(stream).into_response()
     } else {
         match loaded.generate(&prompt, opts, None).await {
-            Ok(full) => Json(GenerateResponse { response: full }).into_response(),
-            Err(_) => axum::http::StatusCode::BAD_GATEWAY.into_response(),
+            Ok(full) => {
+                tracing::debug!(
+                    "Generation completed successfully for model '{}'",
+                    req.model
+                );
+                Json(GenerateResponse { response: full }).into_response()
+            }
+            Err(e) => {
+                tracing::error!(
+                    "Generation failed for model '{}': {} (Issue #106 Windows debugging)",
+                    req.model,
+                    e
+                );
+                axum::http::StatusCode::BAD_GATEWAY.into_response()
+            }
         }
     }
 }
@@ -281,13 +304,24 @@ pub async fn discover_models(State(_state): State<Arc<AppState>>) -> impl IntoRe
                 })
                 .collect();
 
-            Json(serde_json::json!({
+            let response_json = serde_json::json!({
                 "discovered": model_infos.len(),
                 "models": model_infos
-            }))
-            .into_response()
+            });
+            let response_body = response_json.to_string();
+
+            // PPT Invariant: Validate API response before returning
+            shimmy_invariants::assert_api_response_valid(200, &response_body);
+
+            Json(response_json).into_response()
         }
-        Err(_e) => axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        Err(_e) => {
+            // PPT Invariant: Validate error response
+            let error_response = r#"{"error":"Discovery failed"}"#;
+            shimmy_invariants::assert_api_response_valid(500, error_response);
+
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
     }
 }
 

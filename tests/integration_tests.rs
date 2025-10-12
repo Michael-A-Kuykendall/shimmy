@@ -98,7 +98,7 @@ fn test_cli_parsing() {
     let args = vec!["shimmy", "serve", "--bind", "0.0.0.0:8080"];
     let cli = Cli::try_parse_from(args).unwrap();
     match cli.cmd {
-        Command::Serve { bind } => assert_eq!(bind, "0.0.0.0:8080"),
+        Command::Serve { bind, .. } => assert_eq!(bind, "0.0.0.0:8080"),
         _ => panic!("Expected Serve command"),
     }
 

@@ -186,7 +186,7 @@ fn test_version_validation_prevents_regression() {
 
 #[cfg(test)]
 mod ci_validation_tests {
-    use super::*;
+    // Note: Functions imported as needed in each test
 
     #[test]
     fn test_ci_version_validation_logic() {

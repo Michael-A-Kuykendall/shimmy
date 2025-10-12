@@ -12,6 +12,15 @@
 *.swp
 *.swo
 
+# AI Assistant Configuration (developer-specific, not for distribution)
+CLAUDE.md
+.cursor-instructions
+.copilot-instructions.md
+.github/copilot-instructions.md
+*copilot-instructions*
+*claude-instructions*
+*ai-instructions*
+
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -54,7 +63,6 @@ ollama_test_result.txt
 rustchain.exe
 coverage_run.log
 *.ps1
-*.sh
 SHOWCASE-SUMMARY.md
 
 # Temporary files and analysis
