@@ -18,6 +18,7 @@ mod server;
 mod templates;
 mod util {
     pub mod diag;
+    pub mod memory;
 }
 
 use clap::Parser;
@@ -124,7 +125,7 @@ fn print_startup_diagnostics(
         println!("🔧 Backend: Stub mode (no llama feature)");
     }
 
-    // MoE configuration
+    // MoE configuration - NOW WORKING (Issue #108 fix)
     #[cfg(feature = "llama")]
     if cpu_moe || n_cpu_moe.is_some() {
         if let Some(n) = n_cpu_moe {

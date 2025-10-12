@@ -24,6 +24,7 @@ pub mod templates;
 pub mod tools;
 pub mod util {
     pub mod diag;
+    pub mod memory;
 }
 pub mod invariant_ppt;
 pub mod workflow;
