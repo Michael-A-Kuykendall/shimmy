@@ -1,9 +1,9 @@
 <div align="center">
   <img src="assets/shimmy-logo.png" alt="Shimmy Logo" width="300" height="auto" />
 
-  # The Privacy-First Alternative to Ollama
+  # The Lightweight OpenAI API Server
 
-  ### 🔒 Local AI Without the Lock-in 🚀
+  ### 🔒 Local Inference Without Dependencies 🚀
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Security](https://img.shields.io/badge/Security-Audited-green)](https://github.com/Michael-A-Kuykendall/shimmy/security)
@@ -36,23 +36,8 @@ Shimmy is a **4.8MB single-binary** that provides **100% OpenAI-compatible endpo
 
 ## Developer Tools
 
-Whether you're forking Shimmy or integrating it as a service, we provide:
+Whether you're forking Shimmy or integrating it as a service, we provide complete documentation and integration templates.
 
-- **Integration Templates**: Guidance for embedding Shimmy in your projects
-- **Development Specifications**: GitHub Spec-Kit methodology for planning features
-- **Architectural Guarantees**: Constitutional principles ensuring reliability and lightweight design
-- **Complete Documentation**: Everything you need to build on Shimmy
-
-### GitHub Spec-Kit Integration
-
-Shimmy includes [GitHub Spec-Kit methodology](https://github.com/github/spec-kit) for systematic development:
-
-- Systematic workflow: `/specify` → `/plan` → `/tasks` → implement
-- AI-assistant compatible (Claude Code, GitHub Copilot)
-- Professional specification templates
-- Built-in architectural validation
-
-[**Developer Guide →**](DEVELOPERS.md) • [**Learn Spec-Kit →**](https://github.com/github/spec-kit)
 
 ### Try it in 30 seconds
 
@@ -74,14 +59,15 @@ curl -s http://127.0.0.1:11435/v1/chat/completions \
       }' | jq -r '.choices[0].message.content'
 ```
 
-## 🚀 Works with Your Existing Tools
+## 🚀 Compatible with OpenAI SDKs and Tools
 
 **No code changes needed** - just change the API endpoint:
 
+- **Any OpenAI client**: Python, Node.js, curl, etc.
+- **Development applications**: Compatible with standard SDKs
 - **VSCode Extensions**: Point to `http://localhost:11435`
 - **Cursor Editor**: Built-in OpenAI compatibility
 - **Continue.dev**: Drop-in model provider
-- **Any OpenAI client**: Python, Node.js, curl, etc.
 
 ### Use with OpenAI SDKs
 
@@ -122,7 +108,7 @@ print(resp.choices[0].message.content)
 
 ## ⚡ Zero Configuration Required
 
-- **Auto-discovers models** from Hugging Face cache, Ollama, local dirs
+- **Automatically finds models** from Hugging Face cache, Ollama, local dirs
 - **Auto-allocates ports** to avoid conflicts
 - **Auto-detects LoRA adapters** for specialized models
 - **Just works** - no config files, no setup wizards
@@ -239,7 +225,7 @@ shimmy serve
 shimmy serve --bind 127.0.0.1:11435
 ```
 
-Point your AI tools to the displayed port — VSCode Copilot, Cursor, Continue.dev all work instantly.
+Point your development tools to the displayed port — VSCode Copilot, Cursor, Continue.dev all work instantly.
 
 ## 📦 Download & Install
 
@@ -340,14 +326,14 @@ shimmy gpu-info                 # Show GPU backend status
 ### 🚀 Advanced Features
 
 - **🧠 MOE CPU Offloading**: Hybrid GPU/CPU processing for large models (70B+)
-- **🎯 Smart Model Filtering**: Automatically excludes non-LLM models (Stable Diffusion, Whisper, CLIP)
+- **🎯 Smart Model Filtering**: Automatically excludes non-language models (Stable Diffusion, Whisper, CLIP)
 - **🛡️ 6-Gate Release Validation**: Constitutional quality limits ensure reliability
 - **⚡ Smart Model Preloading**: Background loading with usage tracking for instant model switching
 - **💾 Response Caching**: LRU + TTL cache delivering 20-40% performance gains on repeat queries
 - **🚀 Integration Templates**: One-command deployment for Docker, Kubernetes, Railway, Fly.io, FastAPI, Express
 - **🔄 Request Routing**: Multi-instance support with health checking and load balancing
 - **📊 Advanced Observability**: Real-time metrics with self-optimization and Prometheus integration
-- **🔗 RustChain Integration**: Universal workflow transpilation with LLM-powered orchestration
+- **🔗 RustChain Integration**: Universal workflow transpilation with workflow orchestration
 
 ## Community & Support
 
@@ -389,6 +375,18 @@ Shimmy maintains high code quality through comprehensive testing:
 - **Automated CI/CD pipeline** with quality gates
 - **Runtime invariant checking** for critical operations
 - **Cross-platform compatibility testing**
+### Development Testing
+
+Run the complete test suite:
+
+```bash
+# Using cargo aliases
+cargo test-quick           # Quick development tests
+
+# Using Makefile  
+make test                  # Full test suite
+make test-quick            # Quick development tests
+```
 
 See our [testing approach](docs/ppt-invariant-testing.md) for technical details.
 
@@ -406,4 +404,4 @@ MIT License - forever and always.
 
 **Forever maintainer**: Michael A. Kuykendall
 **Promise**: This will never become a paid product
-**Mission**: Making local AI development frictionless
+**Mission**: Making local model inference simple and reliable
