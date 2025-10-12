@@ -1989,7 +1989,7 @@ dependencies = [
 
 [[package]]
 name = "shimmy"
-version = "1.7.2"
+version = "1.7.3"
 dependencies = [
  "anyhow",
  "assert_cmd",
