@@ -62,7 +62,34 @@ impl InferenceEngineAdapter {
         // Check file extension and path patterns to determine optimal backend
         let path_str = spec.base_path.to_string_lossy();
 
-        // FIRST: Check for HuggingFace model IDs (format: "org/model-name")
+        // FIRST: Check for explicit file extensions - these take priority over model IDs
+        if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
+            match ext {
+                "safetensors" => {
+                    // SafeTensors files ALWAYS use SafeTensors engine, regardless of source
+                    return BackendChoice::SafeTensors;
+                }
+                "gguf" => {
+                    #[cfg(feature = "llama")]
+                    {
+                        return BackendChoice::Llama;
+                    }
+                    #[cfg(not(feature = "llama"))]
+                    {
+                        // This shouldn't happen with default features, but handle gracefully
+                        panic!("GGUF file detected but llama feature not enabled. Please install with --features llama");
+                    }
+                }
+                #[cfg(feature = "mlx")]
+                "npz" | "mlx" => {
+                    // MLX native format
+                    return BackendChoice::MLX;
+                }
+                _ => {} // Continue with other checks
+            }
+        }
+
+        // SECOND: Check for HuggingFace model IDs (format: "org/model-name")
         #[cfg(feature = "huggingface")]
         {
             if path_str.contains('/') && !path_str.contains('\\') && !path_str.contains('.') {
@@ -71,16 +98,9 @@ impl InferenceEngineAdapter {
             }
         }
 
-        // Check for MLX files FIRST on Apple Silicon - best performance
+        // THIRD: Check for MLX compatibility on Apple Silicon
         #[cfg(feature = "mlx")]
         {
-            if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
-                if ext == "npz" || ext == "mlx" {
-                    // MLX native format
-                    return BackendChoice::MLX;
-                }
-            }
-
             // Check if we're on Apple Silicon and model is MLX-compatible
             if cfg!(target_os = "macos") && std::env::consts::ARCH == "aarch64" {
                 let model_name = spec.name.to_lowercase();
@@ -95,27 +115,7 @@ impl InferenceEngineAdapter {
             }
         }
 
-        // Check for SafeTensors files SECOND - native Rust implementation
-        if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
-            if ext == "safetensors" {
-                return BackendChoice::SafeTensors;
-            }
-        }
-
-        // Check for GGUF files by extension - these should use LlamaEngine
-        if let Some(ext) = spec.base_path.extension().and_then(|s| s.to_str()) {
-            if ext == "gguf" {
-                #[cfg(feature = "llama")]
-                {
-                    return BackendChoice::Llama;
-                }
-                #[cfg(not(feature = "llama"))]
-                {
-                    // This shouldn't happen with default features, but handle gracefully
-                    panic!("GGUF file detected but llama feature not enabled. Please install with --features llama");
-                }
-            }
-        }
+        // FOURTH: Check for Ollama blob files and other patterns
 
         // Check for Ollama blob files (GGUF files without extension)
         if path_str.contains("ollama") && path_str.contains("blobs") && path_str.contains("sha256-")
@@ -310,6 +310,54 @@ mod tests {
             let windows_spec = create_test_spec("local", "C:\\path\\to\\model.gguf");
             let backend3 = adapter.select_backend(&windows_spec);
             assert_eq!(backend3, BackendChoice::Llama);
+        }
+    }
+
+    #[test]
+    fn test_safetensors_priority_over_huggingface() {
+        let adapter = InferenceEngineAdapter::new();
+
+        // SafeTensors files should ALWAYS use SafeTensors engine, even if from HuggingFace
+        let safetensors_from_hf = create_test_spec("model", "/path/to/model.safetensors");
+        let backend = adapter.select_backend(&safetensors_from_hf);
+        assert_eq!(backend, BackendChoice::SafeTensors);
+
+        // Even with complex paths containing slashes
+        let safetensors_complex = create_test_spec(
+            "model",
+            "/models/huggingface/org/model/pytorch_model.safetensors",
+        );
+        let backend2 = adapter.select_backend(&safetensors_complex);
+        assert_eq!(backend2, BackendChoice::SafeTensors);
+
+        // Windows paths with safetensors
+        let safetensors_windows =
+            create_test_spec("model", "C:\\models\\org\\model\\model.safetensors");
+        let backend3 = adapter.select_backend(&safetensors_windows);
+        assert_eq!(backend3, BackendChoice::SafeTensors);
+    }
+
+    #[test]
+    fn test_file_extension_priority() {
+        let adapter = InferenceEngineAdapter::new();
+
+        // File extensions should take priority over everything else
+        let safetensors_spec = create_test_spec("llama-model", "path/to/llama.safetensors");
+        let backend = adapter.select_backend(&safetensors_spec);
+        assert_eq!(backend, BackendChoice::SafeTensors);
+
+        #[cfg(feature = "llama")]
+        {
+            let gguf_spec = create_test_spec("mistral-model", "path/to/mistral.gguf");
+            let backend2 = adapter.select_backend(&gguf_spec);
+            assert_eq!(backend2, BackendChoice::Llama);
+        }
+
+        #[cfg(feature = "mlx")]
+        {
+            let mlx_spec = create_test_spec("qwen-model", "path/to/qwen.mlx");
+            let backend3 = adapter.select_backend(&mlx_spec);
+            assert_eq!(backend3, BackendChoice::MLX);
         }
     }
 }
