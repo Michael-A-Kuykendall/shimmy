@@ -77,6 +77,12 @@ pub struct Model {
     pub object: String,
     pub created: u64,
     pub owned_by: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub permission: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<String>,
 }
 
 pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
@@ -85,10 +91,13 @@ pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         .list_all_available()
         .into_iter()
         .map(|name| Model {
-            id: name,
+            id: name.clone(),
             object: "model".to_string(),
             created: 0, // Fixed timestamp for simplicity
             owned_by: "shimmy".to_string(),
+            permission: None, // No fine-grained permissions for local models
+            root: Some(name), // The model itself is the root
+            parent: None, // Local models don't have parent models
         })
         .collect();
 

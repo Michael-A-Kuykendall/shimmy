@@ -203,12 +203,18 @@ mod regression_tests {
                     object: "model".to_string(),
                     created: 0,
                     owned_by: "shimmy".to_string(),
+                    permission: None,
+                    root: Some("qwen3-4b-instruct".to_string()),
+                    parent: None,
                 },
                 Model {
                     id: "llama-7b".to_string(),
                     object: "model".to_string(),
                     created: 0,
                     owned_by: "shimmy".to_string(),
+                    permission: None,
+                    root: Some("llama-7b".to_string()),
+                    parent: None,
                 },
             ],
         };
@@ -316,12 +322,15 @@ mod regression_tests {
         // Test the fix for Issue #113 - OpenAI API compatibility for frontends
         use shimmy::openai_compat::{Model, ModelsResponse};
 
-        // Test basic Model structure (enhanced fields are on PR branch)
+        // Test enhanced Model structure with frontend compatibility fields
         let model = Model {
             id: "test-model".to_string(),
             object: "model".to_string(),
             created: 1640995200,
             owned_by: "shimmy".to_string(),
+            permission: None,
+            root: Some("test-model".to_string()),
+            parent: None,
         };
 
         // Test serialization works correctly
@@ -330,6 +339,10 @@ mod regression_tests {
         assert_eq!(json["owned_by"], "shimmy");
         assert_eq!(json["object"], "model");
         assert_eq!(json["created"], 1640995200);
+        assert_eq!(json["root"], "test-model");
+        // Optional fields should be omitted when None (due to skip_serializing_if)
+        assert!(json.get("permission").is_none());
+        assert!(json.get("parent").is_none());
 
         // Test ModelsResponse structure
         let response = ModelsResponse {
