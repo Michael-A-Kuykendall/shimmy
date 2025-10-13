@@ -138,9 +138,11 @@ pub async fn messages(
     let system_message = req.system.clone();
 
     // Build generation options using default values and override with request params
-    let mut options = crate::engine::GenOptions::default();
-    options.max_tokens = req.max_tokens;
-    options.stream = req.stream.unwrap_or(false);
+    let mut options = crate::engine::GenOptions {
+        max_tokens: req.max_tokens,
+        stream: req.stream.unwrap_or(false),
+        ..Default::default()
+    };
 
     if let Some(temp) = req.temperature {
         options.temperature = temp;

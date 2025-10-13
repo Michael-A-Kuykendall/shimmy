@@ -5,6 +5,7 @@
 use sysinfo::System;
 
 /// Get total system memory in bytes
+#[allow(dead_code)] // Placeholder utility for future use
 pub fn get_total_memory() -> u64 {
     let mut system = System::new_all();
     system.refresh_memory();
@@ -12,6 +13,7 @@ pub fn get_total_memory() -> u64 {
 }
 
 /// Get available system memory in bytes
+#[allow(dead_code)] // Placeholder utility for future use
 pub fn get_available_memory() -> u64 {
     let mut system = System::new_all();
     system.refresh_memory();
@@ -22,6 +24,7 @@ pub fn get_available_memory() -> u64 {
 ///
 /// This provides a rough estimate based on file size and typical
 /// memory overhead for quantized models.
+#[allow(dead_code)] // Placeholder utility for future use
 pub fn estimate_memory_requirements(model_file_size: u64) -> MemoryEstimate {
     let file_size_gb = model_file_size as f64 / 1_024_000_000.0;
 
@@ -43,6 +46,7 @@ pub fn estimate_memory_requirements(model_file_size: u64) -> MemoryEstimate {
 
 /// Memory requirement estimate
 #[derive(Debug)]
+#[allow(dead_code)] // Placeholder utility for future use
 pub struct MemoryEstimate {
     pub file_size_gb: f64,
     pub estimated_runtime_gb: f64,
@@ -50,6 +54,7 @@ pub struct MemoryEstimate {
 }
 
 /// Check if system has enough memory for a model
+#[allow(dead_code)] // Placeholder utility for future use
 pub fn check_memory_availability(required_gb: f64) -> MemoryAvailability {
     let total_gb = get_total_memory() as f64 / 1_024_000_000.0;
     let available_gb = get_available_memory() as f64 / 1_024_000_000.0;
@@ -72,6 +77,7 @@ pub fn check_memory_availability(required_gb: f64) -> MemoryAvailability {
 
 /// Memory availability analysis
 #[derive(Debug)]
+#[allow(dead_code)] // Placeholder utility for future use
 pub struct MemoryAvailability {
     pub total_gb: f64,
     pub available_gb: f64,
@@ -80,6 +86,7 @@ pub struct MemoryAvailability {
 }
 
 #[derive(Debug, PartialEq)]
+#[allow(dead_code)] // Placeholder utility for future use
 pub enum MemoryStatus {
     Sufficient,   // Available memory > required
     Tight,        // Total memory >= required but available < required
@@ -88,6 +95,7 @@ pub enum MemoryStatus {
 
 impl MemoryAvailability {
     /// Get user-friendly recommendations based on memory status
+    #[allow(dead_code)] // Placeholder utility for future use
     pub fn get_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
 
