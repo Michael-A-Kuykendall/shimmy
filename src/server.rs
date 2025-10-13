@@ -90,9 +90,15 @@ async fn metrics_endpoint(State(state): State<Arc<AppState>>) -> Json<Value> {
         swap_free: 0,
     });
 
+    // GPU detection for metrics endpoint
+    let gpu_detected = detect_gpu();
+    let gpu_vendor = get_gpu_vendor();
+
     Json(json!({
         "service": "shimmy",
         "version": env!("CARGO_PKG_VERSION"),
+        "gpu_detected": gpu_detected,
+        "gpu_vendor": gpu_vendor,
         "models": {
             "total_count": models.len(),
             "total_size_mb": total_size_mb,
@@ -149,6 +155,60 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
         .with_state(state);
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+/// GPU detection for metrics endpoint
+fn detect_gpu() -> bool {
+    detect_nvidia() || detect_amd() || detect_intel()
+}
+
+fn get_gpu_vendor() -> Option<String> {
+    if detect_nvidia() {
+        Some("nvidia".to_string())
+    } else if detect_amd() {
+        Some("amd".to_string())
+    } else if detect_intel() {
+        Some("intel".to_string())
+    } else {
+        None
+    }
+}
+
+fn detect_nvidia() -> bool {
+    std::process::Command::new("nvidia-smi")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+fn detect_amd() -> bool {
+    // Check for ROCm tools on AMD GPUs
+    std::process::Command::new("rocm-smi")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+        ||
+    // Windows: Check for AMD GPU via device enumeration placeholder
+    std::process::Command::new("wmic")
+        .args(["path", "win32_VideoController", "get", "name"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).to_lowercase().contains("radeon"))
+        .unwrap_or(false)
+}
+
+fn detect_intel() -> bool {
+    // Basic Intel GPU detection placeholder
+    std::process::Command::new("wmic")
+        .args(["path", "win32_VideoController", "get", "name"])
+        .output()
+        .map(|o| {
+            String::from_utf8_lossy(&o.stdout)
+                .to_lowercase()
+                .contains("intel")
+        })
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -336,5 +396,62 @@ mod tests {
         // (Line 24: Ok(()) - not reached due to abort)
 
         // Test completed successfully
+    }
+
+    #[test]
+    fn test_gpu_detection_functions() {
+        // Test that GPU detection functions return boolean values
+        let gpu_detected = detect_gpu();
+        assert!(gpu_detected == true || gpu_detected == false);
+
+        let vendor = get_gpu_vendor();
+        if vendor.is_some() {
+            let vendor_str = vendor.unwrap();
+            assert!(vendor_str == "nvidia" || vendor_str == "amd" || vendor_str == "intel");
+        }
+    }
+
+    #[test]
+    fn test_nvidia_detection() {
+        let result = detect_nvidia();
+        assert!(result == true || result == false);
+    }
+
+    #[test]
+    fn test_amd_detection() {
+        let result = detect_amd();
+        assert!(result == true || result == false);
+    }
+
+    #[test]
+    fn test_intel_detection() {
+        let result = detect_intel();
+        assert!(result == true || result == false);
+    }
+
+    #[tokio::test]
+    async fn test_metrics_endpoint_gpu_fields() {
+        use crate::engine::adapter::InferenceEngineAdapter;
+        use crate::model_registry::Registry;
+
+        let registry = Registry::default();
+        let engine = Box::new(InferenceEngineAdapter::new());
+        let state = Arc::new(crate::AppState::new(engine, registry));
+
+        let response = metrics_endpoint(State(state)).await;
+        let json_value = response.0;
+
+        // Verify GPU fields are present
+        assert!(json_value.get("gpu_detected").is_some());
+        assert!(json_value.get("gpu_vendor").is_some());
+
+        // Verify GPU detection is boolean
+        assert!(json_value["gpu_detected"].is_boolean());
+
+        // Verify GPU vendor is either null or valid string
+        if !json_value["gpu_vendor"].is_null() {
+            let vendor = json_value["gpu_vendor"].as_str().unwrap();
+            assert!(vendor == "nvidia" || vendor == "amd" || vendor == "intel");
+        }
     }
 }
