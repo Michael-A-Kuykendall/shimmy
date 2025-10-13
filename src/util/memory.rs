@@ -1,8 +1,7 @@
 /// Memory management utilities for Issue #108
-/// 
+///
 /// Provides memory estimation and warnings to help users understand
 /// system requirements for large language models.
-
 use sysinfo::System;
 
 /// Get total system memory in bytes
@@ -20,21 +19,21 @@ pub fn get_available_memory() -> u64 {
 }
 
 /// Estimate memory requirements for a model file
-/// 
+///
 /// This provides a rough estimate based on file size and typical
 /// memory overhead for quantized models.
 pub fn estimate_memory_requirements(model_file_size: u64) -> MemoryEstimate {
     let file_size_gb = model_file_size as f64 / 1_024_000_000.0;
-    
+
     // Rough estimates based on typical quantized model behavior:
     // - File size is the compressed/quantized size
     // - Runtime needs additional memory for:
     //   * Context buffers
-    //   * Intermediate activations  
+    //   * Intermediate activations
     //   * Operating system overhead
     let runtime_multiplier = 1.8; // 80% overhead is typical
     let estimated_runtime_gb = file_size_gb * runtime_multiplier;
-    
+
     MemoryEstimate {
         file_size_gb,
         estimated_runtime_gb,
@@ -54,7 +53,7 @@ pub struct MemoryEstimate {
 pub fn check_memory_availability(required_gb: f64) -> MemoryAvailability {
     let total_gb = get_total_memory() as f64 / 1_024_000_000.0;
     let available_gb = get_available_memory() as f64 / 1_024_000_000.0;
-    
+
     let status = if available_gb >= required_gb {
         MemoryStatus::Sufficient
     } else if total_gb >= required_gb {
@@ -62,7 +61,7 @@ pub fn check_memory_availability(required_gb: f64) -> MemoryAvailability {
     } else {
         MemoryStatus::Insufficient
     };
-    
+
     MemoryAvailability {
         total_gb,
         available_gb,
@@ -83,7 +82,7 @@ pub struct MemoryAvailability {
 #[derive(Debug, PartialEq)]
 pub enum MemoryStatus {
     Sufficient,   // Available memory > required
-    Tight,        // Total memory >= required but available < required  
+    Tight,        // Total memory >= required but available < required
     Insufficient, // Total memory < required
 }
 
@@ -91,7 +90,7 @@ impl MemoryAvailability {
     /// Get user-friendly recommendations based on memory status
     pub fn get_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         match self.status {
             MemoryStatus::Sufficient => {
                 recommendations.push("✅ Sufficient memory available".to_string());
@@ -102,17 +101,21 @@ impl MemoryAvailability {
             }
             MemoryStatus::Insufficient => {
                 recommendations.push("❌ Insufficient system memory".to_string());
-                recommendations.push("💡 Use a smaller model (7B instead of 14B parameters)".to_string());
+                recommendations
+                    .push("💡 Use a smaller model (7B instead of 14B parameters)".to_string());
                 recommendations.push("💡 Add more RAM to your system".to_string());
-                recommendations.push("💡 Use a more quantized model (Q4_K_M instead of Q8_0)".to_string());
+                recommendations
+                    .push("💡 Use a more quantized model (Q4_K_M instead of Q8_0)".to_string());
             }
         }
-        
+
         // Always suggest MoE when applicable
         if self.required_gb > 16.0 {
-            recommendations.push("🧠 MoE CPU offloading would help (currently disabled - Issue #108)".to_string());
+            recommendations.push(
+                "🧠 MoE CPU offloading would help (currently disabled - Issue #108)".to_string(),
+            );
         }
-        
+
         recommendations
     }
 }
@@ -132,7 +135,7 @@ mod tests {
 
     #[test]
     fn test_large_model_estimation() {
-        // Test with a large 14B model file (~8GB)  
+        // Test with a large 14B model file (~8GB)
         let estimate = estimate_memory_requirements(8_000_000_000);
         assert!(estimate.file_size_gb > 7.0 && estimate.file_size_gb < 9.0);
         assert!(estimate.estimated_runtime_gb > 14.0); // Should be ~14.4GB

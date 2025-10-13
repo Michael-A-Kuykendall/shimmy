@@ -189,7 +189,7 @@ fn detect_amd() -> bool {
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false)
-        || 
+        ||
     // Windows: Check for AMD GPU via device enumeration placeholder
     std::process::Command::new("wmic")
         .args(&["path", "win32_VideoController", "get", "name"])
@@ -203,7 +203,11 @@ fn detect_intel() -> bool {
     std::process::Command::new("wmic")
         .args(&["path", "win32_VideoController", "get", "name"])
         .output()
-        .map(|o| String::from_utf8_lossy(&o.stdout).to_lowercase().contains("intel"))
+        .map(|o| {
+            String::from_utf8_lossy(&o.stdout)
+                .to_lowercase()
+                .contains("intel")
+        })
         .unwrap_or(false)
 }
 
