@@ -312,7 +312,6 @@ mod tests {
             assert_eq!(backend3, BackendChoice::Llama);
         }
     }
-
     #[test]
     fn test_safetensors_priority_over_huggingface() {
         let adapter = InferenceEngineAdapter::new();
