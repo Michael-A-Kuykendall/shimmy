@@ -1,10 +1,9 @@
 /// Anthropic Claude API compatibility layer
-/// 
+///
 /// This module provides compatibility with the Anthropic Claude API format,
 /// allowing tools like Claude Code to work with shimmy in local networks.
-/// 
+///
 /// Reference: https://docs.claude.com/claude/reference/messages_post
-
 use crate::{api::ChatMessage, AppState};
 use axum::{extract::State, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
@@ -15,7 +14,7 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize)]
 pub struct AnthropicMessageRequest {
     pub model: String,
-    pub max_tokens: usize,  // Required in Anthropic API
+    pub max_tokens: usize, // Required in Anthropic API
     pub messages: Vec<AnthropicMessage>,
     #[serde(default)]
     pub system: Option<String>,
@@ -32,7 +31,7 @@ pub struct AnthropicMessageRequest {
 /// Anthropic message format - supports complex content blocks
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct AnthropicMessage {
-    pub role: String,  // "user" or "assistant"
+    pub role: String, // "user" or "assistant"
     pub content: AnthropicContent,
 }
 
@@ -67,8 +66,8 @@ pub struct ImageSource {
 pub struct AnthropicMessageResponse {
     pub id: String,
     #[serde(rename = "type")]
-    pub response_type: String,  // "message"
-    pub role: String,           // "assistant"
+    pub response_type: String, // "message"
+    pub role: String, // "assistant"
     pub content: Vec<AnthropicContentBlock>,
     pub model: String,
     pub stop_reason: String,
@@ -80,7 +79,7 @@ pub struct AnthropicMessageResponse {
 #[derive(Debug, Serialize)]
 pub struct AnthropicContentBlock {
     #[serde(rename = "type")]
-    pub content_type: String,  // "text"
+    pub content_type: String, // "text"
     pub text: String,
 }
 
@@ -126,8 +125,9 @@ pub async fn messages(
     Json(req): Json<AnthropicMessageRequest>,
 ) -> impl IntoResponse {
     // Convert Anthropic format to our internal format
-    let internal_messages: Vec<ChatMessage> = req.messages.into_iter().map(|msg| msg.into()).collect();
-    
+    let internal_messages: Vec<ChatMessage> =
+        req.messages.into_iter().map(|msg| msg.into()).collect();
+
     // Find the model
     let Some(spec) = state.registry.to_spec(&req.model) else {
         tracing::error!("Model '{}' not found in registry", req.model);
@@ -138,10 +138,12 @@ pub async fn messages(
     let system_message = req.system.clone();
 
     // Build generation options using default values and override with request params
-    let mut options = crate::engine::GenOptions::default();
-    options.max_tokens = req.max_tokens;
-    options.stream = req.stream.unwrap_or(false);
-    
+    let mut options = crate::engine::GenOptions {
+        max_tokens: req.max_tokens,
+        stream: req.stream.unwrap_or(false),
+        ..Default::default()
+    };
+
     if let Some(temp) = req.temperature {
         options.temperature = temp;
     }
@@ -153,8 +155,9 @@ pub async fn messages(
     }
 
     // Prepare the prompt using the same logic as OpenAI compatibility
-    let (system_prompt, conversation_pairs) = extract_system_and_pairs(&internal_messages, system_message);
-    
+    let (system_prompt, conversation_pairs) =
+        extract_system_and_pairs(&internal_messages, system_message);
+
     let mut prompt = String::new();
     if let Some(system) = system_prompt {
         prompt.push_str(&format!("System: {}\n\n", system));
@@ -235,9 +238,9 @@ fn extract_system_and_pairs(
             } else {
                 None
             };
-            
+
             pairs.push((user_msg.as_str(), assistant_msg));
-            
+
             // Skip the assistant message if we found one
             if assistant_msg.is_some() {
                 i += 2;
@@ -319,7 +322,7 @@ mod tests {
         ];
 
         let (system, pairs) = extract_system_and_pairs(&messages, None);
-        
+
         assert_eq!(system, Some("You are a helpful assistant".to_string()));
         assert_eq!(pairs.len(), 2);
         assert_eq!(pairs[0], ("Hello", Some("Hi there!")));
@@ -328,15 +331,14 @@ mod tests {
 
     #[test]
     fn test_explicit_system_message() {
-        let messages = vec![
-            ChatMessage {
-                role: "user".to_string(),
-                content: "Hello".to_string(),
-            },
-        ];
+        let messages = vec![ChatMessage {
+            role: "user".to_string(),
+            content: "Hello".to_string(),
+        }];
 
-        let (system, pairs) = extract_system_and_pairs(&messages, Some("Custom system".to_string()));
-        
+        let (system, pairs) =
+            extract_system_and_pairs(&messages, Some("Custom system".to_string()));
+
         assert_eq!(system, Some("Custom system".to_string()));
         assert_eq!(pairs.len(), 1);
         assert_eq!(pairs[0], ("Hello", None));

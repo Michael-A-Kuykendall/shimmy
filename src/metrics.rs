@@ -401,12 +401,12 @@ impl TelemetryCollector {
         0
     }
 
-    fn detect_gpu() -> bool {
+    pub fn detect_gpu() -> bool {
         // Multi-vendor GPU detection
         Self::detect_nvidia() || Self::detect_amd() || Self::detect_intel()
     }
 
-    fn get_gpu_vendor() -> Option<String> {
+    pub fn get_gpu_vendor() -> Option<String> {
         if Self::detect_nvidia() {
             Some("nvidia".to_string())
         } else if Self::detect_amd() {

@@ -1,5 +1,5 @@
 /// Integration tests for Anthropic Claude API compatibility (Issue #109)
-/// 
+///
 /// This test suite ensures shimmy can serve as a drop-in replacement for
 /// Anthropic's Claude API, enabling tools like Claude Code to work in local networks.
 use serde_json::json;
@@ -8,10 +8,15 @@ use std::process::Command;
 #[test]
 fn test_anthropic_api_endpoint_exists() {
     // Regression test for Issue #109 - Anthropic API format support
-    
+
     // Build shimmy to ensure anthropic_compat module compiles
     let output = Command::new("cargo")
-        .args(&["build", "--no-default-features", "--features", "huggingface"])
+        .args(&[
+            "build",
+            "--no-default-features",
+            "--features",
+            "huggingface",
+        ])
         .output()
         .expect("Failed to build shimmy with anthropic support");
 
@@ -30,7 +35,7 @@ fn test_anthropic_api_endpoint_exists() {
 #[test]
 fn test_anthropic_message_format_parsing() {
     // Test that we can parse the Anthropic message format correctly
-    
+
     let anthropic_request = json!({
         "model": "claude-3-sonnet-20240229",
         "max_tokens": 1024,
@@ -46,7 +51,7 @@ fn test_anthropic_message_format_parsing() {
     assert!(anthropic_request["model"].is_string());
     assert!(anthropic_request["max_tokens"].is_number());
     assert!(anthropic_request["messages"].is_array());
-    
+
     let messages = anthropic_request["messages"].as_array().unwrap();
     assert_eq!(messages.len(), 1);
     assert_eq!(messages[0]["role"], "user");
@@ -58,9 +63,9 @@ fn test_anthropic_message_format_parsing() {
 #[test]
 fn test_anthropic_complex_content_blocks() {
     // Test support for complex content blocks (text + images)
-    
+
     let complex_request = json!({
-        "model": "claude-3-sonnet-20240229", 
+        "model": "claude-3-sonnet-20240229",
         "max_tokens": 1024,
         "messages": [
             {
@@ -86,7 +91,7 @@ fn test_anthropic_complex_content_blocks() {
     // Verify complex content block structure
     let content = &complex_request["messages"][0]["content"];
     assert!(content.is_array());
-    
+
     let blocks = content.as_array().unwrap();
     assert_eq!(blocks.len(), 2);
     assert_eq!(blocks[0]["type"], "text");
@@ -99,12 +104,12 @@ fn test_anthropic_complex_content_blocks() {
 #[test]
 fn test_anthropic_vs_openai_differences() {
     // Document key differences between Anthropic and OpenAI formats
-    
+
     let openai_format = json!({
         "model": "gpt-3.5-turbo",
         "messages": [
             {
-                "role": "user", 
+                "role": "user",
                 "content": "Hello"
             }
         ],
@@ -124,7 +129,7 @@ fn test_anthropic_vs_openai_differences() {
 
     // Key difference: max_tokens is required in Anthropic
     assert!(anthropic_format.get("max_tokens").is_some());
-    
+
     // Both use similar message structure
     assert_eq!(
         openai_format["messages"][0]["role"],
@@ -137,7 +142,7 @@ fn test_anthropic_vs_openai_differences() {
 #[test]
 fn test_anthropic_system_message_handling() {
     // Test different ways to specify system messages in Anthropic format
-    
+
     // Method 1: Explicit system parameter
     let explicit_system = json!({
         "model": "claude-3-sonnet-20240229",
@@ -153,7 +158,7 @@ fn test_anthropic_system_message_handling() {
 
     // Method 2: System message in messages array (less common in Anthropic)
     let inline_system = json!({
-        "model": "claude-3-sonnet-20240229", 
+        "model": "claude-3-sonnet-20240229",
         "max_tokens": 100,
         "messages": [
             {
@@ -176,11 +181,11 @@ fn test_anthropic_system_message_handling() {
 #[test]
 fn test_anthropic_response_format_structure() {
     // Test the expected Anthropic response format structure
-    
+
     let expected_response = json!({
         "id": "msg_01ABC123DEF456",
         "type": "message",
-        "role": "assistant", 
+        "role": "assistant",
         "content": [
             {
                 "type": "text",
@@ -209,14 +214,14 @@ fn test_anthropic_response_format_structure() {
 #[test]
 fn test_anthropic_model_name_compatibility() {
     // Test that common Anthropic model names are handled
-    
+
     let anthropic_models = vec![
         "claude-3-sonnet-20240229",
-        "claude-3-opus-20240229", 
+        "claude-3-opus-20240229",
         "claude-3-haiku-20240307",
         "claude-instant-1.2",
         "claude-2.1",
-        "claude-2.0"
+        "claude-2.0",
     ];
 
     for model in anthropic_models {
@@ -242,9 +247,9 @@ fn test_anthropic_model_name_compatibility() {
 #[test]
 fn test_claude_code_usage_simulation() {
     // Simulate the exact request pattern that Claude Code would send
-    
+
     println!("🧪 Simulating Claude Code usage pattern...");
-    
+
     let claude_code_request = json!({
         "model": "claude-3-sonnet-20240229",
         "max_tokens": 2048,
@@ -252,7 +257,7 @@ fn test_claude_code_usage_simulation() {
         "system": "You are Claude Code, an AI assistant that helps with programming tasks.",
         "messages": [
             {
-                "role": "user", 
+                "role": "user",
                 "content": "Write a simple Python function to calculate fibonacci numbers"
             }
         ]
@@ -278,29 +283,41 @@ fn test_claude_code_usage_simulation() {
 #[test]
 fn test_issue_109_requirements_coverage() {
     // Comprehensive test that all Issue #109 requirements are covered
-    
+
     println!("🎯 Validating Issue #109 requirements coverage...");
-    
+
     // Requirement 1: Support Anthropic API format ✓
     let anthropic_format_supported = true; // We implemented the format
-    assert!(anthropic_format_supported, "Anthropic API format not supported");
-    
+    assert!(
+        anthropic_format_supported,
+        "Anthropic API format not supported"
+    );
+
     // Requirement 2: Enable Claude Code usage in local network ✓
     let claude_code_compatible = true; // Our format matches what Claude Code expects
-    assert!(claude_code_compatible, "Claude Code compatibility not achieved");
-    
+    assert!(
+        claude_code_compatible,
+        "Claude Code compatibility not achieved"
+    );
+
     // Requirement 3: Reference xinference implementation ✓
     // We implemented similar functionality with proper Anthropic endpoints
     let xinference_feature_parity = true;
-    assert!(xinference_feature_parity, "Feature parity with xinference not achieved");
-    
+    assert!(
+        xinference_feature_parity,
+        "Feature parity with xinference not achieved"
+    );
+
     // Requirement 4: Low priority but functional ✓
     let low_priority_but_working = true; // Implemented with proper testing
-    assert!(low_priority_but_working, "Low priority feature not properly implemented");
+    assert!(
+        low_priority_but_working,
+        "Low priority feature not properly implemented"
+    );
 
     println!("✅ Issue #109 requirements coverage: ALL REQUIREMENTS MET");
     println!("   - Anthropic API format supported");
-    println!("   - Claude Code local network usage enabled"); 
+    println!("   - Claude Code local network usage enabled");
     println!("   - xinference-style implementation provided");
     println!("   - Low priority feature delivered with quality");
 }

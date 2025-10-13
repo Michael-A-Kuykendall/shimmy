@@ -274,11 +274,11 @@ fn test_gate_7_cratesio_validation() {
     // Dry-run should either succeed or fail with specific errors we can analyze
     let stderr = String::from_utf8_lossy(&output.stderr);
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     if output.status.success() {
         // Check that it actually packaged something (look in both stdout and stderr)
         let combined_output = format!("{}{}", stdout, stderr);
-        
+
         if combined_output.contains("already exists on crates.io") {
             println!("ℹ️ Gate 7 (Crates.io) - Version already published (this is expected for released versions)");
             // Verify packaging still worked
@@ -299,7 +299,9 @@ fn test_gate_7_cratesio_validation() {
     } else {
         // If it failed, make sure it's not due to missing token (expected in CI)
         if stderr.contains("no upload token found") || stderr.contains("authentication") {
-            println!("ℹ️ Gate 7 dry-run failed due to missing token (expected in test environment)");
+            println!(
+                "ℹ️ Gate 7 dry-run failed due to missing token (expected in test environment)"
+            );
             // This is expected - we can't publish in tests, but we can validate packaging
         } else {
             panic!(
