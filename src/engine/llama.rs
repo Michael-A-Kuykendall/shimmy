@@ -277,36 +277,40 @@ impl InferenceEngine for LlamaEngine {
             }
 
             // Attempt to load the model with better error handling
-            let model = match llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &model_params) {
-                Ok(model) => model,
-                Err(e) => {
-                    // Check if this looks like a memory allocation failure
-                    let error_msg = format!("{}", e);
-                    if error_msg.contains("failed to allocate") || error_msg.contains("CPU_REPACK buffer") {
-                        let file_size = std::fs::metadata(&spec.base_path)
-                            .map(|m| m.len())
-                            .unwrap_or(0);
-                        let size_gb = file_size as f64 / 1_024_000_000.0;
-                        
-                        return Err(anyhow!(
-                            "Memory allocation failed for model {} ({:.1}GB). \n\
+            let model =
+                match llama::model::LlamaModel::load_from_file(&be, &spec.base_path, &model_params)
+                {
+                    Ok(model) => model,
+                    Err(e) => {
+                        // Check if this looks like a memory allocation failure
+                        let error_msg = format!("{}", e);
+                        if error_msg.contains("failed to allocate")
+                            || error_msg.contains("CPU_REPACK buffer")
+                        {
+                            let file_size = std::fs::metadata(&spec.base_path)
+                                .map(|m| m.len())
+                                .unwrap_or(0);
+                            let size_gb = file_size as f64 / 1_024_000_000.0;
+
+                            return Err(anyhow!(
+                                "Memory allocation failed for model {} ({:.1}GB). \n\
                             💡 Possible solutions:\n\
                             • Use a smaller model (7B instead of 14B parameters)\n\
                             • Add more system RAM (model needs ~{}GB)\n\
                             • Enable model quantization (Q4_K_M, Q5_K_M)\n\
                             • MoE CPU offloading is temporarily disabled (Issue #108)\n\
                             Original error: {}",
-                            spec.base_path.display(),
-                            size_gb,
-                            (size_gb * 1.5) as u32, // Rough estimate of RAM needed
-                            e
-                        ));
+                                spec.base_path.display(),
+                                size_gb,
+                                (size_gb * 1.5) as u32, // Rough estimate of RAM needed
+                                e
+                            ));
+                        }
+
+                        // Re-throw other errors as-is
+                        return Err(e.into());
                     }
-                    
-                    // Re-throw other errors as-is
-                    return Err(e.into());
-                }
-            };
+                };
             let ctx_params = llama::context::params::LlamaContextParams::default()
                 .with_n_ctx(NonZeroU32::new(spec.ctx_len as u32))
                 .with_n_batch(2048)

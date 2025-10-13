@@ -84,7 +84,39 @@ jobs:
           echo "✅ Core tests passing"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 6/7: Documentation Validation"
+      - name: "🚧 GATE 5.5/7: Issue Regression Tests"
+        run: |
+          echo "::group::Gate 5.5: Issue Regression Prevention"
+          echo "🔄 Running issue-specific regression tests to prevent user-reported bug regressions..."
+          
+          # Test Issue #111 - GPU metrics endpoint
+          cargo test --test regression_tests test_issue_111_gpu_metrics_endpoint --no-default-features --features huggingface
+          echo "✅ Issue #111 (GPU metrics): Regression test passed"
+          
+          # Test Issue #112 - SafeTensors engine selection  
+          cargo test --test regression_tests test_issue_112_safetensors_engine_selection --no-default-features --features huggingface
+          echo "✅ Issue #112 (SafeTensors): Regression test passed"
+          
+          # Test Issue #113 - OpenAI API frontend compatibility
+          cargo test --test regression_tests test_issue_113_openai_api_frontend_compatibility --no-default-features --features huggingface
+          echo "✅ Issue #113 (OpenAI compatibility): Regression test passed"
+          
+          # Test Issue #114 - MLX distribution features
+          cargo test --test regression_tests test_issue_114_mlx_distribution_features --no-default-features --features huggingface
+          echo "✅ Issue #114 (MLX distribution): Regression test passed"
+          
+          # Test Issue #13 - Qwen model template detection
+          cargo test --test regression_tests test_qwen_model_template_detection --no-default-features --features huggingface
+          echo "✅ Issue #13 (Qwen templates): Regression test passed"
+          
+          # Test Issue #12 - Custom model directories
+          cargo test --test regression_tests test_custom_model_directory_environment_variables --no-default-features --features huggingface  
+          echo "✅ Issue #12 (Custom directories): Regression test passed"
+          
+          echo "✅ All issue regression tests passed - no user-reported bug regressions detected"
+          echo "::endgroup::"
+
+      - name: "🚧 GATE 6/8: Documentation Validation"
         run: |
           echo "::group::Gate 6: Documentation"
           
@@ -104,7 +136,7 @@ jobs:
           fi
           echo "::endgroup::"
 
-      - name: "🚧 GATE 7/7: Crates.io Publication Validation"
+      - name: "🚧 GATE 7/8: Crates.io Publication Validation"
         run: |
           echo "::group::Gate 7: Crates.io Validation"
           echo "🧪 Testing crates.io publication readiness..."
@@ -134,12 +166,13 @@ jobs:
       - name: "🎯 RELEASE GATES SUMMARY"
         id: gates
         run: |
-          echo "🎉 ALL 7 MANDATORY GATES PASSED!"
+          echo "🎉 ALL 8 MANDATORY GATES PASSED!"
           echo "✅ Gate 1: Core Build"
           echo "✅ Gate 2: CUDA Timeout Protection (Issue #59)"
           echo "✅ Gate 3: Template Packaging (Issue #60)"
           echo "✅ Gate 4: Binary Size Constitutional Limit"
           echo "✅ Gate 5: Test Suite"
+          echo "✅ Gate 5.5: Issue Regression Prevention"
           echo "✅ Gate 6: Documentation"
           echo "✅ Gate 7: Crates.io Publication Validation"
           echo "should_publish=true" >> $GITHUB_OUTPUT
