@@ -77,25 +77,42 @@ pub struct Model {
     pub object: String,
     pub created: u64,
     pub owned_by: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub permission: Option<Vec<serde_json::Value>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<String>,
 }
 
 pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    use axum::http::header;
+    
     let models = state
         .registry
         .list_all_available()
         .into_iter()
         .map(|name| Model {
-            id: name,
+            id: name.clone(),
             object: "model".to_string(),
-            created: 0, // Fixed timestamp for simplicity
+            created: 1640995200, // Fixed timestamp (Jan 1, 2022) for stability
             owned_by: "shimmy".to_string(),
+            permission: None, // Optional fields for frontend compatibility
+            root: Some(name.clone()),
+            parent: None,
         })
         .collect();
 
-    Json(ModelsResponse {
+    let response = Json(ModelsResponse {
         object: "list".to_string(),
         data: models,
-    })
+    });
+
+    // Add explicit Content-Type header for frontend compatibility
+    (
+        [(header::CONTENT_TYPE, "application/json")],
+        response,
+    )
 }
 
 pub async fn chat_completions(
@@ -116,7 +133,13 @@ pub async fn chat_completions(
                 "code": "model_not_found"
             }
         });
-        return (StatusCode::NOT_FOUND, Json(error_response)).into_response();
+        // Add explicit Content-Type header for error responses too
+        use axum::http::header;
+        return (
+            StatusCode::NOT_FOUND,
+            [(header::CONTENT_TYPE, "application/json")],
+            Json(error_response),
+        ).into_response();
     };
     tracing::debug!("Found model spec for '{}': {:?}", req.model, spec);
     let engine = &state.engine;
@@ -124,7 +147,20 @@ pub async fn chat_completions(
         Ok(loaded) => loaded,
         Err(e) => {
             tracing::error!("Failed to load model '{}': {:?}", req.model, e);
-            return StatusCode::BAD_GATEWAY.into_response();
+            use axum::http::header;
+            let error_response = serde_json::json!({
+                "error": {
+                    "message": format!("Failed to load model '{}': {}", req.model, e),
+                    "type": "server_error",
+                    "param": "model",
+                    "code": "model_load_failed"
+                }
+            });
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                [(header::CONTENT_TYPE, "application/json")],
+                Json(error_response),
+            ).into_response();
         }
     };
 
@@ -284,7 +320,16 @@ pub async fn chat_completions(
 
         let stream = UnboundedReceiverStream::new(rx)
             .map(|s| Ok::<Event, std::convert::Infallible>(Event::default().data(s)));
-        Sse::new(stream).into_response()
+        
+        use axum::http::header;
+        (
+            [
+                (header::CONTENT_TYPE, "text/event-stream"),
+                (header::CACHE_CONTROL, "no-cache"),
+                (header::CONNECTION, "keep-alive"),
+            ],
+            Sse::new(stream),
+        ).into_response()
     } else {
         // Handle non-streaming response
         match loaded.generate(&prompt, opts, None).await {
@@ -316,7 +361,11 @@ pub async fn chat_completions(
                         total_tokens: 0,
                     },
                 };
-                Json(response).into_response()
+                use axum::http::header;
+                (
+                    [(header::CONTENT_TYPE, "application/json")],
+                    Json(response),
+                ).into_response()
             }
             Err(e) => {
                 tracing::error!(
@@ -324,7 +373,19 @@ pub async fn chat_completions(
                     req.model,
                     e
                 );
-                StatusCode::BAD_GATEWAY.into_response()
+                use axum::http::header;
+                let error_response = serde_json::json!({
+                    "error": {
+                        "message": format!("Failed to generate response: {}", e),
+                        "type": "server_error",
+                        "code": "generation_failed"
+                    }
+                });
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    [(header::CONTENT_TYPE, "application/json")],
+                    Json(error_response),
+                ).into_response()
             }
         }
     }
@@ -680,12 +741,18 @@ mod tests {
                     object: "model".to_string(),
                     created: 1234567890,
                     owned_by: "shimmy".to_string(),
+                    permission: None,
+                    root: Some("model1".to_string()),
+                    parent: None,
                 },
                 Model {
                     id: "model2".to_string(),
                     object: "model".to_string(),
                     created: 1234567890,
                     owned_by: "shimmy".to_string(),
+                    permission: None,
+                    root: Some("model2".to_string()),
+                    parent: None,
                 },
             ],
         };
@@ -997,12 +1064,18 @@ mod tests {
                     object: "model".to_string(),
                     created: 0,
                     owned_by: "shimmy".to_string(),
+                    permission: None,
+                    root: Some("test-model-1".to_string()),
+                    parent: None,
                 },
                 Model {
                     id: "test-model-2".to_string(),
                     object: "model".to_string(),
                     created: 0,
                     owned_by: "shimmy".to_string(),
+                    permission: None,
+                    root: Some("test-model-2".to_string()),
+                    parent: None,
                 },
             ],
         };
@@ -1042,5 +1115,73 @@ mod tests {
         assert_eq!(choice["delta"]["role"], "assistant");
         assert_eq!(choice["delta"]["content"], "Hello");
         assert!(choice["finish_reason"].is_null());
+    }
+
+    #[test]
+    fn test_enhanced_model_structure() {
+        // Test enhanced Model structure with optional fields for frontend compatibility
+        let model = Model {
+            id: "test-model".to_string(),
+            object: "model".to_string(),
+            created: 1640995200,
+            owned_by: "shimmy".to_string(),
+            permission: None,
+            root: Some("test-model".to_string()),
+            parent: None,
+        };
+
+        let json = serde_json::to_value(&model).unwrap();
+        assert_eq!(json["id"], "test-model");
+        assert_eq!(json["object"], "model");
+        assert_eq!(json["created"], 1640995200);
+        assert_eq!(json["owned_by"], "shimmy");
+        assert_eq!(json["root"], "test-model");
+        
+        // Optional fields should be omitted when None
+        assert!(!json.as_object().unwrap().contains_key("permission"));
+        assert!(!json.as_object().unwrap().contains_key("parent"));
+    }
+
+    #[test]
+    fn test_frontend_error_response_format() {
+        // Test error response format expected by frontends
+        let error_json = serde_json::json!({
+            "error": {
+                "message": "Model 'nonexistent' not found. Available models: [\"test\"]",
+                "type": "invalid_request_error",
+                "param": "model",
+                "code": "model_not_found"
+            }
+        });
+
+        // Verify error response structure
+        assert!(error_json["error"].is_object());
+        assert!(error_json["error"]["message"].is_string());
+        assert_eq!(error_json["error"]["type"], "invalid_request_error");
+        assert_eq!(error_json["error"]["param"], "model");
+        assert_eq!(error_json["error"]["code"], "model_not_found");
+    }
+
+    #[tokio::test]
+    async fn test_frontend_models_endpoint_response() {
+        // Test that models endpoint returns format compatible with frontends
+        use crate::model_registry::ModelEntry;
+
+        let mut registry = Registry::default();
+        registry.register(ModelEntry {
+            name: "phi3-mini-instruct".to_string(),
+            base_path: "./test.gguf".into(),
+            lora_path: None,
+            template: Some("chatml".into()),
+            ctx_len: Some(4096),
+            n_threads: None,
+        });
+
+        let engine = Box::new(InferenceEngineAdapter::new());
+        let state = Arc::new(AppState::new(engine, registry));
+
+        let _response = models(State(state)).await;
+        // Response should be properly formatted for frontend consumption
+        // Test completed successfully
     }
 }

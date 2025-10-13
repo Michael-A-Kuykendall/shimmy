@@ -203,12 +203,18 @@ mod regression_tests {
                     object: "model".to_string(),
                     created: 0,
                     owned_by: "shimmy".to_string(),
+                    permission: None,
+                    root: Some("qwen3-4b-instruct".to_string()),
+                    parent: None,
                 },
                 Model {
                     id: "llama-7b".to_string(),
                     object: "model".to_string(),
                     created: 0,
                     owned_by: "shimmy".to_string(),
+                    permission: None,
+                    root: Some("llama-7b".to_string()),
+                    parent: None,
                 },
             ],
         };
