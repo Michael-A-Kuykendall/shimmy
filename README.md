@@ -42,16 +42,22 @@ Whether you're forking Shimmy or integrating it as a service, we provide complet
 ### Try it in 30 seconds
 
 ```bash
-# 1) Install + run
+# 1) Install (platform-optimized)
+# Apple Silicon (recommended):
+cargo install shimmy --features mlx
+
+# Other platforms:
 cargo install shimmy --features huggingface
+
+# 2) Start server
 shimmy serve &
 
-# 2) See models and pick one
+# 3) See models and pick one
 shimmy list
 
-# 3) Smoke test the OpenAI API
+# 4) Smoke test the OpenAI API
 curl -s http://127.0.0.1:11435/v1/chat/completions \
-  -H 'Content-Type: application/json' \
+  -H 'Content-Type: application-json' \
   -d '{
         "model":"REPLACE_WITH_MODEL_FROM_list",
         "messages":[{"role":"user","content":"Say hi in 5 words."}],
@@ -177,23 +183,53 @@ cargo install shimmy --features huggingface
 
 Shimmy supports multiple GPU backends for accelerated inference:
 
-#### **🖥️ Available Backends**
+#### **🖥️ Platform-Specific Installation**
+
+| Platform | Recommended Command | Features Included |
+|----------|---------------------|-------------------|
+| **🍎 Apple Silicon** | `cargo install shimmy --features mlx` | MLX Metal acceleration |
+| **🍎 Intel Mac** | `cargo install shimmy --features mlx` | MLX + fallback support |
+| **🐧 Linux NVIDIA** | `cargo install shimmy --features llama-cuda` | CUDA GPU acceleration |
+| **🐧 Linux AMD/Intel** | `cargo install shimmy --features llama-vulkan` | Vulkan GPU support |
+| **🪟 Windows NVIDIA** | `cargo install shimmy --features llama-cuda` | CUDA GPU acceleration |
+| **🪟 Windows Generic** | `cargo install shimmy --features huggingface` | CPU + SafeTensors |
+
+#### **⚡ Advanced Backend Options**
 
 | Backend | Hardware | Installation |
 |---------|----------|--------------|
-| **CUDA** | NVIDIA GPUs | `cargo install shimmy --features llama-cuda` |
 | **CUDA + MOE** | NVIDIA GPUs + CPU | `cargo install shimmy --features llama-cuda,moe` |
 | **Vulkan** | Cross-platform GPUs | `cargo install shimmy --features llama-vulkan` |
 | **OpenCL** | AMD/Intel/Others | `cargo install shimmy --features llama-opencl` |
-| **MLX** | Apple Silicon | `cargo install shimmy --features mlx` |
 | **MOE Hybrid** | Any GPU + CPU | `cargo install shimmy --features moe` |
-| **All Features** | Everything | `cargo install shimmy --features gpu,moe` |
+| **All Features** | Everything | `cargo install shimmy --features gpu,moe,mlx` |
 
-#### **🔍 Check GPU Support**
+#### **🔍 Verify Installation & GPU Support**
 ```bash
-# Show detected GPU backends
+# Check version and features
+shimmy --version
+
+# Show detected GPU backends (including MLX on Apple Silicon)
 shimmy gpu-info
+
+# For Apple Silicon users - verify MLX support:
+shimmy gpu-info | grep -i mlx
+# Should show: "MLX Backend: Available" on Apple Silicon with MLX build
 ```
+
+#### **📦 Distribution Channels**
+
+**From crates.io (source build):**
+```bash
+# Builds from source with your desired features
+cargo install shimmy --features mlx           # Apple Silicon optimized
+cargo install shimmy --features llama-cuda    # NVIDIA optimized
+```
+
+**Pre-built Binaries (GitHub Releases):**
+- macOS binaries include MLX support automatically (v1.7.4+)
+- Linux/Windows binaries include default features
+- Download: [Latest Release](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest)
 
 #### **⚡ Usage Notes**
 - GPU backends are **automatically detected** at runtime
