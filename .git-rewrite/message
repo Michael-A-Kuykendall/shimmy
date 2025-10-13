@@ -1,0 +1,6 @@
+fix: Improve llama library build workflow robustness
+
+- Use existing cmake on macOS to avoid homebrew conflicts
+- Enhanced library extraction with fallback search patterns
+- Added debugging output to identify library file names
+- Handle cases where libraries might have different naming

@@ -87,7 +87,7 @@ pub struct Model {
 
 pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     use axum::http::header;
-    
+
     let models = state
         .registry
         .list_all_available()
@@ -109,10 +109,7 @@ pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     });
 
     // Add explicit Content-Type header for frontend compatibility
-    (
-        [(header::CONTENT_TYPE, "application/json")],
-        response,
-    )
+    ([(header::CONTENT_TYPE, "application/json")], response)
 }
 
 pub async fn chat_completions(
@@ -139,7 +136,8 @@ pub async fn chat_completions(
             StatusCode::NOT_FOUND,
             [(header::CONTENT_TYPE, "application/json")],
             Json(error_response),
-        ).into_response();
+        )
+            .into_response();
     };
     tracing::debug!("Found model spec for '{}': {:?}", req.model, spec);
     let engine = &state.engine;
@@ -160,7 +158,8 @@ pub async fn chat_completions(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 [(header::CONTENT_TYPE, "application/json")],
                 Json(error_response),
-            ).into_response();
+            )
+                .into_response();
         }
     };
 
@@ -320,7 +319,7 @@ pub async fn chat_completions(
 
         let stream = UnboundedReceiverStream::new(rx)
             .map(|s| Ok::<Event, std::convert::Infallible>(Event::default().data(s)));
-        
+
         use axum::http::header;
         (
             [
@@ -329,7 +328,8 @@ pub async fn chat_completions(
                 (header::CONNECTION, "keep-alive"),
             ],
             Sse::new(stream),
-        ).into_response()
+        )
+            .into_response()
     } else {
         // Handle non-streaming response
         match loaded.generate(&prompt, opts, None).await {
@@ -362,10 +362,7 @@ pub async fn chat_completions(
                     },
                 };
                 use axum::http::header;
-                (
-                    [(header::CONTENT_TYPE, "application/json")],
-                    Json(response),
-                ).into_response()
+                ([(header::CONTENT_TYPE, "application/json")], Json(response)).into_response()
             }
             Err(e) => {
                 tracing::error!(
@@ -385,7 +382,8 @@ pub async fn chat_completions(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     [(header::CONTENT_TYPE, "application/json")],
                     Json(error_response),
-                ).into_response()
+                )
+                    .into_response()
             }
         }
     }
@@ -1136,7 +1134,7 @@ mod tests {
         assert_eq!(json["created"], 1640995200);
         assert_eq!(json["owned_by"], "shimmy");
         assert_eq!(json["root"], "test-model");
-        
+
         // Optional fields should be omitted when None
         assert!(!json.as_object().unwrap().contains_key("permission"));
         assert!(!json.as_object().unwrap().contains_key("parent"));
