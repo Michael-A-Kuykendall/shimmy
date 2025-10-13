@@ -323,12 +323,16 @@ mod tests {
         assert_eq!(backend, BackendChoice::SafeTensors);
 
         // Even with complex paths containing slashes
-        let safetensors_complex = create_test_spec("model", "/models/huggingface/org/model/pytorch_model.safetensors");
+        let safetensors_complex = create_test_spec(
+            "model",
+            "/models/huggingface/org/model/pytorch_model.safetensors",
+        );
         let backend2 = adapter.select_backend(&safetensors_complex);
         assert_eq!(backend2, BackendChoice::SafeTensors);
 
         // Windows paths with safetensors
-        let safetensors_windows = create_test_spec("model", "C:\\models\\org\\model\\model.safetensors");
+        let safetensors_windows =
+            create_test_spec("model", "C:\\models\\org\\model\\model.safetensors");
         let backend3 = adapter.select_backend(&safetensors_windows);
         assert_eq!(backend3, BackendChoice::SafeTensors);
     }
