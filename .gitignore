@@ -1,5 +1,5 @@
 # Rust build artifacts
-/target/
+**/target/
 /alt_target/
 /target-minimal/
 **/*.rs.bk
