@@ -46,18 +46,19 @@ use tracing::info;
 use std::sync::OnceLock;
 
 #[cfg(feature = "llama")]
-static LLAMA_BACKEND: OnceLock<Result<shimmy_llama_cpp_2::llama_backend::LlamaBackend, String>> = OnceLock::new();
+static LLAMA_BACKEND: OnceLock<Result<shimmy_llama_cpp_2::llama_backend::LlamaBackend, String>> =
+    OnceLock::new();
 
 #[cfg(feature = "llama")]
 fn get_or_init_backend() -> Result<&'static shimmy_llama_cpp_2::llama_backend::LlamaBackend> {
     use anyhow::anyhow;
-    
+
     let result = LLAMA_BACKEND.get_or_init(|| {
         info!("Initializing llama.cpp backend (first model load)");
         shimmy_llama_cpp_2::llama_backend::LlamaBackend::init()
             .map_err(|e| format!("Failed to initialize llama backend: {}", e))
     });
-    
+
     result.as_ref().map_err(|e| anyhow!("{}", e))
 }
 
@@ -273,7 +274,7 @@ impl InferenceEngine for LlamaEngine {
             use anyhow::anyhow;
             use shimmy_llama_cpp_2 as llama;
             use std::num::NonZeroU32;
-            
+
             // Use global singleton backend (fixes Issue #128: BackendAlreadyInitialized)
             let be = get_or_init_backend()?;
 
