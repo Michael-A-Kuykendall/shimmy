@@ -11,24 +11,24 @@ fn test_template_files_are_included_in_package() {
     // Test that all template files used in src/templates.rs are accessible
 
     // Docker templates
-    let _dockerfile = include_str!("../templates/docker/Dockerfile");
-    let _compose = include_str!("../templates/docker/docker-compose.yml");
-    let _nginx = include_str!("../templates/docker/nginx.conf");
+    let _dockerfile = include_str!("../../templates/docker/Dockerfile");
+    let _compose = include_str!("../../templates/docker/docker-compose.yml");
+    let _nginx = include_str!("../../templates/docker/nginx.conf");
 
     // Kubernetes templates
-    let _deployment = include_str!("../templates/kubernetes/deployment.yaml");
-    let _service = include_str!("../templates/kubernetes/service.yaml");
-    let _configmap = include_str!("../templates/kubernetes/configmap.yaml");
+    let _deployment = include_str!("../../templates/kubernetes/deployment.yaml");
+    let _service = include_str!("../../templates/kubernetes/service.yaml");
+    let _configmap = include_str!("../../templates/kubernetes/configmap.yaml");
 
-    // Platform templates
-    let _railway = include_str!("../templates/railway/railway.toml");
-    let _fly = include_str!("../templates/fly/fly.toml");
+        // Cloud platform templates
+    let _railway = include_str!("../../templates/railway/railway.toml");
+    let _fly = include_str!("../../templates/fly/fly.toml");
 
     // Framework templates
-    let _fastapi_main = include_str!("../templates/frameworks/fastapi/main.py");
-    let _fastapi_requirements = include_str!("../templates/frameworks/fastapi/requirements.txt");
-    let _express_app = include_str!("../templates/frameworks/express/app.js");
-    let _express_package = include_str!("../templates/frameworks/express/package.json");
+    let _fastapi_main = include_str!("../../templates/frameworks/fastapi/main.py");
+    let _fastapi_requirements = include_str!("../../templates/frameworks/fastapi/requirements.txt");
+    let _express_app = include_str!("../../templates/frameworks/express/app.js");
+    let _express_package = include_str!("../../templates/frameworks/express/package.json");
 
     // If any template file is missing, this test will fail at compile time
     // preventing the issue from reaching users
@@ -84,31 +84,31 @@ fn test_template_files_are_included_in_package() {
 fn test_template_content_validity() {
     // Basic validation that templates contain expected content
 
-    let dockerfile = include_str!("../templates/docker/Dockerfile");
+    let dockerfile = include_str!("../../templates/docker/Dockerfile");
     assert!(
         dockerfile.contains("FROM"),
         "Dockerfile should contain FROM instruction"
     );
 
-    let compose = include_str!("../templates/docker/docker-compose.yml");
+    let compose = include_str!("../../templates/docker/docker-compose.yml");
     assert!(
         compose.contains("version:") || compose.contains("services:"),
         "docker-compose.yml should contain version or services"
     );
 
-    let deployment = include_str!("../templates/kubernetes/deployment.yaml");
+    let deployment = include_str!("../../templates/kubernetes/deployment.yaml");
     assert!(
         deployment.contains("apiVersion:"),
         "deployment.yaml should contain apiVersion"
     );
 
-    let fastapi_main = include_str!("../templates/frameworks/fastapi/main.py");
+    let fastapi_main = include_str!("../../templates/frameworks/fastapi/main.py");
     assert!(
         fastapi_main.contains("FastAPI"),
         "FastAPI template should reference FastAPI"
     );
 
-    let express_app = include_str!("../templates/frameworks/express/app.js");
+    let express_app = include_str!("../../templates/frameworks/express/app.js");
     assert!(
         express_app.contains("express"),
         "Express template should reference express"

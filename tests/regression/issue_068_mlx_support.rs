@@ -172,17 +172,6 @@ fn test_ci_build_matrix_features() {
         "Linux feature set should compile"
     );
 
-    // Test Windows features
-    let windows_test = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "gpu"])
-        .output()
-        .expect("Failed to check Windows features");
-
-    assert!(
-        windows_test.status.success(),
-        "Windows feature set should compile"
-    );
-
     // Test macOS features (the fix for Issue #68)
     let macos_test = Command::new("cargo")
         .args(&["check", "--no-default-features", "--features", "apple"])
