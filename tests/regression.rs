@@ -56,6 +56,9 @@ mod issue_114_mlx_distribution;
 #[path = "regression/issue_128_backend_reinitialization.rs"]
 mod issue_128_backend_reinitialization;
 
+#[path = "regression/issue_129_precompiled_gpu_support.rs"]
+mod issue_129_precompiled_gpu_support;
+
 #[path = "regression/issue_130_gpu_layer_offloading.rs"]
 mod issue_130_gpu_layer_offloading;
 
