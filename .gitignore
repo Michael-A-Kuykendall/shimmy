@@ -1,9 +1,12 @@
 # Rust build artifacts
-/target/
+**/target/
 /alt_target/
 /target-minimal/
 **/*.rs.bk
 *.pdb
+
+# Console development subproject (entire directory)
+console/
 
 # IDE files
 .vscode/
@@ -96,3 +99,6 @@ json
 shimmy
 shimmy.exe
 .claude/settings.local.json
+
+# Console subproject (development/experimental)
+console/

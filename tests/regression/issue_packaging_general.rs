@@ -116,22 +116,22 @@ fn test_include_str_macros_would_compile() {
     // This test runs at compile time, so if it compiles, the files exist
 
     // These are the exact include_str!() calls that were failing in production
-    let _docker_dockerfile = include_str!("../templates/docker/Dockerfile");
-    let _docker_compose = include_str!("../templates/docker/docker-compose.yml");
-    let _docker_nginx = include_str!("../templates/docker/nginx.conf");
+    let _docker_dockerfile = include_str!("../../templates/docker/Dockerfile");
+    let _docker_compose = include_str!("../../templates/docker/docker-compose.yml");
+    let _docker_nginx = include_str!("../../templates/docker/nginx.conf");
 
-    let _k8s_deployment = include_str!("../templates/kubernetes/deployment.yaml");
-    let _k8s_service = include_str!("../templates/kubernetes/service.yaml");
-    let _k8s_configmap = include_str!("../templates/kubernetes/configmap.yaml");
+    let _k8s_deployment = include_str!("../../templates/kubernetes/deployment.yaml");
+    let _k8s_service = include_str!("../../templates/kubernetes/service.yaml");
+    let _k8s_configmap = include_str!("../../templates/kubernetes/configmap.yaml");
 
-    let _fastapi_main = include_str!("../templates/frameworks/fastapi/main.py");
-    let _fastapi_requirements = include_str!("../templates/frameworks/fastapi/requirements.txt");
+    let _fastapi_main = include_str!("../../templates/frameworks/fastapi/main.py");
+    let _fastapi_requirements = include_str!("../../templates/frameworks/fastapi/requirements.txt");
 
-    let _express_app = include_str!("../templates/frameworks/express/app.js");
-    let _express_package = include_str!("../templates/frameworks/express/package.json");
+    let _express_app = include_str!("../../templates/frameworks/express/app.js");
+    let _express_package = include_str!("../../templates/frameworks/express/package.json");
 
-    let _railway_config = include_str!("../templates/railway/railway.toml");
-    let _fly_config = include_str!("../templates/fly/fly.toml");
+    let _railway_config = include_str!("../../templates/railway/railway.toml");
+    let _fly_config = include_str!("../../templates/fly/fly.toml");
 
     // Verify content is not empty (files actually exist and have content)
     assert!(!_docker_dockerfile.is_empty(), "Docker Dockerfile is empty");
