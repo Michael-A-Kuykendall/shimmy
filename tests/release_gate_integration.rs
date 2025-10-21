@@ -67,7 +67,7 @@ fn test_conditional_execution_logic() {
 fn test_gate_1_core_build_validation() {
     // Test that core build (huggingface features) works
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "--release",
             "--no-default-features",
@@ -88,7 +88,7 @@ fn test_gate_1_core_build_validation() {
 fn test_gate_3_template_packaging_protection() {
     // Test that templates are properly included (Issue #60 protection)
     let output = Command::new("cargo")
-        .args(&["package", "--list", "--allow-dirty"])
+        .args(["package", "--list", "--allow-dirty"])
         .output()
         .expect("Failed to run cargo package --list");
 
@@ -115,7 +115,7 @@ fn test_gate_3_template_packaging_protection() {
 fn test_gate_4_binary_size_constitutional_limit() {
     // First ensure we have a binary to test (debug build for speed)
     let build_output = Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "--no-default-features",
             "--features",
@@ -156,7 +156,7 @@ fn test_gate_5_test_suite_validation() {
     // Validate that test suite can be compiled and basic tests pass
     // Note: We run a more limited test to avoid circular dependency issues
     let output = Command::new("cargo")
-        .args(&["test", "--no-run", "--lib"])
+        .args(["test", "--no-run", "--lib"])
         .output()
         .expect("Failed to compile test suite");
 
@@ -168,7 +168,7 @@ fn test_gate_5_test_suite_validation() {
 
     // Additional validation: Ensure we can run a simple test
     let simple_test = Command::new("cargo")
-        .args(&["test", "--lib", "test_model_spec_validation"])
+        .args(["test", "--lib", "test_model_spec_validation"])
         .output()
         .expect("Failed to run simple test");
 
@@ -185,7 +185,7 @@ fn test_gate_5_test_suite_validation() {
 fn test_gate_6_documentation_validation() {
     // Test that documentation builds successfully
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "doc",
             "--no-deps",
             "--no-default-features",
@@ -222,7 +222,7 @@ fn test_gate_2_cuda_timeout_detection() {
     let start = Instant::now();
 
     let output = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "llama"])
+        .args(["check", "--no-default-features", "--features", "llama"])
         .output();
 
     let duration = start.elapsed();
@@ -267,7 +267,7 @@ fn test_gate_2_cuda_timeout_detection() {
 fn test_gate_7_cratesio_validation() {
     // Test that crates.io dry-run validation works
     let output = Command::new("cargo")
-        .args(&["publish", "--dry-run", "--allow-dirty"])
+        .args(["publish", "--dry-run", "--allow-dirty"])
         .output()
         .expect("Failed to run cargo publish --dry-run");
 

@@ -78,7 +78,8 @@ fn test_docker_template_contains_required_files() {
         );
 
         // Verify file is not empty (template content was included)
-        let content = fs::read_to_string(&file_path).expect(&format!("Failed to read {}", file));
+        let content =
+            fs::read_to_string(&file_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
         assert!(
             !content.trim().is_empty(),
             "{} should contain template content, not be empty",
@@ -111,7 +112,8 @@ fn test_kubernetes_template_contains_required_files() {
         );
 
         // Verify file contains YAML content
-        let content = fs::read_to_string(&file_path).expect(&format!("Failed to read {}", file));
+        let content =
+            fs::read_to_string(&file_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
         assert!(
             content.contains("apiVersion") || content.contains("kind"),
             "{} should contain valid Kubernetes YAML content",
@@ -141,7 +143,8 @@ fn test_fastapi_template_contains_required_files() {
         );
 
         // Verify file contains expected content
-        let content = fs::read_to_string(&file_path).expect(&format!("Failed to read {}", file));
+        let content =
+            fs::read_to_string(&file_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
 
         if file == "main.py" {
             assert!(
@@ -178,7 +181,8 @@ fn test_express_template_contains_required_files() {
         );
 
         // Verify file contains expected content
-        let content = fs::read_to_string(&file_path).expect(&format!("Failed to read {}", file));
+        let content =
+            fs::read_to_string(&file_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
 
         if file == "app.js" {
             assert!(

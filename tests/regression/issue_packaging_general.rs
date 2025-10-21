@@ -15,7 +15,7 @@ use std::str;
 fn test_crates_io_package_includes_all_required_files() {
     // Run cargo package --list to get the exact file list that would be uploaded to crates.io
     let output = Command::new("cargo")
-        .args(&["package", "--list", "--allow-dirty"])
+        .args(["package", "--list", "--allow-dirty"])
         .output()
         .expect("Failed to run cargo package --list");
 
@@ -148,7 +148,7 @@ fn test_cargo_install_simulation() {
 
     // This test ensures that a fresh cargo install would succeed
     let output = Command::new("cargo")
-        .args(&["check", "--quiet"])
+        .args(["check", "--quiet"])
         .output()
         .expect("Failed to run cargo check");
 
@@ -184,7 +184,7 @@ fn test_cargo_install_simulation() {
 fn test_package_size_sanity() {
     // Ensure the package isn't suspiciously small (which would indicate missing files)
     let output = Command::new("cargo")
-        .args(&["package", "--list", "--allow-dirty"])
+        .args(["package", "--list", "--allow-dirty"])
         .output()
         .expect("Failed to run cargo package --list");
 
@@ -215,7 +215,7 @@ fn test_shimmy_llama_cpp_fork_packages_available() {
 
     // Check if we can build with our published shimmy packages
     let output = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "llama"])
+        .args(["check", "--no-default-features", "--features", "llama"])
         .output()
         .expect("Failed to run cargo check with llama feature");
 
@@ -249,7 +249,7 @@ fn test_template_packaging_gate_protection() {
     // to ensure our packaging follows the gate requirements
 
     let output = Command::new("cargo")
-        .args(&["package", "--list", "--allow-dirty"])
+        .args(["package", "--list", "--allow-dirty"])
         .output()
         .expect("Failed to run cargo package --list");
 

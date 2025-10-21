@@ -4,8 +4,7 @@
 ///
 /// **Bug**: Qwen/Qwen2.5-Coder models weren't being detected and assigned proper templates
 /// **Fix**: Added Qwen family detection in template inference logic
-/// **This test**: Verifies Qwen models get correct ChatML-based templates
-
+// **This test**: Verifies Qwen models get correct ChatML-based templates
 #[cfg(test)]
 mod issue_013_tests {
     use shimmy::model_registry::Registry;

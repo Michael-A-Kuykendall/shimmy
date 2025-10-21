@@ -55,7 +55,7 @@ async fn test_http_api_health_check() {
         .unwrap();
 
     let response = client
-        .get(&format!("{}/health", base_url))
+        .get(format!("{}/health", base_url))
         .send()
         .await
         .unwrap();
@@ -181,7 +181,7 @@ async fn test_concurrent_requests() {
         let base_url = base_url.clone();
         let handle = tokio::spawn(async move {
             let response = client
-                .get(&format!("{}/health", base_url))
+                .get(format!("{}/health", base_url))
                 .send()
                 .await
                 .unwrap();

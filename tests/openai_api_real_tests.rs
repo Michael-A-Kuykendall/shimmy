@@ -11,7 +11,6 @@ use std::sync::Arc;
 
 /// Real functional tests for Open WebUI and AnythingLLM compatibility
 /// These tests actually call the API functions and verify responses
-
 fn setup_test_state_with_models() -> Arc<AppState> {
     let mut registry = Registry::default();
 

@@ -30,7 +30,7 @@ fn test_binary_version_matches_cargo_toml() {
     // Each part should be a valid number
     for part in &parts[0..3] {
         part.parse::<u32>()
-            .expect(&format!("Version part '{}' should be a valid number", part));
+            .unwrap_or_else(|_| panic!("Version part '{}' should be a valid number", part));
     }
 }
 
@@ -81,7 +81,6 @@ fn test_version_flag_functionality() {
 
     // The important thing is that the CLI is configured to handle version flags
     // If this test runs without panicking, the version infrastructure is working
-    assert!(true, "Version flag infrastructure should be available");
 }
 
 #[test]
@@ -90,7 +89,7 @@ fn test_cargo_pkg_version_environment_variable() {
     let version = env!("CARGO_PKG_VERSION");
 
     // Should match the pattern of a real version
-    assert!(version.len() > 0, "CARGO_PKG_VERSION should not be empty");
+    assert!(!version.is_empty(), "CARGO_PKG_VERSION should not be empty");
 
     // Should not contain any build artifacts that could cause issues
     assert!(
@@ -205,9 +204,12 @@ fn test_version_consistency_across_codebase() {
     );
 
     // First two parts should be numeric
-    for i in 0..2.min(version_parts.len()) {
-        version_parts[i]
-            .parse::<u32>()
-            .expect(&format!("Version component {} should be numeric", i));
+    for (i, part) in version_parts
+        .iter()
+        .enumerate()
+        .take(2.min(version_parts.len()))
+    {
+        part.parse::<u32>()
+            .unwrap_or_else(|_| panic!("Version component {} should be numeric", i));
     }
 }

@@ -36,7 +36,7 @@ fn test_moe_disabled_warning_compilation() {
 
     // This test ensures the warning system compiles correctly
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "--no-default-features",
             "--features",
@@ -85,7 +85,7 @@ fn test_issue_108_cli_flags_still_work() {
     // Regression test: Ensure --cpu-moe and --n-cpu-moe flags still exist and parse
 
     let help_output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "shimmy",

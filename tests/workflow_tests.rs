@@ -27,8 +27,7 @@ mod tests {
         let rt = tokio::runtime::Runtime::new().unwrap();
         let result = rt.block_on(engine.execute_workflow(request));
         // Empty workflow might succeed but requesting output from non-existent step should fail
-        if result.is_ok() {
-            let workflow_result = result.unwrap();
+        if let Ok(workflow_result) = result {
             assert!(
                 !workflow_result.success,
                 "Workflow should fail with non-existent output step"

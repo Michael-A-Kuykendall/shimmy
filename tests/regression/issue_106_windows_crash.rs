@@ -4,8 +4,7 @@
 ///
 /// **Bug**: Server crashes on Windows when handling certain requests
 /// **Fix**: Added proper error handling and Windows-specific compatibility
-/// **This test**: Verifies Windows server stability
-
+// **This test**: Verifies Windows server stability
 #[cfg(test)]
 mod issue_106_tests {
     #[test]
@@ -16,14 +15,12 @@ mod issue_106_tests {
         #[cfg(target_os = "windows")]
         {
             // Windows-specific test
-            assert!(true, "Windows server initialization should not crash");
             println!("✅ Issue #106: Windows server stability verified");
         }
 
         #[cfg(not(target_os = "windows"))]
         {
             // Test still passes on other platforms
-            assert!(true, "Cross-platform compatibility maintained");
             println!("✅ Issue #106: Cross-platform test passed (not Windows)");
         }
     }
@@ -34,7 +31,6 @@ mod issue_106_tests {
         // Issue #106 was caused by uncaught panics
 
         // Verify panic handling infrastructure exists
-        assert!(true, "Error handling should prevent crashes");
         println!("✅ Issue #106: Server error handling present");
     }
 }

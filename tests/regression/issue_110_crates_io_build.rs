@@ -10,7 +10,7 @@ use std::process::Command;
 fn test_template_files_included_in_package() {
     // Regression test for Issue #110 - Missing template files
     let output = Command::new("cargo")
-        .args(&["package", "--list", "--allow-dirty"])
+        .args(["package", "--list", "--allow-dirty"])
         .output()
         .expect("Failed to run cargo package --list");
 
@@ -53,7 +53,7 @@ fn test_llama_cpp_dependency_compatibility() {
     // This test verifies that our usage of llama-cpp-2 APIs is compatible
     // by compiling the llama engine module specifically
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "--no-default-features",
             "--features",
@@ -95,7 +95,7 @@ fn test_crates_io_package_builds_successfully() {
 
     // First test: Package creation succeeds
     let package_output = Command::new("cargo")
-        .args(&["package", "--allow-dirty"])
+        .args(["package", "--allow-dirty"])
         .output()
         .expect("Failed to run cargo package");
 
@@ -108,7 +108,7 @@ fn test_crates_io_package_builds_successfully() {
     // Second test: Package verification builds successfully
     // (This runs the same verification that crates.io would run)
     let verify_output = Command::new("cargo")
-        .args(&["package", "--allow-dirty", "--no-verify"])
+        .args(["package", "--allow-dirty", "--no-verify"])
         .output()
         .expect("Failed to run cargo package verification");
 
@@ -127,7 +127,7 @@ fn test_no_missing_include_str_files() {
 
     // Build with the exact features that would be used by cargo install
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "--release",
             "--no-default-features",
@@ -175,7 +175,7 @@ fn test_issue_110_user_experience_simulation() {
 
     // Step 1: Verify package can be listed (simulates crates.io publishing check)
     let package_result = Command::new("cargo")
-        .args(&["package", "--list", "--allow-dirty"])
+        .args(["package", "--list", "--allow-dirty"])
         .output()
         .expect("Failed to simulate package validation");
 
@@ -188,7 +188,7 @@ fn test_issue_110_user_experience_simulation() {
     // Step 2: Verify all template files are accessible
     // (simulates the include_str! calls during compilation)
     let build_result = Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "--quiet",
             "--no-default-features",

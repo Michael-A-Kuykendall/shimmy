@@ -4,8 +4,7 @@
 ///
 /// **Bug**: --gpu-backend flag was parsed but not actually wired into model loading
 /// **Fix**: Properly pass GPU backend selection through to llama.cpp initialization
-/// **This test**: Verifies GPU backend flag is respected in model loading path
-
+// **This test**: Verifies GPU backend flag is respected in model loading path
 #[cfg(test)]
 mod issue_072_tests {
     use shimmy::engine::ModelSpec;

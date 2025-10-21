@@ -26,7 +26,7 @@ fn test_llm_only_filtering() {
     // Test without filtering - should show all models
     let mut cmd_all = Command::cargo_bin("shimmy").unwrap();
     let output_all = cmd_all
-        .args(&["discover", &model_dirs_arg])
+        .args(["discover", &model_dirs_arg])
         .assert()
         .success();
 
@@ -35,7 +35,7 @@ fn test_llm_only_filtering() {
     // Test with LLM filtering - should filter out non-LLM models
     let mut cmd_filtered = Command::cargo_bin("shimmy").unwrap();
     let output_filtered = cmd_filtered
-        .args(&["discover", &model_dirs_arg, "--llm-only"])
+        .args(["discover", &model_dirs_arg, "--llm-only"])
         .assert()
         .success();
 
@@ -86,18 +86,18 @@ fn test_llm_only_filtering() {
 fn test_moe_cpu_offloading_flags() {
     // Test that MoE CPU flags are accepted without errors
     let mut cmd = Command::cargo_bin("shimmy").unwrap();
-    cmd.args(&["--cpu-moe", "list"]).assert().success();
+    cmd.args(["--cpu-moe", "list"]).assert().success();
 
     // Test n-cpu-moe flag
     let mut cmd2 = Command::cargo_bin("shimmy").unwrap();
-    cmd2.args(&["--n-cpu-moe", "4", "list"]).assert().success();
+    cmd2.args(["--n-cpu-moe", "4", "list"]).assert().success();
 }
 
 #[test]
 fn test_moe_cpu_flags_conflict() {
     // Test that --cpu-moe and --n-cpu-moe conflict
     let mut cmd = Command::cargo_bin("shimmy").unwrap();
-    cmd.args(&["--cpu-moe", "--n-cpu-moe", "4", "list"])
+    cmd.args(["--cpu-moe", "--n-cpu-moe", "4", "list"])
         .assert()
         .failure()
         .stderr(predicate::str::contains("cannot be used with"));
@@ -106,7 +106,7 @@ fn test_moe_cpu_flags_conflict() {
 #[test]
 fn test_discover_help_shows_llm_only() {
     let mut cmd = Command::cargo_bin("shimmy").unwrap();
-    cmd.args(&["discover", "--help"])
+    cmd.args(["discover", "--help"])
         .assert()
         .success()
         .stdout(predicate::str::contains("--llm-only"))
@@ -118,7 +118,7 @@ fn test_threading_optimization_performance() {
     // Test that threading optimization is properly implemented
     // This is a regression test for Issue #101
     let mut cmd = Command::cargo_bin("shimmy").unwrap();
-    cmd.args(&["--help"]).assert().success();
+    cmd.args(["--help"]).assert().success();
     // The fact that this doesn't hang or consume excessive CPU is the test
     // If threading was broken, this would cause issues
 }
@@ -128,7 +128,7 @@ fn test_streaming_functionality() {
     // Test that streaming functionality is available
     // This is a regression test for Issue #101
     let mut cmd = Command::cargo_bin("shimmy").unwrap();
-    cmd.args(&["serve", "--help"])
+    cmd.args(["serve", "--help"])
         .assert()
         .success()
         .stdout(predicate::str::contains("HTTP server")); // Verify server can start
@@ -145,7 +145,7 @@ fn test_ollama_models_environment_variable() {
 
     let mut cmd = Command::cargo_bin("shimmy").unwrap();
     cmd.env("OLLAMA_MODELS", &test_path)
-        .args(&["list"])
+        .args(["list"])
         .assert()
         .success(); // Should not crash when OLLAMA_MODELS is set
 }
@@ -160,7 +160,7 @@ fn test_windows_server_stability_issue_106() {
 
     // Test that server can start without crashing on Windows
     // Instead of spawning and killing, just test that server help works
-    cmd.args(&["serve", "--help"])
+    cmd.args(["serve", "--help"])
         .assert()
         .success()
         .stdout(predicate::str::contains("HTTP server")); // Verify server command exists

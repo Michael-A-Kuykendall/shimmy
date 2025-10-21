@@ -4,8 +4,7 @@
 ///
 /// **Bug**: Custom model directory environment variables not being detected
 /// **Fix**: Added proper environment variable parsing and directory validation
-/// **This test**: Verifies custom directory detection via env vars
-
+// **This test**: Verifies custom directory detection via env vars
 #[cfg(test)]
 mod issue_012_tests {
     use shimmy::discovery::discover_models_from_directory;

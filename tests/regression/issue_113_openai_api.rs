@@ -4,8 +4,7 @@
 ///
 /// **Bug**: OpenAI API responses missing fields required by frontend frameworks
 /// **Fix**: Enhanced Model structure with permission, root, parent fields
-/// **This test**: Verifies OpenAI API response structure matches spec
-
+// **This test**: Verifies OpenAI API response structure matches spec
 #[cfg(test)]
 mod issue_113_tests {
     use shimmy::openai_compat::{Model, ModelsResponse};

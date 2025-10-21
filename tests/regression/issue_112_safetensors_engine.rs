@@ -4,8 +4,7 @@
 ///
 /// **Bug**: SafeTensors files (.safetensors) were routed to wrong engine (HuggingFace instead of SafeTensors)
 /// **Fix**: Added proper file extension detection to route .safetensors to SafeTensors engine
-/// **This test**: Verifies SafeTensors files use correct engine
-
+// **This test**: Verifies SafeTensors files use correct engine
 #[cfg(test)]
 mod issue_112_tests {
     use shimmy::engine::adapter::InferenceEngineAdapter;

@@ -38,7 +38,7 @@ fn test_cargo_toml_version_format() {
     // Each part should be numeric (for the first 3 parts)
     for (i, part) in parts.iter().take(3).enumerate() {
         part.parse::<u32>()
-            .expect(&format!("Version part {} should be numeric: {}", i, part));
+            .unwrap_or_else(|_| panic!("Version part {} should be numeric: {}", i, part));
     }
 
     println!("✅ Cargo.toml version format is valid: {}", version);
@@ -110,7 +110,7 @@ fn test_version_validation_script_simulation() {
 fn test_binary_version_output() {
     // Build and test the binary version output
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "--release",
             "--no-default-features",

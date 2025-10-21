@@ -6,7 +6,6 @@
 /// **Root Cause**: llama.cpp backend was initialized on every model load
 /// **Fix**: Use global OnceLock singleton to initialize backend once per process
 /// **This test**: Verifies the backend singleton pattern is implemented correctly
-
 #[cfg(feature = "llama")]
 #[test]
 fn test_issue_128_backend_singleton_exists() {
@@ -20,8 +19,6 @@ fn test_issue_128_backend_singleton_exists() {
     // - OnceLock<Result<LlamaBackend, String>> is defined
     // - get_or_init_backend() uses get_or_init() not get_or_try_init()
     // - Multiple calls to load() won't re-initialize the backend
-
-    assert!(true, "Backend singleton pattern is implemented");
 }
 
 #[cfg(not(feature = "llama"))]
