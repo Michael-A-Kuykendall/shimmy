@@ -5,6 +5,9 @@
 **/*.rs.bk
 *.pdb
 
+# Console development subproject (entire directory)
+console/
+
 # IDE files
 .vscode/
 .idea/
