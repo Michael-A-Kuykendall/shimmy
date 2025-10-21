@@ -42,6 +42,25 @@ fn get_optimal_thread_count() -> i32 {
 use std::sync::Mutex;
 use tracing::info;
 
+#[cfg(feature = "llama")]
+use std::sync::OnceLock;
+
+#[cfg(feature = "llama")]
+static LLAMA_BACKEND: OnceLock<Result<shimmy_llama_cpp_2::llama_backend::LlamaBackend, String>> = OnceLock::new();
+
+#[cfg(feature = "llama")]
+fn get_or_init_backend() -> Result<&'static shimmy_llama_cpp_2::llama_backend::LlamaBackend> {
+    use anyhow::anyhow;
+    
+    let result = LLAMA_BACKEND.get_or_init(|| {
+        info!("Initializing llama.cpp backend (first model load)");
+        shimmy_llama_cpp_2::llama_backend::LlamaBackend::init()
+            .map_err(|e| format!("Failed to initialize llama backend: {}", e))
+    });
+    
+    result.as_ref().map_err(|e| anyhow!("{}", e))
+}
+
 #[derive(Default)]
 pub struct LlamaEngine {
     #[allow(dead_code)] // Temporarily unused while fork is being fixed
@@ -254,7 +273,9 @@ impl InferenceEngine for LlamaEngine {
             use anyhow::anyhow;
             use shimmy_llama_cpp_2 as llama;
             use std::num::NonZeroU32;
-            let be = llama::llama_backend::LlamaBackend::init()?;
+            
+            // Use global singleton backend (fixes Issue #128: BackendAlreadyInitialized)
+            let be = get_or_init_backend()?;
 
             // Configure GPU acceleration based on backend
             let n_gpu_layers = self.gpu_backend.gpu_layers();
@@ -342,7 +363,6 @@ impl InferenceEngine for LlamaEngine {
             let ctx: llama::context::LlamaContext<'static> =
                 unsafe { std::mem::transmute(ctx_tmp) };
             Ok(Box::new(LlamaLoaded {
-                _be: be,
                 model,
                 ctx: Mutex::new(ctx),
             }))
@@ -357,7 +377,6 @@ impl InferenceEngine for LlamaEngine {
 
 #[cfg(feature = "llama")]
 struct LlamaLoaded {
-    _be: shimmy_llama_cpp_2::llama_backend::LlamaBackend,
     model: shimmy_llama_cpp_2::model::LlamaModel,
     ctx: Mutex<shimmy_llama_cpp_2::context::LlamaContext<'static>>,
 }

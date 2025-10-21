@@ -2,7 +2,10 @@
 ///
 /// This module includes all individual regression test files from tests/regression/
 /// Each file tests a specific user-reported issue to prevent regressions.
+///
+/// Auto-discovered by CI/CD - just add new issue_NNN_*.rs files to tests/regression/
 
+// Include all individual regression test modules (only files that exist)
 #[path = "regression/issue_012_custom_model_dirs.rs"]
 mod issue_012_custom_model_dirs;
 
@@ -54,8 +57,14 @@ mod issue_114_mlx_distribution;
 #[path = "regression/issue_127_128_mlx_placeholder.rs"]
 mod issue_127_128_mlx_placeholder;
 
+#[path = "regression/issue_128_backend_reinitialization.rs"]
+mod issue_128_backend_reinitialization;
+
 #[path = "regression/issue_packaging_general.rs"]
 mod issue_packaging_general;
 
 #[path = "regression/issue_version_validation.rs"]
 mod issue_version_validation;
+
+// This test file is now executable via: cargo test --test regression
+// CI/CD runs this automatically before main test suite
