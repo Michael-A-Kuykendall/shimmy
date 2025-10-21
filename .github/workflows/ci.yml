@@ -44,7 +44,7 @@ jobs:
         fi
       continue-on-error: true
 
-  # Comprehensive Test Suite
+  # Comprehensive Test Suite (includes regression tests)
   test:
     name: Test Suite
     runs-on: ubuntu-latest
@@ -94,6 +94,13 @@ jobs:
       run: |
         echo "Running Unit Tests - All Features"
         timeout 900s cargo test --lib --all-features --verbose
+
+    - name: Run Regression Tests
+      if: steps.check-skip-tests.outputs.skip-tests != 'true'
+      run: |
+        echo "🧪 Running Regression Tests - User-reported bug prevention"
+        timeout 900s cargo test --test regression --features llama --verbose
+        timeout 900s cargo test --test regression_tests --no-default-features --features huggingface --verbose
 
     - name: Report test status
       run: |
