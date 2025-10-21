@@ -4,8 +4,7 @@
 /// - Issue #59: CUDA compilation errors (cudart_static not found)
 /// - Issue #58: GPU capabilities in prebuilt binaries
 /// - General compilation robustness
-/// - Feature flag combinations
-
+// - Feature flag combinations
 #[test]
 fn test_feature_compilation_compatibility() {
     // Test that different feature combinations can be compiled
@@ -17,31 +16,26 @@ fn test_feature_compilation_compatibility() {
         // If we can create an adapter, the feature is working
         use shimmy::engine::adapter::InferenceEngineAdapter;
         let _adapter = InferenceEngineAdapter::new();
-        assert!(true, "LLAMA feature should compile successfully");
     }
 
     #[cfg(feature = "huggingface")]
     {
         // Test that huggingface feature compiles without issues
-        assert!(true, "HuggingFace feature should compile successfully");
     }
 
     #[cfg(feature = "llama-cuda")]
     {
         // Test that CUDA feature compiles (may not be available at runtime)
-        assert!(true, "CUDA feature should compile successfully");
     }
 
     #[cfg(feature = "llama-vulkan")]
     {
         // Test that Vulkan feature compiles
-        assert!(true, "Vulkan feature should compile successfully");
     }
 
     #[cfg(feature = "llama-opencl")]
     {
         // Test that OpenCL feature compiles
-        assert!(true, "OpenCL feature should compile successfully");
     }
 }
 
@@ -87,7 +81,6 @@ fn test_inference_engine_adapter_creation() {
 
     // Basic checks that the adapter is functional
     // We can't test actual inference without models, but we can test creation
-    assert!(true, "InferenceEngineAdapter should create successfully");
 
     // Test that we can call basic methods without panicking
     drop(adapter); // Ensure cleanup works
@@ -131,7 +124,6 @@ fn test_library_dependencies_available() {
     let _router: Router = Router::new();
 
     // Test that basic operations work
-    assert!(true, "Core dependencies should be functional");
 }
 
 #[test]
@@ -190,7 +182,7 @@ fn test_cargo_build_environment_compatibility() {
     assert_eq!(name, "shimmy", "Package name should be correct");
 
     // These should be available during build
-    assert!(version.len() > 0, "Version string should not be empty");
+    assert!(!version.is_empty(), "Version string should not be empty");
 }
 
 #[test]
@@ -216,7 +208,6 @@ fn test_memory_usage_basic_operations() {
     }
 
     // If we get here without running out of memory, basic memory management is working
-    assert!(true, "Basic memory management should work correctly");
 }
 
 #[test]
@@ -254,13 +245,11 @@ mod conditional_tests {
         let adapter = InferenceEngineAdapter::new();
         // If this compiles and runs, llama integration is working
         drop(adapter);
-        assert!(true, "Llama feature should work correctly");
     }
 
     #[cfg(feature = "huggingface")]
     #[test]
     fn test_huggingface_specific_functionality() {
         // Test huggingface-specific code paths
-        assert!(true, "HuggingFace feature should work correctly");
     }
 }

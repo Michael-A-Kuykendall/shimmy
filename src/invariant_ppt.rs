@@ -84,6 +84,7 @@ pub fn contract_test(name: &str, required_invariants: &[&str]) {
 
 /// Exploration test helper - for temporary tests during development
 #[cfg(test)]
+#[allow(dead_code)]
 pub fn explore_test<F>(name: &str, test_fn: F)
 where
     F: Fn() -> bool,
@@ -127,6 +128,7 @@ pub fn checked_invariants() -> Vec<String> {
 
 /// Get all failed invariants
 #[cfg(test)]
+#[allow(dead_code)]
 pub fn failed_invariants() -> Vec<String> {
     match FAILED_INVARIANTS.lock() {
         Ok(failed) => failed.clone(),
@@ -140,6 +142,7 @@ pub mod shimmy_invariants {
 
     /// Model loading invariants
     #[cfg(test)]
+    #[allow(dead_code)]
     pub fn assert_model_loaded(model_name: &str, success: bool) {
         assert_invariant(
             !model_name.is_empty(),
@@ -158,6 +161,7 @@ pub mod shimmy_invariants {
 
     /// Generation invariants
     #[cfg(test)]
+    #[allow(dead_code)]
     pub fn assert_generation_valid(prompt: &str, response: &str) {
         assert_invariant(
             !prompt.is_empty(),

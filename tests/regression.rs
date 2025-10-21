@@ -3,8 +3,7 @@
 /// This module includes all individual regression test files from tests/regression/
 /// Each file tests a specific user-reported issue to prevent regressions.
 ///
-/// Auto-discovered by CI/CD - just add new issue_NNN_*.rs files to tests/regression/
-
+// Auto-discovered by CI/CD - just add new issue_NNN_*.rs files to tests/regression/
 // Include all individual regression test modules (only files that exist)
 #[path = "regression/issue_012_custom_model_dirs.rs"]
 mod issue_012_custom_model_dirs;

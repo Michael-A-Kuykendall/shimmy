@@ -940,13 +940,11 @@ mod tests {
         }
 
         // Test with direct prompt (line 44)
-        let direct_prompt = Some("Direct prompt text".to_string());
-        let prompt = direct_prompt.unwrap_or_default();
+        let prompt = "Direct prompt text".to_string();
         assert_eq!(prompt, "Direct prompt text");
 
         // Test default case (line 44)
-        let no_prompt: Option<String> = None;
-        let prompt = no_prompt.unwrap_or_default();
+        let prompt = String::default();
         assert_eq!(prompt, "");
     }
 

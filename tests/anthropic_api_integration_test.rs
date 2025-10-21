@@ -11,7 +11,7 @@ fn test_anthropic_api_endpoint_exists() {
 
     // Build shimmy to ensure anthropic_compat module compiles
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "--no-default-features",
             "--features",

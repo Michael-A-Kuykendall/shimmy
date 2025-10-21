@@ -224,23 +224,23 @@ fn test_model_discovery_error_handling() {
     let result = discover_models_from_directory(&non_existent);
 
     // Should handle gracefully (either return empty list or error, but not panic)
-    match result {
-        Ok(models) => assert!(
+    if let Ok(models) = result {
+        assert!(
             models.is_empty(),
             "Non-existent directory should return empty list"
-        ),
-        Err(_) => (), // Error is also acceptable
+        );
     }
+    // Error is also acceptable
 
     // Test with file instead of directory
     let temp_file = tempfile::NamedTempFile::new().unwrap();
     let result = discover_models_from_directory(temp_file.path());
 
     // Should handle gracefully
-    match result {
-        Ok(models) => assert!(models.is_empty(), "File path should return empty list"),
-        Err(_) => (), // Error is also acceptable
+    if let Ok(models) = result {
+        assert!(models.is_empty(), "File path should return empty list");
     }
+    // Error is also acceptable
 }
 
 #[test]

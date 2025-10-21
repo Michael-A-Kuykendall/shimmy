@@ -4,8 +4,7 @@
 ///
 /// **Bug**: MLX feature not properly defined in distribution builds
 /// **Fix**: Added mlx feature flag and apple convenience feature
-/// **This test**: Verifies MLX feature is properly configured
-
+// **This test**: Verifies MLX feature is properly configured
 #[cfg(test)]
 mod issue_114_tests {
     #[test]
@@ -13,13 +12,11 @@ mod issue_114_tests {
         // Test that MLX feature compiles when enabled
         #[cfg(feature = "mlx")]
         {
-            assert!(true, "MLX feature should be available when enabled");
             println!("✅ Issue #114: MLX feature enabled and working");
         }
 
         #[cfg(not(feature = "mlx"))]
         {
-            assert!(true, "MLX feature correctly disabled when not specified");
             println!("✅ Issue #114: MLX feature correctly optional");
         }
     }
@@ -58,7 +55,6 @@ mod issue_114_tests {
         #[cfg(feature = "mlx")]
         {
             // MLX code should compile cleanly
-            assert!(true, "MLX distribution build should succeed");
         }
 
         // Test passes regardless of feature flag state

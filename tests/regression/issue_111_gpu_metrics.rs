@@ -4,8 +4,7 @@
 ///
 /// **Bug**: GPU metrics (gpu_detected, gpu_vendor) missing from /metrics endpoint
 /// **Fix**: Added GPU detection and metrics to /metrics response
-/// **This test**: Verifies GPU metrics are included in metrics endpoint
-
+// **This test**: Verifies GPU metrics are included in metrics endpoint
 #[cfg(test)]
 mod issue_111_tests {
     use shimmy::engine::adapter::InferenceEngineAdapter;
@@ -20,7 +19,6 @@ mod issue_111_tests {
         let _state = Arc::new(shimmy::AppState::new(engine, registry));
 
         // This should not panic and should include GPU detection capability
-        assert!(true, "GPU detection functions should not crash");
 
         println!("✅ Issue #111: GPU metrics infrastructure present");
     }
@@ -33,7 +31,6 @@ mod issue_111_tests {
         // - gpu_vendor: string | null
 
         // This test verifies the infrastructure exists
-        assert!(true, "GPU detection should return valid types");
 
         println!("✅ Issue #111: GPU detection returns valid values");
     }
@@ -47,8 +44,6 @@ mod issue_111_tests {
         // - gpu_detected: boolean
         // - gpu_vendor: string or null
         // - Fields are properly typed (not strings when should be boolean)
-
-        assert!(true, "Metrics endpoint should have GPU field support");
 
         println!("✅ Issue #111: Metrics endpoint GPU fields verified");
     }

@@ -8,7 +8,7 @@ use std::process::Command;
 fn test_mlx_feature_compilation() {
     // Test that MLX feature can be compiled
     let output = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "mlx"])
+        .args(["check", "--no-default-features", "--features", "mlx"])
         .output()
         .expect("Failed to run cargo check with mlx feature");
 
@@ -32,7 +32,7 @@ fn test_apple_feature_set_compilation() {
     }
 
     let output = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "apple"])
+        .args(["check", "--no-default-features", "--features", "apple"])
         .output()
         .expect("Failed to run cargo check with apple feature set");
 
@@ -55,7 +55,7 @@ fn test_gpu_info_with_mlx_compiled() {
 
     // Build with apple features and test gpu-info output (debug build for speed)
     let build_output = Command::new("cargo")
-        .args(&["build", "--no-default-features", "--features", "apple"])
+        .args(["build", "--no-default-features", "--features", "apple"])
         .output()
         .expect("Failed to build with apple features");
 
@@ -128,7 +128,7 @@ fn test_regression_issue_68_scenarios() {
     // Scenario 1: cargo install with MLX should work (template compilation)
     // We test compilation rather than full install for speed
     let mlx_compile_test = Command::new("cargo")
-        .args(&["check", "--features", "mlx"])
+        .args(["check", "--features", "mlx"])
         .output()
         .expect("Failed to check MLX compilation");
 
@@ -140,7 +140,7 @@ fn test_regression_issue_68_scenarios() {
     // Scenario 2: macOS binaries should include MLX support
     // Test that apple feature set includes MLX
     let apple_features_test = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "apple"])
+        .args(["check", "--no-default-features", "--features", "apple"])
         .output()
         .expect("Failed to check apple features");
 
@@ -158,7 +158,7 @@ fn test_ci_build_matrix_features() {
 
     // Test Linux features
     let linux_test = Command::new("cargo")
-        .args(&[
+        .args([
             "check",
             "--no-default-features",
             "--features",
@@ -174,7 +174,7 @@ fn test_ci_build_matrix_features() {
 
     // Test macOS features (the fix for Issue #68)
     let macos_test = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "apple"])
+        .args(["check", "--no-default-features", "--features", "apple"])
         .output()
         .expect("Failed to check macOS features");
 
@@ -192,7 +192,7 @@ fn test_mlx_status_messages_comprehensive() {
 
     // Test apple feature set includes MLX
     let apple_test = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "apple"])
+        .args(["check", "--no-default-features", "--features", "apple"])
         .output()
         .expect("Failed to check apple features");
 
@@ -203,7 +203,7 @@ fn test_mlx_status_messages_comprehensive() {
 
     // Test that mlx feature alone works
     let mlx_only_test = Command::new("cargo")
-        .args(&["check", "--no-default-features", "--features", "mlx"])
+        .args(["check", "--no-default-features", "--features", "mlx"])
         .output()
         .expect("Failed to check mlx feature alone");
 
@@ -225,7 +225,7 @@ fn test_mlx_binary_status_messages() {
 
     // Build binary with apple features (includes MLX) - debug build for speed
     let build_output = Command::new("cargo")
-        .args(&["build", "--no-default-features", "--features", "apple"])
+        .args(["build", "--no-default-features", "--features", "apple"])
         .output()
         .expect("Failed to build with apple features");
 
@@ -306,7 +306,7 @@ fn test_mlx_regression_prevention() {
 
     // 3. Test that MLX feature compiles without errors
     let mlx_check = Command::new("cargo")
-        .args(&["check", "--features", "mlx"])
+        .args(["check", "--features", "mlx"])
         .output()
         .expect("Failed to run cargo check with mlx");
 
@@ -333,7 +333,7 @@ mod integration_tests {
 
         // Full integration test: build and run with apple features (debug for speed)
         let build_result = Command::new("cargo")
-            .args(&["build", "--no-default-features", "--features", "apple"])
+            .args(["build", "--no-default-features", "--features", "apple"])
             .output()
             .expect("Failed to build with apple features");
 

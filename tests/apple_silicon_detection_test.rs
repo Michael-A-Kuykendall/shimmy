@@ -6,7 +6,6 @@
 /// Issue: User with Apple M3 Pro received "MLX Backend: Not available (requires Apple Silicon)"
 /// Root cause: check_mlx_availability() was checking for MLX Python packages instead of just hardware
 /// Solution: Separate hardware detection from software installation checks
-
 #[cfg(test)]
 mod apple_silicon_tests {
     #[cfg(feature = "mlx")]
@@ -113,6 +112,5 @@ mod apple_silicon_tests {
         println!("MLX Python packages detected: {}", python_available);
 
         // Test should pass whether MLX is installed or not
-        assert!(true, "Python detection should complete without panic");
     }
 }

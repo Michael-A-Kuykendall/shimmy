@@ -1398,9 +1398,11 @@ mod tests {
         assert!(output.contains("max_tokens:"));
 
         // Test with different options
-        let mut opts = crate::engine::GenOptions::default();
-        opts.max_tokens = 150;
-        opts.temperature = 0.8;
+        let opts = crate::engine::GenOptions {
+            max_tokens: 150,
+            temperature: 0.8,
+            ..Default::default()
+        };
 
         let output = loaded.generate("Another test", opts, None).await.unwrap();
         assert!(output.contains("Another test"));
@@ -1677,7 +1679,8 @@ mod tests {
         // Verify test values are set
         for var in &test_vars {
             assert_eq!(
-                env::var(var).expect(&format!("Environment variable {} should be set", var)),
+                env::var(var)
+                    .unwrap_or_else(|_| panic!("Environment variable {} should be set", var)),
                 "/test/path"
             );
         }

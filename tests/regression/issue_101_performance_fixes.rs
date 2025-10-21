@@ -9,7 +9,6 @@
 ///
 /// **Fixes**: Smart threading, fixed SSE streaming, added OLLAMA_MODELS support
 /// **This test**: Verifies all three fixes remain working
-
 #[cfg(test)]
 mod issue_101_tests {
     use std::env;

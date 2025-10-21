@@ -401,32 +401,31 @@ mod tests {
     #[test]
     fn test_gpu_detection_functions() {
         // Test that GPU detection functions return boolean values
-        let gpu_detected = detect_gpu();
-        assert!(gpu_detected == true || gpu_detected == false);
+        let _gpu_detected = detect_gpu();
+        // GPU detection either succeeds or fails - both are valid
 
         let vendor = get_gpu_vendor();
-        if vendor.is_some() {
-            let vendor_str = vendor.unwrap();
+        if let Some(vendor_str) = vendor {
             assert!(vendor_str == "nvidia" || vendor_str == "amd" || vendor_str == "intel");
         }
     }
 
     #[test]
     fn test_nvidia_detection() {
-        let result = detect_nvidia();
-        assert!(result == true || result == false);
+        let _result = detect_nvidia();
+        // NVIDIA detection either succeeds or fails - both are valid
     }
 
     #[test]
     fn test_amd_detection() {
-        let result = detect_amd();
-        assert!(result == true || result == false);
+        let _result = detect_amd();
+        // AMD detection either succeeds or fails - both are valid
     }
 
     #[test]
     fn test_intel_detection() {
-        let result = detect_intel();
-        assert!(result == true || result == false);
+        let _result = detect_intel();
+        // Intel detection either succeeds or fails - both are valid
     }
 
     #[tokio::test]

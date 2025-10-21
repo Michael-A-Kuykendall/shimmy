@@ -272,7 +272,7 @@ mod regression_tests {
         // But we can test that the GPU detection functions work
 
         // Test that GPU detection functions return valid boolean values
-        assert!(true); // GPU detection should not crash
+        // GPU detection functions executed without panicking (test passes if we reach here)
 
         // In a real test environment, we would test:
         // 1. GET /metrics returns JSON with gpu_detected field
@@ -368,13 +368,11 @@ mod regression_tests {
         #[cfg(feature = "mlx")]
         {
             // MLX feature is enabled - test that MLX-related code compiles
-            assert!(true, "MLX feature should be available when enabled");
         }
 
         #[cfg(not(feature = "mlx"))]
         {
             // MLX feature is disabled - that's also valid
-            assert!(true, "MLX feature correctly disabled when not specified");
         }
 
         // Test that Cargo.toml includes MLX feature definition
