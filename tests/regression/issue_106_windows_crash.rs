@@ -12,14 +12,14 @@ mod issue_106_tests {
     fn test_windows_server_stability() {
         // Test that server initialization doesn't crash on Windows
         // This test verifies basic stability without actually starting server
-        
+
         #[cfg(target_os = "windows")]
         {
             // Windows-specific test
             assert!(true, "Windows server initialization should not crash");
             println!("✅ Issue #106: Windows server stability verified");
         }
-        
+
         #[cfg(not(target_os = "windows"))]
         {
             // Test still passes on other platforms
@@ -32,7 +32,7 @@ mod issue_106_tests {
     fn test_server_error_handling() {
         // Test that server has proper error handling
         // Issue #106 was caused by uncaught panics
-        
+
         // Verify panic handling infrastructure exists
         assert!(true, "Error handling should prevent crashes");
         println!("✅ Issue #106: Server error handling present");

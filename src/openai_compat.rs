@@ -97,7 +97,7 @@ pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
             owned_by: "shimmy".to_string(),
             permission: None, // No fine-grained permissions for local models
             root: Some(name), // The model itself is the root
-            parent: None, // Local models don't have parent models
+            parent: None,     // Local models don't have parent models
         })
         .collect();
 

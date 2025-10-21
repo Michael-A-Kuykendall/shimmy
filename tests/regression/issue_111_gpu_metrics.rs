@@ -21,7 +21,7 @@ mod issue_111_tests {
 
         // This should not panic and should include GPU detection capability
         assert!(true, "GPU detection functions should not crash");
-        
+
         println!("✅ Issue #111: GPU metrics infrastructure present");
     }
 
@@ -31,10 +31,10 @@ mod issue_111_tests {
         // In production: GET /metrics should return JSON with:
         // - gpu_detected: bool
         // - gpu_vendor: string | null
-        
+
         // This test verifies the infrastructure exists
         assert!(true, "GPU detection should return valid types");
-        
+
         println!("✅ Issue #111: GPU detection returns valid values");
     }
 
@@ -42,14 +42,14 @@ mod issue_111_tests {
     fn test_metrics_endpoint_includes_gpu_fields() {
         // Test that /metrics endpoint structure supports GPU fields
         // Can't test actual HTTP without server, but verify types exist
-        
+
         // Expected fields in /metrics response:
         // - gpu_detected: boolean
         // - gpu_vendor: string or null
         // - Fields are properly typed (not strings when should be boolean)
-        
+
         assert!(true, "Metrics endpoint should have GPU field support");
-        
+
         println!("✅ Issue #111: Metrics endpoint GPU fields verified");
     }
 }

@@ -40,9 +40,7 @@ async fn test_mlx_returns_error_not_placeholder() {
                 stream: false,
             };
 
-            let result = model
-                .generate("Test prompt", opts, None)
-                .await;
+            let result = model.generate("Test prompt", opts, None).await;
 
             // CRITICAL: Must return Err(), NOT a placeholder string
             assert!(
@@ -170,7 +168,7 @@ async fn test_mlx_no_placeholder_streaming() {
         Ok(model) => {
             let token_count = Arc::new(Mutex::new(0));
             let token_count_clone = Arc::clone(&token_count);
-            
+
             let callback = Box::new(move |_token: String| {
                 let mut count = token_count_clone.lock().unwrap();
                 *count += 1;

@@ -20,7 +20,7 @@ fn test_template_files_are_included_in_package() {
     let _service = include_str!("../../templates/kubernetes/service.yaml");
     let _configmap = include_str!("../../templates/kubernetes/configmap.yaml");
 
-        // Cloud platform templates
+    // Cloud platform templates
     let _railway = include_str!("../../templates/railway/railway.toml");
     let _fly = include_str!("../../templates/fly/fly.toml");
 
