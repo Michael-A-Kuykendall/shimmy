@@ -2,7 +2,6 @@
 ///
 /// This test suite ensures proper memory management, error handling,
 /// and user guidance for memory allocation issues.
-use std::fs;
 use std::process::Command;
 
 #[test]
@@ -88,6 +87,8 @@ fn test_issue_108_cli_flags_still_work() {
     let help_output = Command::new("cargo")
         .args(&[
             "run",
+            "--bin",
+            "shimmy",
             "--no-default-features",
             "--features",
             "huggingface,llama",
