@@ -212,9 +212,16 @@ impl GpuBackend {
     }
 
     /// Get the number of layers to offload to GPU
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     fn gpu_layers(&self) -> u32 {
-        999 // Offload all layers to GPU
+        match self {
+            GpuBackend::Cpu => 0, // No GPU offloading for CPU backend
+            #[cfg(feature = "llama-cuda")]
+            GpuBackend::Cuda => 999, // Offload all layers to CUDA
+            #[cfg(feature = "llama-vulkan")]
+            GpuBackend::Vulkan => 999, // Offload all layers to Vulkan
+            #[cfg(feature = "llama-opencl")]
+            GpuBackend::OpenCL => 999, // Offload all layers to OpenCL
+        }
     }
 }
 
@@ -227,7 +234,6 @@ impl LlamaEngine {
     }
 
     /// Create engine with specific GPU backend from CLI
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     pub fn new_with_backend(backend_str: Option<&str>) -> Self {
         let gpu_backend = backend_str
             .map(GpuBackend::from_string)
@@ -242,7 +248,6 @@ impl LlamaEngine {
     }
 
     /// Set MoE CPU offloading configuration
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     pub fn with_moe_config(mut self, cpu_moe_all: bool, n_cpu_moe: Option<usize>) -> Self {
         self.moe_config = MoeConfig {
             cpu_moe_all,
@@ -252,7 +257,6 @@ impl LlamaEngine {
     }
 
     /// Get information about the current GPU backend configuration
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     pub fn get_backend_info(&self) -> String {
         match self.gpu_backend {
             GpuBackend::Cpu => "CPU".to_string(),
@@ -489,6 +493,48 @@ mod tests {
         // LlamaEngine has a GpuBackend field - just verify it can be created
         // Size depends on which GPU features are compiled in
         let _ = engine; // Suppress unused variable warning
+    }
+
+    #[test]
+    fn test_gpu_backend_layer_offloading_logic() {
+        // Issue #130: Verify CPU backend offloads 0 layers, GPU backends offload all layers
+        
+        let cpu_backend = GpuBackend::Cpu;
+        assert_eq!(
+            cpu_backend.gpu_layers(),
+            0,
+            "CPU backend should offload 0 layers to GPU"
+        );
+
+        #[cfg(feature = "llama-cuda")]
+        {
+            let cuda_backend = GpuBackend::Cuda;
+            assert_eq!(
+                cuda_backend.gpu_layers(),
+                999,
+                "CUDA backend should offload 999 layers to GPU"
+            );
+        }
+
+        #[cfg(feature = "llama-vulkan")]
+        {
+            let vulkan_backend = GpuBackend::Vulkan;
+            assert_eq!(
+                vulkan_backend.gpu_layers(),
+                999,
+                "Vulkan backend should offload 999 layers to GPU"
+            );
+        }
+
+        #[cfg(feature = "llama-opencl")]
+        {
+            let opencl_backend = GpuBackend::OpenCL;
+            assert_eq!(
+                opencl_backend.gpu_layers(),
+                999,
+                "OpenCL backend should offload 999 layers to GPU"
+            );
+        }
     }
 
     #[tokio::test]

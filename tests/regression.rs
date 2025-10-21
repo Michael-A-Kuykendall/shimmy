@@ -53,9 +53,6 @@ mod issue_113_openai_api;
 #[path = "regression/issue_114_mlx_distribution.rs"]
 mod issue_114_mlx_distribution;
 
-#[path = "regression/issue_127_128_mlx_placeholder.rs"]
-mod issue_127_128_mlx_placeholder;
-
 #[path = "regression/issue_128_backend_reinitialization.rs"]
 mod issue_128_backend_reinitialization;
 
