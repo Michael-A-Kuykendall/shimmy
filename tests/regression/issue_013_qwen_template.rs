@@ -17,20 +17,21 @@ mod issue_013_tests {
         let qwen_models = vec![
             "Qwen/Qwen2.5-Coder-32B-Instruct",
             "Qwen/Qwen2.5-7B-Instruct",
-            "qwen2.5-coder-7b-instruct",  // lowercase variant
+            "qwen2.5-coder-7b-instruct", // lowercase variant
             "Qwen2-7B-Instruct",
         ];
 
         for model_name in qwen_models {
             let template_str = registry.infer_template(model_name);
-            
+
             // Check if template is appropriate for Qwen models
             assert!(
                 template_str == "chatml" || template_str == "llama3",
                 "❌ Issue #13 regression: {} should use chatml or llama3, got {}",
-                model_name, template_str
+                model_name,
+                template_str
             );
-            
+
             println!("✅ {} correctly uses {} template", model_name, template_str);
         }
 
@@ -43,7 +44,7 @@ mod issue_013_tests {
         let registry = Registry::new();
         let model_path = "Qwen/Qwen2.5-Coder-32B-Instruct";
         let template_str = registry.infer_template(model_path);
-        
+
         // VSCode Copilot expects proper conversation formatting
         // ChatML is the correct template for Qwen models
         assert!(

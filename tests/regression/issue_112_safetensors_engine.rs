@@ -32,7 +32,7 @@ mod issue_112_tests {
             "safetensors",
             "SafeTensors files should be detected by .safetensors extension"
         );
-        
+
         println!("✅ Issue #112: SafeTensors file detection working");
     }
 
@@ -53,7 +53,7 @@ mod issue_112_tests {
             "safetensors",
             "Complex paths should still detect .safetensors extension"
         );
-        
+
         println!("✅ Issue #112: Complex SafeTensors paths handled");
     }
 
@@ -70,7 +70,7 @@ mod issue_112_tests {
             gguf.extension().unwrap(),
             "SafeTensors and GGUF should be distinguishable"
         );
-        
+
         println!("✅ Issue #112: SafeTensors vs GGUF distinction clear");
     }
 }
