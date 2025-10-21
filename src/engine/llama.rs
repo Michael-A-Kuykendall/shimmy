@@ -79,7 +79,7 @@ struct MoeConfig {
 }
 
 #[derive(Debug, Clone, Default)]
-enum GpuBackend {
+pub enum GpuBackend {
     #[default]
     Cpu,
     #[cfg(feature = "llama-cuda")]
@@ -212,7 +212,7 @@ impl GpuBackend {
     }
 
     /// Get the number of layers to offload to GPU
-    fn gpu_layers(&self) -> u32 {
+    pub fn gpu_layers(&self) -> u32 {
         match self {
             GpuBackend::Cpu => 0, // No GPU offloading for CPU backend
             #[cfg(feature = "llama-cuda")]
