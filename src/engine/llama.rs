@@ -498,7 +498,7 @@ mod tests {
     #[test]
     fn test_gpu_backend_layer_offloading_logic() {
         // Issue #130: Verify CPU backend offloads 0 layers, GPU backends offload all layers
-        
+
         let cpu_backend = GpuBackend::Cpu;
         assert_eq!(
             cpu_backend.gpu_layers(),
