@@ -12,6 +12,8 @@ pub struct GenOptions {
     pub repeat_penalty: f32,
     pub seed: Option<u32>,
     pub stream: bool,
+    #[serde(default)]
+    pub stop_tokens: Vec<String>,
 }
 
 impl Default for GenOptions {
@@ -24,6 +26,7 @@ impl Default for GenOptions {
             repeat_penalty: 1.1,
             seed: None,
             stream: true,
+            stop_tokens: Vec::new(),
         }
     }
 }
