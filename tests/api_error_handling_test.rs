@@ -72,6 +72,7 @@ async fn test_chat_completions_model_not_found_response() {
         temperature: None,
         max_tokens: None,
         top_p: None,
+        stop: None,
     };
 
     // Exercise the handler - should return 404 with JSON error
