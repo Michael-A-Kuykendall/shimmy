@@ -67,6 +67,15 @@ impl TemplateFamily {
             }
         }
     }
+
+    /// Get the stop tokens for this template family
+    pub fn stop_tokens(&self) -> Vec<String> {
+        match self {
+            TemplateFamily::ChatML => vec!["<|im_end|>".to_string(), "<|im_start|>".to_string()],
+            TemplateFamily::Llama3 => vec!["<|eot_id|>".to_string(), "<|end_of_text|>".to_string()],
+            TemplateFamily::OpenChat => vec![],
+        }
+    }
 }
 
 // Template generation functions for deployment platforms
@@ -283,5 +292,30 @@ mod tests {
         let result = template.render(None, &messages, None);
         assert!(result.contains("user: Hi"));
         assert!(result.contains("assistant: "));
+    }
+
+    #[test]
+    fn test_chatml_stop_tokens() {
+        let template = TemplateFamily::ChatML;
+        let stop_tokens = template.stop_tokens();
+        assert_eq!(stop_tokens.len(), 2);
+        assert!(stop_tokens.contains(&"<|im_end|>".to_string()));
+        assert!(stop_tokens.contains(&"<|im_start|>".to_string()));
+    }
+
+    #[test]
+    fn test_llama3_stop_tokens() {
+        let template = TemplateFamily::Llama3;
+        let stop_tokens = template.stop_tokens();
+        assert_eq!(stop_tokens.len(), 2);
+        assert!(stop_tokens.contains(&"<|eot_id|>".to_string()));
+        assert!(stop_tokens.contains(&"<|end_of_text|>".to_string()));
+    }
+
+    #[test]
+    fn test_openchat_stop_tokens() {
+        let template = TemplateFamily::OpenChat;
+        let stop_tokens = template.stop_tokens();
+        assert_eq!(stop_tokens.len(), 0);
     }
 }
