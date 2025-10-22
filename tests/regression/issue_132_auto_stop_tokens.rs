@@ -1,31 +1,32 @@
-//! Regression test for Issue #132: Chat template stop tokens
-//!
-//! Issue: https://github.com/Dicklesworthstone/shimmy/issues/132
-//!
-//! ## Problem
-//! Models using chat templates (like gpt-oss-20b with ChatML) were outputting
-//! raw template tokens like `<|im_end|>` and `<|im_start|>` in the generated text.
-//!
-//! ## Root Cause
-//! Chat templates were being applied to format prompts, but stop tokens were not
-//! being configured automatically. This caused the model to continue generating
-//! past template markers instead of stopping when it reached them.
-//!
-//! ## Solution
-//! - Added `stop_tokens` field to `GenOptions`
-//! - Added `stop_tokens()` method to `TemplateFamily` enum
-//! - Auto-configure stop tokens in OpenAI compatibility layer based on template
-//! - Merge user-provided stop tokens with template defaults
-//! - Check stop tokens during generation and truncate output
-//!
-//! ## Test Coverage
-//! - Template stop token configuration for ChatML
-//! - Template stop token configuration for Llama3
-//! - Template stop token configuration for OpenChat
-//! - User-provided stop tokens merge with template defaults
-//! - Stop token checking in generation loop
+// Regression tests for Issue #132: Auto-configure stop tokens for chat templates
+//
+// Issue: https://github.com/Dicklesworthstone/shimmy/issues/132
+//
+// ## Problem
+// Models using chat templates (like gpt-oss-20b with ChatML) were outputting
+// raw template tokens like `<|im_end|>` and `<|im_start|>` in the generated text.
+//
+// ## Root Cause
+// Chat templates were being applied to format prompts, but stop tokens were not
+// being configured automatically. This caused the model to continue generating
+// past template markers instead of stopping when it reached them.
+//
+// ## Solution
+// - Added `stop_tokens` field to `GenOptions`
+// - Added `stop_tokens()` method to `TemplateFamily` enum
+// - Auto-configure stop tokens in OpenAI compatibility layer based on template
+// - Merge user-provided stop tokens with template defaults
+// - Check stop tokens during generation and truncate output
+//
+// ## Test Coverage
+// - Template stop token configuration for ChatML
+// - Template stop token configuration for Llama3
+// - Template stop token configuration for OpenChat
+// - User-provided stop tokens merge with template defaults
+// - Stop token checking in generation loop
 
-use shimmy::templates::TemplateFamily;
+mod tests {
+    use shimmy::templates::TemplateFamily;
 
 #[test]
 fn test_chatml_template_has_stop_tokens() {
@@ -92,8 +93,10 @@ fn test_gen_options_has_stop_tokens_field() {
     );
 
     // Test setting stop tokens
-    let mut opts_with_stop = GenOptions::default();
-    opts_with_stop.stop_tokens = vec!["<|im_end|>".to_string()];
+    let opts_with_stop = GenOptions {
+        stop_tokens: vec!["<|im_end|>".to_string()],
+        ..Default::default()
+    };
     assert_eq!(opts_with_stop.stop_tokens.len(), 1);
     assert_eq!(opts_with_stop.stop_tokens[0], "<|im_end|>");
 }
@@ -236,8 +239,10 @@ fn test_gen_options_serialization_with_stop_tokens() {
     // Issue #132: Verify GenOptions can be serialized/deserialized with stop tokens
     use shimmy::engine::GenOptions;
 
-    let mut opts = GenOptions::default();
-    opts.stop_tokens = vec!["<|im_end|>".to_string(), "<|im_start|>".to_string()];
+    let opts = GenOptions {
+        stop_tokens: vec!["<|im_end|>".to_string(), "<|im_start|>".to_string()],
+        ..Default::default()
+    };
 
     // Serialize
     let json = serde_json::to_string(&opts).unwrap();
@@ -272,4 +277,5 @@ fn test_stop_tokens_default_to_empty() {
     let mut opts_extended = opts;
     opts_extended.stop_tokens.push("custom_stop".to_string());
     assert_eq!(opts_extended.stop_tokens.len(), 1);
+}
 }
