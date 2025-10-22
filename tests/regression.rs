@@ -62,6 +62,9 @@ mod issue_129_precompiled_gpu_support;
 #[path = "regression/issue_130_gpu_layer_offloading.rs"]
 mod issue_130_gpu_layer_offloading;
 
+#[path = "regression/issue_132_auto_stop_tokens.rs"]
+mod issue_132_auto_stop_tokens;
+
 #[path = "regression/issue_packaging_general.rs"]
 mod issue_packaging_general;
 

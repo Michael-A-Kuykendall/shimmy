@@ -17,6 +17,24 @@ pub struct ChatCompletionRequest {
     pub max_tokens: Option<usize>,
     #[serde(default)]
     pub top_p: Option<f32>,
+    #[serde(default)]
+    pub stop: Option<StopTokens>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum StopTokens {
+    Single(String),
+    Multiple(Vec<String>),
+}
+
+impl StopTokens {
+    fn into_vec(self) -> Vec<String> {
+        match self {
+            StopTokens::Single(s) => vec![s],
+            StopTokens::Multiple(v) => v,
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -196,6 +214,14 @@ pub async fn chat_completions(
     if let Some(s) = req.stream {
         opts.stream = s;
     }
+
+    // Auto-configure stop tokens based on template family
+    let mut stop_tokens = fam.stop_tokens();
+    // Merge with user-provided stop tokens if any
+    if let Some(user_stop) = req.stop {
+        stop_tokens.extend(user_stop.into_vec());
+    }
+    opts.stop_tokens = stop_tokens;
 
     if opts.stream {
         // Handle streaming response with proper OpenAI format
