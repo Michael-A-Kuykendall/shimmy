@@ -116,7 +116,7 @@ jobs:
           echo "✅ All issue regression tests passed - no user-reported bug regressions detected"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 6/8: Documentation Validation"
+      - name: "🚧 GATE 6/7: Documentation Validation"
         run: |
           echo "::group::Gate 6: Documentation"
           
@@ -136,7 +136,7 @@ jobs:
           fi
           echo "::endgroup::"
 
-      - name: "🚧 GATE 7/8: Crates.io Publication Validation"
+      - name: "🚧 GATE 7/7: Crates.io Publication Validation"
         run: |
           echo "::group::Gate 7: Crates.io Validation"
           echo "🧪 Testing crates.io publication readiness..."

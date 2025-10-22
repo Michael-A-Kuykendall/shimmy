@@ -373,6 +373,7 @@ mod tests {
             repeat_penalty: 1.1,
             seed: Some(42),
             stream: false,
+            stop_tokens: Vec::new(),
         };
 
         assert_eq!(opts.max_tokens, 100);

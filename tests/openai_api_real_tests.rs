@@ -100,6 +100,7 @@ async fn test_chat_completions_error_handling_real() {
         temperature: Some(0.7),
         max_tokens: Some(50),
         top_p: None,
+        stop: None,
     };
 
     let response = openai_compat::chat_completions(State(state), Json(request)).await;
@@ -137,6 +138,7 @@ fn test_chat_completions_model_loading_failure() {
         temperature: Some(0.7),
         max_tokens: Some(100),
         top_p: Some(0.9),
+        stop: None,
     };
 
     // Verify request structure for model loading scenarios
@@ -170,6 +172,7 @@ fn test_system_message_handling() {
         temperature: Some(0.5),
         max_tokens: Some(50),
         top_p: Some(0.8),
+        stop: None,
     };
 
     // Verify the request structure is correct for multi-message scenarios
@@ -197,6 +200,7 @@ fn test_streaming_request_processing() {
         temperature: Some(0.3),
         max_tokens: Some(50),
         top_p: None,
+        stop: None,
     };
 
     // Verify streaming request structure
@@ -306,6 +310,7 @@ fn test_generation_options_parsing() {
         temperature: Some(0.8),
         max_tokens: Some(150),
         top_p: Some(0.95),
+        stop: None,
     };
 
     // Verify the request structure matches what Open WebUI/AnythingLLM send
@@ -327,6 +332,7 @@ fn test_generation_options_parsing() {
         temperature: None,
         max_tokens: None,
         top_p: None,
+        stop: None,
     };
 
     assert!(minimal_request.stream.is_none());
