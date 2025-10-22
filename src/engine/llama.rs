@@ -447,6 +447,23 @@ impl LoadedModel for LlamaLoaded {
             let piece = self.model.token_to_str(token, Special::Plaintext)?;
             let start = out.len();
             out.push_str(&piece);
+
+            // Check for stop tokens before emitting
+            let should_stop = opts
+                .stop_tokens
+                .iter()
+                .any(|stop_token| out.contains(stop_token));
+            if should_stop {
+                // Remove the stop token from the output
+                for stop_token in &opts.stop_tokens {
+                    if let Some(pos) = out.rfind(stop_token) {
+                        out.truncate(pos);
+                        break;
+                    }
+                }
+                break;
+            }
+
             if let Some(cb) = on_token.as_mut() {
                 cb(out[start..].to_string());
             }
