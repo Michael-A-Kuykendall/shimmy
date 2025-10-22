@@ -6,7 +6,7 @@ set -e
 
 echo "🧪 SHIMMY RELEASE DRY RUN - Complete Local Emulation"
 echo "=================================================="
-echo "This runs the exact same 6 gates as GitHub Actions"
+echo "This runs the exact same gates as GitHub Actions CI/CD"
 echo ""
 
 # Colors for output
@@ -15,6 +15,18 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# Pre-flight check: Code formatting (catches what pre-commit should catch)
+echo -e "${BLUE}🔍 PRE-FLIGHT: Code Formatting Check${NC}"
+echo "=========================================="
+if cargo fmt -- --check; then
+    echo -e "${GREEN}✅ Code is properly formatted${NC}"
+else
+    echo -e "${RED}❌ Code formatting issues detected!${NC}"
+    echo "Run: cargo fmt"
+    exit 1
+fi
+echo ""
 
 # Gate status tracking
 GATE_1_STATUS="PENDING"

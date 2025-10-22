@@ -133,24 +133,33 @@ impl WorkflowEngine {
 
         // Collect outputs
         let mut outputs = HashMap::new();
+        let mut missing_outputs = Vec::new();
         for output_step_id in &request.workflow.outputs {
             if let Some(step_result) = step_results.get(output_step_id) {
                 outputs.insert(output_step_id.clone(), step_result.result.clone());
+            } else {
+                missing_outputs.push(output_step_id.clone());
             }
         }
 
-        // Check if workflow succeeded (all steps succeeded)
-        let success = step_results.values().all(|result| result.success);
+        // Check if workflow succeeded (all steps succeeded and all outputs found)
+        let success =
+            step_results.values().all(|result| result.success) && missing_outputs.is_empty();
 
         Ok(WorkflowResult {
             workflow_id: request.workflow.id,
             success,
             step_results,
             outputs,
-            error: if success {
-                None
-            } else {
+            error: if !missing_outputs.is_empty() {
+                Some(format!(
+                    "Missing output steps: {}",
+                    missing_outputs.join(", ")
+                ))
+            } else if !success {
                 Some("One or more steps failed".to_string())
+            } else {
+                None
             },
             execution_time_ms: start_time.elapsed().as_millis() as u64,
         })
