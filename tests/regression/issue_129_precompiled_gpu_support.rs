@@ -24,7 +24,7 @@
 /// **Note**: This test validates the CONFIGURATION, not the actual binary compilation
 /// (which happens in CI/CD). It ensures the workflow is set up correctly.
 #[cfg(test)]
-mod issue_129_precompiled_gpu_support {
+mod tests {
     use std::fs;
 
     #[test]
