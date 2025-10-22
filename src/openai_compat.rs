@@ -387,6 +387,7 @@ mod tests {
             max_tokens: None,
             top_p: None,
             stream: Some(false),
+            stop: None,
         };
 
         // Exercise handler code path (will gracefully fail due to no model)
@@ -463,6 +464,7 @@ mod tests {
             temperature: None,
             max_tokens: None,
             top_p: None,
+            stop: None,
         };
 
         let _response = chat_completions(State(state), Json(request)).await;
@@ -500,6 +502,7 @@ mod tests {
             temperature: Some(0.7),
             max_tokens: Some(100),
             top_p: Some(0.9),
+            stop: None,
         };
 
         // Exercise streaming path (lines 132-213)
@@ -541,6 +544,7 @@ mod tests {
             temperature: Some(0.5),
             max_tokens: Some(50),
             top_p: Some(0.8),
+            stop: None,
         };
 
         // Exercise non-streaming path (lines 214-244)
@@ -908,6 +912,7 @@ mod tests {
             temperature: Some(0.7),
             max_tokens: Some(100),
             top_p: Some(0.9),
+            stop: None,
         };
 
         // Skip actual model loading in tests - models don't exist
@@ -924,6 +929,7 @@ mod tests {
             temperature: Some(0.5),
             max_tokens: Some(50),
             top_p: None,
+            stop: None,
         };
 
         // Skip actual model loading in tests - models don't exist
@@ -984,6 +990,7 @@ mod tests {
             temperature: None,
             max_tokens: None,
             top_p: None,
+            stop: None,
         };
 
         let _response = chat_completions(State(state), Json(invalid_request)).await;

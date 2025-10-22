@@ -366,6 +366,7 @@ mod tests {
             repeat_penalty: 1.1,
             seed: Some(42),
             stream: true,
+            stop_tokens: Vec::new(),
         };
 
         let result = adapter.generate("Hello world", opts, None).await;

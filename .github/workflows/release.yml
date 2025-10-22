@@ -116,7 +116,7 @@ jobs:
           echo "✅ All issue regression tests passed - no user-reported bug regressions detected"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 6/8: Documentation Validation"
+      - name: "🚧 GATE 6/7: Documentation Validation"
         run: |
           echo "::group::Gate 6: Documentation"
           
@@ -136,7 +136,7 @@ jobs:
           fi
           echo "::endgroup::"
 
-      - name: "🚧 GATE 7/8: Crates.io Publication Validation"
+      - name: "🚧 GATE 7/7: Crates.io Publication Validation"
         run: |
           echo "::group::Gate 7: Crates.io Validation"
           echo "🧪 Testing crates.io publication readiness..."
@@ -214,6 +214,12 @@ jobs:
             binary-name: shimmy
             artifact-name: shimmy-linux-x86_64-universal
 
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            binary-name: shimmy
+            artifact-name: shimmy-linux-aarch64
+            use-cross: true
+
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary-name: shimmy.exe
@@ -244,6 +250,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y musl-tools musl-dev
 
+      - name: Install cross for ARM64 cross-compilation
+        if: matrix.use-cross == true
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+
       - name: Build binary
         shell: bash
         run: |
@@ -253,6 +264,9 @@ jobs:
           if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
             # musl builds: use huggingface-only to avoid llama.cpp C++ compilation issues
             FEATURES="huggingface"
+          elif [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+            # ARM64 Linux: CPU-only features (Issue #131)
+            FEATURES="huggingface,llama"
           elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
             # Windows: Add Vulkan support for GPU acceleration
             FEATURES="huggingface,llama,llama-vulkan"
@@ -262,7 +276,13 @@ jobs:
           fi
           
           echo "Building with features: $FEATURES"
-          cargo build --release --target ${{ matrix.target }} --no-default-features --features "$FEATURES"
+          
+          # Use cross for ARM64 cross-compilation, cargo for native builds
+          if [[ "${{ matrix.use-cross }}" == "true" ]]; then
+            cross build --release --target ${{ matrix.target }} --no-default-features --features "$FEATURES"
+          else
+            cargo build --release --target ${{ matrix.target }} --no-default-features --features "$FEATURES"
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -291,6 +311,8 @@ jobs:
           # Copy and rename artifacts
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
           cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic name
+
+          cp artifacts/shimmy-linux-aarch64/shimmy release-files/shimmy-linux-aarch64
 
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
           cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic name

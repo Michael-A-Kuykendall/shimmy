@@ -16,7 +16,7 @@
 ///
 /// **Related Issues**: #126 (MoE GPU detection), #129 (precompiled binaries missing GPU)
 #[cfg(test)]
-mod issue_130_gpu_layer_offloading {
+mod tests {
     use shimmy::engine::llama::GpuBackend;
 
     #[test]
