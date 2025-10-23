@@ -16,6 +16,19 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Pre-flight check: Cargo.lock is committed (CRITICAL - prevents crates.io publish failures)
+echo -e "${BLUE}🔍 PRE-FLIGHT: Cargo.lock Sync Check${NC}"
+echo "=========================================="
+if [[ -n $(git status --porcelain Cargo.lock) ]]; then
+    echo -e "${RED}❌ Cargo.lock has uncommitted changes!${NC}"
+    echo "This will cause crates.io publish to fail."
+    echo "Run: git add Cargo.lock && git commit -m 'chore: update Cargo.lock'"
+    exit 1
+else
+    echo -e "${GREEN}✅ Cargo.lock is committed${NC}"
+fi
+echo ""
+
 # Pre-flight check: Code formatting (catches what pre-commit should catch)
 echo -e "${BLUE}🔍 PRE-FLIGHT: Code Formatting Check${NC}"
 echo "=========================================="
