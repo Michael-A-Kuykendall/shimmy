@@ -99,11 +99,9 @@ gate_3() {
 gate_4() {
     echo "Checking binary size (20MB limit)..."
     
-    # Build if needed (use existing binary if available)
-    if [ ! -f "target/release/shimmy" ] && [ ! -f "target/release/shimmy.exe" ]; then
-        echo "Building release binary for size check..."
-        cargo build --release
-    fi
+    # Rebuild huggingface binary for size check (Gate 2 CUDA build is 26MB, huggingface is 2.6MB)
+    echo "Building huggingface binary for size validation..."
+    cargo build --release --no-default-features --features huggingface --quiet
     
     # Check size (handle both Unix and Windows)
     if [ -f "target/release/shimmy.exe" ]; then
