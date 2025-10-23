@@ -257,6 +257,8 @@ jobs:
 
       - name: Build binary
         shell: bash
+        env:
+          CROSS_NO_WARNINGS: 1
         run: |
           # Determine features based on platform (Issue #129: GPU support in precompiled binaries)
           FEATURES="huggingface,llama"
