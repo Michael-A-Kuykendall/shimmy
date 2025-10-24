@@ -55,7 +55,8 @@ curl -s http://127.0.0.1:11435/v1/chat/completions \
   -d '{
         "model":"REPLACE_WITH_MODEL_FROM_list",
         "messages":[{"role":"user","content":"Say hi in 5 words."}],
-        "max_tokens":32
+        "max_tokens":32,
+        "stream":false
       }' | jq -r '.choices[0].message.content'
 ```
 
@@ -85,6 +86,7 @@ const resp = await openai.chat.completions.create({
   model: "REPLACE_WITH_MODEL",
   messages: [{ role: "user", content: "Say hi in 5 words." }],
   max_tokens: 32,
+  stream: false,
 });
 
 console.log(resp.choices[0].message?.content);
@@ -101,6 +103,7 @@ resp = client.chat.completions.create(
     model="REPLACE_WITH_MODEL",
     messages=[{"role": "user", "content": "Say hi in 5 words."}],
     max_tokens=32,
+    stream=False,
 )
 
 print(resp.choices[0].message.content)
