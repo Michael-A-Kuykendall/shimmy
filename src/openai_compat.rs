@@ -86,7 +86,15 @@ pub struct Delta {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModelsResponse {
     pub object: String,
-    pub data: Vec<Model>,
+    pub data: Vec<ListModel>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ListModel {
+    pub id: String,
+    pub object: String,
+    pub created: u64,
+    pub owned_by: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -108,14 +116,14 @@ pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         .registry
         .list_all_available()
         .into_iter()
-        .map(|name| Model {
-            id: name.clone(),
+        .map(|name| ListModel {
+            id: name,
             object: "model".to_string(),
-            created: 0, // Fixed timestamp for simplicity
+            created: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
             owned_by: "shimmy".to_string(),
-            permission: None, // No fine-grained permissions for local models
-            root: Some(name), // The model itself is the root
-            parent: None,     // Local models don't have parent models
         })
         .collect();
 
@@ -714,23 +722,17 @@ mod tests {
         let models_response = ModelsResponse {
             object: "list".to_string(),
             data: vec![
-                Model {
+                ListModel {
                     id: "model1".to_string(),
                     object: "model".to_string(),
                     created: 1234567890,
                     owned_by: "shimmy".to_string(),
-                    permission: None,
-                    root: None,
-                    parent: None,
                 },
-                Model {
+                ListModel {
                     id: "model2".to_string(),
                     object: "model".to_string(),
                     created: 1234567890,
                     owned_by: "shimmy".to_string(),
-                    permission: None,
-                    root: None,
-                    parent: None,
                 },
             ],
         };
@@ -1040,23 +1042,17 @@ mod tests {
         let models_response = ModelsResponse {
             object: "list".to_string(),
             data: vec![
-                Model {
+                ListModel {
                     id: "test-model-1".to_string(),
                     object: "model".to_string(),
-                    created: 0,
+                    created: 1234567890,
                     owned_by: "shimmy".to_string(),
-                    permission: None,
-                    root: None,
-                    parent: None,
                 },
-                Model {
+                ListModel {
                     id: "test-model-2".to_string(),
                     object: "model".to_string(),
-                    created: 0,
+                    created: 1234567890,
                     owned_by: "shimmy".to_string(),
-                    permission: None,
-                    root: None,
-                    parent: None,
                 },
             ],
         };
