@@ -64,14 +64,11 @@ mod issue_113_tests {
     #[test]
     fn test_openai_models_response_structure() {
         // Test that ModelsResponse matches OpenAI spec
-        let model = Model {
+        let model = shimmy::openai_compat::ListModel {
             id: "test-model".to_string(),
             object: "model".to_string(),
             created: 1640995200,
             owned_by: "shimmy".to_string(),
-            permission: None,
-            root: Some("test-model".to_string()),
-            parent: None,
         };
 
         let response = ModelsResponse {

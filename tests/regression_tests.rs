@@ -198,23 +198,17 @@ mod regression_tests {
         let models_response = ModelsResponse {
             object: "list".to_string(),
             data: vec![
-                Model {
+                openai_compat::ListModel {
                     id: "qwen3-4b-instruct".to_string(),
                     object: "model".to_string(),
-                    created: 0,
+                    created: 1234567890,
                     owned_by: "shimmy".to_string(),
-                    permission: None,
-                    root: Some("qwen3-4b-instruct".to_string()),
-                    parent: None,
                 },
-                Model {
+                openai_compat::ListModel {
                     id: "llama-7b".to_string(),
                     object: "model".to_string(),
-                    created: 0,
+                    created: 1234567890,
                     owned_by: "shimmy".to_string(),
-                    permission: None,
-                    root: Some("llama-7b".to_string()),
-                    parent: None,
                 },
             ],
         };
@@ -345,9 +339,16 @@ mod regression_tests {
         assert!(json.get("parent").is_none());
 
         // Test ModelsResponse structure
+        let list_model = openai_compat::ListModel {
+            id: "test-model".to_string(),
+            object: "model".to_string(),
+            created: 1640995200,
+            owned_by: "shimmy".to_string(),
+        };
+
         let response = ModelsResponse {
             object: "list".to_string(),
-            data: vec![model],
+            data: vec![list_model],
         };
 
         let response_json = serde_json::to_value(&response).unwrap();
