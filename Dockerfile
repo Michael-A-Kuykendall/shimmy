@@ -1,15 +1,19 @@
-FROM rust:1.75-slim as builder
+FROM rust:1.85-slim as builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
     build-essential \
+    libclang-dev \
+    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY src/ ./src/
+COPY benches/ ./benches/
+COPY templates/ ./templates/
 
 # Build the application
 RUN cargo build --release --features huggingface
