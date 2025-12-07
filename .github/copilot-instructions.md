@@ -2,82 +2,36 @@
 # If you start a server (shimmy serve, python -m http.server, etc.) and then cancel it, IT WON'T RUN ANYMORE.
 # Either use trailing `&` for background OR use different terminal tabs. You've done this mistake 12+ times today!
 
-# 📋 CURRENT STATUS - Oct 8, 2025
+# 📋 CURRENT STATUS - December 7, 2025
 
-## Active Work: MoE Technical Validation Report 🎯
+## Active Work: Issue Resolution & Vision Module Development 🎯
 
-### CRITICAL DISCOVERY - Oct 8, 2025
-**llama.cpp already had MoE offloading BEFORE our work**:
-- **Upstream**: PR #15077 merged August 4, 2025 (by @slaren)
-- **Our work started**: October 4, 2025 (2 months AFTER)
-- **What we actually built**: Rust bindings for existing llama.cpp functionality
-- **NOT novel**: The core MoE offloading algorithm was already in llama.cpp
+### IMMEDIATE PRIORITY: Fix All Open Issues (17 total)
+**Workflow for Each Issue:**
+1. **Create Feature Branch**: `git checkout -b fix/issue-NNN-description`
+2. **Implement Fix**: Make minimal, targeted changes
+3. **Test Thoroughly**: Run local tests + regression suite
+4. **Pass Release Gates**: `./scripts/dry-run-release.sh`
+5. **Create PR**: Push branch, create PR with detailed description
+6. **Merge & Monitor**: Merge PR, ensure CI passes, handle any issues
 
-### MISSION PIVOT: Technical Validation Report (Not Research Paper)
-- **Status**: CORRECTING overclaims, creating honest technical validation
-- **Goal**: Produce accurate user documentation with real baselines
-- **Current Phase**: Running controlled A/B baselines → Final report
+### Open Issues Priority Order:
+1. **Critical (Blockers)**: #152 (Docker build), #140 (GGML assert), #139 (Unicode), #127 (MLX smoke), #114 (Distribution)
+2. **High**: #113 (Open WebUI), #142 (AMD GPU), #147 (Multi-file models)
+3. **Medium**: #145 (Model support), #144 (MLX default), #143 (uvx support)
+4. **Low**: #153 (Swagger), #137 (Demo), #141 (OpenAI response.create), #150 (Server loads model), #151 (How shimmy works)
 
-### What We Actually Built ✅
-- **Rust Bindings**: `with_cpu_moe_all()`, `with_n_cpu_moe(n)` methods in llama-cpp-2
-- **Shimmy Integration**: `--cpu-moe` and `--n-cpu-moe` CLI flags
-- **Multi-Model Validation**: 3 models tested (GPT-OSS 20B with controlled baseline, Phi-3.5-MoE 42B, DeepSeek 16B)
-- **HuggingFace Uploads**: Professional model cards for all 3 models
-- **Comprehensive Testing**: Full A/B baseline for GPT-OSS 20B (N=3, controlled, CUDA-enabled)
-- **Real Performance Data**: 71.5% VRAM reduction, 6.9x speed penalty (measured, not estimated)
+### LONG-TERM: Vision Module Development
+- **Port Seer Tool**: Node.js vision analysis → Rust shimmy-vision feature
+- **Licensing**: Keygen integration for paid vision features
+- **Timeline**: After all issues resolved, implement vision module
 
-### Issues Found in Original Whitepaper ❌
-1. **Overclaimed novelty**: Said "first implementation" (WRONG - llama.cpp did it first)
-2. **Memory contradictions**: 2MB vs 2.33GB vs 1.8GB (inconsistent measurements)
-3. **No real baselines**: All "baseline" numbers were estimates
-4. **Broken token counting**: word_count × 1.3 (not valid), SSE chunks ≠ tokens
-5. **Guessed TTFT**: "10% of total time" (literally made up)
-6. **Single runs**: N=1 (no statistical validity)
-
-### Corrections Made ✅
-- **Created**: `docs/MOE-TECHNICAL-VALIDATION.md` (honest positioning)
-- **Created**: `docs/MOE-WHITEPAPER-CORRECTIONS.md` (audit summary)
-- **Archived**: Original whitepaper as reference (problematic version)
-- **Positioning**: "Rust bindings + production integration" NOT "first implementation"
-
-### IMMEDIATE PRIORITY: Get Real Baselines
-- [⏳] **Run GPT-OSS**: With/without `--cpu-moe`, N=3, measure VRAM/TPS/TTFT
-  * Previous run had BROKEN VRAM measurement (0MB/3MB - nonsense)
-  * Status: RE-RUNNING with FIXED measure_vram() function (started Oct 8, 20:19 UTC)
-  * ETA: ~20 minutes
-- [⏳] **Run Phi-3.5-MoE**: With/without `--cpu-moe`, N=3, measure VRAM/TPS/TTFT
-  * Previous run had BROKEN VRAM measurement (2MB/1MB - nonsense)
-  * Status: NEEDS RE-RUN after GPT-OSS completes
-  * Performance data WAS valid: 11.55 TPS baseline, 4.69 TPS offload (2.5x penalty)
-- [ ] **Run DeepSeek**: With/without `--cpu-moe`, N=3, measure VRAM/TPS/TTFT
-- [ ] **Update report**: Insert REAL baseline data (not fabricated numbers)
-
-### Previous Work (Completed):
-#### PR #1: CUDA stdbool Fix (SUBMITTED ✅)
-- **Status**: LIVE at https://github.com/utilityai/llama-cpp-rs/pull/839
-- **Solution**: Use cc crate to discover MSVC INCLUDE paths, pass to bindgen
-- **Tested**: Production use in shimmy v1.6.0 (295/295 tests passing)
-
-#### Issue #81: MoE CPU Offloading (IMPLEMENTED ✅)
-- **Status**: Successfully implemented in shimmy feat/moe-cpu-offload branch
-- **Achievement**: First working MoE CPU offloading with 99.9% VRAM reduction
-- **Validation**: GPT-OSS 20B running with 2MB GPU memory vs 15GB expected
-
-### Shimmy Audit Cleanup (PARKED - Resume After PRs)
-- **Status**: Branch `refactor/audit-cleanup-phase1-3` created, pushed to origin
-- **Work done**: 73 fixes (I2 getters, N5 unwraps, A3_stringly errors)
-- **Tests**: 295/295 passing
-- **Plan**: Create PR to main AFTER upstream PRs are complete
-- **Remaining**: C3 (pub APIs), A6/A7 (debug prints), P7 (lint suppressions), etc.
-
-### Paid Licensing Feature (WAITING - After Cleanup)
-- **Status**: Branch with Ed25519 keygen controls standing by
-- **Goal**: Add Claude Code-style subscription licensing ($10-20/month)
-- **Value Prop**: Unlimited local inference without time/usage restrictions
-- **Market**: Users spending $100/month on Claude who max it out regularly
-- **Tech**: Ed25519-based license key validation, time-based activation
-- **Strategy**: Keep eyes out during cleanup/refactors for alignment opportunities
-- **Priority**: AFTER audit cleanup is complete and codebase is polished
+### Development Workflow Rules:
+- **NEVER work on main**: Always create feature branches
+- **Test before commit**: `./scripts/dev-test.sh` or `cargo test`
+- **Release gates mandatory**: `./scripts/dry-run-release.sh` before PR
+- **Clean commits**: `cargo fmt`, `cargo clippy -- -D warnings`
+- **Detailed PRs**: Include issue link, reproduction steps, test results
 
 ---
 

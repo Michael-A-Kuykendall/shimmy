@@ -93,7 +93,7 @@ gate_2() {
     fi
 }
 
-# GATE 3: Template Packaging Validation
+# GATE 3: Template Packaging & Docker Build Validation
 gate_3() {
     echo "Checking Docker template packaging..."
     
@@ -105,6 +105,28 @@ gate_3() {
         echo "Package contents:"
         cargo package --allow-dirty --list | grep -i docker || echo "No docker files found"
         return 1
+    fi
+    
+    echo "Testing Docker build (Issue #152 regression protection)..."
+    if command -v docker >/dev/null 2>&1; then
+        # First check if Docker daemon is accessible
+        if docker info >/dev/null 2>&1; then
+            # Test that Dockerfile can be built without errors
+            if docker build --no-cache --quiet . 2>/dev/null; then
+                echo "✅ Docker build completed successfully"
+            else
+                echo "❌ Docker build failed - Issue #152 regression!"
+                echo "This indicates missing files in Dockerfile COPY commands"
+                return 1
+            fi
+        else
+            echo "⚠️ Docker daemon not accessible, skipping build test"
+            echo "📝 Note: Docker build validation skipped - Docker daemon not running"
+        fi
+    else
+        echo "⚠️ Docker not available, skipping build test"
+        echo "📝 Note: Docker build validation skipped - install Docker to enable this check"
+        # Don't fail the gate if Docker isn't available - this is expected in some environments
     fi
 }
 
@@ -173,7 +195,7 @@ echo ""
 # Run each gate
 run_gate 1 "Core Build Validation" gate_1
 run_gate 2 "CUDA Build Validation (No Timeout - Can Take Hours)" gate_2
-run_gate 3 "Template Packaging Validation (Issue #60 Protection)" gate_3
+run_gate 3 "Template Packaging & Docker Build Validation (Issues #60 & #152 Protection)" gate_3
 run_gate 4 "Binary Size Constitutional Limit (20MB)" gate_4
 run_gate 5 "Test Suite Validation" gate_5
 run_gate 6 "Documentation Validation" gate_6
