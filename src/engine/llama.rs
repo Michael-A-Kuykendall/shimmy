@@ -508,6 +508,7 @@ impl LoadedModel for LlamaLoaded {
 
         let mut out = String::new();
         let mut all_tokens = tokens;
+
         for _ in 0..opts.max_tokens {
             // Sample from the last (and only) position with logits
             let token = sampler.sample(&ctx, -1);
@@ -516,7 +517,6 @@ impl LoadedModel for LlamaLoaded {
             }
             // Use Plaintext to avoid re-tokenizing control tokens into special forms
             let piece = self.model.token_to_str(token, Special::Plaintext)?;
-            let start = out.len();
             out.push_str(&piece);
 
             // Check for stop tokens before emitting
@@ -525,18 +525,27 @@ impl LoadedModel for LlamaLoaded {
                 .iter()
                 .any(|stop_token| out.contains(stop_token));
             if should_stop {
-                // Remove the stop token from the output
+                // Remove the stop token from the output, ensuring UTF-8 validity
                 for stop_token in &opts.stop_tokens {
                     if let Some(pos) = out.rfind(stop_token) {
-                        out.truncate(pos);
+                        // Find the character boundary before the stop token
+                        // This prevents truncating in the middle of multi-byte Unicode characters
+                        let truncate_pos = out
+                            .char_indices()
+                            .take_while(|(byte_pos, _)| *byte_pos <= pos)
+                            .last()
+                            .map(|(byte_pos, _)| byte_pos)
+                            .unwrap_or(0);
+                        out.truncate(truncate_pos);
                         break;
                     }
                 }
                 break;
             }
 
+            // Handle UTF-8 aware token streaming (Issue #139 fix)
             if let Some(cb) = on_token.as_mut() {
-                cb(out[start..].to_string());
+                cb(piece.clone());
             }
 
             let mut step = LlamaBatch::new(1, 1);
@@ -544,6 +553,7 @@ impl LoadedModel for LlamaLoaded {
             ctx.decode(&mut step)?;
             all_tokens.push(token);
         }
+
         Ok(out)
     }
 }
