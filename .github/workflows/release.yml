@@ -358,3 +358,22 @@ jobs:
           
           echo "✅ Successfully published shimmy ${{ github.ref_name }} to crates.io!"
           echo "📦 Users can now install with: cargo install shimmy"
+
+      - name: "🐳 Build and Push Docker Image to GHCR"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🐳 Building and pushing Docker image to GitHub Container Registry..."
+          
+          # Login to GHCR
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # Build the Docker image
+          docker build -f deploy/Dockerfile -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} -t ghcr.io/${{ github.repository }}:latest .
+          
+          # Push both tagged and latest versions
+          docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          docker push ghcr.io/${{ github.repository }}:latest
+          
+          echo "✅ Docker image published successfully!"
+          echo "🐳 Users can now run: docker run ghcr.io/${{ github.repository }}:latest"

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] - 2025-12-08
+
+### 🐳 **DOCKER PUBLISHING INFRASTRUCTURE** - Container Registry Publishing Fixed
+
+This patch release fixes the missing Docker publishing infrastructure that caused the v1.8.0 release to fail despite all quality gates passing.
+
+### 🏆 **HEADLINE ACHIEVEMENTS**
+
+**🚀 DOCKER PUBLISHING PIPELINE IMPLEMENTATION**
+- **FIXED**: Added Docker image publishing to GitHub Container Registry (GHCR)
+- Implemented automated Docker build and push in release workflow
+- Added proper GHCR authentication and image tagging
+- **Result**: Containerized shimmy deployments now work reliably
+
+**🔧 RELEASE INFRASTRUCTURE COMPLETION**
+- Completed the Docker publishing pipeline for issue #146
+- Enhanced release workflow with container registry publishing
+- Improved deployment automation for cloud-native environments
+
+### 📦 **CHANGES**
+- Added Docker build and push step to release workflow
+- Configured GHCR publishing with proper authentication
+- Added both versioned and latest Docker image tags
+
 ## [1.8.0] - 2025-12-08
 
 ### 🐳 **DOCKER PUBLISHING PIPELINE** - Containerized Deployments Fixed
