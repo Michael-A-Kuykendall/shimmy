@@ -6,6 +6,7 @@ use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
 /// Smart thread detection optimized for inference performance
 /// Matches Ollama's approach: use physical cores with intelligent limits
+#[allow(dead_code)]
 fn get_optimal_thread_count() -> i32 {
     let total_cores = std::thread::available_parallelism()
         .map(|n| n.get() as i32)
@@ -64,17 +65,18 @@ fn get_or_init_backend() -> Result<&'static shimmy_llama_cpp_2::llama_backend::L
 
 #[derive(Default)]
 pub struct LlamaEngine {
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     gpu_backend: GpuBackend,
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     moe_config: MoeConfig,
 }
 
 #[derive(Debug, Clone, Default)]
 struct MoeConfig {
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
+    // These fields are only used when the "llama" feature is enabled,
+    // in model loading code that configures MoE CPU offloading.
+    // They appear "dead" when compiling without llama feature.
+    #[allow(dead_code)]
     cpu_moe_all: bool,
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
+    #[allow(dead_code)]
     n_cpu_moe: Option<usize>,
 }
 
@@ -92,7 +94,6 @@ pub enum GpuBackend {
 
 impl GpuBackend {
     /// Parse GPU backend from CLI string
-    #[allow(dead_code)] // Temporarily unused while fork is being fixed
     fn from_string(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "auto" => Self::detect_best(),
@@ -212,6 +213,7 @@ impl GpuBackend {
     }
 
     /// Get the number of layers to offload to GPU
+    #[allow(dead_code)]
     pub fn gpu_layers(&self) -> u32 {
         match self {
             GpuBackend::Cpu => 0, // No GPU offloading for CPU backend
@@ -234,10 +236,14 @@ impl LlamaEngine {
     }
 
     /// Create engine with specific GPU backend from CLI
+    #[allow(dead_code)]
     pub fn new_with_backend(backend_str: Option<&str>) -> Self {
         let gpu_backend = backend_str
             .map(GpuBackend::from_string)
             .unwrap_or_else(GpuBackend::detect_best);
+
+        // Set environment variables for GPU backend before any backend initialization
+        Self::configure_gpu_environment(&gpu_backend);
 
         info!("GPU backend configured: {:?}", gpu_backend);
 
@@ -247,7 +253,48 @@ impl LlamaEngine {
         }
     }
 
+    /// Configure environment variables for GPU backend
+    fn configure_gpu_environment(gpu_backend: &GpuBackend) {
+        match gpu_backend {
+            #[cfg(feature = "llama-cuda")]
+            GpuBackend::Cuda => {
+                std::env::set_var("GGML_CUDA", "1");
+                info!("Set GGML_CUDA=1 for CUDA backend");
+            }
+            #[cfg(feature = "llama-vulkan")]
+            GpuBackend::Vulkan => {
+                std::env::set_var("GGML_VULKAN", "1");
+                info!("Set GGML_VULKAN=1 for Vulkan backend");
+                #[cfg(target_os = "windows")]
+                {
+                    // On Windows, Vulkan might need ICD setup
+                    if std::env::var("VK_ICD_FILENAMES").is_err() {
+                        info!("Vulkan ICD not configured - GPU acceleration may not work");
+                    }
+                }
+            }
+            #[cfg(feature = "llama-opencl")]
+            GpuBackend::OpenCL => {
+                std::env::set_var("GGML_OPENCL", "1");
+                // Set defaults if not already set
+                if std::env::var("GGML_OPENCL_PLATFORM").is_err() {
+                    std::env::set_var("GGML_OPENCL_PLATFORM", "0");
+                    info!("Set GGML_OPENCL_PLATFORM=0 (default)");
+                }
+                if std::env::var("GGML_OPENCL_DEVICE").is_err() {
+                    std::env::set_var("GGML_OPENCL_DEVICE", "0");
+                    info!("Set GGML_OPENCL_DEVICE=0 (default)");
+                }
+                info!("Configured OpenCL environment variables");
+            }
+            GpuBackend::Cpu => {
+                // No special environment setup needed for CPU
+            }
+        }
+    }
+
     /// Set MoE CPU offloading configuration
+    #[allow(dead_code)]
     pub fn with_moe_config(mut self, cpu_moe_all: bool, n_cpu_moe: Option<usize>) -> Self {
         self.moe_config = MoeConfig {
             cpu_moe_all,
@@ -257,6 +304,7 @@ impl LlamaEngine {
     }
 
     /// Get information about the current GPU backend configuration
+    #[allow(dead_code)]
     pub fn get_backend_info(&self) -> String {
         match self.gpu_backend {
             GpuBackend::Cpu => "CPU".to_string(),

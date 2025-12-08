@@ -62,6 +62,9 @@ mod issue_129_precompiled_gpu_support;
 #[path = "regression/issue_130_gpu_layer_offloading.rs"]
 mod issue_130_gpu_layer_offloading;
 
+#[path = "regression/issue_142_amd_gpu_detection.rs"]
+mod issue_142_amd_gpu_detection;
+
 #[path = "regression/issue_131_arm64_ci_support.rs"]
 mod issue_131_arm64_ci_support;
 
