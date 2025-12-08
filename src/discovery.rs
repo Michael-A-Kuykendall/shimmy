@@ -97,6 +97,10 @@ impl ModelDiscovery {
     }
 
     pub fn discover_models(&self) -> Result<Vec<DiscoveredModel>> {
+        println!(
+            "DEBUG: discover_models called, search_paths: {:?}",
+            self.search_paths
+        );
         let mut models = Vec::new();
 
         for path in &self.search_paths {
@@ -109,19 +113,129 @@ impl ModelDiscovery {
     }
 
     fn scan_directory(&self, dir: &Path, models: &mut Vec<DiscoveredModel>) -> Result<()> {
+        println!("DEBUG: Scanning directory: {:?}", dir);
+        // First pass: collect all model files in this directory
+        let mut model_files = Vec::new();
+        let mut subdirs = Vec::new();
+
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
             let path = entry.path();
 
             if path.is_dir() {
-                self.scan_directory(&path, models)?;
+                subdirs.push(path);
             } else if self.is_model_file(&path) {
-                if let Ok(model) = self.analyze_model_file(&path) {
-                    models.push(model);
+                model_files.push(path);
+            }
+        }
+
+        // Group sharded models together
+        let grouped_models = self.group_sharded_models(dir, &model_files)?;
+
+        // Add grouped models to the results
+        for model in grouped_models {
+            models.push(model);
+        }
+
+        // Recursively scan subdirectories
+        for subdir in subdirs {
+            self.scan_directory(&subdir, models)?;
+        }
+
+        Ok(())
+    }
+
+    /// Group sharded model files together (Issue #147)
+    /// Detects patterns like model-00001-of-00004.safetensors and groups them as single models
+    fn group_sharded_models(
+        &self,
+        dir: &Path,
+        model_files: &[PathBuf],
+    ) -> Result<Vec<DiscoveredModel>> {
+        println!(
+            "DEBUG: group_sharded_models called for dir: {:?}, files: {}",
+            dir,
+            model_files.len()
+        );
+        use regex::Regex;
+        use std::collections::HashMap;
+
+        let mut grouped_models = Vec::new();
+        let mut processed_files = std::collections::HashSet::new();
+
+        // Regex to match sharded model patterns: model-XXXX-of-YYYY.ext
+        let shard_pattern = Regex::new(r"^(.+)-\d{5}-of-\d{5}(\..+)$").unwrap();
+
+        // Group files by their base name (without shard numbers)
+        let mut shard_groups: HashMap<String, Vec<PathBuf>> = HashMap::new();
+
+        for file_path in model_files {
+            if let Some(filename) = file_path.file_name().and_then(|f| f.to_str()) {
+                println!("DEBUG: Checking file: {}", filename);
+                if let Some(captures) = shard_pattern.captures(filename) {
+                    // This is a sharded file
+                    let base_name = captures.get(1).unwrap().as_str();
+                    let extension = captures.get(2).unwrap().as_str();
+                    let group_key = format!("{}{}", base_name, extension);
+                    println!(
+                        "DEBUG: Matched sharded file - base: {}, ext: {}, key: {}",
+                        base_name, extension, group_key
+                    );
+                    shard_groups
+                        .entry(group_key)
+                        .or_insert_with(Vec::new)
+                        .push(file_path.clone());
+                    processed_files.insert(file_path.clone());
+                } else {
+                    println!("DEBUG: No match for: {}", filename);
                 }
             }
         }
-        Ok(())
+
+        // Create grouped model entries for sharded models
+        for (group_key, files) in shard_groups {
+            if files.len() > 1 {
+                // Calculate total size
+                let total_size: u64 = files
+                    .iter()
+                    .filter_map(|path| fs::metadata(path).ok().map(|m| m.len()))
+                    .sum();
+
+                // Use directory name as model name for sharded models
+                let model_name = dir
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or(&group_key)
+                    .to_string();
+
+                // Use the first file as the primary path (for compatibility)
+                let primary_path = files[0].clone();
+
+                let format = if group_key.ends_with(".safetensors") {
+                    ModelFormat::SafeTensors
+                } else {
+                    ModelFormat::Gguf
+                };
+
+                grouped_models.push(DiscoveredModel {
+                    name: model_name,
+                    path: primary_path,
+                    format,
+                    size_bytes: Some(total_size),
+                });
+            }
+        }
+
+        // Add non-sharded models as individual entries
+        for file_path in model_files {
+            if !processed_files.contains(file_path) {
+                if let Ok(model) = self.analyze_model_file(file_path) {
+                    grouped_models.push(model);
+                }
+            }
+        }
+
+        Ok(grouped_models)
     }
 
     fn is_model_file(&self, path: &Path) -> bool {
