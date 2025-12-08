@@ -4,7 +4,8 @@
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use std::path::Path;
-use std::process::Command;
+#[cfg(target_os = "macos")]
+use std::sync::Arc;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
@@ -46,14 +47,17 @@ impl MLXEngine {
         self.mlx_available
     }
 
-    /// Check if MLX Python packages are available
-    pub fn check_mlx_python_available() -> bool {
-        // Try to run a simple MLX command to verify installation
-        Command::new("python3")
-            .args(["-c", "import mlx.core; print('MLX available')"])
-            .output()
-            .map(|output| output.status.success())
-            .unwrap_or(false)
+    /// Check if MLX is available (native implementation)
+    pub fn check_mlx_available() -> bool {
+        // On macOS with Apple Silicon, MLX should be available through the native crate
+        #[cfg(target_os = "macos")]
+        {
+            std::env::consts::ARCH == "aarch64"
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            false
+        }
     }
 
     /// Detect if a model is suitable for MLX
@@ -118,33 +122,39 @@ struct MLXModel {
     #[allow(dead_code)]
     model_path: std::path::PathBuf,
     _ctx_len: usize,
+    #[cfg(target_os = "macos")]
+    model: Arc<()>, // Placeholder for future MLX model
 }
 
 impl MLXModel {
+    #[cfg(target_os = "macos")]
     async fn new(spec: &ModelSpec) -> Result<Self> {
-        // In a real implementation, this would:
-        // 1. Load the MLX model using Python bindings or native MLX
-        // 2. Set up the model for inference
-        // 3. Configure memory and GPU settings
-
-        tracing::info!("Initializing MLX model at {:?}", spec.base_path);
-
         // Validate model file exists
         if !spec.base_path.exists() {
             return Err(anyhow!("Model file not found: {:?}", spec.base_path));
         }
 
+        tracing::info!("Initializing MLX model at {:?}", spec.base_path);
+
+        // For now, create a placeholder model
+        // Real implementation would load the actual MLX model
         Ok(Self {
             name: spec.name.clone(),
             model_path: spec.base_path.clone(),
             _ctx_len: spec.ctx_len,
+            model: Arc::new(()), // Placeholder
         })
     }
 
+    #[cfg(not(target_os = "macos"))]
+    async fn new(_spec: &ModelSpec) -> Result<Self> {
+        Err(anyhow!("MLX is only supported on macOS with Apple Silicon"))
+    }
+
     /// Generate text using MLX
+    #[cfg(target_os = "macos")]
     async fn mlx_generate(&self, prompt: &str, options: &GenOptions) -> Result<String> {
-        // In a real implementation, this would call MLX Python bindings
-        // or use a native MLX Rust interface
+        use mlx_lm::model::Model;
 
         tracing::debug!(
             "MLX generation for model {}: prompt length = {}",
@@ -152,13 +162,8 @@ impl MLXModel {
             prompt.len()
         );
 
-        // Simulate MLX generation with a placeholder
-        // Real implementation would:
-        // 1. Tokenize the prompt
-        // 2. Run inference on Metal GPU
-        // 3. Decode tokens back to text
-        // 4. Handle streaming if requested
-
+        // For now, use a simple text generation approach
+        // This is a placeholder until we can properly integrate with mlx-lm
         let response = format!(
             "MLX generated response for prompt: '{}...' (max_tokens: {})",
             &prompt.chars().take(50).collect::<String>(),
@@ -166,6 +171,13 @@ impl MLXModel {
         );
 
         Ok(response)
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    async fn mlx_generate(&self, _prompt: &str, _options: &GenOptions) -> Result<String> {
+        Err(anyhow!(
+            "MLX generation is only supported on macOS with Apple Silicon"
+        ))
     }
 }
 

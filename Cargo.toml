@@ -25,7 +25,7 @@ default = ["huggingface", "llama"]  # Now with working Windows MSVC support via 
 # Engine backends
 llama = ["dep:shimmy-llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
-mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
+mlx = ["dep:mlx-rs", "dep:mlx-lm"] # Apple MLX integration for Metal GPU acceleration on Apple Silicon (macOS only)
 # GPU acceleration backends for llama.cpp
 llama-cuda = ["llama", "shimmy-llama-cpp-2/cuda"] # NVIDIA CUDA GPU acceleration
 llama-vulkan = ["llama"] # Vulkan GPU acceleration (cross-platform)
@@ -68,6 +68,11 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-feature
 
 # llama.cpp bindings (optional) - published shimmy-llama-cpp-2 with MoE CPU offloading support
 shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = false }
+
+# MLX bindings (optional) - for Apple Silicon GPU acceleration
+[target.'cfg(target_os = "macos")'.dependencies]
+mlx-rs = { version = "0.25", optional = true, features = ["metal", "accelerate"] }
+mlx-lm = { version = "0.0.1", optional = true }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"

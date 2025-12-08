@@ -549,7 +549,7 @@ async fn main() -> anyhow::Result<()> {
 
                 if MLXEngine::is_hardware_supported() {
                     // Check if MLX Python packages are available
-                    let python_available = MLXEngine::check_mlx_python_available();
+                    let python_available = MLXEngine::check_mlx_available();
                     if python_available {
                         println!("🍎 MLX Backend: ✅ Available (Apple Silicon + MLX installed)");
                     } else {

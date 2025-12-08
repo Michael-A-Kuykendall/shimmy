@@ -18,7 +18,7 @@ mod apple_silicon_tests {
         // works regardless of whether MLX Python packages are installed
 
         let hardware_supported = MLXEngine::is_hardware_supported();
-        let python_available = MLXEngine::check_mlx_python_available();
+        let python_available = MLXEngine::check_mlx_available();
 
         // On Apple Silicon macOS, hardware should be detected even if Python packages aren't installed
         #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
@@ -76,7 +76,7 @@ mod apple_silicon_tests {
         #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
         {
             let hardware_supported = MLXEngine::is_hardware_supported();
-            let python_available = MLXEngine::check_mlx_python_available();
+            let python_available = MLXEngine::check_mlx_available();
 
             // Simulate the output logic from main.rs
             if hardware_supported {
@@ -105,7 +105,7 @@ mod apple_silicon_tests {
         // Ensure MLX Python detection fails gracefully when python3 is not available
         // or when MLX packages are not installed
 
-        let python_available = MLXEngine::check_mlx_python_available();
+        let python_available = MLXEngine::check_mlx_available();
 
         // This should not panic regardless of system state
         // Result can be true or false depending on whether MLX is installed

@@ -379,7 +379,7 @@ mod regression_tests {
         // Test that Cargo.toml includes MLX feature definition
         let cargo_toml = include_str!("../Cargo.toml");
         assert!(
-            cargo_toml.contains("mlx = []"),
+            cargo_toml.contains(r#"mlx = ["dep:mlx-rs", "dep:mlx-lm"]"#),
             "MLX feature should be defined in Cargo.toml"
         );
 
