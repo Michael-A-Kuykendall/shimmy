@@ -303,6 +303,29 @@ impl LlamaEngine {
         self
     }
 
+    /// Calculate adaptive batch size based on context length to prevent GGML assert failures
+    /// with large prompts (Issue #140)
+    fn calculate_adaptive_batch_size(ctx_len: usize) -> u32 {
+        // Base batch size for smaller contexts
+        const BASE_BATCH_SIZE: u32 = 2048;
+
+        // For larger contexts, scale up the batch size
+        // Use context length as minimum, but cap at reasonable limits
+        let adaptive_size = ctx_len.max(BASE_BATCH_SIZE as usize);
+
+        // Cap at 8192 to prevent excessive memory usage while handling large contexts
+        // This allows for contexts up to 8192 tokens with large prompts
+        let capped_size = adaptive_size.min(8192);
+
+        tracing::info!(
+            "Batch size: {} (context: {}, adaptive calculation for large prompt support)",
+            capped_size,
+            ctx_len
+        );
+
+        capped_size as u32
+    }
+
     /// Get information about the current GPU backend configuration
     #[allow(dead_code)]
     pub fn get_backend_info(&self) -> String {
@@ -389,7 +412,7 @@ impl InferenceEngine for LlamaEngine {
             };
             let ctx_params = llama::context::params::LlamaContextParams::default()
                 .with_n_ctx(NonZeroU32::new(spec.ctx_len as u32))
-                .with_n_batch(2048)
+                .with_n_batch(Self::calculate_adaptive_batch_size(spec.ctx_len))
                 .with_n_ubatch(512)
                 .with_n_threads(spec.n_threads.unwrap_or_else(get_optimal_thread_count))
                 .with_n_threads_batch(spec.n_threads.unwrap_or_else(get_optimal_thread_count));
