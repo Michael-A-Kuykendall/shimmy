@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2025-12-08
+
+### 🐳 **DOCKER PUBLISHING PIPELINE** - Containerized Deployments Fixed
+
+This release resolves critical Docker image publishing failures that prevented containerized shimmy deployments. The fix ensures reliable automated Docker Hub publishing for all future releases.
+
+### 🏆 **HEADLINE ACHIEVEMENTS**
+
+**🚀 DOCKER PUBLISHING AUTOMATION**
+- **FIXED**: Issue #146 - Docker image publishing pipeline failures
+- Implemented automated Docker Hub publishing in release workflow
+- Added comprehensive Docker build validation in release gates
+- **Result**: Containerized shimmy deployments now work reliably
+
+**🔧 INFRASTRUCTURE RELIABILITY**
+- Enhanced release gate validation with Docker build verification
+- Strengthened CI/CD pipeline with container deployment testing
+- Improved deployment automation for cloud-native environments
+
+### 📦 **CHANGES**
+- Fixed Docker publishing workflow configuration
+- Added Docker build validation to release gates
+- Enhanced containerized deployment reliability
+
 ## [1.7.3] - 2025-10-12
 
 ### 🎯 **SYSTEMATIC ENGINEERING EXCELLENCE** - Production Quality Release
