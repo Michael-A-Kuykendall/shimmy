@@ -1936,6 +1936,7 @@ dependencies = [
  "parking_lot",
  "predicates",
  "rand",
+ "regex",
  "reqwest",
  "safetensors",
  "serde",

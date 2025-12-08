@@ -217,6 +217,7 @@ impl ModelAutoDiscovery {
         }
 
         let mut models = Vec::new();
+        let mut model_files = Vec::new();
 
         // Use error handling for read_dir to handle permission issues
         let entries = match fs::read_dir(dir) {
@@ -265,13 +266,104 @@ impl ModelAutoDiscovery {
                 // Recursively scan subdirectories with depth tracking
                 models.extend(self.scan_directory_with_depth(&path, depth + 1)?);
             } else if self.is_model_file(&path) {
-                if let Ok(model) = self.analyze_model_file(&path) {
-                    models.push(model);
+                model_files.push(path);
+            }
+        }
+
+        // Group sharded models and analyze them
+        let grouped_models = self.group_sharded_models(dir, &model_files)?;
+        models.extend(grouped_models);
+
+        Ok(models)
+    }
+
+    /// Group sharded model files together (Issue #147)
+    /// Detects patterns like model-00001-of-00004.safetensors and groups them as single models
+    fn group_sharded_models(&self, dir: &Path, model_files: &[PathBuf]) -> Result<Vec<DiscoveredModel>> {
+        use std::collections::HashMap;
+        use regex::Regex;
+
+        let mut grouped_models = Vec::new();
+        let mut processed_files = std::collections::HashSet::new();
+
+        // Regex to match sharded model patterns: model-XXXXX-of-XXXXX.ext
+        let shard_pattern = Regex::new(r"^(.+)-\d{5}-of-\d{5}(\..+)$").unwrap();
+
+        // Group files by their base name (without shard numbers)
+        let mut shard_groups: HashMap<String, Vec<PathBuf>> = HashMap::new();
+
+        for file_path in model_files {
+            if let Some(filename) = file_path.file_name().and_then(|f| f.to_str()) {
+                if let Some(captures) = shard_pattern.captures(filename) {
+                    // This is a sharded file
+                    let base_name = captures.get(1).unwrap().as_str();
+                    let extension = captures.get(2).unwrap().as_str();
+                    let group_key = format!("{}{}", base_name, extension);
+                    shard_groups.entry(group_key).or_insert_with(Vec::new).push(file_path.clone());
+                    processed_files.insert(file_path.clone());
                 }
             }
         }
 
-        Ok(models)
+        // Create grouped model entries for sharded models
+        for (group_key, files) in shard_groups {
+            if files.len() > 1 {
+                // Calculate total size
+                let total_size: u64 = files.iter()
+                    .filter_map(|path| fs::metadata(path).ok().map(|m| m.len()))
+                    .sum();
+
+                // Use directory name as model name for sharded models
+                let model_name = dir.file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or(&group_key)
+                    .to_string();
+
+                // Create a descriptive path showing the sharded files
+                let first_file = &files[0];
+                let filename = first_file.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
+                let descriptive_path = if files.len() == 1 {
+                    first_file.clone()
+                } else {
+                    // Show first file with count of additional files
+                    PathBuf::from(format!("{} (+{} more files)", first_file.display(), files.len() - 1))
+                };
+
+                let (model_type, parameter_count, quantization) = self.parse_filename(filename);
+
+                // CRITICAL: All GGUF files must use Llama backend
+                let backend_type = if first_file.extension().and_then(|s| s.to_str()) == Some("gguf") {
+                    "Llama".to_string()
+                } else {
+                    model_type
+                };
+
+                // Look for paired LoRA adapter (check all files for LoRA)
+                let lora_path = files.iter()
+                    .find_map(|path| self.find_lora_for_model(path));
+
+                grouped_models.push(DiscoveredModel {
+                    name: model_name,
+                    path: descriptive_path,
+                    lora_path,
+                    size_bytes: total_size,
+                    model_type: backend_type,
+                    parameter_count,
+                    quantization,
+                });
+            }
+        }
+
+        // Add non-sharded models as individual entries
+        for file_path in model_files {
+            if !processed_files.contains(file_path) {
+                if let Ok(model) = self.analyze_model_file(file_path) {
+                    grouped_models.push(model);
+                }
+            }
+        }
+
+        Ok(grouped_models)
     }
 
     fn is_model_file(&self, path: &Path) -> bool {
