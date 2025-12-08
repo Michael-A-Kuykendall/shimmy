@@ -726,12 +726,14 @@ mod tests {
         env::remove_var("SHIMMY_BASE_GGUF");
         env::remove_var("HOME");
         env::remove_var("USERPROFILE");
+        env::remove_var("SHIMMY_MODEL_PATHS");
+        env::remove_var("OLLAMA_MODELS");
 
         let discovery = ModelDiscovery::from_env();
 
-        // Should create discovery without SHIMMY_BASE_GGUF but may have home dirs
-        // (HOME/USERPROFILE may still be set in test environment)
-        assert!(discovery.search_paths.len() <= 10); // Reasonable upper bound
+        // Should create discovery without environment variables
+        // On Windows, this may include paths for multiple drives, so be more lenient
+        assert!(discovery.search_paths.len() <= 20); // More reasonable upper bound for Windows
     }
 
     #[test]

@@ -433,4 +433,57 @@ mod regression_tests {
             );
         }
     }
+
+    #[test]
+    fn test_issue_146_docker_image_publishing() {
+        // Test the fix for Issue #146 - Docker image publishing pipeline
+        use std::fs;
+        use std::path::Path;
+
+        // Verify Dockerfile exists and is readable
+        let dockerfile_path = Path::new("Dockerfile");
+        assert!(
+            dockerfile_path.exists(),
+            "Dockerfile must exist for container builds"
+        );
+        let dockerfile_content = fs::read_to_string(dockerfile_path).unwrap();
+        assert!(
+            !dockerfile_content.is_empty(),
+            "Dockerfile must not be empty"
+        );
+
+        // Verify docker-compose.yml exists and references correct image
+        let compose_path = Path::new("docker-compose.yml");
+        assert!(
+            compose_path.exists(),
+            "docker-compose.yml must exist for container deployment"
+        );
+        let compose_content = fs::read_to_string(compose_path).unwrap();
+        assert!(
+            compose_content.contains("ghcr.io/michael-a-kuykendall/shimmy"),
+            "docker-compose.yml must reference the correct ghcr.io image path"
+        );
+
+        // Verify GitHub Actions workflow includes Docker publishing
+        let workflow_path = Path::new(".github/workflows/release.yml");
+        assert!(
+            workflow_path.exists(),
+            "GitHub Actions release workflow must exist"
+        );
+        let workflow_content = fs::read_to_string(workflow_path).unwrap();
+        assert!(
+            workflow_content.contains("docker/build-push-action"),
+            "Release workflow must include Docker build and push action"
+        );
+        assert!(
+            workflow_content.contains("ghcr.io/${{ github.repository_owner }}/shimmy"),
+            "Release workflow must push to correct ghcr.io registry path"
+        );
+
+        // Verify the workflow has proper permissions for package publishing
+        assert!(
+            workflow_content.contains("packages: write"),
+            "Release workflow must have packages:write permission for ghcr.io publishing"
+        );
+    }
 }

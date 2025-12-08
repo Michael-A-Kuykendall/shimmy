@@ -2,36 +2,64 @@
 # If you start a server (shimmy serve, python -m http.server, etc.) and then cancel it, IT WON'T RUN ANYMORE.
 # Either use trailing `&` for background OR use different terminal tabs. You've done this mistake 12+ times today!
 
-# 📋 CURRENT STATUS - December 7, 2025
+# 📋 CURRENT STATUS - December 8, 2025
 
-## Active Work: Issue Resolution & Vision Module Development 🎯
+## Active Work: Systematic Issue Resolution 🎯
 
-### IMMEDIATE PRIORITY: Fix All Open Issues (17 total)
-**Workflow for Each Issue:**
-1. **Create Feature Branch**: `git checkout -b fix/issue-NNN-description`
-2. **Implement Fix**: Make minimal, targeted changes
-3. **Test Thoroughly**: Run local tests + regression suite
-4. **Pass Release Gates**: `./scripts/dry-run-release.sh`
-5. **Create PR**: Push branch, create PR with detailed description
-6. **Merge & Monitor**: Merge PR, ensure CI passes, handle any issues
+### IMMEDIATE PRIORITY: Fix All Open Issues (12 remaining)
+**Complete Workflow for Each Issue:**
+1. **READ AND UNDERSTAND FULL ISSUE + ALL CONVERSATIONS** - Every sub-point, every user comment, every technical detail
+2. **Create Feature Branch**: `git checkout -b fix/issue-NNN-description`
+3. **Implement Solution**: Make minimal, targeted changes based on full understanding
+4. **Add Regression Tests**: Create tests to prevent this issue from recurring
+5. **Add PPT/Invariant Tests**: If needed for core functionality validation
+6. **Test Thoroughly**: Run local tests + regression suite
+7. **Pass Release Gates**: `./scripts/dry-run-release.sh` must pass all gates
+8. **Create PR**: Push branch, create PR with detailed description
+9. **Merge & Monitor**: Merge PR, ensure CI passes, handle any issues
+10. **Write Human Response**: Respond to all users in natural human voice (not AI), sign as "Mike"
 
-### Open Issues Priority Order:
-1. **Critical (Blockers)**: #152 (Docker build), #140 (GGML assert), #139 (Unicode), #127 (MLX smoke), #114 (Distribution)
-2. **High**: #113 (Open WebUI), #142 (AMD GPU), #147 (Multi-file models)
-3. **Medium**: #145 (Model support), #144 (MLX default), #143 (uvx support)
-4. **Low**: #153 (Swagger), #137 (Demo), #141 (OpenAI response.create), #150 (Server loads model), #151 (How shimmy works)
-
-### LONG-TERM: Vision Module Development
-- **Port Seer Tool**: Node.js vision analysis → Rust shimmy-vision feature
-- **Licensing**: Keygen integration for paid vision features
-- **Timeline**: After all issues resolved, implement vision module
+### Current Open Issues Priority Order:
+1. **#146**: Docker image publishing (HIGH - affects container users)
+2. **#114**: Distribution pipeline failures (HIGH - affects all installations)
+3. **#144**: MLX default on Apple Silicon (MEDIUM - macOS UX)
+4. **#143**: uvx support (MEDIUM - Python packaging)
+5. **#145**: Multi-modal support (LOW - major feature)
+6. **#153**: Swagger docs (LOW - docs)
+7. **#137**: Quickstart/demo (LOW - docs)
+8. **#135**: README examples (LOW - docs)
+9. **#141**: OpenAI response.create (QUESTION)
+10. **#150**: Server model loading (QUESTION)
+11. **#151**: How shimmy works (QUESTION)
 
 ### Development Workflow Rules:
 - **NEVER work on main**: Always create feature branches
+- **Read FULL context first**: Every issue conversation, every technical detail
 - **Test before commit**: `./scripts/dev-test.sh` or `cargo test`
 - **Release gates mandatory**: `./scripts/dry-run-release.sh` before PR
 - **Clean commits**: `cargo fmt`, `cargo clippy -- -D warnings`
 - **Detailed PRs**: Include issue link, reproduction steps, test results
+- **Human responses**: Write responses in natural human voice, not AI-speak
+
+### Quality Gates:
+- ✅ Code compiles and runs
+- ✅ All tests pass (unit + regression)
+- ✅ Dry-run release passes all 6 gates
+- ✅ No warnings in builds
+- ✅ Issue fully resolved per user requirements
+
+### Completed Issues (5 total):
+- ✅ #152: Docker build failure
+- ✅ #142: AMD GPU detection on Windows
+- ✅ #113: OpenAI API frontend compatibility
+- ✅ #147: Sharded model file grouping
+- ✅ #139: Unicode streaming fixes
+
+### Shelved Issues:
+- ❌ #127: MLX smoke test (too complex, awaiting new library)
+
+---
+Keep this file concise; update as issues are resolved.
 
 ---
 

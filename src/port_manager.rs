@@ -150,7 +150,7 @@ mod tests {
     fn test_find_available_port() {
         let allocator = PortAllocator::new();
         let port = allocator.find_available_port("test-service").unwrap();
-        assert!(port >= 11435);
+        assert!(port >= 11435 && port <= 11535); // Should be in the configured range
 
         // Second call should return same port
         let port2 = allocator.find_available_port("test-service").unwrap();
