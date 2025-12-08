@@ -97,7 +97,10 @@ impl ModelDiscovery {
     }
 
     pub fn discover_models(&self) -> Result<Vec<DiscoveredModel>> {
-        println!("DEBUG: discover_models called, search_paths: {:?}", self.search_paths);
+        println!(
+            "DEBUG: discover_models called, search_paths: {:?}",
+            self.search_paths
+        );
         let mut models = Vec::new();
 
         for path in &self.search_paths {
@@ -144,10 +147,18 @@ impl ModelDiscovery {
 
     /// Group sharded model files together (Issue #147)
     /// Detects patterns like model-00001-of-00004.safetensors and groups them as single models
-    fn group_sharded_models(&self, dir: &Path, model_files: &[PathBuf]) -> Result<Vec<DiscoveredModel>> {
-        println!("DEBUG: group_sharded_models called for dir: {:?}, files: {}", dir, model_files.len());
-        use std::collections::HashMap;
+    fn group_sharded_models(
+        &self,
+        dir: &Path,
+        model_files: &[PathBuf],
+    ) -> Result<Vec<DiscoveredModel>> {
+        println!(
+            "DEBUG: group_sharded_models called for dir: {:?}, files: {}",
+            dir,
+            model_files.len()
+        );
         use regex::Regex;
+        use std::collections::HashMap;
 
         let mut grouped_models = Vec::new();
         let mut processed_files = std::collections::HashSet::new();
@@ -166,8 +177,14 @@ impl ModelDiscovery {
                     let base_name = captures.get(1).unwrap().as_str();
                     let extension = captures.get(2).unwrap().as_str();
                     let group_key = format!("{}{}", base_name, extension);
-                    println!("DEBUG: Matched sharded file - base: {}, ext: {}, key: {}", base_name, extension, group_key);
-                    shard_groups.entry(group_key).or_insert_with(Vec::new).push(file_path.clone());
+                    println!(
+                        "DEBUG: Matched sharded file - base: {}, ext: {}, key: {}",
+                        base_name, extension, group_key
+                    );
+                    shard_groups
+                        .entry(group_key)
+                        .or_insert_with(Vec::new)
+                        .push(file_path.clone());
                     processed_files.insert(file_path.clone());
                 } else {
                     println!("DEBUG: No match for: {}", filename);
@@ -179,12 +196,14 @@ impl ModelDiscovery {
         for (group_key, files) in shard_groups {
             if files.len() > 1 {
                 // Calculate total size
-                let total_size: u64 = files.iter()
+                let total_size: u64 = files
+                    .iter()
                     .filter_map(|path| fs::metadata(path).ok().map(|m| m.len()))
                     .sum();
 
                 // Use directory name as model name for sharded models
-                let model_name = dir.file_name()
+                let model_name = dir
+                    .file_name()
                     .and_then(|n| n.to_str())
                     .unwrap_or(&group_key)
                     .to_string();
