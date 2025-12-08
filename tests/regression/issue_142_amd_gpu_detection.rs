@@ -80,9 +80,9 @@ mod issue_142_tests {
         let _engine = shimmy::engine::llama::LlamaEngine::new_with_backend(Some("auto"));
 
         // At least one GPU variable should be set if GPU backends are available
-        let _has_cuda = env::var("GGML_CUDA").is_ok();
-        let _has_vulkan = env::var("GGML_VULKAN").is_ok();
-        let _has_opencl = env::var("GGML_OPENCL").is_ok();
+        let has_cuda = env::var("GGML_CUDA").is_ok();
+        let has_vulkan = env::var("GGML_VULKAN").is_ok();
+        let has_opencl = env::var("GGML_OPENCL").is_ok();
 
         // If any GPU backend is enabled, at least one variable should be set
         #[cfg(any(
