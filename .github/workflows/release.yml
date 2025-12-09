@@ -331,6 +331,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if gh release view ${{ github.ref_name }} >/dev/null 2>&1; then
+            echo "ℹ️ Existing release ${{ github.ref_name }} found; deleting before recreate"
+            gh release delete ${{ github.ref_name }} --yes
+          fi
+
           gh release create ${{ github.ref_name }} \
             release-files/* \
             --title "Shimmy ${{ github.ref_name }}" \
