@@ -298,6 +298,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') && needs.preflight.outputs.should_publish == 'true'
     permissions:
       contents: write
+      packages: write  # Required for pushing to GHCR
     steps:
       - uses: actions/checkout@v4
 
