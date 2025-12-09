@@ -1,5 +1,5 @@
 # Multi-stage build for minimal final image
-FROM rust:1.70 as builder
+FROM rust:1.85 as builder
 
 WORKDIR /app
 
