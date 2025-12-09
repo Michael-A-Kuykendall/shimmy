@@ -353,11 +353,16 @@ jobs:
           DIRTY_FLAG="--allow-dirty"
           echo "⚠️ Using --allow-dirty to avoid Cargo.lock churn blocking publish"
 
-          # Publish to crates.io (dry-run already validated in Gate 7)
-          cargo publish $DIRTY_FLAG || (echo "❌ cargo publish failed"; exit 1)
-          
-          echo "✅ Successfully published shimmy ${{ github.ref_name }} to crates.io!"
-          echo "📦 Users can now install with: cargo install shimmy"
+          # Skip publish if this version already exists on crates.io (allows re-running release without bump)
+          VERSION="${GITHUB_REF_NAME#v}"
+          if curl -sSf "https://crates.io/api/v1/crates/shimmy/${VERSION}" >/dev/null; then
+            echo "ℹ️ shimmy ${VERSION} already published to crates.io; skipping publish"
+          else
+            # Publish to crates.io (dry-run already validated in Gate 7)
+            cargo publish $DIRTY_FLAG || (echo "❌ cargo publish failed"; exit 1)
+            echo "✅ Successfully published shimmy ${{ github.ref_name }} to crates.io!"
+            echo "📦 Users can now install with: cargo install shimmy"
+          fi
 
       - name: "🐳 Build and Push Docker Image to GHCR"
         if: always()
