@@ -17,6 +17,8 @@ COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 # Copy benches needed for manifest validation during build
 COPY benches ./benches
+# Copy templates required by include_str! in templates.rs
+COPY templates ./templates
 
 # Build release binary with minimal features for cloud deployment
 RUN cargo build --release --no-default-features --features huggingface
