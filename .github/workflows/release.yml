@@ -349,10 +349,9 @@ jobs:
           echo "🔍 git diff --name-only against HEAD (if any):"
           git diff --name-only || true
 
-          # When publishing we always allow dirty state for Cargo.lock differences that appear
-          # during build/packaging steps (this prevents transient lockfile updates from blocking publish)
-          echo "⚠️ Publishing with --allow-dirty to tolerate transient changes to Cargo.lock"
+          # Always allow dirty to tolerate Cargo.lock updates that occur during publish packaging
           DIRTY_FLAG="--allow-dirty"
+          echo "⚠️ Using --allow-dirty to avoid Cargo.lock churn blocking publish"
 
           # Publish to crates.io (dry-run already validated in Gate 7)
           cargo publish $DIRTY_FLAG || (echo "❌ cargo publish failed"; exit 1)
@@ -366,16 +365,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🐳 Building and pushing Docker image to GitHub Container Registry..."
+
+          # GHCR requires lowercase repository names
+          GHCR_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
           # Login to GHCR
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
           # Build the Docker image
-          docker build -f deploy/Dockerfile -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} -t ghcr.io/${{ github.repository }}:latest .
+          docker build -f deploy/Dockerfile -t ghcr.io/${GHCR_REPO}:${{ github.ref_name }} -t ghcr.io/${GHCR_REPO}:latest .
           
           # Push both tagged and latest versions
-          docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-          docker push ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/${GHCR_REPO}:${{ github.ref_name }}
+          docker push ghcr.io/${GHCR_REPO}:latest
           
           echo "✅ Docker image published successfully!"
-          echo "🐳 Users can now run: docker run ghcr.io/${{ github.repository }}:latest"
+          echo "🐳 Users can now run: docker run ghcr.io/${GHCR_REPO}:latest"
