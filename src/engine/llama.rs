@@ -305,6 +305,7 @@ impl LlamaEngine {
 
     /// Calculate adaptive batch size based on context length to prevent GGML assert failures
     /// with large prompts (Issue #140)
+    #[cfg(feature = "llama")]
     fn calculate_adaptive_batch_size(ctx_len: usize) -> u32 {
         // Base batch size for smaller contexts
         const BASE_BATCH_SIZE: u32 = 2048;
