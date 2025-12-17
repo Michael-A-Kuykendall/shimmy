@@ -10,7 +10,7 @@
 - **[Omar McIver](https://github.com/omarmciver)** - Priority support + featured sponsor
 
 ## Coffee Tier Heroes ($5+/month)
-- **[Matthias Zepper](https://github.com/MatthiasZepper)** - *First sponsor!*
+*Your support could be here*
 
 ---
 
