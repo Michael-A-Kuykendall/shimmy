@@ -1,0 +1,12 @@
+{
+  "discovery_url": "http://127.0.0.1:11430/api/discovery",
+  "finished_at": "2025-12-07T20:03:46.773785600+00:00",
+  "shimmy_port": 62740,
+  "started_at": "2025-12-07T20:03:44.268408500+00:00",
+  "status": "ok",
+  "theme_url": "http://localhost:8080",
+  "verification": {
+    "run": false,
+    "status": "skipped"
+  }
+}
