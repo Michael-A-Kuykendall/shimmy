@@ -1,0 +1,19 @@
+{
+  "passed": [
+    "chooser"
+  ],
+  "failed": [
+    {
+      "test": "selection",
+      "error": "page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"text\"], textarea, [class*=\"chat\"], [class*=\"input\"]') to be visible\u001b[22m\n"
+    },
+    {
+      "test": "chat_rust",
+      "error": "locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"text\"], textarea').first()\u001b[22m\n"
+    },
+    {
+      "test": "chat_context",
+      "error": "locator.clear: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"text\"], textarea').first()\u001b[22m\n"
+    }
+  ]
+}

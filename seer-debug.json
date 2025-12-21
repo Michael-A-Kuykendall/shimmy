@@ -1,0 +1,15 @@
+{
+  "imagePath": "C:\\Users\\micha\\repos\\shimmy\\theme-tester\\screenshots\\chat-after-fix.png",
+  "mode": "full",
+  "textBlocks": [],
+  "layout": {},
+  "visual": {},
+  "interaction": {},
+  "rawModelOutput": "The analysis of this screenshot results in the following single JSON object:\n\n```json\n{\n  \"textBlocks\": [\n    {\n      \"text\": \"SHIMMY.AI CONSOLE v1.0\"\n    },\n    {\n      \"text\": \"64-BIT RETRO EDITION VERSION **\"\n    },\n    {\n      \"text\": \"DISCONNECTED\"\n    },\n    {\n      \"text\": \"Type your message...\"\n    }\n  ],\n  \"layout\": {\n    \"theme\": \"dark\",\n    \"mainRegions\": [\n      {\n        \"name\": \"Title Bar\",\n        \"details\": \"Top of the window with title and icons, a toggle for simplifying the console to minimal mode, advancement options.\"\n      },\n      {\n        \"name\": \"Main Content Area\",\n        \"details\": \"Centered area where user interacts with various elements including chat messages in progress\"\n      },\n      {\n        \"name\": \"Status Bar\",\n        \"details\": \"Bottom part showing what is typed by the user and a send button for sending it.\"\n      }\n    ],\n    \"keyUIElements\": [\n      { \"type\": \"title\", \"text\": \"SHIMMY.AI CONSOLE v1.0\" },\n      { \"type\": \"toggle\", \"label\": \"SIMPLE\", \"status\": true},\n      { \"type\": \"toggle\", \"label\": \"ADVANCED\", 'checked': false },\n      { \"type\": \"message\", \"title\": \"SHIMMY\", \"content\": \"DISCONNECTED\" },\n      { \"type\": \"inputbox\", \"textLabel\": \"Type your message...\" }\n    ]\n  },\n  \"visual\": {\n    \"background\": \"#0d1724\",\n    \"accentColor\": \"#FFB86F\"\n  },\n  \"interaction\": {\n    \"description\": \"The user is currently in a state where they can type messages and send them to the console. They are viewing an error status about being disconnected from Shimmy.\"\n  }\n}\n```\n",
+  "meta": {
+    "model": "minicpm-v",
+    "backend": "ollama",
+    "url": "http://127.0.0.1:11434",
+    "durationMs": 10549
+  }
+}

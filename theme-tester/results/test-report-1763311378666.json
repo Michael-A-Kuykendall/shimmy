@@ -1,0 +1,13 @@
+{
+  "passed": [
+    "chooser",
+    "selection",
+    "chat_rust"
+  ],
+  "failed": [
+    {
+      "test": "chat_context",
+      "error": "No input field found after first message - UI may not have recovered"
+    }
+  ]
+}

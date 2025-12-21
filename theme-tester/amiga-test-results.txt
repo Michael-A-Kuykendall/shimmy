@@ -1,0 +1,98 @@
+🚀 Starting comprehensive theme tests...
+
+📍 Navigating to http://localhost:8080
+
+📋 TESTS:
+
+
+📄 Page Content (first 500 chars):
+ SHIMMY CONSOLE
+v1.0.64
+ONLINE
+SELECT AI MODEL
+
+CHOOSE YOUR INFERENCE ENGINE
+
+✨
+GPT OSS 20B F16
+
+ID: gpt-oss-20b-f16
+
+PARAMS
+20B
+MEMORY
+13GB
+CONTEXT
+4K
+QUANT
+F16
+CONNECT
+🦙
+LLAMA3.2:1B [OLLAMA]
+
+ID: llama3.2:1b [Ollama]
+
+PARAMS
+1B
+MEMORY
+1GB
+CONTEXT
+4K
+QUANT
+Ollama
+CONNECT
+🤖
+PHI 3 MINI 4K INSTRUCT Q4
+
+ID: phi-3-mini-4k-instruct-q4
+
+PARAMS
+3B
+MEMORY
+2GB
+CONTEXT
+4K
+QUANT
+Q4
+CONNECT
+🤖
+PHI 3 MINI 4K INSTRUCT Q4 K M
+
+ID: phi-3-mini-4k-instruct-q4-k-m
+
+PARAMS
+3B
+MEMORY
+2GB
+CONTEXT
+4K
+QUANT
+Q4_K_M
+CON
+🔘 Found 9 buttons
+📝 Found 0 input fields
+🎯 Found 10 potential model elements
+✅ [chooser] Found 10 model elements
+🎯 Found 20 potential model cards
+🔗 Found phi-3-mini-4k-instruct-q4-k-m model's CONNECT button
+✅ [selection] Model connected, chat UI loaded
+📝 Found 1 input field(s), using first one
+🚀 Found 1 send button(s), clicking first one
+⏳ Waiting for generation to complete (input re-enabled)...
+⚠️  Input still disabled after visible, waiting 5 more seconds...
+✅ [chat_rust] Chat message sent, response received
+⏸️  Waiting 2 seconds for UI to stabilize...
+📝 Found 1 input fields
+🔒 Input field disabled: true
+❌ [chat_context] Input field still disabled after first message completed
+
+============================================================
+📊 TEST SUMMARY
+============================================================
+✅ Passed: 3
+❌ Failed: 1
+
+🔴 Failures:
+  - chat_context: Input field still disabled after first message completed
+
+📄 Report saved: C:\Users\micha\repos\shimmy\theme-tester\results\test-report-1763265901907.json

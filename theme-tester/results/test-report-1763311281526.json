@@ -1,0 +1,21 @@
+{
+  "passed": [],
+  "failed": [
+    {
+      "test": "chooser",
+      "error": "Could not find model cards/buttons with any selector strategy"
+    },
+    {
+      "test": "selection",
+      "error": "Cannot read properties of undefined (reading 'click')"
+    },
+    {
+      "test": "chat_rust",
+      "error": "Could not find any input field"
+    },
+    {
+      "test": "chat_context",
+      "error": "No input field found after first message - UI may not have recovered"
+    }
+  ]
+}

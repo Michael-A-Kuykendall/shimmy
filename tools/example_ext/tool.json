@@ -1,0 +1,14 @@
+{
+  "name": "md_summary",
+  "version": "0.1.0",
+  "description": "Summarize a markdown file (stub external tool).",
+  "type": "external",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "path": { "type": "string", "description": "Markdown file path" }
+    },
+    "required": ["path"],
+    "additionalProperties": false
+  }
+}

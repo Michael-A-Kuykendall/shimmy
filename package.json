@@ -1,0 +1,28 @@
+{
+  "name": "shimmy-contract",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeScript contract generation for Shimmy frontend themes",
+  "scripts": {
+    "generate-contract": "node scripts/generate-types.js",
+    "generate-types": "node scripts/generate-types.js",
+    "verify-stack": "shimmy dev --verify",
+    "test-types": "tsc --noEmit theme-types/shimmy-contract.d.ts"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "^13.1.2",
+    "typescript": "^5.3.2"
+  },
+  "keywords": [
+    "shimmy",
+    "llm",
+    "frontend",
+    "contract",
+    "typescript"
+  ],
+  "author": "Shimmy Project",
+  "license": "MIT",
+  "dependencies": {
+    "tesseract.js": "^6.0.1"
+  }
+}

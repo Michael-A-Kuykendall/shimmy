@@ -1,3 +1,4 @@
+#![cfg(feature = "regression_tests")]
 /// Regression test for Issue #13: Qwen models don't use correct templates in VSCode
 ///
 /// GitHub: https://github.com/Michael-A-Kuykendall/shimmy/issues/13

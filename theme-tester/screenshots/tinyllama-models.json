@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "file": "C:\\Users\\micha\\repos\\shimmy\\theme-tester\\screenshots\\tinyllama-models.png",
+  "mode": "ocr",
+  "size_bytes": 44760,
+  "base64_length": 59680,
+  "text": "shimmy-default ® Connected\n\nSelect a Model\n\nChoose a model to start chatting. Models are loaded from your local Shimmy instance.\nphi3 [Ollama] starcoder2:3b [Ollama] phi-3-mini-4k-instruct-q4-k-m\nParameters: 3B Parameters: 3B Parameters: 3B\n‘Quantization: Ollama ‘Quantization: Ollama ‘Quantization: Q4KM\nContext Length: 409% Context Length: 409% Context Length: 409%\nSize: 20GB Size: 1.6 GB Size: 22GB\nType: Gguf Type: Gguf Type: Gguf\nFeatures: Features: Features:\ngenerate stream generate stream generate stream\nqwen2.5:1.5b [Ollama] phi-3-mini-4k-instruct-q4 gpt-oss-20b-f16"
+}

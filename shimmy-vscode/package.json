@@ -1,0 +1,133 @@
+{
+  "name": "shimmy-vscode",
+  "displayName": "Shimmy: 5MB Ollama Alternative",
+  "description": "5MB Ollama alternative with instant LoRA serving. Train → Point → Serve. Zero conversion, zero config.",
+  "version": "0.1.0",
+  "publisher": "targetedwebresults",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "llm",
+    "ollama",
+    "inference",
+    "lora",
+    "gguf",
+    "local"
+  ],
+  "activationEvents": [
+    "onCommand:shimmy.startServer",
+    "onCommand:shimmy.stopServer",
+    "onCommand:shimmy.restartServer",
+    "onCommand:shimmy.generateCode",
+    "onLanguage:javascript",
+    "onLanguage:typescript", 
+    "onLanguage:python",
+    "onLanguage:rust"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "shimmy.startServer",
+        "title": "Start Shimmy Server",
+        "category": "Shimmy"
+      },
+      {
+        "command": "shimmy.stopServer", 
+        "title": "Stop Shimmy Server",
+        "category": "Shimmy"
+      },
+      {
+        "command": "shimmy.restartServer",
+        "title": "Restart Shimmy Server", 
+        "category": "Shimmy"
+      },
+      {
+        "command": "shimmy.generateCode",
+        "title": "Generate Code with Shimmy",
+        "category": "Shimmy"
+      },
+      {
+        "command": "shimmy.generateFromSelection",
+        "title": "Generate from Selection",
+        "category": "Shimmy"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "shimmy.generateFromSelection",
+          "when": "editorHasSelection",
+          "group": "1_modification"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "shimmy.startServer"
+        },
+        {
+          "command": "shimmy.stopServer"
+        },
+        {
+          "command": "shimmy.restartServer"
+        },
+        {
+          "command": "shimmy.generateCode"
+        },
+        {
+          "command": "shimmy.generateFromSelection",
+          "when": "editorHasSelection"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Shimmy",
+      "properties": {
+        "shimmy.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:11435",
+          "description": "Shimmy server URL"
+        },
+        "shimmy.binaryPath": {
+          "type": "string", 
+          "default": "shimmy",
+          "description": "Path to shimmy binary"
+        },
+        "shimmy.modelPath": {
+          "type": "string",
+          "description": "Path to GGUF model file"
+        },
+        "shimmy.autoStart": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically start shimmy server on extension activation"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "^18.x",
+    "typescript": "^4.9.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Michael-A-Kuykendall/shimmy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Michael-A-Kuykendall/shimmy/issues"
+  },
+  "homepage": "https://github.com/Michael-A-Kuykendall/shimmy#readme",
+  "license": "MIT"
+}

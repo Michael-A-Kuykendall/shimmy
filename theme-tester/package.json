@@ -1,0 +1,16 @@
+{
+  "name": "theme-tester",
+  "version": "1.0.0",
+  "description": "Minimal Playwright tool for theme screenshot and button clicking",
+  "main": "tester.js",
+  "type": "module",
+  "scripts": {
+    "screenshot": "node tester.js screenshot",
+    "click": "node tester.js click",
+    "agent": "node headless-agent.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "ws": "^8.18.3"
+  }
+}

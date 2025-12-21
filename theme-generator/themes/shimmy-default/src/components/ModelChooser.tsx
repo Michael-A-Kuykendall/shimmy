@@ -1,0 +1,242 @@
+import React, { useState, useEffect } from 'react'
+
+interface Model {
+  name: string
+  display_name: string
+  parameter_count: string
+  quantization: string
+  context_length: number
+  size_bytes: number
+  model_type: string
+  loaded: boolean
+  supported_features: string[]
+  source: string
+}
+
+interface ModelChooserProps {
+  socket: WebSocket | null
+  isConnected: boolean
+  sendMessage: (message: any) => void
+  onModelSelected: (modelName: string) => void
+  selectedModel: string | null
+}
+
+function ModelChooser({ socket, isConnected, sendMessage, onModelSelected, selectedModel }: ModelChooserProps) {
+  const [models, setModels] = useState<Model[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedModelName, setSelectedModelName] = useState<string | null>(selectedModel)
+  
+  // Request models when WebSocket becomes connected
+  // Using a ref to track if we've already requested to avoid duplicate requests
+  const hasRequestedModels = React.useRef(false)
+  
+  useEffect(() => {
+    if (isConnected && !hasRequestedModels.current) {
+      console.log('🔄 Auto-requesting models after WebSocket connection')
+      hasRequestedModels.current = true
+      requestModels()
+    }
+    // Reset the flag when disconnected so we request again on reconnect
+    if (!isConnected) {
+      hasRequestedModels.current = false
+    }
+  }, [isConnected])
+  
+  // Listen for WebSocket messages
+  useEffect(() => {
+    const handleMessage = (event: CustomEvent) => {
+      const message = event.detail
+      
+      switch (message.type) {
+        case 'models_response':
+          setModels(message.models || [])
+          setLoading(false)
+          setError(null)
+          break
+          
+        case 'model_selected':
+          setLoading(false)
+          if (message.success) {
+            onModelSelected(selectedModelName!)
+          } else {
+            setError(message.error || 'Failed to select model')
+          }
+          break
+          
+        case 'error':
+          setLoading(false)
+          setError(message.error || 'Unknown error')
+          break
+      }
+    }
+    
+    window.addEventListener('shimmy-websocket-message', handleMessage as EventListener)
+    
+    return () => {
+      window.removeEventListener('shimmy-websocket-message', handleMessage as EventListener)
+    }
+  }, [selectedModelName, onModelSelected])
+  
+  const requestModels = () => {
+    if (!isConnected) {
+      setError('WebSocket not connected')
+      return
+    }
+    
+    setLoading(true)
+    setError(null)
+    sendMessage({ type: 'get_models' })
+  }
+  
+  const selectModel = (modelName: string) => {
+    if (!isConnected) {
+      setError('WebSocket not connected')
+      return
+    }
+    
+    setSelectedModelName(modelName)
+    setLoading(true)
+    setError(null)
+    
+    sendMessage({
+      type: 'select_model',
+      model_name: modelName
+    })
+  }
+  
+  const formatSize = (bytes: number) => {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB']
+    let size = bytes
+    let unitIndex = 0
+    
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024
+      unitIndex++
+    }
+    
+    return `${size.toFixed(1)} ${units[unitIndex]}`
+  }
+  
+  if (!socket) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500">
+          <div className="text-4xl mb-4">🔌</div>
+          <p>Waiting for WebSocket connection...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  return (
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-4">Select a Model</h1>
+        <p className="text-gray-400 mb-6">
+          Choose a model to start chatting. Models are loaded from your local Shimmy instance.
+        </p>
+        
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={requestModels}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-white font-medium transition-colors"
+          >
+            {loading ? '🔄 Loading...' : '🔄 Refresh Models'}
+          </button>
+          
+          {error && (
+            <div className="text-red-400 text-sm">
+              ❌ {error}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {models.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <div className="text-gray-500">
+            <div className="text-6xl mb-4">📦</div>
+            <h3 className="text-xl mb-2">No Models Found</h3>
+            <p>No models are currently available. Try refreshing or check your Shimmy configuration.</p>
+          </div>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {models.map((model) => (
+          <div
+            key={model.name}
+            className={`
+              border rounded-lg p-6 transition-all cursor-pointer
+              ${model.name === selectedModelName 
+                ? 'border-blue-500 bg-blue-950/20' 
+                : 'border-gray-700 hover:border-gray-600 bg-gray-800'
+              }
+              ${!model.loaded ? 'opacity-75' : ''}
+            `}
+            onClick={() => selectModel(model.name)}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="font-semibold text-lg text-blue-400">
+                {model.display_name || model.name}
+              </h3>
+              <div className="flex items-center space-x-2">
+                {model.loaded && (
+                  <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">
+                    ✅ Loaded
+                  </span>
+                )}
+                {model.name === selectedModelName && (
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded">
+                    🎯 Selected
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            <div className="space-y-2 text-sm text-gray-400">
+              <div className="flex justify-between">
+                <span>Parameters:</span>
+                <span className="text-white font-medium">{model.parameter_count}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span>Quantization:</span>
+                <span className="text-white">{model.quantization}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span>Context Length:</span>
+                <span className="text-white">{model.context_length?.toLocaleString() || 'N/A'}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span>Size:</span>
+                <span className="text-white">{formatSize(model.size_bytes)}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span>Type:</span>
+                <span className="text-white capitalize">{model.model_type}</span>
+              </div>
+              
+              {model.supported_features && model.supported_features.length > 0 && (
+                <div className="mt-3">
+                  <span className="text-gray-500 block mb-1">Features:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {model.supported_features.map((feature, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-gray-700"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

@@ -1,0 +1,28 @@
+{
+  "name": "read_image",
+  "version": "1.0.0",
+  "description": "Read an image file from disk, returning base64-encoded data, MIME type, dimensions, and optional OCR text",
+  "type": "builtin",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "Path to the image file (absolute or relative to working directory)"
+      },
+      "mode": {
+        "type": "string",
+        "description": "Output mode: 'base64' (full data + metadata), 'meta' (metadata only), 'ocr' (with text extraction)",
+        "enum": ["base64", "meta", "ocr"],
+        "default": "base64"
+      }
+    },
+    "required": ["path"],
+    "additionalProperties": false
+  },
+  "permissions": {
+    "filesystem": "read-write",
+    "network": [],
+    "exec": false
+  }
+}

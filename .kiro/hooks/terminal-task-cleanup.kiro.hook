@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Terminal Task Cleanup Manager",
+  "description": "When starting a new terminal task, this hook checks existing tabs, reuses open tabs when possible, closes stale processes, and alerts if more than 5 tabs are open to prevent workspace clutter and maintain context regularity.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before starting this terminal task:\n1. List all currently open terminal tabs and their processes\n2. Identify which tabs can be reused for this task (same project, compatible process)\n3. Check for stale tabs (processes that have finished or are idle) and recommend closing them\n4. If more than 5 tabs are open, flag this as potential context/memory issue and suggest cleanup\n5. Recommend which tab to use or if a new tab is needed\n6. Provide a summary of the workspace state and any cleanup actions taken"
+  }
+}

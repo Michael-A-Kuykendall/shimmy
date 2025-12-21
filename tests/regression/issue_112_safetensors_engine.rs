@@ -1,3 +1,4 @@
+#![cfg(feature = "regression_tests")]
 /// Regression test for Issue #112: SafeTensors files should use SafeTensors engine
 ///
 /// GitHub: https://github.com/Michael-A-Kuykendall/shimmy/issues/112

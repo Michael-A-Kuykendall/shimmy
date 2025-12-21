@@ -1,0 +1,19 @@
+{
+  "passed": [
+    "chooser"
+  ],
+  "failed": [
+    {
+      "test": "selection",
+      "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('text=phi-3-mini-4k-instruct-q4-k-m').locator('..').locator('..').locator('button:has-text(\"CONNECT\")').first()\u001b[22m\n"
+    },
+    {
+      "test": "chat_rust",
+      "error": "Could not find any input field"
+    },
+    {
+      "test": "chat_context",
+      "error": "locator.clear: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"text\"], textarea').first()\u001b[22m\n"
+    }
+  ]
+}

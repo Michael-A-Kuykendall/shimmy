@@ -1,0 +1,19 @@
+{
+  "name": "shimmy-theme-validator",
+  "version": "1.0.0",
+  "description": "Schema-driven validator for Shimmy themes",
+  "main": "validator.js",
+  "scripts": {
+    "test": "node test/verify-report-schema-test.js && node test/discovery-validation-test.js",
+    "validate": "node validator.js"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "ws": "^8.18.0",
+    "playwright": "^1.48.1"
+  },
+  "keywords": ["shimmy", "validation", "schema", "testing"],
+  "author": "Shimmy Team",
+  "license": "MIT"
+}

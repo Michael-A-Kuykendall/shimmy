@@ -1,0 +1,301 @@
+name: Theme Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'themes/**'
+      - 'theme-validator/**'
+      - 'theme-generator/**'
+      - 'src/**'
+      - 'console/src/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'themes/**'
+      - 'theme-validator/**'
+      - 'theme-generator/**'
+      - 'src/**'
+      - 'console/src/**'
+  workflow_dispatch:
+    inputs:
+      theme_name:
+        description: 'Specific theme to validate (default: all)'
+        required: false
+        default: 'all'
+
+jobs:
+  validate-themes:
+    name: "🎨 Theme Validation"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [18, 20]
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-theme-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-theme-
+            ${{ runner.os }}-cargo-
+
+      - name: Build shimmy with console feature
+        run: |
+          echo "::group::Building shimmy for theme validation"
+          cargo build --features console --no-default-features
+          echo "::endgroup::"
+
+      - name: Install theme validator dependencies
+        run: |
+          echo "::group::Installing theme validator dependencies"
+          cd theme-validator
+          npm install
+          echo "::endgroup::"
+
+      - name: Start shimmy server for validation
+        run: |
+          echo "::group::Starting shimmy server"
+          # Start shimmy in background
+          cargo run --features console --no-default-features -- serve --bind auto > shimmy.log 2>&1 &
+          SHIMMY_PID=$!
+          echo $SHIMMY_PID > shimmy.pid
+          
+          # Wait for shimmy to be ready
+          echo "Waiting for shimmy to start..."
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:11430/api/discovery >/dev/null 2>&1; then
+              echo "✅ Shimmy server ready"
+              break
+            fi
+            sleep 2
+          done
+          
+          if ! curl -s http://127.0.0.1:11430/api/discovery >/dev/null 2>&1; then
+            echo "❌ Shimmy server failed to start"
+            cat shimmy.log
+            exit 1
+          fi
+          echo "::endgroup::"
+        shell: bash
+
+      - name: Run theme validator
+        run: |
+          echo "::group::Running theme validator"
+          cd theme-validator
+          
+          # Run validation with automatic discovery
+          if ./validator.js --port auto; then
+            echo "✅ Theme validation passed"
+          else
+            echo "❌ Theme validation failed"
+            exit 1
+          fi
+          echo "::endgroup::"
+        shell: bash
+
+      - name: Validate existing themes
+        run: |
+          echo "::group::Validating existing themes"
+          
+          # Check if themes directory exists and has themes
+          if [ -d "themes" ] && [ "$(ls -A themes)" ]; then
+            echo "Found themes to validate:"
+            ls -la themes/
+            
+            # Basic validation for each theme
+            for theme_dir in themes/*/; do
+              if [ -d "$theme_dir" ]; then
+                theme_name=$(basename "$theme_dir")
+                echo "::group::Validating theme: $theme_name"
+                
+                # Check if package.json exists
+                if [ -f "$theme_dir/package.json" ]; then
+                  echo "✅ Found package.json for $theme_name"
+                  
+                  # Install dependencies and check build
+                  cd "$theme_dir"
+                  npm install || echo "⚠️ npm install failed for $theme_name"
+                  
+                  # Try to build (if build script exists)
+                  if npm run build --if-present; then
+                    echo "✅ Build successful for $theme_name"
+                  else
+                    echo "⚠️ Build failed for $theme_name"
+                  fi
+                  
+                  cd - > /dev/null
+                else
+                  echo "⚠️ No package.json found for $theme_name"
+                fi
+                
+                echo "::endgroup::"
+              fi
+            done
+          else
+            echo "ℹ️ No themes found to validate"
+          fi
+          echo "::endgroup::"
+        shell: bash
+
+      - name: Test theme generator
+        run: |
+          echo "::group::Testing theme generator"
+          cd theme-generator
+          npm install
+          
+          # Test theme generation
+          echo "Testing theme generation..."
+          npm start -- --name test-ci-theme --template react-vite --output ./test-output/
+          
+          # Verify generated theme structure
+          if [ -d "./test-output/test-ci-theme" ]; then
+            echo "✅ Theme generated successfully"
+            
+            # Check for key files
+            if [ -f "./test-output/test-ci-theme/package.json" ]; then
+              echo "✅ Generated package.json"
+            else
+              echo "❌ Missing package.json in generated theme"
+              exit 1
+            fi
+            
+            # Test build of generated theme
+            cd "./test-output/test-ci-theme"
+            npm install
+            
+            if npm run build; then
+              echo "✅ Generated theme builds successfully"
+            else
+              echo "❌ Generated theme fails to build"
+              exit 1
+            fi
+          else
+            echo "❌ Theme generation failed"
+            exit 1
+          fi
+          echo "::endgroup::"
+        shell: bash
+
+      - name: Cleanup shimmy server
+        if: always()
+        run: |
+          if [ -f shimmy.pid ]; then
+            SHIMMY_PID=$(cat shimmy.pid)
+            echo "Stopping shimmy server (PID: $SHIMMY_PID)"
+            kill $SHIMMY_PID || true
+            rm shimmy.pid
+          fi
+        shell: bash
+
+      - name: Upload validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: theme-validation-${{ runner.os }}-node${{ matrix.node }}
+          path: |
+            shimmy.log
+            theme-validator/results/**
+            theme-generator/test-output/**
+          retention-days: 7
+
+  schema-contract-sync:
+    name: "📋 Schema Contract Synchronization"
+    runs-on: ubuntu-latest
+    needs: validate-themes
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    env:
+      EXPORT_SCHEMA_FILE: exported-shimmy-schema.json
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-sync-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-sync-
+            ${{ runner.os }}-cargo-
+
+      - name: Build and export schema (orchestrator-first)
+        run: |
+          echo "::group::Exporting latest schema using orchestrator"
+          cargo build --features console --no-default-features
+
+          # Run the orchestrator (dev --verify) to export the schema
+          if [ -f "./target/debug/shimmy" ]; then
+            ./target/debug/shimmy dev shimmy-default --verify --no-build
+          else
+            # Fallback to cargo run if binary not present
+            cargo run --features console --no-default-features -- dev shimmy-default --verify --no-build
+          fi
+
+          echo "::endgroup::"
+
+      - name: Check and upload exported schema artifact
+        id: check-changes
+        run: |
+          # If the orchestrator produced a JSON file, normalize into EXPORT_SCHEMA_FILE and upload
+          found=$(ls -1t *.json 2>/dev/null | head -n1 || true)
+          if [ -n "$found" ]; then
+            echo "schema_found=true" >> $GITHUB_OUTPUT
+            echo "📋 Exported schema detected, normalizing to $EXPORT_SCHEMA_FILE"
+            ls -la "$found"
+            mv "$found" "$EXPORT_SCHEMA_FILE" || true
+          else
+            echo "schema_found=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No exported schema file found after orchestrator run"
+          fi
+
+      - name: Upload schema artifact if present
+        if: steps.check-changes.outputs.schema_found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: exported-schema
+          path: ${{ env.EXPORT_SCHEMA_FILE }}
+          retention-days: 30
+
+      - name: Validation summary
+        run: |
+          echo "::group::Theme Validation Summary"
+          echo "✅ Theme validation workflow completed successfully"
+          echo "📋 Summary:"
+          echo "   - Theme validator tests: ✅"
+          echo "   - Existing themes validation: ✅"
+          echo "   - Theme generator tests: ✅"
+          if [ "${{ steps.check-changes.outputs.schema_changed }}" == "true" ]; then
+            echo "   - Schema changes committed: ✅"
+          else
+            echo "   - Schema unchanged: ✅"
+          fi
+          echo "::endgroup::"

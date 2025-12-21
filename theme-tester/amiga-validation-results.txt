@@ -1,0 +1,12 @@
+file:///C:/Users/micha/repos/shimmy/theme-tester/manual-chat-test.js:1
+const puppeteer = require('puppeteer');
+                  ^
+
+ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and 'C:\Users\micha\repos\shimmy\theme-tester\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///C:/Users/micha/repos/shimmy/theme-tester/manual-chat-test.js:1:19
+    at ModuleJob.run (node:internal/modules/esm/module_job:371:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:669:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.6.0

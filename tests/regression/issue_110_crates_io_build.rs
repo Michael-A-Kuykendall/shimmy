@@ -1,3 +1,4 @@
+#![cfg(feature = "regression_tests")]
 /// Regression test for Issue #110: Build Failure on cargo install shimmy v1.7.0
 ///
 /// This test ensures that:

@@ -1,0 +1,71 @@
+{
+  "imagePath": "C:\\Users\\micha\\repos\\shimmy\\theme-tester\\screenshots\\screenshot-latest.png",
+  "mode": "full",
+  "textBlocks": [
+    {
+      "text": "Select a Model",
+      "confidence": null
+    },
+    {
+      "text": "Choose a model to start chatting.",
+      "confidence": null
+    },
+    {
+      "text": "Models are loaded from your local Shimmy instance.",
+      "confidence": null
+    },
+    {
+      "text": "Refresh Models",
+      "confidence": null
+    }
+  ],
+  "layout": {
+    "regions": [
+      {
+        "name": "Left Model Selection Section",
+        "position": [
+          0.19,
+          0.42
+        ]
+      },
+      {
+        "name": "Right Model Selection Section",
+        "position": [
+          0.635,
+          0.42
+        ]
+      }
+    ],
+    "keyUIElements": [
+      {
+        "name": "Refresh Models Button",
+        "theme": "light blue button"
+      },
+      {
+        "name": "Model Selection Icons",
+        "position": [
+          0.635,
+          0.42
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "background": "dark grey background with black accents.",
+    "accentColors": [
+      "light blue"
+    ],
+    "contrastIssues": null
+  },
+  "interaction": {
+    "action": "Select a model",
+    "state": "initial"
+  },
+  "rawModelOutput": "{\n    \"textBlocks\": [\n        {\n            \"text\": \"Select a Model\",\n            \"theme\": \"dark\"\n        },\n        {\n            \"text\": \"Choose a model to start chatting.\",\n            \"theme\": \"dark\"\n        },\n        {\n            \"text\": \" Models are loaded from your local Shimmy instance.\",\n            \"theme\": \"dark\"\n        },\n        {\n            \"text\": \"Refresh Models\",\n            \"theme\": \"light blue button\"\n        }\n    ],\n    \"layout\": {\n        \"regions\": [\n            {\n                \"name\": \"Left Model Selection Section\",\n                \"position\": [\n                    0.19,\n                    0.42\n                ]\n            },\n            {\n                \"name\": \"Right Model Selection Section\",\n                \"position\": [\n                    0.635,\n                    0.42\n                ]\n            }\n        ],\n        \"keyUIElements\": [\n            {\n                \"name\": \"Refresh Models Button\",\n                \"theme\": \"light blue button\"\n            },\n            {\n                \"name\": \"Model Selection Icons\",\n                \"position\": [\n                    0.635,\n                    0.42\n                ]\n            }\n        ]\n    },\n    \"visual\": {\n        \"background\": \"dark grey background with black accents.\",\n        \"accentColors\": [\n            \"light blue\"\n        ],\n        \"contrastIssues\": null // No obvious contrast issues detected.\n    },\n    \"interaction\": {\n        \"action\": \"Select a model\",\n        \"state\": \"initial\"\n    }\n}",
+  "meta": {
+    "model": "minicpm-v",
+    "backend": "ollama",
+    "url": "http://127.0.0.1:11434",
+    "durationMs": 9196
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "outDir": "dist",
+    "declaration": true,
+    "sourceMap": true,
+    "types": ["node"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
+}

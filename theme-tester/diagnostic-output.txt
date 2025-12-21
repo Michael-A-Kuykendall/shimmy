@@ -1,0 +1,57 @@
+📍 Navigating to http://localhost:8080...
+⏳ Waiting 5 seconds for discovery to attempt...
+✅ Screenshot: C:\Users\micha\repos\shimmy\theme-tester\screenshots\console-diagnostic.png
+📄 Page title: SHIMMY.AI Console - 64-bit Retro Development Interface
+
+📋 CONSOLE LOGS:
+  [0] DEBUG: [vite] connecting...
+  [1] DEBUG: [vite] connected.
+  [2] INFO: %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-de
+  [3] LOG: [ModelChooser] DEBUG: {modelsCount: 0, isConnected: false, models: Array(0)}
+  [4] LOG: [useShimmy] Refresh called, isConnected: false
+  [5] LOG: [useShimmy] Not connected, calling discoverBackends()
+  [6] LOG: [DiscoveryClient] 🚀🚀🚀 ENTERING discoverBackends()
+  [7] LOG: [DiscoveryClient] Starting backend discovery...
+  [8] LOG: [DiscoveryClient] Browser environment detected, using HTTP discovery...
+  [9] LOG: [DiscoveryClient] 🌐🌐🌐 ENTERING discoverViaHTTP()
+  [10] LOG: [DiscoveryClient] 🌐 Attempting HTTP discovery at http://localhost:11430/api/discovery
+  [11] WARNING: ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startT
+  [12] WARNING: ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7
+  [13] LOG: [ModelChooser] DEBUG: {modelsCount: 0, isConnected: false, models: Array(0)}
+  [14] LOG: [DiscoveryClient] HTTP response status: 200
+  [15] LOG: [DiscoveryClient] ✅ Discovery successful at http://localhost:11430: 1 backend(s)
+  [16] LOG: [useShimmy] 🎉 Connected event received: {backends: 1, modelsCount: 9}
+  [17] LOG: [DiscoveryClient] HTTP discovery found 1 backend(s)
+  [18] LOG: [useShimmy] discoverBackends returned: 1 backends
+  [19] LOG: [useShimmy] getAllModels returned: 9 models
+  [20] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [21] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [22] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [23] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [24] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [25] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [26] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [27] LOG: [useShimmy] Refresh called, isConnected: false
+  [28] LOG: [useShimmy] Not connected, calling discoverBackends()
+  [29] LOG: [DiscoveryClient] 🚀🚀🚀 ENTERING discoverBackends()
+  [30] LOG: [DiscoveryClient] Starting backend discovery...
+  [31] LOG: [DiscoveryClient] Browser environment detected, using HTTP discovery...
+  [32] LOG: [DiscoveryClient] 🌐🌐🌐 ENTERING discoverViaHTTP()
+  [33] LOG: [DiscoveryClient] 🌐 Attempting HTTP discovery at http://localhost:11430/api/discovery
+  [34] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: false, models: Array(3)}
+  [35] LOG: [DiscoveryClient] HTTP response status: 200
+  [36] LOG: [DiscoveryClient] ✅ Discovery successful at http://localhost:11430: 1 backend(s)
+  [37] LOG: [useShimmy] 🎉 Connected event received: {backends: 1, modelsCount: 9}
+  [38] LOG: [DiscoveryClient] HTTP discovery found 1 backend(s)
+  [39] LOG: [useShimmy] discoverBackends returned: 1 backends
+  [40] LOG: [useShimmy] getAllModels returned: 9 models
+  [41] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [42] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [43] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+  [44] LOG: [ModelChooser] DEBUG: {modelsCount: 9, isConnected: true, models: Array(3)}
+
+✅ No JavaScript errors
+
+🔍 Checking discovery-client state...
+  URL: http://localhost:8080/
+  Discovery client global: false

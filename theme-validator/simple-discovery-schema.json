@@ -1,0 +1,27 @@
+{
+  "definitions": {
+    "DiscoveryResponse": {
+      "type": "object",
+      "properties": {
+        "backends": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "port": {"type": "integer"},
+              "validation": {
+                "type": "object",
+                "properties": {
+                  "health_check": {"type": "boolean"},
+                  "models_endpoint": {"type": "boolean"},
+                  "websocket_endpoint": {"type": "boolean"}
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": ["backends"]
+    }
+  }
+}

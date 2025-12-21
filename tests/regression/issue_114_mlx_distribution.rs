@@ -1,3 +1,4 @@
+#![cfg(feature = "regression_tests")]
 /// Regression test for Issue #114: MLX support in distribution pipeline
 ///
 /// GitHub: https://github.com/Michael-A-Kuykendall/shimmy/issues/114

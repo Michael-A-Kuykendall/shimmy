@@ -1,3 +1,4 @@
+#![cfg(feature = "regression_tests")]
 /// Regression test for Issue #12: Custom model directories not detected
 ///
 /// GitHub: https://github.com/Michael-A-Kuykendall/shimmy/issues/12

@@ -2,6 +2,12 @@ use axum::{routing::get, Router};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
+// Include console tests when console feature is enabled
+#[cfg(feature = "console")]
+mod console {
+    include!("console/tool_registry_test.rs");
+}
+
 // Note: These are integration tests that require external dependencies
 // Run with: cargo test --test integration_tests -- --ignored
 
@@ -92,7 +98,7 @@ fn test_cli_parsing() {
     // Test list command
     let args = vec!["shimmy", "list"];
     let cli = Cli::try_parse_from(args).unwrap();
-    matches!(cli.cmd, Command::List { short: false });
+    matches!(cli.cmd, Command::List);
 
     // Test serve command
     let args = vec!["shimmy", "serve", "--bind", "0.0.0.0:8080"];

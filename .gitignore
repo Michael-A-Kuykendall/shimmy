@@ -5,8 +5,9 @@
 **/*.rs.bk
 *.pdb
 
-# Console development subproject (entire directory)
-console/
+# Console development artifacts (but allow source code)
+console/target/
+console/Cargo.lock
 
 # IDE files
 .vscode/
@@ -42,6 +43,9 @@ docs-internal/
 # Local configuration
 .env
 .env.local
+
+# Claude Code local settings (always changing)
+.claude/settings.local.json
 
 # Test artifacts
 *.log
@@ -100,5 +104,5 @@ shimmy
 shimmy.exe
 .claude/settings.local.json
 
-# Console subproject (development/experimental)
-console/
+# Console build artifacts only (source code allowed)  
+console/target/

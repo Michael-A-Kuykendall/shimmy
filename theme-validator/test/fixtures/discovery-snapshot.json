@@ -1,0 +1,31 @@
+{
+  "discovery_port": 11430,
+  "last_updated": "2025-11-23T18:00:00Z",
+  "epoch": 1,
+  "backends": [
+    {
+      "id": "local-1",
+      "url": "http://127.0.0.1:51061",
+      "port": 51061,
+      "models": [
+        {
+          "name": "test-model",
+          "display_name": "Test Model",
+          "size_bytes": null,
+          "parameter_count": null,
+          "quantization": null,
+          "context_length": null,
+          "model_type": null,
+          "source": "local",
+          "backend": "llama",
+          "health_status": "ready",
+          "health_error": null
+        }
+      ],
+      "capabilities": ["chat"],
+      "health": { "healthy": true, "last_check": "2025-11-23T17:59:00Z" },
+      "started_at": "2025-11-23T17:00:00Z",
+      "pid": 1234
+    }
+  ]
+}

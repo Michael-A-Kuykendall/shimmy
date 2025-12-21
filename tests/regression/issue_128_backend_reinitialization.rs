@@ -1,3 +1,4 @@
+#![cfg(feature = "regression_tests")]
 /// Regression test for Issue #128: BackendAlreadyInitialized error on second request
 ///
 /// GitHub: https://github.com/Michael-A-Kuykendall/shimmy/issues/128

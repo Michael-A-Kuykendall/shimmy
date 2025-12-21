@@ -1,0 +1,10 @@
+.vscode/
+node_modules/
+.DS_Store
+.nyc_output/
+coverage/
+*.log
+.git/
+src/
+tsconfig.json
+package-lock.json

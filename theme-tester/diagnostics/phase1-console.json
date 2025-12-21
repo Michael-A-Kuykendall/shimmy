@@ -1,0 +1,125 @@
+{
+  "timestamp": "2025-11-14T05:48:35.483Z",
+  "url": "http://localhost:8080/",
+  "title": "SHIMMY.AI Console - 64-bit Retro Development Interface",
+  "pageTextPreview": "SHIMMY CONSOLE\nv1.0.64\nONLINE\nSELECT AI MODEL\n\nCHOOSE YOUR INFERENCE ENGINE\n\n✨\nGPT OSS 20B F16\n\nID: gpt-oss-20b-f16\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🦙\nLLAMA3.2:1B [OLLAMA]\n\nID: llama3.2:1b [Ollama]\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🤖\nPHI 3 MINI 4K INSTRUCT Q4\n\nID: phi-3-mini-4k-instruct-q4\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🤖\nPHI 3 MINI 4K INSTRUCT Q4 K M\n\nID: phi-3-mini-4k-instruct-q4-k-m\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🤖\nPHI 3.5 MOE F16\n\nID: phi-3.5-moe-f16\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🦙\nPHI3 [OLLAMA]\n\nID: phi3 [Ollama]\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🤖\nPHI3 LORA\n\nID: phi3-lora\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🤖\nPHI3 MINI\n\nID: phi3-mini\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🦙\nQWEN2.5:1.5B [OLLAMA]\n\nID: qwen2.5:1.5b [Ollama]\n\nPARAMS\nN/A\nMEMORY\nN/A\nCONTEXT\nN/A\nQUANT\nN/A\nCONNECT\n🦙\nSTARCODER2:3B [OLLAMA]\n\nID: starcoder2:3b ",
+  "elementCounts": {
+    "buttons": 11,
+    "inputs": 0,
+    "textareas": 0
+  },
+  "consoleLogs": [
+    {
+      "type": "error",
+      "timestamp": "2025-11-14T05:48:31.995Z",
+      "message": "[ModelChooser] DEBUG: {\"modelsCount\":0,\"isConnected\":false,\"models\":[]}"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.002Z",
+      "message": "[useShimmy] Refresh called, isConnected: false"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.002Z",
+      "message": "[useShimmy] Not connected, calling discoverBackends()"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.003Z",
+      "message": "[DiscoveryClient] 🚀🚀🚀 ENTERING discoverBackends()"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.003Z",
+      "message": "[DiscoveryClient] Starting backend discovery..."
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.003Z",
+      "message": "[DiscoveryClient] Browser environment detected, using HTTP discovery..."
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.003Z",
+      "message": "[DiscoveryClient] 🌐🌐🌐 ENTERING discoverViaHTTP()"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.004Z",
+      "message": "[DiscoveryClient] 🌐 Attempting HTTP discovery at http://localhost:11430/api/discovery"
+    },
+    {
+      "type": "warn",
+      "timestamp": "2025-11-14T05:48:32.005Z",
+      "message": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+    },
+    {
+      "type": "warn",
+      "timestamp": "2025-11-14T05:48:32.005Z",
+      "message": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+    },
+    {
+      "type": "error",
+      "timestamp": "2025-11-14T05:48:32.311Z",
+      "message": "[ModelChooser] DEBUG: {\"modelsCount\":0,\"isConnected\":false,\"models\":[]}"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.314Z",
+      "message": "[DiscoveryClient] HTTP response status: 200"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.315Z",
+      "message": "[DiscoveryClient] ✅ Discovery successful at http://localhost:11430: 1 backend(s)"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.316Z",
+      "message": "[useShimmy] 🎉 Connected event received: {\"backends\":1,\"modelsCount\":11}"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.317Z",
+      "message": "[DiscoveryClient] HTTP discovery found 1 backend(s)"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.317Z",
+      "message": "[useShimmy] discoverBackends returned: 1 backends"
+    },
+    {
+      "type": "log",
+      "timestamp": "2025-11-14T05:48:32.326Z",
+      "message": "[useShimmy] getAllModels returned: 11 models"
+    },
+    {
+      "type": "error",
+      "timestamp": "2025-11-14T05:48:32.327Z",
+      "message": "[ModelChooser] DEBUG: {\"modelsCount\":11,\"isConnected\":true,\"models\":[\"gpt-oss-20b-f16\",\"llama3.2:1b [Ollama]\",\"phi-3-mini-4k-instruct-q4\"]}"
+    },
+    {
+      "type": "error",
+      "timestamp": "2025-11-14T05:48:32.360Z",
+      "message": "[ModelChooser] DEBUG: {\"modelsCount\":11,\"isConnected\":true,\"models\":[\"gpt-oss-20b-f16\",\"llama3.2:1b [Ollama]\",\"phi-3-mini-4k-instruct-q4\"]}"
+    },
+    {
+      "type": "error",
+      "timestamp": "2025-11-14T05:48:32.619Z",
+      "message": "[ModelChooser] DEBUG: {\"modelsCount\":11,\"isConnected\":true,\"models\":[\"gpt-oss-20b-f16\",\"llama3.2:1b [Ollama]\",\"phi-3-mini-4k-instruct-q4\"]}"
+    },
+    {
+      "type": "error",
+      "timestamp": "2025-11-14T05:48:33.476Z",
+      "message": "[ModelChooser] DEBUG: {\"modelsCount\":11,\"isConnected\":true,\"models\":[\"gpt-oss-20b-f16\",\"llama3.2:1b [Ollama]\",\"phi-3-mini-4k-instruct-q4\"]}"
+    },
+    {
+      "type": "error",
+      "timestamp": "2025-11-14T05:48:34.512Z",
+      "message": "[ModelChooser] DEBUG: {\"modelsCount\":11,\"isConnected\":true,\"models\":[\"gpt-oss-20b-f16\",\"llama3.2:1b [Ollama]\",\"phi-3-mini-4k-instruct-q4\"]}"
+    }
+  ],
+  "errorCount": 7,
+  "warningCount": 2
+}

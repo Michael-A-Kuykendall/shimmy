@@ -1,11 +1,6 @@
 ## Description
 Brief description of changes and motivation.
 
-**Branch Naming Convention**: `issue-{number}-{human-readable-description}`  
-**Example**: `issue-101-performance-cpu-usage-streaming-glibc-compatibility`
-
-**Related Issue**: Fixes #___
-
 ## Type of Change
 - [ ] Bug fix (non-breaking change that fixes an issue)
 - [ ] New feature (non-breaking change that adds functionality)
@@ -15,7 +10,7 @@ Brief description of changes and motivation.
 - [ ] Code refactoring
 
 ## Shimmy Philosophy Compliance
-- [ ] Maintains lightweight binary size (≤5MB constitutional limit)
+- [ ] Maintains lightweight binary size (~5MB target)
 - [ ] Preserves zero-config principle
 - [ ] Enhances OpenAI API compatibility
 - [ ] Follows invisible infrastructure philosophy
@@ -26,26 +21,10 @@ Brief description of changes and motivation.
 - [ ] I have run `cargo clippy` with no warnings
 - [ ] I have run `cargo fmt`
 
-## Legal Compliance
-- [ ] All commits are signed off with DCO (`git commit -s`)
-- [ ] I have the right to contribute this code under the project license
-- [ ] If this includes third-party code, it's properly attributed and licensed
-
 ## Binary Size Impact
 Current binary size: ___ MB
 New binary size: ___ MB
-Change: ± ___ MB (increase/decrease)
-
-## Quality Considerations
-- [ ] This change maintains backward compatibility
-- [ ] Performance impact has been measured and documented
-- [ ] Documentation has been updated where applicable
-- [ ] Change aligns with roadmap priorities
-
-## Community Impact
-- [ ] This change benefits the broader Shimmy community
-- [ ] Breaking changes are clearly documented and justified
-- [ ] Migration path is provided for breaking changes
+Change: ± ___ MB
 
 ## Checklist
 - [ ] My code follows the project's coding standards

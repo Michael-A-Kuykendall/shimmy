@@ -1,0 +1,47 @@
+{
+  "name": "@shimmy/discovery-client",
+  "version": "1.0.0",
+  "description": "Simple discovery client for Shimmy backends - hides IPC complexity from theme developers",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test:http-first": "node test/test-http-first-ipc-fallback.js && node test/test-http-first-http-preferred.js",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist/",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "shimmy",
+    "llm",
+    "discovery",
+    "react",
+    "hooks"
+  ],
+  "author": "Michael-A-Kuykendall",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "react": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Michael-A-Kuykendall/shimmy.git",
+    "directory": "packages/discovery-client"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}

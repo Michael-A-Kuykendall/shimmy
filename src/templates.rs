@@ -3,11 +3,69 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Template families for different LLM architectures
+/// 
+/// Coverage (Dec 2025, by Ollama downloads):
+/// - ChatML: Qwen 2.5 (17M), TinyLlama (3M), Yi, InternLM
+/// - Llama3: Llama 3.1 (106M), Llama 3.2 (48M), Llama 3.3
+/// - Phi3: Phi-3 (14M), Phi-3.5
+/// - Phi4: Phi-4 (6M) - ChatML variant with <|im_sep|>
+/// - Mistral: Mistral (22M), Mixtral (1.5M), Ministral
+/// - Gemma: Gemma 2 (10M), Gemma 3
+/// - DeepSeek: DeepSeek-R1 (73M), DeepSeek-V2/V3
+/// - Vicuna: Vicuna, older instruction-tuned models
+/// - Alpaca: Alpaca format models
+/// - CommandR: Cohere Command-R (386K)
+/// - Raw: StarCoder2 (1.6M), CodeLlama completion, base models
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum TemplateFamily {
+    /// ChatML format: <|im_start|>role\ncontent<|im_end|>
+    /// Used by: Qwen 2.5, TinyLlama, Yi, InternLM
     ChatML,
+    
+    /// Llama 3 format: <|start_header_id|>role<|end_header_id|>\ncontent<|eot_id|>
+    /// Used by: Llama 3.x family
     Llama3,
+    
+    /// Phi-3 format: <|system|>\ncontent<|end|>\n<|user|>\ncontent<|end|>\n<|assistant|>
+    /// Used by: Phi-3, Phi-3.5, Zephyr-style models
+    Phi3,
+    
+    /// Phi-4 format: ChatML variant with <|im_sep|> instead of newline
+    /// Used by: Phi-4
+    Phi4,
+    
+    /// Mistral format: [INST] content [/INST]
+    /// Used by: Mistral 7B, Mixtral, Ministral
+    Mistral,
+    
+    /// Gemma format: <start_of_turn>role\ncontent<end_of_turn>
+    /// Used by: Gemma 1/2/3 family
+    Gemma,
+    
+    /// DeepSeek format: ChatML-like, R1 adds <think> reasoning
+    /// Used by: DeepSeek-V2, DeepSeek-V3, DeepSeek-R1
+    DeepSeek,
+    
+    /// Vicuna format: USER: content\nASSISTANT:
+    /// Used by: Vicuna, older instruction models
+    Vicuna,
+    
+    /// Alpaca format: ### Instruction:\ncontent\n### Response:
+    /// Used by: Alpaca, Stanford Alpaca derivatives
+    Alpaca,
+    
+    /// Command-R format: <|START_OF_TURN_TOKEN|><|USER_TOKEN|>content<|END_OF_TURN_TOKEN|>
+    /// Used by: Cohere Command-R
+    CommandR,
+    
+    /// Simple role: content format
+    /// Used by: OpenChat and similar
     OpenChat,
+    
+    /// Raw/completion mode - no template wrapping
+    /// Used by: StarCoder2, CodeLlama completion, base models
+    Raw,
 }
 
 impl TemplateFamily {
@@ -38,251 +96,216 @@ impl TemplateFamily {
                 let mut s = String::new();
                 if let Some(sys) = system {
                     s.push_str(&format!(
-                        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n{}<|eot_id|>",
+                        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{}<|eot_id|>",
                         sys
                     ));
+                } else {
+                    s.push_str("<|begin_of_text|>");
                 }
                 for (role, content) in messages {
                     s.push_str(&format!(
-                        "<|start_header_id|>{}<|end_header_id|>\n{}<|eot_id|>",
+                        "<|start_header_id|>{}<|end_header_id|>\n\n{}<|eot_id|>",
                         role, content
                     ));
                 }
                 if let Some(inp) = input {
-                    s.push_str(&format!("<|start_header_id|>user<|end_header_id|>\n{}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n", inp));
+                    s.push_str(&format!(
+                        "<|start_header_id|>user<|end_header_id|>\n\n{}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+                        inp
+                    ));
                 }
                 s
             }
-            TemplateFamily::OpenChat => {
+            TemplateFamily::Phi3 => {
                 let mut s = String::new();
+                if let Some(sys) = system {
+                    s.push_str(&format!("<|system|>\n{}<|end|>\n", sys));
+                }
                 for (role, content) in messages {
-                    s.push_str(&format!("{}: {}\n", role, content));
+                    let role_tag = match role.as_str() {
+                        "user" => "<|user|>",
+                        "assistant" => "<|assistant|>",
+                        _ => "<|user|>",
+                    };
+                    s.push_str(&format!("{}\n{}<|end|>\n", role_tag, content));
                 }
                 if let Some(inp) = input {
-                    s.push_str(&format!("user: {}\nassistant: ", inp));
-                } else {
-                    s.push_str("assistant: ");
+                    s.push_str(&format!("<|user|>\n{}<|end|>\n<|assistant|>\n", inp));
                 }
                 s
             }
-        }
-    }
-
-    /// Get the stop tokens for this template family
-    pub fn stop_tokens(&self) -> Vec<String> {
-        match self {
-            TemplateFamily::ChatML => vec!["<|im_end|>".to_string(), "<|im_start|>".to_string()],
-            TemplateFamily::Llama3 => vec!["<|eot_id|>".to_string(), "<|end_of_text|>".to_string()],
-            TemplateFamily::OpenChat => vec![],
-        }
-    }
-}
-
-// Template generation functions for deployment platforms
-
-/// Generate Docker deployment template
-pub fn generate_docker_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
-    let output_path = Path::new(output_dir);
-    fs::create_dir_all(output_path)?;
-
-    // Copy Dockerfile
-    let dockerfile_content = include_str!("../templates/docker/Dockerfile");
-    fs::write(output_path.join("Dockerfile"), dockerfile_content)?;
-
-    // Copy docker-compose.yml
-    let compose_content = include_str!("../templates/docker/docker-compose.yml");
-    let customized_compose = if let Some(name) = project_name {
-        compose_content.replace("shimmy-ai", &format!("{}-shimmy", name))
-    } else {
-        compose_content.to_string()
-    };
-    fs::write(output_path.join("docker-compose.yml"), customized_compose)?;
-
-    // Copy nginx.conf
-    let nginx_content = include_str!("../templates/docker/nginx.conf");
-    fs::write(output_path.join("nginx.conf"), nginx_content)?;
-
-    // Create .dockerignore
-    let dockerignore_content = r#"target/
-Cargo.lock
-*.md
-docs/
-tests/
-.git/
-.gitignore
-README.md
-"#;
-    fs::write(output_path.join(".dockerignore"), dockerignore_content)?;
-
-    Ok(())
-}
-
-/// Generate Kubernetes deployment template
-pub fn generate_kubernetes_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
-    let output_path = Path::new(output_dir);
-    fs::create_dir_all(output_path)?;
-
-    let name = project_name.unwrap_or("shimmy");
-
-    // Generate deployment.yaml
-    let deployment_content = include_str!("../templates/kubernetes/deployment.yaml")
-        .replace("shimmy-deployment", &format!("{}-deployment", name))
-        .replace("app: shimmy", &format!("app: {}", name));
-    fs::write(output_path.join("deployment.yaml"), deployment_content)?;
-
-    // Generate service.yaml
-    let service_content = include_str!("../templates/kubernetes/service.yaml")
-        .replace("shimmy-service", &format!("{}-service", name))
-        .replace("shimmy-loadbalancer", &format!("{}-loadbalancer", name))
-        .replace("app: shimmy", &format!("app: {}", name));
-    fs::write(output_path.join("service.yaml"), service_content)?;
-
-    // Generate configmap.yaml
-    let configmap_content = include_str!("../templates/kubernetes/configmap.yaml")
-        .replace("shimmy-config", &format!("{}-config", name))
-        .replace("shimmy-models-pvc", &format!("{}-models-pvc", name))
-        .replace("app: shimmy", &format!("app: {}", name));
-    fs::write(output_path.join("configmap.yaml"), configmap_content)?;
-
-    Ok(())
-}
-
-/// Generate Railway deployment template
-pub fn generate_railway_template(output_dir: &str, _project_name: Option<&str>) -> Result<()> {
-    let output_path = Path::new(output_dir);
-    fs::create_dir_all(output_path)?;
-
-    let railway_content = include_str!("../templates/railway/railway.toml");
-    fs::write(output_path.join("railway.toml"), railway_content)?;
-
-    // Generate Dockerfile for Railway
-    let dockerfile_content = include_str!("../templates/docker/Dockerfile");
-    fs::write(output_path.join("Dockerfile"), dockerfile_content)?;
-
-    Ok(())
-}
-
-/// Generate Fly.io deployment template
-pub fn generate_fly_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
-    let output_path = Path::new(output_dir);
-    fs::create_dir_all(output_path)?;
-
-    let fly_content = include_str!("../templates/fly/fly.toml");
-    let customized_fly = if let Some(name) = project_name {
-        fly_content.replace("shimmy-ai", &format!("{}-ai", name))
-    } else {
-        fly_content.to_string()
-    };
-    fs::write(output_path.join("fly.toml"), customized_fly)?;
-
-    // Generate Dockerfile for Fly
-    let dockerfile_content = include_str!("../templates/docker/Dockerfile");
-    fs::write(output_path.join("Dockerfile"), dockerfile_content)?;
-
-    Ok(())
-}
-
-/// Generate FastAPI integration template
-pub fn generate_fastapi_template(output_dir: &str, _project_name: Option<&str>) -> Result<()> {
-    let output_path = Path::new(output_dir);
-    fs::create_dir_all(output_path)?;
-
-    let main_content = include_str!("../templates/frameworks/fastapi/main.py");
-    fs::write(output_path.join("main.py"), main_content)?;
-
-    let requirements_content = include_str!("../templates/frameworks/fastapi/requirements.txt");
-    fs::write(output_path.join("requirements.txt"), requirements_content)?;
-
-    Ok(())
-}
-
-/// Generate Express.js integration template
-pub fn generate_express_template(output_dir: &str, project_name: Option<&str>) -> Result<()> {
-    let output_path = Path::new(output_dir);
-    fs::create_dir_all(output_path)?;
-
-    let app_content = include_str!("../templates/frameworks/express/app.js");
-    fs::write(output_path.join("app.js"), app_content)?;
-
-    let package_content = include_str!("../templates/frameworks/express/package.json");
-    let customized_package = if let Some(name) = project_name {
-        package_content.replace(
-            "shimmy-express-integration",
-            &format!("{}-shimmy-integration", name),
-        )
-    } else {
-        package_content.to_string()
-    };
-    fs::write(output_path.join("package.json"), customized_package)?;
-
-    Ok(())
-}
-
-/// Generic template generation function that dispatches to specific template generators
-pub fn generate_template(
-    template: &str,
-    output_dir: &str,
-    project_name: Option<&str>,
-) -> Result<String> {
-    match template.to_lowercase().as_str() {
-        "docker" => {
-            generate_docker_template(output_dir, project_name)?;
-            Ok(format!("✅ Docker template generated in {}", output_dir))
-        }
-        "kubernetes" | "k8s" => {
-            generate_kubernetes_template(output_dir, project_name)?;
-            Ok(format!(
-                "✅ Kubernetes template generated in {}",
-                output_dir
-            ))
-        }
-        "railway" => {
-            generate_railway_template(output_dir, project_name)?;
-            Ok(format!("✅ Railway template generated in {}", output_dir))
-        }
-        "fly" => {
-            generate_fly_template(output_dir, project_name)?;
-            Ok(format!("✅ Fly.io template generated in {}", output_dir))
-        }
-        "fastapi" => {
-            generate_fastapi_template(output_dir, project_name)?;
-            Ok(format!("✅ FastAPI template generated in {}", output_dir))
-        }
-        "express" => {
-            generate_express_template(output_dir, project_name)?;
-            Ok(format!(
-                "✅ Express.js template generated in {}",
-                output_dir
-            ))
-        }
-        _ => {
-            anyhow::bail!("Unknown template type: {}. Available: docker, kubernetes, railway, fly, fastapi, express", template)
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_chatml_render() {
-        let template = TemplateFamily::ChatML;
-        let messages = vec![("user".to_string(), "Hello".to_string())];
-        let result = template.render(None, &messages, None);
-        assert!(result.contains("<|im_start|>user"));
-        assert!(result.contains("Hello"));
-        assert!(result.contains("<|im_end|>"));
+            TemplateFamily::Phi4 => {
+                // Phi-4 uses ChatML variant with <|im_sep|> separator (no newline after sep)
+                let mut s = String::new();
+                if let Some(sys) = system {
+                    s.push_str(&format!("<|im_start|>system<|im_sep|>{}<|im_end|>", sys));
+                }
+                for (role, content) in messages {
+                    s.push_str(&format!("<|im_start|>{}<|im_sep|>{}<|im_end|>", role, content));
+                }
+                if let Some(inp) = input {
+                    s.push_str(&format!(
+                        "<|im_start|>user<|im_sep|>{}<|im_end|><|im_start|>assistant<|im_sep|>",
+                        inp
+                    ));
+                }
+                s
+            }
+            TemplateFamily::Mistral => {
+                // Mistral V1/V3 format: <s>[INST] content [/INST]response</s>[INST] next [/INST]
+                let mut s = String::from("<s>");
+                let mut first_user = true;
+                
+                // System prompt gets prepended to first user message
+                let sys_prefix = system.map(|s| format!("{}\n\n", s)).unwrap_or_default();
+                
+                for (role, content) in messages {
+                    match role.as_str() {
+                        "user" => {
+                            if first_user {
+                                s.push_str(&format!("[INST] {}{} [/INST]", sys_prefix, content));
+                                first_user = false;
+                            } else {
+                                s.push_str(&format!("[INST] {} [/INST]", content));
+                            }
+                        }
+                        "assistant" => s.push_str(&format!("{}</s>", content)),
+                        _ => s.push_str(&format!("[INST] {} [/INST]", content)),
+                    }
+                }
+                if let Some(inp) = input {
+                    if first_user {
+                        s.push_str(&format!("[INST] {}{} [/INST]", sys_prefix, inp));
+                    } else {
+                        s.push_str(&format!("[INST] {} [/INST]", inp));
+                    }
+                }
+                s
+            }
+            TemplateFamily::Gemma => {
+                let mut s = String::new();
+                s.push_str("<bos>");
+                // Gemma doesn't have explicit system role, prepend to first user message
+                let sys_prefix = system.map(|s| format!("{}\n\n", s)).unwrap_or_default();
+                let mut sys_added = false;
+                
+                for (role, content) in messages {
+                    let role_name = match role.as_str() {
+                        "user" => "user",
+                        "assistant" => "model",
+                        _ => "user",
+                    };
+                    if !sys_added && role == "user" && !sys_prefix.is_empty() {
+                        s.push_str(&format!(
+                            "<start_of_turn>{}\n{}{}<end_of_turn>\n",
+                            role_name, sys_prefix, content
+                        ));
+                        sys_added = true;
+                    } else {
+                        s.push_str(&format!(
+                            "<start_of_turn>{}\n{}<end_of_turn>\n",
+                            role_name, content
+                        ));
+                    }
+                }
+                if let Some(inp) = input {
+                    if !sys_added && !sys_prefix.is_empty() {
+                        s.push_str(&format!(
+                            "<start_of_turn>user\n{}{}<end_of_turn>\n<start_of_turn>model\n",
+                            sys_prefix, inp
+                        ));
+                    } else {
+                        s.push_str(&format!(
+                            "<start_of_turn>user\n{}<end_of_turn>\n<start_of_turn>model\n",
+                            inp
+                        ));
+                    }
+                }
+                s
+            }
+            TemplateFamily::DeepSeek => {
+                // DeepSeek uses Alpaca-style format per llama.cpp
+                let mut s = String::new();
+                if let Some(sys) = system {
+                    s.push_str(&format!("{}\n\n", sys));
+                }
+                for (role, content) in messages {
+                    match role.as_str() {
+                        "user" => s.push_str(&format!("### Instruction:\n{}\n\n", content)),
+                        "assistant" => s.push_str(&format!("### Response:\n{}\n<|EOT|>\n", content)),
+                        _ => s.push_str(&format!("### Instruction:\n{}\n\n", content)),
+                    }
+                }
+                if let Some(inp) = input {
+                    s.push_str(&format!("### Instruction:\n{}\n\n### Response:\n", inp));
+                }
+                s
+            }
+            TemplateFamily::Vicuna => {
+                let mut s = String::new();
+                if let Some(sys) = system {
+                    s.push_str(&format!("{}\n\n", sys));
+                }
+                for (role, content) in messages {
+                    match role.as_str() {
+                        "user" => s.push_str(&format!("USER: {}\n", content)),
+                        "assistant" => s.push_str(&format!("ASSISTANT: {}</s>\n", content)),
+                        _ => s.push_str(&format!("USER: {}\n", content)),
+                    }
+                }
+                if let Some(inp) = input {
+                    s.push_str(&format!("USER: {}\nASSISTANT:", inp));
+                }
+                s
+            }
+            TemplateFamily::Alpaca => {
+                let mut s = String::new();
+                if let Some(sys) = system {
+                    s.push_str(&format!(
+                        "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n{}\n\n",
+                        sys
+                    ));
+                } else {
+                    s.push_str("Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n");
+                }
+                for (role, content) in messages {
+                    match role.as_str() {
+                        "user" => s.push_str(&format!("### Instruction:\n{}\n\n", content)),
+                        "assistant" => s.push_str(&format!("### Response:\n{}\n\n", content)),
+                        _ => s.push_str(&format!("### Instruction:\n{}\n\n", content)),
+                    }
+                }
+                if let Some(inp) = input {
+                    s.push_str(&format!("### Instruction:\n{}\n\n### Response:\n", inp));
+                }
+                s
+            }
+            TemplateFamily::CommandR => {
+                let mut s = String::new();
+                if let Some(sys) = system {
+                    s.push_str(&format!(
+                        "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>{}<|END_OF_TURN_TOKEN|>",
+                        sys
+                    ));
+                }
+                for (role, content) in messages {
+                    let role_token = match role.as_str() {
+                        "user" => "<|USER_TOKEN|>",
+                        "assistant" => "<|CHA                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+        let template = TemplateFamily::Gemma;
+        let result = template.render(None, &[], Some("Hello world"));
+        assert!(result.contains("<bos>"));
+        assert!(result.contains("<start_of_turn>user"));
+        assert!(result.contains("Hello world"));
+        assert!(result.contains("<end_of_turn>"));
+        assert!(result.contains("<start_of_turn>model"));
     }
 
     #[test]
-    fn test_llama3_render() {
-        let template = TemplateFamily::Llama3;
-        let messages = vec![("user".to_string(), "Test".to_string())];
-        let result = template.render(None, &messages, None);
-        assert!(result.contains("<|start_header_id|>user<|end_header_id|>"));
-        assert!(result.contains("Test"));
-        assert!(result.contains("<|eot_id|>"));
+    fn test_raw_render() {
+        let template = TemplateFamily::Raw;
+        let result = template.render(None, &[], Some("def hello():"));
+        assert_eq!(result, "def hello():");
     }
 
     #[test]
@@ -290,8 +313,8 @@ mod tests {
         let template = TemplateFamily::OpenChat;
         let messages = vec![("user".to_string(), "Hi".to_string())];
         let result = template.render(None, &messages, None);
-        assert!(result.contains("user: Hi"));
-        assert!(result.contains("assistant: "));
+        assert!(result.contains("GPT4 Correct User: Hi"));
+        assert!(result.contains("<|end_of_turn|>"));
     }
 
     #[test]
@@ -313,9 +336,72 @@ mod tests {
     }
 
     #[test]
+    fn test_phi3_stop_tokens() {
+        let template = TemplateFamily::Phi3;
+        let stop_tokens = template.stop_tokens();
+        assert!(stop_tokens.contains(&"<|end|>".to_string()));
+    }
+
+    #[test]
     fn test_openchat_stop_tokens() {
         let template = TemplateFamily::OpenChat;
         let stop_tokens = template.stop_tokens();
-        assert_eq!(stop_tokens.len(), 0);
+        assert_eq!(stop_tokens.len(), 1);
+        assert!(stop_tokens.contains(&"<|end_of_turn|>".to_string()));
+    }
+
+    #[test]
+    fn test_detect_phi3() {
+        assert_eq!(TemplateFamily::detect("phi-3-mini-4k-instruct"), TemplateFamily::Phi3);
+        assert_eq!(TemplateFamily::detect("Phi-3.5-mini-instruct"), TemplateFamily::Phi3);
+    }
+
+    #[test]
+    fn test_detect_phi4() {
+        assert_eq!(TemplateFamily::detect("phi-4"), TemplateFamily::Phi4);
+        assert_eq!(TemplateFamily::detect("microsoft/phi4"), TemplateFamily::Phi4);
+    }
+
+    #[test]
+    fn test_detect_llama3() {
+        assert_eq!(TemplateFamily::detect("llama-3.2-3b-instruct"), TemplateFamily::Llama3);
+        assert_eq!(TemplateFamily::detect("Meta-Llama-3.1-8B"), TemplateFamily::Llama3);
+    }
+
+    #[test]
+    fn test_detect_mistral() {
+        assert_eq!(TemplateFamily::detect("mistral-7b-instruct-v0.3"), TemplateFamily::Mistral);
+        assert_eq!(TemplateFamily::detect("Mixtral-8x7B-Instruct"), TemplateFamily::Mistral);
+    }
+
+    #[test]
+    fn test_detect_gemma() {
+        assert_eq!(TemplateFamily::detect("gemma-2-9b-it"), TemplateFamily::Gemma);
+        assert_eq!(TemplateFamily::detect("google/gemma-7b"), TemplateFamily::Gemma);
+    }
+
+    #[test]
+    fn test_detect_qwen() {
+        assert_eq!(TemplateFamily::detect("qwen2.5-7b-instruct"), TemplateFamily::ChatML);
+        assert_eq!(TemplateFamily::detect("Qwen-72B-Chat"), TemplateFamily::ChatML);
+    }
+
+    #[test]
+    fn test_detect_deepseek() {
+        assert_eq!(TemplateFamily::detect("deepseek-r1"), TemplateFamily::DeepSeek);
+        assert_eq!(TemplateFamily::detect("DeepSeek-V3"), TemplateFamily::DeepSeek);
+    }
+
+    #[test]
+    fn test_detect_code_models() {
+        assert_eq!(TemplateFamily::detect("starcoder2-15b"), TemplateFamily::Raw);
+        assert_eq!(TemplateFamily::detect("codellama-7b"), TemplateFamily::Raw);
+        // Instruct variants should use appropriate template
+        assert_eq!(TemplateFamily::detect("codellama-7b-instruct"), TemplateFamily::Llama3);
+    }
+
+    #[test]
+    fn test_detect_tinyllama() {
+        assert_eq!(TemplateFamily::detect("tinyllama-1.1b-chat"), TemplateFamily::ChatML);
     }
 }

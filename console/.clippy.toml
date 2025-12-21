@@ -1,0 +1,8 @@
+msrv = "1.70"
+warn-on-all-wildcard-imports = true
+allow-expect-in-tests = true
+allow-unwrap-in-tests = true
+allow-dbg-in-tests = true
+avoid-breaking-exported-api = true
+allow-print-in-tests = true
+allow-private-module-inception = true

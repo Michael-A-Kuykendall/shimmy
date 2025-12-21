@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Shimmy Verify Report",
+  "type": "object",
+  "required": ["timestamp","phase","description","results","summary"],
+  "properties": {
+    "timestamp": { "type": "string", "format": "date-time" },
+    "phase": { "type": "string" },
+    "description": { "type": "string" },
+    "results": {
+      "type": "object",
+      "properties": {
+        "discovery": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": { "type": "string", "enum": ["pending","success","failed","validation_failed"] },
+            "port": { "type": ["integer","null"] },
+            "error": { "type": ["string","null"] }
+          }
+        },
+        "schema_load": { "type": "object" },
+        "websocket_connection": { "type": "object" },
+        "get_models_test": { "type": "object" },
+        "select_model_test": { "type": "object" },
+        "chat_test": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "schema_loaded": { "type": "boolean" },
+        "discovery_working": { "type": "boolean" },
+        "websocket_connected": { "type": "boolean" },
+        "get_models_working": { "type": "boolean" },
+        "select_model_working": { "type": "boolean" },
+        "chat_streaming_working": { "type": "boolean" },
+        "backend_port": { "type": ["integer","null"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

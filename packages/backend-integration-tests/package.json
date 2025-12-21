@@ -1,0 +1,37 @@
+{
+  "name": "@shimmy/backend-integration-tests",
+  "version": "0.1.0",
+  "description": "Integration tests to validate running Shimmy backend API compliance",
+  "bin": {
+    "shimmy-test-backend": "dist/index.js"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:watch": "tsc -p tsconfig.json --watch",
+    "clean": "rimraf dist",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "node-fetch": "^3.3.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/ws": "^8.5.10",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}

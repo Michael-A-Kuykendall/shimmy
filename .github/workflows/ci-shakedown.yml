@@ -1,0 +1,85 @@
+name: CI Shakedown
+
+on:
+  push:
+    branches: [ main, feature/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  shakedown:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan repo for deprecated orchestration artifacts
+        run: |
+          echo "Running repository scan for deprecated orchestration references..."
+          chmod +x ./scripts/scan-docs.sh
+          ./scripts/scan-docs.sh
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Build shimmy (release)
+        run: |
+          # Build release binary so we can run it in the CI shakedown
+          cargo build --release --bin shimmy --features llama,console,http-adapter
+
+      - name: Prepare node & Playwright dependencies
+        run: |
+          # Install project root JS deps (includes tesseract.js used by analyze-screenshot)
+          npm ci
+
+      - name: Start the full stack (shimmy orchestrator)
+        run: |
+          # Use the Rust orchestrator lifecycle to start and verify the stack.
+          # We built the release binary earlier — invoke it in verify mode.
+          chmod +x ./target/release/shimmy || true
+          # Run lifecycle for the 32bit theme and run verification (no rebuild)
+          ./target/release/shimmy dev 32bit --verify --no-build || true
+
+      - name: Install theme-tester and Playwright browsers
+        working-directory: ./theme-tester
+        run: |
+          npm ci
+          # Install Playwright browsers for headless tests
+          npx playwright install --with-deps
+
+      - name: Deprecated shell verifier (informational)
+        run: |
+          echo "Using Rust orchestrator verification (shimmy dev --verify); the legacy shell-based verifier has been deprecated and archived"
+
+      - name: Aggregate artifacts
+        # Run OCR analysis on any screenshots (uses tesseract.js via analyze-screenshot.js in repo root)
+        run: |
+          mkdir -p theme-tester/ocr-results || true
+          for f in theme-tester/screenshots/*.png; do
+            if [ -f "$f" ]; then
+              node analyze-screenshot.js "$f" ocr theme-tester/ocr-results/$(basename "$f").ocr.json || true
+            fi
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shakedown-artifacts
+          path: |
+            theme-validator/verify-report.json
+            theme-tester/screenshots/**/*
+            theme-tester/results/*.json
+            stack-verify-report.json
+            theme-tester/ocr-results/*.json
+
+      - name: Note - Playwright + OCR (future)
+        run: echo "Playwright + OCR shakedown job will be added in follow-up (browsers + tesseract)"

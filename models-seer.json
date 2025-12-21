@@ -1,0 +1,15 @@
+{
+  "imagePath": "C:\\Users\\micha\\repos\\shimmy\\theme-tester\\screenshots\\debug-models-loaded.png",
+  "mode": "full",
+  "textBlocks": [],
+  "layout": {},
+  "visual": {},
+  "interaction": {},
+  "rawModelOutput": "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+  "meta": {
+    "model": "minicpm-v",
+    "backend": "ollama",
+    "url": "http://127.0.0.1:11434",
+    "durationMs": 867
+  }
+}

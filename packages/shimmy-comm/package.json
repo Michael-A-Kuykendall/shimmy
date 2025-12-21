@@ -1,0 +1,26 @@
+{
+  "name": "@shimmy/comm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "shimmy-comm": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@shimmy/discovery-client": "file:../discovery-client",
+    "chalk": "5.3.0",
+    "ws": "8.18.0"
+  },
+  "devDependencies": {
+    "typescript": "5.4.5",
+    "ts-node": "10.9.2",
+    "@types/node": "20.11.30",
+    "@types/ws": "8.5.10"
+  }
+}
