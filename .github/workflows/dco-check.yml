@@ -1,0 +1,25 @@
+name: DCO Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  dco_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: DCO Check
+        run: |
+          echo "Checking commits for DCO sign-off..."
+          git log --format="%H %s" --no-merges origin/main..HEAD | while read commit message; do
+            if git show --format="%B" "$commit" | grep -q "Signed-off-by:"; then
+              echo "✅ $commit: $message"
+            else
+              echo "❌ $commit: $message (missing Signed-off-by)"
+              exit 1
+            fi
+          done
+          echo "✅ All non-merge commits have proper DCO sign-off"

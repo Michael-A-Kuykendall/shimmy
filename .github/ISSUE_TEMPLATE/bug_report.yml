@@ -1,0 +1,117 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us reproduce and fix the issue.
+
+        **⚠️ Important:** For security vulnerabilities, please use [private reporting](https://github.com/Michael-A-Kuykendall/shimmy/security/advisories/new) instead of public issues.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 🐛 Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened and what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Run command '...'
+        2. Send API request '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Expected Behavior
+      description: What you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Actual Behavior
+      description: What actually happened instead
+    validations:
+      required: true
+
+  - type: dropdown
+    id: version
+    attributes:
+      label: 📦 Shimmy Version
+      description: Which version of Shimmy are you using? Run `shimmy --version` to check.
+      options:
+        - Latest (main branch)
+        - v1.4.0 or newer
+        - v1.3.x
+        - v1.2.x
+        - v1.1.x
+        - v1.0.x
+        - Other/Unknown (specify in additional context)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 💻 Operating System
+      description: What operating system are you running?
+      options:
+        - Windows
+        - macOS
+        - Linux (Ubuntu)
+        - Linux (other)
+        - Docker
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: 📥 Installation Method
+      description: How did you install Shimmy?
+      options:
+        - cargo install shimmy
+        - Pre-built binary from releases
+        - Built from source (cargo build)
+        - Docker/Docker Compose
+        - Package manager (winget, brew, apt, etc.)
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 🌍 Environment Details
+      description: Additional environment information
+      placeholder: |
+        - Rust version (if applicable):
+        - Model being used:
+        - Hardware specs:
+        - Any relevant configuration:
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 📋 Logs/Error Messages
+      description: Include relevant logs, error messages, or stack traces
+      render: text
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 📝 Additional Context
+      description: Any other context, screenshots, or information that might help

@@ -1,0 +1,14 @@
+# Railway.app deployment configuration for Shimmy
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "deploy/Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "NEVER"
+
+[env]
+# Railway will provide PORT automatically
+RUST_LOG = "info"
+SHIMMY_BIND = "0.0.0.0:$PORT"

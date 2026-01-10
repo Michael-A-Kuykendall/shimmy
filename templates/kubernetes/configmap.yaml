@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shimmy-config
+  labels:
+    app: shimmy
+data:
+  SHIMMY_HOST: "0.0.0.0"
+  SHIMMY_PORT: "11435"
+  RUST_LOG: "info"
+  SHIMMY_MODEL_PATHS: "/app/models"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shimmy-models-pvc
+  labels:
+    app: shimmy
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: fast-ssd

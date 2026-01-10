@@ -1,0 +1,394 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - test-release  # Test on specific branch
+  workflow_dispatch:  # Allow manual testing
+
+jobs:
+  # 🚧 MANDATORY RELEASE GATES - ALL MUST PASS OR ENTIRE RELEASE STOPS
+  preflight:
+    name: "🚧 Release Gates - MANDATORY VALIDATION"
+    runs-on: ubuntu-latest
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: true
+    outputs:
+      should_publish: ${{ steps.gates.outputs.should_publish }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Git for private dependencies
+        run: |
+          git config --global url."https://${{ secrets.VISION_PRIVATE_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: "🚧 GATE 1/7: Core Build Validation"
+        run: |
+          echo "::group::Gate 1: Core Build"
+          cargo build --release --no-default-features --features huggingface,llama,vision
+          echo "✅ Core build successful"
+          echo "::endgroup::"
+
+      - name: "🚧 GATE 2/7: CUDA Build Validation (No Timeout - Can Take Hours)"
+        run: |
+          echo "::group::Gate 2: CUDA Build"
+          echo "⏳ CUDA compilation can take 19+ hours - letting it run to natural completion"
+          
+          # Check if CUDA Toolkit is available first
+          if command -v nvcc >/dev/null 2>&1; then
+            echo "✅ CUDA Toolkit found, attempting CUDA build..."
+            cargo build --release --no-default-features --features llama-cuda
+            echo "✅ CUDA build completed successfully"
+          else
+            echo "⚠️ CUDA Toolkit not found on runner (nvcc not available)"
+            echo "🔄 Validating CPU-only llama build instead..."
+            
+            # Validate that CPU-only llama build works
+            cargo build --release --no-default-features --features llama
+            echo "✅ CPU-only llama build completed successfully"
+            echo "📝 Note: CUDA validation skipped - this is expected on standard GitHub runners"
+          fi
+          echo "::endgroup::"
+
+      - name: "🚧 GATE 3/7: Template Packaging Validation (Issue #60 Protection)"
+        run: |
+          echo "::group::Gate 3: Template Packaging"
+          # Check for Docker templates with OS-agnostic path handling
+          # Use --allow-dirty to handle uncommitted Cargo.lock changes from dependency resolution
+          if cargo package --allow-dirty --list | grep -E "(^|[/\\\\])templates[/\\\\]docker[/\\\\]Dockerfile$" > /dev/null; then
+            echo "✅ Docker templates properly included in package"
+          else
+            echo "❌ Required Docker template missing from package - Issue #60 regression!"
+            echo "Package contents:"
+            cargo package --allow-dirty --list | grep -i docker || echo "No docker files found"
+            exit 1
+          fi
+          echo "::endgroup::"
+
+      - name: "🚧 GATE 4/7: Binary Size Constitutional Limit (20MB)"
+        run: |
+          echo "::group::Gate 4: Binary Size"
+          size=$(stat -c%s target/release/shimmy 2>/dev/null || echo "0")
+          max_size=$((20 * 1024 * 1024))
+          if [ "$size" -gt "$max_size" ]; then
+            echo "❌ Binary size ${size} exceeds constitutional limit of ${max_size} bytes"
+            exit 1
+          fi
+          echo "✅ Binary size ${size} bytes within constitutional limit"
+          echo "::endgroup::"
+
+      - name: "🚧 GATE 5/7: Test Suite Validation"
+        run: |
+          echo "::group::Gate 5: Tests"
+          # Run tests that don't require model files (exclude integration tests needing .gguf files)
+          cargo test --lib --no-default-features --features huggingface -- --skip test_generate_handler --skip test_chat_completions
+          echo "✅ Core tests passing"
+          echo "::endgroup::"
+
+      - name: "🚧 GATE 5.5/7: Issue Regression Tests"
+        run: |
+          echo "::group::Gate 5.5: Issue Regression Prevention"
+          echo "🔄 Running issue-specific regression tests to prevent user-reported bug regressions..."
+          
+          # Test Issue #111 - GPU metrics endpoint
+          cargo test --test regression_tests test_issue_111_gpu_metrics_endpoint --no-default-features --features huggingface
+          echo "✅ Issue #111 (GPU metrics): Regression test passed"
+          
+          # Test Issue #112 - SafeTensors engine selection  
+          cargo test --test regression_tests test_issue_112_safetensors_engine_selection --no-default-features --features huggingface
+          echo "✅ Issue #112 (SafeTensors): Regression test passed"
+          
+          # Test Issue #113 - OpenAI API frontend compatibility
+          cargo test --test regression_tests test_issue_113_openai_api_frontend_compatibility --no-default-features --features huggingface
+          echo "✅ Issue #113 (OpenAI compatibility): Regression test passed"
+          
+          # Test Issue #114 - MLX distribution features
+          cargo test --test regression_tests test_issue_114_mlx_distribution_features --no-default-features --features huggingface
+          echo "✅ Issue #114 (MLX distribution): Regression test passed"
+          
+          # Test Issue #13 - Qwen model template detection
+          cargo test --test regression_tests test_qwen_model_template_detection --no-default-features --features huggingface
+          echo "✅ Issue #13 (Qwen templates): Regression test passed"
+          
+          # Test Issue #12 - Custom model directories
+          cargo test --test regression_tests test_custom_model_directory_environment_variables --no-default-features --features huggingface  
+          echo "✅ Issue #12 (Custom directories): Regression test passed"
+          
+          echo "✅ All issue regression tests passed - no user-reported bug regressions detected"
+          echo "::endgroup::"
+
+      - name: "🚧 GATE 6/7: Documentation Validation"
+        run: |
+          echo "::group::Gate 6: Documentation"
+          
+          # Check if CUDA Toolkit is available for documentation build
+          if command -v nvcc >/dev/null 2>&1; then
+            echo "✅ CUDA Toolkit found, building docs with all features..."
+            cargo doc --no-deps --all-features
+            echo "✅ Documentation with all features built successfully"
+          else
+            echo "⚠️ CUDA Toolkit not found on runner (nvcc not available)"
+            echo "🔄 Building documentation without CUDA features..."
+            
+            # Build docs without CUDA features to avoid build failures
+            cargo doc --no-deps --features "huggingface,llama,mlx"
+            echo "✅ Documentation built successfully (CUDA features excluded)"
+            echo "📝 Note: CUDA documentation skipped - this is expected on standard GitHub runners"
+          fi
+          echo "::endgroup::"
+
+      - name: "🚧 GATE 7/7: Crates.io Publication Validation"
+        run: |
+          echo "::group::Gate 7: Crates.io Validation"
+          echo "🧪 Testing crates.io publication readiness..."
+          
+          # Handle uncommitted Cargo.lock (common issue)
+          if git status --porcelain | grep -q "Cargo.lock"; then
+            echo "⚠️ Cargo.lock has uncommitted changes (expected from dependency resolution)"
+            echo "🔄 Using --allow-dirty flag for crates.io validation"
+            DIRTY_FLAG="--allow-dirty"
+          else
+            echo "✅ No uncommitted changes detected"
+            DIRTY_FLAG=""
+          fi
+          
+          # Dry-run validation to catch issues before real release
+          echo "🔍 Running cargo publish --dry-run..."
+          if cargo publish --dry-run $DIRTY_FLAG; then
+            echo "✅ Crates.io dry-run validation PASSED"
+            echo "📦 Package builds successfully and is ready for publication"
+          else
+            echo "❌ Crates.io dry-run validation FAILED"
+            echo "🚫 Blocking release until crates.io issues are resolved"
+            exit 1
+          fi
+          echo "::endgroup::"
+
+      - name: "🎯 RELEASE GATES SUMMARY"
+        id: gates
+        run: |
+          echo "🎉 ALL 8 MANDATORY GATES PASSED!"
+          echo "✅ Gate 1: Core Build"
+          echo "✅ Gate 2: CUDA Timeout Protection (Issue #59)"
+          echo "✅ Gate 3: Template Packaging (Issue #60)"
+          echo "✅ Gate 4: Binary Size Constitutional Limit"
+          echo "✅ Gate 5: Test Suite"
+          echo "✅ Gate 5.5: Issue Regression Prevention"
+          echo "✅ Gate 6: Documentation"
+          echo "✅ Gate 7: Crates.io Publication Validation"
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+
+      # 🚀 REUSE GATE BINARIES - NO RECOMPILATION WASTE
+      - name: "Upload gate binaries as artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-built-binary
+          path: target/release/shimmy
+
+  # 🚀 LINUX BINARY - REUSE FROM GATES (NO RECOMPILATION)
+  reuse-gate-binary:
+    needs: preflight
+    if: needs.preflight.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download gate-built binary
+        uses: actions/download-artifact@v4
+        with:
+          name: gate-built-binary
+          path: ./
+
+      - name: Upload as Linux x86_64 artifact (Kitchen Sink)
+        uses: actions/upload-artifact@v4
+        with:
+          name: shimmy-linux-x86_64
+          path: shimmy
+
+  # 🚀 KITCHEN SINK BUILDS - All GPU backends in one binary per platform
+  # Auto-detection at runtime via --gpu-backend auto (default)
+  build:
+    needs: preflight
+    if: needs.preflight.outputs.should_publish == 'true'
+    strategy:
+      matrix:
+        include:
+          # Linux x86_64 - SKIPPED - Built in reuse-gate-binary job above
+          # Prevents artifact naming conflict (409 error)
+          
+          # Linux ARM64 - CPU only (GPU rare on ARM servers)
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            binary-name: shimmy
+            artifact-name: shimmy-linux-aarch64
+            features: huggingface,llama,vision
+            use-cross: true
+
+          # Windows x64 - CPU only for GitHub runners
+          # NOTE: GPU backends excluded - requires system libraries not on runners
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary-name: shimmy.exe
+            artifact-name: shimmy-windows-x86_64.exe
+            features: huggingface,llama,vision
+
+          # macOS Intel - CPU only (MLX requires Apple Silicon)
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            binary-name: shimmy
+            artifact-name: shimmy-macos-intel
+            features: huggingface,llama,vision
+
+          # macOS ARM64 - MLX GPU for Apple Silicon
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary-name: shimmy
+            artifact-name: shimmy-macos-arm64
+            features: huggingface,llama,mlx,vision
+
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: true
+      GGML_CUDA_NO_GIT_VER: "1"  # Disable git version check in llama.cpp CMake
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Git for private dependencies
+        run: |
+          git config --global url."https://${{ secrets.VISION_PRIVATE_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install musl-tools (for musl builds)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools musl-dev
+
+      - name: Install cross for ARM64 cross-compilation
+        if: matrix.use-cross == true
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build binary
+        shell: bash
+        env:
+          CROSS_NO_WARNINGS: 1
+          MACOSX_DEPLOYMENT_TARGET: "12.0"
+        run: |
+          # Kitchen Sink: Features defined in matrix (all GPU backends per platform)
+          FEATURES="${{ matrix.features }}"
+          
+          echo "Building ${{ matrix.artifact-name }} with features: $FEATURES"
+          
+          # Use cross for ARM64 cross-compilation, cargo for native builds
+          if [[ "${{ matrix.use-cross }}" == "true" ]]; then
+            cross build --release --target ${{ matrix.target }} --no-default-features --features "$FEATURES"
+          else
+            cargo build --release --target ${{ matrix.target }} --no-default-features --features "$FEATURES"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.binary-name }}
+
+  release:
+    needs: [preflight, reuse-gate-binary, build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') && needs.preflight.outputs.should_publish == 'true'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+
+          # Linux x86_64 - Kitchen Sink (all GPU backends)
+          cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy-linux-x86_64
+          cp artifacts/shimmy-linux-x86_64/shimmy release-files/shimmy  # Generic = Linux x64
+
+          # Linux ARM64 - CPU only
+          cp artifacts/shimmy-linux-aarch64/shimmy release-files/shimmy-linux-aarch64
+
+          # Windows x64 - Kitchen Sink (all GPU backends)
+          cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy-windows-x86_64.exe
+          cp artifacts/shimmy-windows-x86_64.exe/shimmy.exe release-files/shimmy.exe  # Generic = Windows
+
+          # macOS Intel - CPU only
+          cp artifacts/shimmy-macos-intel/shimmy release-files/shimmy-macos-intel
+
+          # macOS ARM64 - MLX GPU
+          cp artifacts/shimmy-macos-arm64/shimmy release-files/shimmy-macos-arm64
+
+          # List what we're releasing
+          echo "Release files:"
+          ls -lh release-files/
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} \
+            release-files/* \
+            --title "Shimmy ${{ github.ref_name }}" \
+            --generate-notes
+
+      - name: Install Rust for crates.io publishing
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: "📦 Publish to crates.io"
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          echo "🚀 Publishing shimmy ${{ github.ref_name }} to crates.io..."
+          # Debug: print working tree state (helps diagnose Cargo.lock vs git status mismatch)
+          echo "🔍 git status (porcelain):"
+          git status --porcelain || true
+          echo "🔍 git diff --name-only against HEAD (if any):"
+          git diff --name-only || true
+
+          # When publishing we always allow dirty state for Cargo.lock differences that appear
+          # during build/packaging steps (this prevents transient lockfile updates from blocking publish)
+          echo "⚠️ Publishing with --allow-dirty to tolerate transient changes to Cargo.lock"
+          DIRTY_FLAG="--allow-dirty"
+
+          # Publish to crates.io (dry-run already validated in Gate 7)
+          cargo publish $DIRTY_FLAG || (echo "❌ cargo publish failed"; exit 1)
+          
+          echo "✅ Successfully published shimmy ${{ github.ref_name }} to crates.io!"
+          echo "📦 Users can now install with: cargo install shimmy"
+
+      - name: "🐳 Build and Push Docker Image to GHCR"
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🐳 Building and pushing Docker image to GitHub Container Registry..."
+          
+          # Login to GHCR
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # Build the Docker image
+          docker build -f deploy/Dockerfile -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} -t ghcr.io/${{ github.repository }}:latest .
+          
+          # Push both tagged and latest versions
+          docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          docker push ghcr.io/${{ github.repository }}:latest
+          
+          echo "✅ Docker image published successfully!"
+          echo "🐳 Users can now run: docker run ghcr.io/${{ github.repository }}:latest"
