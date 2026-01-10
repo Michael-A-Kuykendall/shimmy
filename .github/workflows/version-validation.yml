@@ -1,0 +1,201 @@
+name: Version Validation
+
+# Run this workflow on all tags to ensure version consistency before any release
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:  # Allow manual trigger for testing
+    inputs:
+      tag_name:
+        description: 'Tag name to validate (optional, defaults to latest tag)'
+        required: false
+        type: string
+
+jobs:
+  validate-version:
+    runs-on: ubuntu-latest
+    name: "🔍 Version Consistency Check"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for tag comparison
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Determine tag to validate
+        id: determine_tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ inputs.tag_name }}" ]; then
+            TAG_NAME="${{ inputs.tag_name }}"
+          elif [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref_type }}" == "tag" ]; then
+            TAG_NAME="${{ github.ref_name }}"
+          else
+            # Fallback to latest tag
+            TAG_NAME=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          fi
+
+          if [ -z "$TAG_NAME" ]; then
+            echo "❌ ERROR: No tag found to validate"
+            exit 1
+          fi
+
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Validating tag: $TAG_NAME"
+
+      - name: Checkout specific tag
+        run: |
+          git checkout ${{ steps.determine_tag.outputs.tag_name }}
+
+      - name: Version Validation - Cargo.toml vs Git Tag
+        id: validate_cargo_tag
+        run: |
+          TAG_NAME="${{ steps.determine_tag.outputs.tag_name }}"
+
+          # Extract version from Cargo.toml - strip all whitespace/newlines
+          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/' | tr -d '\r\n' | xargs)
+
+          # Extract version from tag (remove 'v' prefix) - strip whitespace/newlines
+          TAG_VERSION=$(echo "${TAG_NAME#v}" | tr -d '\r\n' | xargs)
+
+          echo "🔍 Version Check Results:"
+          echo "  Cargo.toml version: '$CARGO_VERSION'"
+          echo "  Git tag version:    '$TAG_VERSION'"
+
+          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ ERROR: Version mismatch detected!"
+            echo "   Cargo.toml shows: $CARGO_VERSION"
+            echo "   Git tag shows:    $TAG_VERSION"
+            echo ""
+            echo "🛠️  To fix this issue:"
+            echo "   1. Update Cargo.toml version to match tag: $TAG_VERSION"
+            echo "   2. OR retag with version: v$CARGO_VERSION"
+            echo "   3. Commit and push the correction"
+            exit 1
+          else
+            echo "✅ Version consistency check passed!"
+          fi
+
+          echo "cargo_version=$CARGO_VERSION" >> $GITHUB_OUTPUT
+          echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Version Validation - Build Test
+        run: |
+          echo "🧪 Testing that binary reports correct version..."
+
+          # Build the project
+          cargo build --release --no-default-features --features "huggingface"
+
+          # Test version output
+          VERSION_OUTPUT=$(./target/release/shimmy --version)
+          EXPECTED_VERSION="${{ steps.validate_cargo_tag.outputs.cargo_version }}"
+
+          echo "Binary version output: $VERSION_OUTPUT"
+
+          if echo "$VERSION_OUTPUT" | grep -q "$EXPECTED_VERSION"; then
+            echo "✅ Binary version check passed!"
+          else
+            echo "❌ ERROR: Binary version mismatch!"
+            echo "   Expected to find: $EXPECTED_VERSION"
+            echo "   Binary reported:  $VERSION_OUTPUT"
+            exit 1
+          fi
+
+      - name: Version Validation - Semantic Versioning
+        run: |
+          VERSION="${{ steps.validate_cargo_tag.outputs.tag_version }}"
+
+          echo "🔍 Validating semantic versioning format..."
+
+          # Check semantic versioning pattern (major.minor.patch with optional pre-release/build)
+          if echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\.-]+)?(\+[a-zA-Z0-9\.-]+)?$'; then
+            echo "✅ Semantic versioning format is valid: $VERSION"
+          else
+            echo "❌ ERROR: Invalid semantic versioning format: $VERSION"
+            echo "   Expected format: MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]"
+            echo "   Examples: 1.0.0, 1.0.0-alpha.1, 1.0.0+build.1"
+            exit 1
+          fi
+
+          # Additional check: version should not be 0.1.0 (development placeholder)
+          if [ "$VERSION" = "0.1.0" ]; then
+            echo "❌ ERROR: Version 0.1.0 is a development placeholder and should not be released"
+            echo "   Please update to a proper release version"
+            exit 1
+          fi
+
+      - name: Version Validation - Release Notes Check
+        run: |
+          TAG_NAME="${{ steps.determine_tag.outputs.tag_name }}"
+
+          echo "🔍 Checking if this tag already has a GitHub release..."
+
+          # Check if release already exists
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "⚠️  WARNING: Release $TAG_NAME already exists on GitHub"
+            echo "   This might indicate a re-tag or duplicate release attempt"
+            echo "   Please review if this is intentional"
+
+            # Show existing release info
+            echo ""
+            echo "📋 Existing release information:"
+            gh release view "$TAG_NAME" --json name,tagName,publishedAt,isLatest
+          else
+            echo "✅ No existing release found for $TAG_NAME - ready for new release"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Version Validation - Dependency Check
+        run: |
+          echo "🔍 Validating dependencies and version consistency..."
+
+          # Check that Cargo.lock is consistent
+          cargo check --locked --no-default-features --features "huggingface"
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Dependency check passed - Cargo.lock is consistent"
+          else
+            echo "❌ ERROR: Cargo.lock is inconsistent with Cargo.toml"
+            echo "   Run 'cargo update' and commit the updated Cargo.lock"
+            exit 1
+          fi
+
+      - name: Version Validation - Changelog Check
+        run: |
+          TAG_NAME="${{ steps.determine_tag.outputs.tag_name }}"
+
+          echo "🔍 Checking changelog for version entry..."
+
+          if [ -f "CHANGELOG.md" ]; then
+            if grep -q "$TAG_NAME" CHANGELOG.md; then
+              echo "✅ Changelog entry found for $TAG_NAME"
+            else
+              echo "⚠️  WARNING: No changelog entry found for $TAG_NAME"
+              echo "   Consider adding release notes to CHANGELOG.md"
+            fi
+          else
+            echo "ℹ️  No CHANGELOG.md found - skipping changelog check"
+          fi
+
+      - name: Version Validation Summary
+        run: |
+          echo ""
+          echo "🎯 VERSION VALIDATION SUMMARY"
+          echo "=============================="
+          echo "✅ Cargo.toml vs Git tag consistency: PASSED"
+          echo "✅ Binary version output: PASSED"
+          echo "✅ Semantic versioning format: PASSED"
+          echo "✅ Dependency consistency: PASSED"
+          echo ""
+          echo "🚀 Version ${{ steps.determine_tag.outputs.tag_name }} is ready for release!"
+          echo ""
+          echo "📋 This validation prevents:"
+          echo "   • Version mismatches between Cargo.toml and Git tags"
+          echo "   • Binaries reporting wrong version numbers"
+          echo "   • Invalid semantic versioning"
+          echo "   • Dependency inconsistencies"
+          echo "   • Duplicate or conflicting releases"
+          echo ""
+          echo "Next step: The release workflow will proceed with building and publishing."

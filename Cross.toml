@@ -1,0 +1,7 @@
+# Cross-compilation configuration for ARM64 Linux
+[build.env]
+passthrough = [
+    "CARGO_INCREMENTAL",
+    "CARGO_NET_RETRY", 
+    "CARGO_NET_TIMEOUT",
+]

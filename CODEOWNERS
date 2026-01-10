@@ -1,0 +1,17 @@
+# This file defines code review ownership for Shimmy.
+# All changes require review and approval from the lead maintainer.
+
+# Global ownership - require maintainer review for everything
+* @Michael-A-Kuykendall
+
+# Critical files require explicit maintainer approval
+Cargo.toml @Michael-A-Kuykendall
+src/main.rs @Michael-A-Kuykendall
+src/api.rs @Michael-A-Kuykendall
+src/openai_compat.rs @Michael-A-Kuykendall
+
+# Governance and project files
+ROADMAP.md @Michael-A-Kuykendall
+CONTRIBUTING.md @Michael-A-Kuykendall
+CODEOWNERS @Michael-A-Kuykendall
+README.md @Michael-A-Kuykendall

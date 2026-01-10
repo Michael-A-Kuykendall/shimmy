@@ -1,0 +1,116 @@
+[package]
+name = "shimmy"
+version = "1.9.0"
+edition = "2021"
+license = "MIT"
+description = "Lightweight sub-5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading. Now with GitHub Spec-Kit integration for systematic development."
+homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
+repository = "https://github.com/Michael-A-Kuykendall/shimmy"
+readme = "README.md"
+keywords = ["llm", "local-ai", "inference", "server", "api"]
+categories = ["command-line-utilities", "web-programming::http-server"]
+authors = ["Michael A. Kuykendall <michaelallenkuykendall@gmail.com>"]
+include = [
+    "src/**/*",
+    "templates/**/*",
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "LICENSE",
+    "build.rs"
+]
+
+[features]
+default = ["huggingface", "llama"]  # Now with working Windows MSVC support via shimmy-llama-cpp-2
+# Engine backends
+llama = ["dep:shimmy-llama-cpp-2"]
+huggingface = [] # Python integration, no additional Rust deps
+mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
+# GPU acceleration backends for llama.cpp
+llama-cuda = ["llama", "shimmy-llama-cpp-2/cuda"] # NVIDIA CUDA GPU acceleration
+llama-vulkan = ["llama"] # Vulkan GPU acceleration (cross-platform)
+llama-opencl = ["llama"] # OpenCL GPU acceleration (AMD, Intel, etc.)
+# Convenience feature sets
+fast = ["huggingface"] # Fast compilation - no C++ deps
+full = ["huggingface", "llama", "mlx"] # Full compilation - includes all backends
+gpu = ["huggingface", "llama-cuda", "llama-vulkan", "llama-opencl"] # GPU-optimized build
+apple = ["huggingface", "mlx"] # Apple Silicon optimized - MLX + HuggingFace
+coverage = ["huggingface"] # Coverage testing - minimal deps for faster builds
+vision = ["dep:image", "dep:base64", "dep:chromiumoxide", "dep:ed25519-dalek", "dep:hex", "dep:sha2"] # Optional vision feature for image/web analysis
+
+[dependencies]
+anyhow = "1"
+axum = { version = "0.7", features = ["http1", "json", "ws", "macros"] }
+async-trait = "0.1"
+base64 = { version = "0.21", optional = true }
+bytes = "1"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive"] }
+futures-util = "0.3"
+chromiumoxide = { version = "0.7", optional = true, default-features = false, features = ["tokio-runtime"] }
+ed25519-dalek = { version = "2", optional = true, features = ["std"] }
+hex = { version = "0.4", optional = true }
+image = { version = "0.24", optional = true }
+sha2 = { version = "0.10", optional = true }
+lazy_static = "1.5"
+memmap2 = "0.9"
+minijinja = { version = "2", features = ["loader"] }
+parking_lot = "0.12"
+rand = "0.8"
+regex = "1"
+safetensors = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sys-info = "0.9"
+sysinfo = "0.30"
+tempfile = "3"
+thiserror = "1"
+tokio = { version = "1", features = ["macros","rt-multi-thread","signal","process","fs"] }
+tokio-stream = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+dirs = "5.0"
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+
+# llama.cpp bindings (optional) - published shimmy-llama-cpp-2 with MoE CPU offloading support
+shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = false }
+
+[dev-dependencies]
+tokio-tungstenite = "0.20"
+criterion = { version = "0.5", features = ["html_reports"] }
+serial_test = "3.1"  # For serialized test execution
+# Additional dependencies for mock testing infrastructure
+tempfile = "3"  # For creating temporary test directories
+rand = "0.8"    # For randomized testing scenarios (already in main deps)
+assert_cmd = "2"  # For CLI testing
+predicates = "3"  # For assertion predicates in tests
+tower = { version = "0.5", features = ["util"] }  # For test oneshot helper
+# Note: tempfile is already in main dependencies, rand is already in main dependencies
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"
+
+# Optimize build times for development
+[profile.dev]
+opt-level = 1
+debug = true
+
+# Faster builds for dependencies
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
+
+# Benchmark configuration  
+[[bench]]
+name = "model_loading"
+harness = false
+
+[[bench]]
+name = "generation_performance"
+harness = false
+
+[workspace]
+
