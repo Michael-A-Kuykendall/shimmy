@@ -1,0 +1,21 @@
+# Override GitHub language detection to show Rust instead of Makefile
+# This is needed because Rust build generates many .d files with Makefile syntax
+
+# Mark Rust files as detectable and prioritize them
+*.rs linguist-detectable=true
+
+# Exclude build artifacts and dependency files from language detection
+*.d linguist-detectable=false
+Makefile linguist-detectable=false
+makefile linguist-detectable=false
+GNUmakefile linguist-detectable=false
+
+# Exclude other build artifacts and generated files
+target/ linguist-generated=true
+Cargo.lock linguist-generated=true
+*.profraw linguist-generated=true
+
+# Ensure template files are properly categorized
+*.toml linguist-detectable=true
+*.yml linguist-detectable=true
+*.yaml linguist-detectable=true

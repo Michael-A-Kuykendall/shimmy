@@ -1,0 +1,46 @@
+# Pre-commit hooks for Shimmy
+# Fast quality checks that run on EVERY commit
+# Regression tests run separately on PRs and releases (too slow for pre-commit)
+
+repos:
+  - repo: local
+    hooks:
+      # HOOK 1: Code formatting (fast - auto-fixable)
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt
+        language: system
+        types: [rust]
+        pass_filenames: false
+        
+      # HOOK 2: Code quality (fast - catches most issues)
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --all-features --all-targets -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+        
+      # HOOK 3: Quick compile check (fast - ensures code builds)
+      - id: cargo-check
+        name: cargo check
+        entry: cargo check --all-features
+        language: system
+        types: [rust]
+        pass_filenames: false
+      
+      # HOOK 4: Update Cargo.lock after version changes (prevents release failures)
+      - id: cargo-lock-update
+        name: Update Cargo.lock
+        entry: bash -c 'if git diff --cached --name-only | grep -q "Cargo.toml"; then cargo generate-lockfile; git add Cargo.lock 2>/dev/null || true; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+# NOTE: Regression tests (115 tests, ~60-100s) are NOT run on every commit
+# They run automatically on:
+# - Pull requests (GitHub Actions CI)
+# - Release workflow (scripts/dry-run-release.sh Gate 5)
+# 
+# To run manually: cargo test --all-features
+# Or use: ./scripts/run-regression-tests.sh

@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 General Discussion & Questions
+    url: https://github.com/Michael-A-Kuykendall/shimmy/discussions
+    about: Ask questions, share ideas, get help, or discuss Shimmy with the community
+  - name: 🔒 Security Vulnerability Report
+    url: https://github.com/Michael-A-Kuykendall/shimmy/security/advisories/new
+    about: Report security vulnerabilities privately (DO NOT use public issues for security)
+  - name: 📖 Documentation & Guides
+    url: https://github.com/Michael-A-Kuykendall/shimmy/tree/main/docs
+    about: Check existing documentation, API guides, and setup instructions
+  - name: 📧 Maintainer Contact
+    url: mailto:hello@shimmy-ai.dev
+    about: Contact maintainers directly for licensing, partnerships, or other inquiries
