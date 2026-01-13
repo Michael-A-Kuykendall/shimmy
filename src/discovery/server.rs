@@ -22,30 +22,20 @@ impl DiscoveryServer {
         }
     }
 
-    /// Bind to ephemeral port (0) - let OS assign available port
+    /// Bind to port 11430 with fallback to 11431-11439
     pub async fn bind(&mut self) -> anyhow::Result<u16> {
-        // Preferred ports — attempt primary 11430 then fallback 11431
-        let candidates = [11430u16, 11431u16, 0u16];
-
-        for &p in &candidates {
-            let addr = format!("127.0.0.1:{}", p);
-            match TcpListener::bind(&addr) {
-                Ok(listener) => {
-                    self.port = listener.local_addr()?.port();
-                    return Ok(self.port);
+        // Try ports 11430-11439
+        for port in 11430..=11439 {
+            match TcpListener::bind(format!("127.0.0.1:{}", port)) {
+                Ok(_) => {
+                    self.port = port;
+                    return Ok(port);
                 }
                 Err(_) => continue,
             }
         }
-
-        // Should never reach here, but return an ephemeral port as fallback
-        match TcpListener::bind("127.0.0.1:0") {
-            Ok(listener) => {
-                self.port = listener.local_addr()?.port();
-                Ok(self.port)
-            }
-            Err(e) => Err(e.into()),
-        }
+        
+        anyhow::bail!("Could not bind to any port in range 11430-11439")
     }
 
     /// Start the discovery service
@@ -62,24 +52,15 @@ impl DiscoveryServer {
             .route("/backends/:id/validate", get(handlers::validate_backend))
             .with_state(self.service.clone());
         
-        // Spawn stale backend cleanup task with shutdown channel
+        // Spawn stale backend cleanup task
         let service = self.service.clone();
-        let (cleanup_shutdown_tx, mut cleanup_shutdown_rx) = tokio::sync::watch::channel(false);
-        
-        let cleanup_handle = tokio::spawn(async move {
+        tokio::spawn(async move {
             let mut cleanup_interval = interval(Duration::from_secs(5));
             loop {
-                tokio::select! {
-                    _ = cleanup_interval.tick() => {
-                        let removed = service.remove_stale_backends().await;
-                        if removed > 0 {
-                            eprintln!("🧹 Cleaned up {} stale backend(s)", removed);
-                        }
-                    }
-                    _ = cleanup_shutdown_rx.changed() => {
-                        println!("🛑 Cleanup task received shutdown signal");
-                        break;
-                    }
+                cleanup_interval.tick().await;
+                let removed = service.remove_stale_backends().await;
+                if removed > 0 {
+                    eprintln!("🧹 Cleaned up {} stale backend(s)", removed);
                 }
             }
         });
@@ -89,13 +70,7 @@ impl DiscoveryServer {
         println!("✅ Discovery service ready on http://127.0.0.1:{}", port);
         
         axum::serve(listener, app)
-            .with_graceful_shutdown(async move {
-                shutdown_signal().await;
-                // Signal cleanup task to stop
-                let _ = cleanup_shutdown_tx.send(true);
-                // Wait for cleanup to finish
-                let _ = cleanup_handle.await;
-            })
+            .with_graceful_shutdown(shutdown_signal())
             .await?;
         
         println!("🛑 Discovery service shutting down");
@@ -106,12 +81,6 @@ impl DiscoveryServer {
     pub fn service(&self) -> Arc<DiscoveryService> {
         self.service.clone()
     }
-}
-
-/// Standalone function to run discovery server (used by CLI)
-pub async fn run() -> anyhow::Result<()> {
-    let server = DiscoveryServer::new();
-    server.start().await
 }
 
 impl Default for DiscoveryServer {
@@ -152,34 +121,26 @@ async fn shutdown_signal() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
 
     #[tokio::test]
-    #[serial]
-    async fn test_binds_to_ephemeral_port() {
+    async fn test_binds_to_port_11430() {
         let mut server = DiscoveryServer::new();
         let port = server.bind().await.unwrap();
-        assert!(port > 0, "Ephemeral port should be assigned by OS");
-        // Port can be any available port (typically > 1024)
+        assert_eq!(port, 11430);
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_fallback_to_11431_if_11430_taken() {
-        // Bind to 11430 first - keep alive for the duration of the test
-        let listener = TcpListener::bind("127.0.0.1:11430").unwrap();
+        // Bind to 11430 first
+        let _listener = TcpListener::bind("127.0.0.1:11430").unwrap();
         
         // Try to bind discovery server - should fall back to 11431
         let mut server = DiscoveryServer::new();
         let port = server.bind().await.unwrap();
         assert_eq!(port, 11431);
-        
-        // Drop listener to free port
-        drop(listener);
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_stale_cleanup_removes_old_backends() {
         use super::super::service::{BackendRegistration, BackendCapabilities, ValidationStatus, HealthStatus};
         use std::time::Instant;
@@ -212,3 +173,4 @@ mod tests {
         assert!(backend.is_none());
     }
 }
+

@@ -1,26 +1,17 @@
 use axum::Json;
 use serde::Serialize;
-use sysinfo::System;
+use sysinfo::{System, SystemExt};
 
 #[derive(Serialize)]
-pub struct Diag {
-    os: String,
-    cores: usize,
-    mem_total_mb: u64,
-}
+pub struct Diag { os: String, cores: usize, mem_total_gb: f32 }
 
 pub async fn diag_handler() -> Json<Diag> {
     let mut sys = System::new_all();
     sys.refresh_all();
-    // Some sysinfo methods changed across versions; keep it minimal & portable.
-    let os = std::env::consts::OS.to_string();
-    let cores = std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(0);
-    let mem_total_mb = sys.total_memory() / 1024; // KiB -> MiB
     Json(Diag {
-        os,
-        cores,
-        mem_total_mb,
+        os: format!(\"{} {}\", sys.name().unwrap_or_default(), sys.kernel_version().unwrap_or_default()),
+        cores: sys.physical_core_count().unwrap_or(0),
+        mem_total_gb: (sys.total_memory() as f32)/(1024.0*1024.0),
     })
 }
+
