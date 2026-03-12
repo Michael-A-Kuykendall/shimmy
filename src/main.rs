@@ -111,34 +111,41 @@ fn print_startup_diagnostics(
 ) {
     println!("🎯 Shimmy v{}", version);
 
-    // GPU backend info
-    #[cfg(feature = "llama")]
-    {
-        let backend_display = match gpu_backend {
-            Some("cpu") => "CPU only".to_string(),
-            Some("cuda") => "CUDA (GPU acceleration)".to_string(),
-            Some("vulkan") => "Vulkan (GPU acceleration)".to_string(),
-            Some("opencl") => "OpenCL (GPU acceleration)".to_string(),
-            Some("auto") | None => {
-                // Auto-detect logic mirrors what LlamaEngine does
-                if cfg!(feature = "llama-cuda") {
-                    "CUDA (auto-detected)".to_string()
-                } else if cfg!(feature = "llama-vulkan") {
-                    "Vulkan (auto-detected)".to_string()
-                } else if cfg!(feature = "llama-opencl") {
-                    "OpenCL (auto-detected)".to_string()
-                } else {
-                    "CPU (no GPU acceleration)".to_string()
-                }
-            }
-            Some(other) => format!("{} (custom)", other),
-        };
-        println!("🔧 Backend: {}", backend_display);
-    }
+    let airframe_selected = airframe_engine_selected();
 
-    #[cfg(not(feature = "llama"))]
-    {
-        println!("🔧 Backend: Stub mode (no llama feature)");
+    if airframe_selected {
+        println!("🔧 Backend: Airframe (external GPU runtime)");
+    } else {
+
+        // GPU backend info
+        #[cfg(feature = "llama")]
+        {
+            let backend_display = match gpu_backend {
+                Some("cpu") => "CPU only".to_string(),
+                Some("cuda") => "CUDA (GPU acceleration)".to_string(),
+                Some("vulkan") => "Vulkan (GPU acceleration)".to_string(),
+                Some("opencl") => "OpenCL (GPU acceleration)".to_string(),
+                Some("auto") | None => {
+                    // Auto-detect logic mirrors what LlamaEngine does
+                    if cfg!(feature = "llama-cuda") {
+                        "CUDA (auto-detected)".to_string()
+                    } else if cfg!(feature = "llama-vulkan") {
+                        "Vulkan (auto-detected)".to_string()
+                    } else if cfg!(feature = "llama-opencl") {
+                        "OpenCL (auto-detected)".to_string()
+                    } else {
+                        "CPU (no GPU acceleration)".to_string()
+                    }
+                }
+                Some(other) => format!("{} (custom)", other),
+            };
+            println!("🔧 Backend: {}", backend_display);
+        }
+
+        #[cfg(not(feature = "llama"))]
+        {
+            println!("🔧 Backend: Stub mode (no llama feature)");
+        }
     }
 
     // MoE configuration - NOW WORKING (Issue #108 fix)
@@ -156,6 +163,13 @@ fn print_startup_diagnostics(
 
     // Model count
     println!("📦 Models: {} available", model_count);
+}
+
+fn airframe_engine_selected() -> bool {
+    std::env::var("SHIMMY_ENGINE_BACKEND")
+        .or_else(|_| std::env::var("SHIMMY_EXPERIMENTAL_BACKEND"))
+        .map(|value| value.eq_ignore_ascii_case("airframe"))
+        .unwrap_or(false)
 }
 
 #[tokio::main]
@@ -201,8 +215,10 @@ async fn main() -> anyhow::Result<()> {
         n_threads: None,
     });
 
-    // Create engine with MoE configuration if needed
-    let engine: Box<dyn engine::InferenceEngine> = {
+    // Choose the execution engine once at startup.
+    let engine: Box<dyn engine::InferenceEngine> = if airframe_engine_selected() {
+        Box::new(engine::airframe::AirframeEngine::new())
+    } else {
         #[cfg(feature = "llama")]
         {
             let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(
@@ -282,14 +298,14 @@ async fn main() -> anyhow::Result<()> {
                 cli.gpu_backend.as_deref(),
                 cli.cpu_moe,
                 cli.n_cpu_moe,
-                0, // Will update after model discovery
+                state.registry.list().len(),
             );
             println!("🚀 Starting server on {}", addr);
 
             // Auto-register discovered models if we only have the default
             let manual_count = state.registry.list().len();
-            if manual_count <= 1 {
-                // Only the default phi3-lora entry
+            if manual_count <= 1 && !airframe_engine_selected() {
+                // Only the default phi3-lora entry and not using Airframe
                 // Create new engine with same configuration (including MoE if set)
                 let enhanced_engine: Box<dyn engine::InferenceEngine> = {
                     #[cfg(feature = "llama")]
