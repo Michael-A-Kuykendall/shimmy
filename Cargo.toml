@@ -76,6 +76,9 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls", "stream"], defau
 # llama.cpp bindings (optional) - published shimmy-llama-cpp-2 with MoE CPU offloading support
 shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = false }
 
+# Airframe native GPU inference
+airframe = { path = "../" }
+
 [dev-dependencies]
 tokio-tungstenite = "0.20"
 criterion = { version = "0.5", features = ["html_reports"] }

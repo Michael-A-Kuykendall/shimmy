@@ -108,13 +108,12 @@ fn print_startup_diagnostics(
     #[cfg_attr(not(feature = "llama"), allow(unused_variables))] cpu_moe: bool,
     #[cfg_attr(not(feature = "llama"), allow(unused_variables))] n_cpu_moe: Option<usize>,
     model_count: usize,
+    airframe_selected: bool,
 ) {
     println!("🎯 Shimmy v{}", version);
 
-    let airframe_selected = airframe_engine_selected();
-
     if airframe_selected {
-        println!("🔧 Backend: Airframe (external GPU runtime)");
+        println!("🔧 Backend: Airframe (GPU)");
     } else {
 
         // GPU backend info
@@ -165,11 +164,15 @@ fn print_startup_diagnostics(
     println!("📦 Models: {} available", model_count);
 }
 
-fn airframe_engine_selected() -> bool {
+fn airframe_engine_selected(legacy: bool) -> bool {
+    if legacy {
+        return false;
+    }
+    // Default to Airframe. Only opt out via --legacy flag or SHIMMY_ENGINE_BACKEND=llama
     std::env::var("SHIMMY_ENGINE_BACKEND")
         .or_else(|_| std::env::var("SHIMMY_EXPERIMENTAL_BACKEND"))
-        .map(|value| value.eq_ignore_ascii_case("airframe"))
-        .unwrap_or(false)
+        .map(|value| !value.eq_ignore_ascii_case("llama"))
+        .unwrap_or(true)
 }
 
 #[tokio::main]
@@ -203,12 +206,15 @@ async fn main() -> anyhow::Result<()> {
     // Initialize registry with auto-discovery
     let mut reg = Registry::with_discovery();
 
-    // Add default model from environment variables if available
+    // Register the default model
+    let default_model_path = std::env::var("SHIMMY_BASE_GGUF")
+        .unwrap_or_else(|_| {
+            // Airframe default: TinyLlama 1.1B Q4_0
+            "C:/Users/micha/repos/llama.cpp/models/TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf".into()
+        });
     reg.register(ModelEntry {
-        name: "phi3-lora".into(),
-        base_path: std::env::var("SHIMMY_BASE_GGUF")
-            .unwrap_or_else(|_| "./models/phi3-mini.gguf".into())
-            .into(),
+        name: "tinyllama-1.1b".into(),
+        base_path: default_model_path.into(),
         lora_path: std::env::var("SHIMMY_LORA_GGUF").ok().map(Into::into),
         template: Some("chatml".into()),
         ctx_len: Some(4096),
@@ -216,7 +222,7 @@ async fn main() -> anyhow::Result<()> {
     });
 
     // Choose the execution engine once at startup.
-    let engine: Box<dyn engine::InferenceEngine> = if airframe_engine_selected() {
+    let engine: Box<dyn engine::InferenceEngine> = if airframe_engine_selected(cli.legacy) {
         Box::new(engine::airframe::AirframeEngine::new())
     } else {
         #[cfg(feature = "llama")]
@@ -293,18 +299,20 @@ async fn main() -> anyhow::Result<()> {
                 });
 
             // Print startup diagnostics before server starts
+            let use_airframe = airframe_engine_selected(cli.legacy);
             print_startup_diagnostics(
                 env!("CARGO_PKG_VERSION"),
                 cli.gpu_backend.as_deref(),
                 cli.cpu_moe,
                 cli.n_cpu_moe,
                 state.registry.list().len(),
+                use_airframe,
             );
             println!("🚀 Starting server on {}", addr);
 
             // Auto-register discovered models if we only have the default
             let manual_count = state.registry.list().len();
-            if manual_count <= 1 && !airframe_engine_selected() {
+            if manual_count <= 1 && !airframe_engine_selected(cli.legacy) {
                 // Only the default phi3-lora entry and not using Airframe
                 // Create new engine with same configuration (including MoE if set)
                 let enhanced_engine: Box<dyn engine::InferenceEngine> = {
@@ -1789,8 +1797,8 @@ mod tests {
         // Test basic startup diagnostics output (no MoE)
         // This test verifies the function runs without panic
         // We can't easily capture println! output in tests, but we verify the logic works
-        print_startup_diagnostics("1.6.0", None, false, None, 3);
-        print_startup_diagnostics("1.6.0", Some("auto"), false, None, 5);
+        print_startup_diagnostics("1.6.0", None, false, None, 3, true);
+        print_startup_diagnostics("1.6.0", Some("auto"), false, None, 5, true);
 
         // Test completed successfully - no panic means diagnostics formatted correctly
     }
@@ -1798,11 +1806,11 @@ mod tests {
     #[test]
     fn test_print_startup_diagnostics_with_backends() {
         // Test diagnostics with different GPU backends
-        print_startup_diagnostics("1.6.0", Some("cpu"), false, None, 2);
-        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 4);
-        print_startup_diagnostics("1.6.0", Some("vulkan"), false, None, 1);
-        print_startup_diagnostics("1.6.0", Some("opencl"), false, None, 6);
-        print_startup_diagnostics("1.6.0", Some("custom-backend"), false, None, 3);
+        print_startup_diagnostics("1.6.0", Some("cpu"), false, None, 2, false);
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 4, false);
+        print_startup_diagnostics("1.6.0", Some("vulkan"), false, None, 1, false);
+        print_startup_diagnostics("1.6.0", Some("opencl"), false, None, 6, false);
+        print_startup_diagnostics("1.6.0", Some("custom-backend"), false, None, 3, false);
 
         // Test completed successfully
     }
@@ -1811,9 +1819,9 @@ mod tests {
     #[cfg(feature = "llama")]
     fn test_print_startup_diagnostics_with_moe() {
         // Test diagnostics with MoE configuration
-        print_startup_diagnostics("1.6.0", Some("cuda"), true, None, 2);
-        print_startup_diagnostics("1.6.0", Some("cuda"), false, Some(16), 2);
-        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 5);
+        print_startup_diagnostics("1.6.0", Some("cuda"), true, None, 2, false);
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, Some(16), 2, false);
+        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 5, false);
 
         // Test completed successfully
     }
@@ -1821,7 +1829,7 @@ mod tests {
     #[test]
     fn test_print_startup_diagnostics_zero_models() {
         // Test diagnostics with zero models (edge case)
-        print_startup_diagnostics("1.6.0", None, false, None, 0);
+        print_startup_diagnostics("1.6.0", None, false, None, 0, true);
 
         // Should not panic even with 0 models
         // (The actual serve command will exit with error, but diagnostics should print)
@@ -1830,8 +1838,8 @@ mod tests {
     #[test]
     fn test_print_startup_diagnostics_many_models() {
         // Test diagnostics with many models (like user's 13+ scenario)
-        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 13);
-        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 25);
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 13, false);
+        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 25, false);
 
         // Test completed successfully
     }
@@ -1848,7 +1856,7 @@ mod tests {
         let model_count = 0;
 
         // Call diagnostics as serve command would
-        print_startup_diagnostics(version, gpu_backend, cpu_moe, n_cpu_moe, model_count);
+        print_startup_diagnostics(version, gpu_backend, cpu_moe, n_cpu_moe, model_count, true);
 
         // Test completed - verifies function signature matches usage
     }
@@ -1865,6 +1873,6 @@ mod tests {
         );
 
         // Call diagnostics with real version
-        print_startup_diagnostics(version, None, false, None, 1);
+        print_startup_diagnostics(version, None, false, None, 1, true);
     }
 }
