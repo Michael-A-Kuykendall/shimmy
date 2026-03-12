@@ -8,29 +8,39 @@ use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 use airframe::runtime::gpu::{GpuRuntime, SamplingParams};
 
 /// Airframe GPU inference engine — in-process, zero-HTTP.
-pub struct AirframeEngine;
+/// The GPU runtime is loaded once on first `load()` and reused for all subsequent requests.
+pub struct AirframeEngine {
+    runtime: Arc<Mutex<Option<GpuRuntime>>>,
+}
 
 impl AirframeEngine {
     pub fn new() -> Self {
-        Self
+        Self {
+            runtime: Arc::new(Mutex::new(None)),
+        }
     }
 }
 
 #[async_trait]
 impl InferenceEngine for AirframeEngine {
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>> {
-        let runtime = GpuRuntime::load(&spec.base_path)
-            .await
-            .map_err(|e| anyhow::anyhow!("Airframe GPU load failed: {}", e))?;
+        let mut guard = self.runtime.lock().await;
+        if guard.is_none() {
+            let rt = GpuRuntime::load(&spec.base_path)
+                .await
+                .map_err(|e| anyhow::anyhow!("Airframe GPU load failed: {}", e))?;
+            *guard = Some(rt);
+        }
+        drop(guard);
 
         Ok(Box::new(AirframeModel {
-            runtime: Arc::new(Mutex::new(runtime)),
+            runtime: self.runtime.clone(),
         }))
     }
 }
 
 struct AirframeModel {
-    runtime: Arc<Mutex<GpuRuntime>>,
+    runtime: Arc<Mutex<Option<GpuRuntime>>>,
 }
 
 // Safety: GpuRuntime is behind Arc<Mutex> and only accessed from spawn_blocking
@@ -63,7 +73,10 @@ impl LoadedModel for AirframeModel {
 
         // GPU compute is synchronous — run on the blocking threadpool
         let result = tokio::task::spawn_blocking(move || {
-            let rt = runtime.blocking_lock();
+            let guard = runtime.blocking_lock();
+            let rt = guard
+                .as_ref()
+                .expect("AirframeModel used before engine loaded");
 
             // Reset KV cache for each generation (stateless per-request)
             rt.reset();
