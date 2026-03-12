@@ -151,4 +151,5 @@ pub mod universal;
 pub mod mlx;
 
 pub mod adapter;
+pub mod airframe;
 pub mod safetensors_native;

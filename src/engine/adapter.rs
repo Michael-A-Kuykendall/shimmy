@@ -179,6 +179,7 @@ impl InferenceEngineAdapter {
             }
         }
     }
+
 }
 
 #[derive(Debug, Clone, PartialEq)]
