@@ -441,7 +441,13 @@ impl InferenceEngine for LlamaEngine {
             // The context lifetime is tied to &model; storing both in the same struct ensures safety
             let ctx: llama::context::LlamaContext<'static> =
                 unsafe { std::mem::transmute(ctx_tmp) };
+            // Read the chat template embedded in the GGUF metadata so that
+            // format_prompt() can apply it correctly without guessing from
+            // the model name.  Using the wrong template causes models to echo
+            // structural tokens (e.g. <|start_header_id|>) as literal output.
+            let native_template = model.chat_template(None).ok();
             Ok(Box::new(LlamaLoaded {
+                native_template,
                 model,
                 ctx: Mutex::new(ctx),
             }))
@@ -456,6 +462,7 @@ impl InferenceEngine for LlamaEngine {
 
 #[cfg(feature = "llama")]
 struct LlamaLoaded {
+    native_template: Option<shimmy_llama_cpp_2::model::LlamaChatTemplate>,
     model: shimmy_llama_cpp_2::model::LlamaModel,
     ctx: Mutex<shimmy_llama_cpp_2::context::LlamaContext<'static>>,
 }
@@ -516,8 +523,11 @@ impl LoadedModel for LlamaLoaded {
             if self.model.is_eog_token(token) {
                 break;
             }
-            // Use Plaintext to avoid re-tokenizing control tokens into special forms
-            let piece = self.model.token_to_str(token, Special::Plaintext)?;
+            // Use token_to_bytes + from_utf8_lossy to handle multi-byte token boundaries
+            // (e.g. qwen3 emits partial UTF-8 sequences per token that fail strict from_utf8)
+            let piece = self.model.token_to_bytes(token, Special::Plaintext)
+                .map(|b| String::from_utf8_lossy(&b).into_owned())
+                .unwrap_or_default();
             out.push_str(&piece);
 
             // Check for stop tokens before emitting
@@ -556,6 +566,21 @@ impl LoadedModel for LlamaLoaded {
         }
 
         Ok(out)
+    }
+
+    fn format_prompt(&self, messages: &[(String, String)]) -> Option<String> {
+        let tmpl = self.native_template.as_ref()?;
+        let chat: Vec<shimmy_llama_cpp_2::model::LlamaChatMessage> = messages
+            .iter()
+            .filter_map(|(role, content)| {
+                shimmy_llama_cpp_2::model::LlamaChatMessage::new(
+                    role.clone(),
+                    content.clone(),
+                )
+                .ok()
+            })
+            .collect();
+        self.model.apply_chat_template(tmpl, &chat, true).ok()
     }
 }
 

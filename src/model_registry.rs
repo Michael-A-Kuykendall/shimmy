@@ -55,7 +55,7 @@ impl Registry {
                     base_path: discovered.path.clone(),
                     lora_path: discovered.lora_path.clone(),
                     template: Some(self.infer_template(name)),
-                    ctx_len: Some(4096),
+                    ctx_len: Some(8192),
                     n_threads: None,
                 };
                 self.inner.insert(name.clone(), entry);
@@ -102,7 +102,7 @@ impl Registry {
                 base_path: e.base_path.clone(),
                 lora_path: e.lora_path.clone(),
                 template: e.template.clone(),
-                ctx_len: e.ctx_len.unwrap_or(4096),
+                ctx_len: e.ctx_len.unwrap_or(8192),
                 n_threads: e.n_threads,
             });
         }
@@ -114,7 +114,7 @@ impl Registry {
                 base_path: discovered.path.clone(),
                 lora_path: discovered.lora_path.clone(),
                 template: Some(self.infer_template(&discovered.name)),
-                ctx_len: 4096,
+                ctx_len: 8192,
                 n_threads: None,
             });
         }
@@ -148,7 +148,7 @@ mod tests {
             base_path: PathBuf::from("/path/to/model"),
             lora_path: None,
             template: Some("chatml".to_string()),
-            ctx_len: Some(4096),
+            ctx_len: Some(8192),
             n_threads: Some(4),
         };
 
