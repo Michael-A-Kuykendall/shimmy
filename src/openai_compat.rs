@@ -163,12 +163,20 @@ pub async fn chat_completions(
         }
     };
 
-    // Construct prompt from messages
+    // Construct prompt from messages.
+    // Always compute fam for stop_tokens; use model's native GGUF template for
+    // the prompt when available — this avoids chat-template mismatch errors
+    // where the wrong format causes models to echo structural tokens as output.
+    let pairs = req
+        .messages
+        .iter()
+        .map(|m| (m.role.clone(), m.content.clone()))
+        .collect::<Vec<_>>();
+
     let fam = match spec.template.as_deref() {
         Some("chatml") => crate::templates::TemplateFamily::ChatML,
         Some("llama3") | Some("llama-3") => crate::templates::TemplateFamily::Llama3,
         _ => {
-            // Auto-detect template based on model name
             if req.model.to_lowercase().contains("qwen")
                 || req.model.to_lowercase().contains("chatglm")
             {
@@ -180,32 +188,26 @@ pub async fn chat_completions(
             }
         }
     };
-    let pairs = req
-        .messages
-        .iter()
-        .map(|m| (m.role.clone(), m.content.clone()))
-        .collect::<Vec<_>>();
 
-    // For chat completions, we need to trigger assistant response
-    // Extract the last user message to use as input parameter
-    let last_user_message = req
-        .messages
-        .iter()
-        .rfind(|m| m.role == "user")
-        .map(|m| m.content.as_str());
-
-    // Build conversation history without the last user message
-    let history: Vec<_> = if last_user_message.is_some() {
-        req.messages
-            .iter()
-            .take(req.messages.len().saturating_sub(1))
-            .map(|m| (m.role.clone(), m.content.clone()))
-            .collect()
+    let prompt = if let Some(native_prompt) = loaded.format_prompt(&pairs) {
+        native_prompt
     } else {
-        pairs.clone()
+        let last_user_message = req
+            .messages
+            .iter()
+            .rfind(|m| m.role == "user")
+            .map(|m| m.content.as_str());
+        let history: Vec<_> = if last_user_message.is_some() {
+            req.messages
+                .iter()
+                .take(req.messages.len().saturating_sub(1))
+                .map(|m| (m.role.clone(), m.content.clone()))
+                .collect()
+        } else {
+            pairs.clone()
+        };
+        fam.render(None, &history, last_user_message)
     };
-
-    let prompt = fam.render(None, &history, last_user_message);
 
     // Set generation options
     let mut opts = crate::engine::GenOptions::default();
