@@ -525,7 +525,9 @@ impl LoadedModel for LlamaLoaded {
             }
             // Use token_to_bytes + from_utf8_lossy to handle multi-byte token boundaries
             // (e.g. qwen3 emits partial UTF-8 sequences per token that fail strict from_utf8)
-            let piece = self.model.token_to_bytes(token, Special::Plaintext)
+            let piece = self
+                .model
+                .token_to_bytes(token, Special::Plaintext)
                 .map(|b| String::from_utf8_lossy(&b).into_owned())
                 .unwrap_or_default();
             out.push_str(&piece);
@@ -573,11 +575,7 @@ impl LoadedModel for LlamaLoaded {
         let chat: Vec<shimmy_llama_cpp_2::model::LlamaChatMessage> = messages
             .iter()
             .filter_map(|(role, content)| {
-                shimmy_llama_cpp_2::model::LlamaChatMessage::new(
-                    role.clone(),
-                    content.clone(),
-                )
-                .ok()
+                shimmy_llama_cpp_2::model::LlamaChatMessage::new(role.clone(), content.clone()).ok()
             })
             .collect();
         self.model.apply_chat_template(tmpl, &chat, true).ok()
