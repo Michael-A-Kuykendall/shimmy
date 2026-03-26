@@ -19,3 +19,6 @@ Cargo.lock linguist-generated=true
 *.toml linguist-detectable=true
 *.yml linguist-detectable=true
 *.yaml linguist-detectable=true
+
+# Force LF line endings for shell scripts (prevents CRLF shebang failures on Linux CI)
+*.sh text eol=lf
