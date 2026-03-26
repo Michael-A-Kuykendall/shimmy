@@ -61,8 +61,12 @@ mod issue_183_tests {
         //   '你' = U+4F60 → [0xE4, 0xBD, 0xA0]
         //   '好' = U+597D → [0xE5, 0xA5, 0xBD]
         let token_bytes: Vec<Vec<u8>> = vec![
-            vec![0xE4], vec![0xBD], vec![0xA0], // '你'
-            vec![0xE5], vec![0xA5], vec![0xBD], // '好'
+            vec![0xE4],
+            vec![0xBD],
+            vec![0xA0], // '你'
+            vec![0xE5],
+            vec![0xA5],
+            vec![0xBD], // '好'
         ];
 
         // Simulate the fixed generation loop: accumulate bytes, decode at end
@@ -78,7 +82,10 @@ mod issue_183_tests {
 
         // Full accumulated sequence decodes correctly
         let result = String::from_utf8(accumulated).expect("complete sequence must be valid UTF-8");
-        assert_eq!(result, "你好", "Multi-byte characters must reconstruct correctly");
+        assert_eq!(
+            result, "你好",
+            "Multi-byte characters must reconstruct correctly"
+        );
     }
 
     /// Verify that ASCII output (the common case) is completely unaffected.
@@ -100,7 +107,10 @@ mod issue_183_tests {
             out.push_str(&piece);
         }
 
-        assert_eq!(out, "Hello, world!", "ASCII output must be unchanged by the fix");
+        assert_eq!(
+            out, "Hello, world!",
+            "ASCII output must be unchanged by the fix"
+        );
     }
 
     /// Verify that the fix handles the empty-bytes edge case gracefully.
@@ -124,6 +134,9 @@ mod issue_183_tests {
         // '🚀' = U+1F680, UTF-8: [0xF0, 0x9F, 0x9A, 0x80]
         let rocket_bytes: Vec<u8> = vec![0xF0, 0x9F, 0x9A, 0x80];
         let result = String::from_utf8_lossy(&rocket_bytes).into_owned();
-        assert_eq!(result, "🚀", "Complete 4-byte UTF-8 sequence must not be corrupted");
+        assert_eq!(
+            result, "🚀",
+            "Complete 4-byte UTF-8 sequence must not be corrupted"
+        );
     }
 }

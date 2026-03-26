@@ -23,8 +23,8 @@
 /// rather than any hardcoded constant.
 #[cfg(test)]
 mod issue_182_tests {
-    use std::path::PathBuf;
     use shimmy::model_registry::{ModelEntry, Registry};
+    use std::path::PathBuf;
 
     /// Verify that auto-registered discovered models receive ctx_len=8192.
     ///
@@ -45,7 +45,9 @@ mod issue_182_tests {
         };
         registry.register(entry);
 
-        let spec = registry.to_spec("qwen3-8b").expect("model should be registered");
+        let spec = registry
+            .to_spec("qwen3-8b")
+            .expect("model should be registered");
         assert_eq!(
             spec.ctx_len, 8192,
             "Auto-registered model with None ctx_len must default to 8192, not 4096. \

@@ -159,7 +159,10 @@ mod issue_184_tests {
         ];
 
         let result = model.format_prompt(&messages);
-        assert!(result.is_some(), "Model with native template must return Some");
+        assert!(
+            result.is_some(),
+            "Model with native template must return Some"
+        );
 
         let prompt = result.clone().unwrap();
         assert!(
