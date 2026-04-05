@@ -849,7 +849,7 @@ mod tests {
             base_path: "./test2.gguf".into(),
             lora_path: None,
             template: Some("llama3".into()),
-            ctx_len: Some(4096),
+            ctx_len: Some(2048),
             n_threads: None,
         });
 
@@ -876,7 +876,7 @@ mod tests {
             base_path: "./test-phi3.gguf".into(),
             lora_path: None,
             template: Some("chatml".into()),
-            ctx_len: Some(4096),
+            ctx_len: Some(2048),
             n_threads: None,
         });
 
@@ -885,7 +885,7 @@ mod tests {
             base_path: "./test-llama3.gguf".into(),
             lora_path: None,
             template: Some("llama3".into()),
-            ctx_len: Some(8192),
+            ctx_len: Some(2048),
             n_threads: None,
         });
 

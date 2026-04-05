@@ -205,7 +205,7 @@ mod tests {
                 lora_path: Some(PathBuf::from("lora.bin")),
             },
             template: Some("llama3".to_string()),
-            ctx_len: 4096,
+            ctx_len: 2048,
             device: "cuda".to_string(),
             n_threads: None,
         };
@@ -230,7 +230,7 @@ mod tests {
                 assert_eq!(legacy.base_path, PathBuf::from("base.gguf"));
                 assert_eq!(legacy.lora_path, Some(PathBuf::from("lora.bin")));
                 assert_eq!(legacy.template, Some("llama3".to_string()));
-                assert_eq!(legacy.ctx_len, 4096);
+                assert_eq!(legacy.ctx_len, 2048);
                 assert_eq!(legacy.n_threads, None);
             }
             _ => panic!("Expected LlamaGGUF backend"),
@@ -251,7 +251,7 @@ mod tests {
                 use_local: false,
             },
             template: None,
-            ctx_len: 4096,
+            ctx_len: 2048,
             device: "cpu".to_string(),
             n_threads: None,
         };
@@ -334,7 +334,7 @@ mod tests {
                 adapter_path: Some(PathBuf::from("adapter.safetensors")),
             },
             template: Some("custom".to_string()),
-            ctx_len: 8192,
+            ctx_len: 2048,
             device: "metal".to_string(),
             n_threads: Some(8),
         };
@@ -419,7 +419,7 @@ mod tests {
                 lora_path: None,
             },
             template: Some("chatml".to_string()),
-            ctx_len: 4096,
+            ctx_len: 2048,
             device: "cpu".to_string(),
             n_threads: Some(8),
         };
@@ -432,7 +432,7 @@ mod tests {
         assert_eq!(model_spec.base_path, PathBuf::from("/path/to/model.gguf"));
         assert_eq!(model_spec.lora_path, None);
         assert_eq!(model_spec.template, Some("chatml".to_string()));
-        assert_eq!(model_spec.ctx_len, 4096);
+        assert_eq!(model_spec.ctx_len, 2048);
         assert_eq!(model_spec.n_threads, Some(8));
     }
 
@@ -475,7 +475,7 @@ mod tests {
                 use_local: false,
             },
             template: None,
-            ctx_len: 4096,
+            ctx_len: 2048,
             device: "cpu".to_string(),
             n_threads: None,
         };
@@ -496,7 +496,7 @@ mod tests {
                 adapter_path: Some(PathBuf::from("/path/to/adapter.safetensors")),
             },
             template: Some("custom".to_string()),
-            ctx_len: 8192,
+            ctx_len: 2048,
             device: "metal".to_string(),
             n_threads: Some(4),
         };
