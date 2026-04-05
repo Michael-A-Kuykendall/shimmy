@@ -283,7 +283,7 @@ mod tests {
             },
             device: "cpu".to_string(),
             template: None,
-            ctx_len: 4096,
+            ctx_len: 2048,
             n_threads: None,
         };
 
@@ -307,7 +307,7 @@ mod tests {
             },
             device: "cpu".to_string(),
             template: None,
-            ctx_len: 4096,
+            ctx_len: 2048,
             n_threads: None,
         };
 
@@ -399,7 +399,7 @@ mod tests {
             },
             device: "cpu".to_string(),
             template: None,
-            ctx_len: 4096,
+            ctx_len: 2048,
             n_threads: None,
         };
 
@@ -416,7 +416,7 @@ mod tests {
             },
             device: "cpu".to_string(),
             template: None,
-            ctx_len: 4096,
+            ctx_len: 2048,
             n_threads: None,
         };
 
