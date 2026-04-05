@@ -217,7 +217,7 @@ async fn main() -> anyhow::Result<()> {
         base_path: default_model_path.into(),
         lora_path: std::env::var("SHIMMY_LORA_GGUF").ok().map(Into::into),
         template: Some("chatml".into()),
-        ctx_len: Some(4096),
+        ctx_len: Some(2048),
         n_threads: None,
     });
 
@@ -708,7 +708,7 @@ mod tests {
             base_path: "./models/phi3-mini.gguf".into(),
             lora_path: None,
             template: Some("chatml".into()),
-            ctx_len: Some(4096),
+            ctx_len: Some(2048),
             n_threads: None,
         });
 
@@ -1050,7 +1050,7 @@ mod tests {
             base_path: base_path.into(),
             lora_path,
             template: Some("chatml".into()),
-            ctx_len: Some(4096),
+            ctx_len: Some(2048),
             n_threads: None,
         });
 
@@ -1130,7 +1130,7 @@ mod tests {
                 .into(),
             lora_path: env::var("SHIMMY_LORA_GGUF").ok().map(Into::into),
             template: Some("chatml".into()),
-            ctx_len: Some(4096),
+            ctx_len: Some(2048),
             n_threads: None,
         });
 
@@ -1394,7 +1394,7 @@ mod tests {
             base_path: "./maximal.gguf".into(),
             lora_path: Some("./maximal.lora".into()),
             template: Some("llama3".to_string()),
-            ctx_len: Some(8192),
+            ctx_len: Some(2048),
             n_threads: Some(8),
         });
 
@@ -1409,7 +1409,7 @@ mod tests {
         let maximal = models.iter().find(|e| e.name == "maximal").unwrap();
         assert!(maximal.lora_path.is_some());
         assert_eq!(maximal.template.as_ref().unwrap(), "llama3");
-        assert_eq!(maximal.ctx_len.unwrap(), 8192);
+        assert_eq!(maximal.ctx_len.unwrap(), 2048);
         assert_eq!(maximal.n_threads.unwrap(), 8);
     }
 

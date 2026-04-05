@@ -50,7 +50,7 @@ mod tests {
             base_path: PathBuf::from("/test/path"),
             lora_path: None,
             template: Some("chatml".to_string()),
-            ctx_len: Some(4096),
+            ctx_len: Some(2048),
             n_threads: Some(4),
         };
 
@@ -171,7 +171,7 @@ mod tests {
             base_path: PathBuf::from("/opt/models/production"),
             lora_path: Some(PathBuf::from("/opt/models/lora")),
             template: Some("llama3".to_string()),
-            ctx_len: Some(8192),
+            ctx_len: Some(2048),
             n_threads: Some(8),
         };
 
@@ -180,7 +180,7 @@ mod tests {
         // Verify production setup
         assert_eq!(registry_mut.list().len(), 1);
         assert_eq!(registry_mut.list()[0].name, "production-model");
-        assert_eq!(registry_mut.list()[0].ctx_len, Some(8192));
+        assert_eq!(registry_mut.list()[0].ctx_len, Some(2048));
     }
 
     #[test]
