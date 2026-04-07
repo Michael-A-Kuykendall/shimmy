@@ -147,9 +147,25 @@ impl ModelAutoDiscovery {
             Err(e) => eprintln!("Warning: Failed to discover Ollama models: {}", e),
         }
 
-        // Remove duplicates based on file hash or path
+        // Remove duplicates based on path. When two entries share the same
+        // resolved path (e.g. raw scanner found "sha256-abc" and manifest
+        // scanner found the same file as "registry.ollama.ai/library/gemma3/1b"),
+        // prefer the entry with a human-readable name (no "sha256-" prefix).
         discovered.sort_by(|a, b| a.path.cmp(&b.path));
-        discovered.dedup_by(|a, b| a.path == b.path);
+        discovered.dedup_by(|a, b| {
+            if a.path != b.path {
+                return false;
+            }
+            // Keep whichever entry has the better (non-sha256) name.
+            // dedup_by drops `a` and keeps `b`, so swap names if `a` is better.
+            if a.name.starts_with("sha256-") && !b.name.starts_with("sha256-") {
+                // b already has the good name — drop a (default)
+            } else if !a.name.starts_with("sha256-") && b.name.starts_with("sha256-") {
+                // a has the good name — copy it to b before a is dropped
+                b.name = a.name.clone();
+            }
+            true
+        });
 
         // PPT Invariant: Validate discovery results before returning
         shimmy_invariants::assert_discovery_valid(discovered.len());
@@ -663,8 +679,21 @@ impl ModelAutoDiscovery {
                             if layer.media_type == "application/vnd.ollama.image.model" {
                                 if let Some(hash) = layer.digest.strip_prefix("sha256:") {
                                     let blob_path = blobs_dir.join(format!("sha256-{}", hash));
-                                    if blob_path.exists()
-                                        && self.is_gguf_blob(&blob_path).unwrap_or(false)
+                                    // llama.cpp requires a path with a .gguf extension to load
+                                    // correctly. Create a .gguf symlink alongside the raw Ollama
+                                    // blob (which has no extension) so load_from_file succeeds.
+                                    let blob_gguf_path = blobs_dir.join(format!("sha256-{}.gguf", hash));
+                                    if !blob_gguf_path.exists() && blob_path.exists() {
+                                        #[cfg(unix)]
+                                        let _ = std::os::unix::fs::symlink(&blob_path, &blob_gguf_path);
+                                    }
+                                    let effective_path = if blob_gguf_path.exists() {
+                                        blob_gguf_path
+                                    } else {
+                                        blob_path.clone()
+                                    };
+                                    if effective_path.exists()
+                                        && self.is_gguf_blob(&effective_path).unwrap_or(false)
                                     {
                                         // Build display name from path components
                                         let display_name = if path_components.len() >= 2 {
@@ -679,7 +708,7 @@ impl ModelAutoDiscovery {
 
                                         let discovered = DiscoveredModel {
                                             name: display_name,
-                                            path: blob_path,
+                                            path: effective_path,
                                             lora_path: None,
                                             size_bytes: layer.size as u64,
                                             model_type: "Ollama".to_string(),
