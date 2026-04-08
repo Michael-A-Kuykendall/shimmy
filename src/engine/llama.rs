@@ -516,8 +516,11 @@ impl LoadedModel for LlamaLoaded {
             if self.model.is_eog_token(token) {
                 break;
             }
-            // Use Plaintext to avoid re-tokenizing control tokens into special forms
-            let piece = self.model.token_to_str(token, Special::Plaintext)?;
+            // Use token_to_bytes + from_utf8_lossy to handle multi-byte token
+            // boundaries (e.g. qwen3, CJK models) without propagating FromUtf8Error.
+            // token_to_str()?  would crash on any token that lands mid-codepoint.
+            let piece_bytes = self.model.token_to_bytes(token, Special::Plaintext)?;
+            let piece = String::from_utf8_lossy(&piece_bytes).into_owned();
             out.push_str(&piece);
 
             // Check for stop tokens before emitting

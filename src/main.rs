@@ -197,7 +197,7 @@ async fn main() -> anyhow::Result<()> {
             .into(),
         lora_path: std::env::var("SHIMMY_LORA_GGUF").ok().map(Into::into),
         template: Some("chatml".into()),
-        ctx_len: Some(4096),
+        ctx_len: Some(8192),
         n_threads: None,
     });
 
@@ -684,7 +684,7 @@ mod tests {
             base_path: "./models/phi3-mini.gguf".into(),
             lora_path: None,
             template: Some("chatml".into()),
-            ctx_len: Some(4096),
+            ctx_len: Some(8192),
             n_threads: None,
         });
 
@@ -1026,7 +1026,7 @@ mod tests {
             base_path: base_path.into(),
             lora_path,
             template: Some("chatml".into()),
-            ctx_len: Some(4096),
+            ctx_len: Some(8192),
             n_threads: None,
         });
 
@@ -1106,7 +1106,7 @@ mod tests {
                 .into(),
             lora_path: env::var("SHIMMY_LORA_GGUF").ok().map(Into::into),
             template: Some("chatml".into()),
-            ctx_len: Some(4096),
+            ctx_len: Some(8192),
             n_threads: None,
         });
 
