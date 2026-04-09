@@ -560,6 +560,30 @@ impl LoadedModel for LlamaLoaded {
 
         Ok(out)
     }
+
+    fn format_prompt(&self, messages: &[(String, String)]) -> Option<String> {
+        // Read the Jinja chat template embedded in the GGUF metadata.
+        // Returns None if the model has no template, letting callers fall
+        // back to name-based template inference.
+        let tmpl = match self.model.chat_template(None) {
+            Ok(t) => t,
+            Err(_) => return None,
+        };
+        let chat_msgs: Vec<shimmy_llama_cpp_2::model::LlamaChatMessage> = messages
+            .iter()
+            .filter_map(|(role, content)| {
+                shimmy_llama_cpp_2::model::LlamaChatMessage::new(
+                    role.clone(),
+                    content.clone(),
+                )
+                .ok()
+            })
+            .collect();
+        if chat_msgs.is_empty() {
+            return None;
+        }
+        self.model.apply_chat_template(&tmpl, &chat_msgs, true).ok()
+    }
 }
 
 /// Fallback implementation when llama.cpp feature is not enabled

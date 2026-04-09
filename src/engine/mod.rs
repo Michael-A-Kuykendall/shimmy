@@ -137,6 +137,18 @@ pub trait LoadedModel: Send + Sync {
         // Default implementation returns error - vision models should override
         Err(anyhow!("Vision not supported by this model"))
     }
+
+    /// Format a list of (role, content) message pairs into a prompt string
+    /// using the chat template embedded in the model's GGUF metadata.
+    ///
+    /// Returns `None` if the model has no embedded template (e.g. non-llama
+    /// backends), in which case callers should fall back to name-based template
+    /// inference.  Using the embedded template avoids chat-template mismatch
+    /// errors where the wrong format causes models to echo structural tokens
+    /// (e.g. `<|start_header_id|>`) as literal output content.
+    fn format_prompt(&self, _messages: &[(String, String)]) -> Option<String> {
+        None
+    }
 }
 
 pub mod llama;

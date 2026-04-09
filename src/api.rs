@@ -62,18 +62,22 @@ pub async fn generate(
         }
     };
 
-    // Construct prompt
+    // Construct prompt — prefer the template embedded in the GGUF metadata.
     let prompt = if let Some(ms) = &req.messages {
-        let fam = match spec.template.as_deref() {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
-        let pairs = ms
+        let pairs: Vec<(String, String)> = ms
             .iter()
             .map(|m| (m.role.clone(), m.content.clone()))
-            .collect::<Vec<_>>();
-        fam.render(req.system.as_deref(), &pairs, None)
+            .collect();
+        if let Some(native_prompt) = loaded.format_prompt(&pairs) {
+            native_prompt
+        } else {
+            let fam = match spec.template.as_deref() {
+                Some("chatml") => TemplateFamily::ChatML,
+                Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
+                _ => TemplateFamily::OpenChat,
+            };
+            fam.render(req.system.as_deref(), &pairs, None)
+        }
     } else {
         req.prompt.unwrap_or_default()
     };
@@ -181,18 +185,22 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
         return;
     };
 
-    // Build prompt (reuse logic)
+    // Build prompt — prefer the template embedded in the GGUF metadata.
     let prompt = if let Some(ms) = &req.messages {
-        let fam = match spec.template.as_deref() {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
-        let pairs = ms
+        let pairs: Vec<(String, String)> = ms
             .iter()
             .map(|m| (m.role.clone(), m.content.clone()))
-            .collect::<Vec<_>>();
-        fam.render(req.system.as_deref(), &pairs, None)
+            .collect();
+        if let Some(native_prompt) = loaded.format_prompt(&pairs) {
+            native_prompt
+        } else {
+            let fam = match spec.template.as_deref() {
+                Some("chatml") => TemplateFamily::ChatML,
+                Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
+                _ => TemplateFamily::OpenChat,
+            };
+            fam.render(req.system.as_deref(), &pairs, None)
+        }
     } else {
         req.prompt.clone().unwrap_or_default()
     };
