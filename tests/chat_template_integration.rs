@@ -70,9 +70,10 @@ async fn test_short_prompt_produces_output() {
     let loaded = engine.load(&spec).await.expect("model should load");
 
     // format_prompt should work (native template or fallback)
-    let pairs = vec![
-        ("user".to_string(), "What is 2+2? Answer in one word.".to_string()),
-    ];
+    let pairs = vec![(
+        "user".to_string(),
+        "What is 2+2? Answer in one word.".to_string(),
+    )];
     let prompt = loaded
         .format_prompt(&pairs)
         .unwrap_or_else(|| "What is 2+2? Answer in one word.".to_string());
@@ -83,8 +84,16 @@ async fn test_short_prompt_produces_output() {
         .expect("generate should succeed");
 
     assert!(!output.is_empty(), "model should produce non-empty output");
-    assert!(output.len() > 1, "output should be more than 1 char: '{}'", output);
-    eprintln!("Short prompt output ({} chars): {}", output.len(), &output[..output.len().min(200)]);
+    assert!(
+        output.len() > 1,
+        "output should be more than 1 char: '{}'",
+        output
+    );
+    eprintln!(
+        "Short prompt output ({} chars): {}",
+        output.len(),
+        &output[..output.len().min(200)]
+    );
 }
 
 // ── Long prompt: model produces non-empty output ───────────────────────
@@ -107,17 +116,22 @@ async fn test_long_prompt_produces_output() {
         long_context
     );
     let pairs = vec![("user".to_string(), prompt_text.clone())];
-    let prompt = loaded
-        .format_prompt(&pairs)
-        .unwrap_or(prompt_text);
+    let prompt = loaded.format_prompt(&pairs).unwrap_or(prompt_text);
 
     let output = loaded
         .generate(&prompt, test_opts(128), None)
         .await
         .expect("generate should succeed on long prompt");
 
-    assert!(!output.is_empty(), "model should produce output on long prompt");
-    eprintln!("Long prompt output ({} chars): {}", output.len(), &output[..output.len().min(200)]);
+    assert!(
+        !output.is_empty(),
+        "model should produce output on long prompt"
+    );
+    eprintln!(
+        "Long prompt output ({} chars): {}",
+        output.len(),
+        &output[..output.len().min(200)]
+    );
 }
 
 // ── Cached model reuse: second request also works ──────────────────────
@@ -135,19 +149,35 @@ async fn test_cached_model_second_request() {
     // First request
     let loaded1 = engine.load(&spec).await.expect("first load");
     let pairs1 = vec![("user".to_string(), "Say hello.".to_string())];
-    let prompt1 = loaded1.format_prompt(&pairs1).unwrap_or("Say hello.".to_string());
-    let out1 = loaded1.generate(&prompt1, test_opts(32), None).await.expect("first generate");
+    let prompt1 = loaded1
+        .format_prompt(&pairs1)
+        .unwrap_or("Say hello.".to_string());
+    let out1 = loaded1
+        .generate(&prompt1, test_opts(32), None)
+        .await
+        .expect("first generate");
     assert!(!out1.is_empty(), "first request should produce output");
 
     // Second request (should hit cache — no model reload)
     let loaded2 = engine.load(&spec).await.expect("second load (cached)");
     let pairs2 = vec![("user".to_string(), "What is 1+1?".to_string())];
-    let prompt2 = loaded2.format_prompt(&pairs2).unwrap_or("What is 1+1?".to_string());
-    let out2 = loaded2.generate(&prompt2, test_opts(32), None).await.expect("second generate");
-    assert!(!out2.is_empty(), "second request (cached) should produce output");
+    let prompt2 = loaded2
+        .format_prompt(&pairs2)
+        .unwrap_or("What is 1+1?".to_string());
+    let out2 = loaded2
+        .generate(&prompt2, test_opts(32), None)
+        .await
+        .expect("second generate");
+    assert!(
+        !out2.is_empty(),
+        "second request (cached) should produce output"
+    );
 
     // Outputs should be different (different prompts, KV cache cleared)
-    assert_ne!(out1, out2, "different prompts should produce different output");
+    assert_ne!(
+        out1, out2,
+        "different prompts should produce different output"
+    );
     eprintln!("Request 1: {}", &out1[..out1.len().min(100)]);
     eprintln!("Request 2: {}", &out2[..out2.len().min(100)]);
 }
@@ -158,8 +188,7 @@ async fn test_cached_model_second_request() {
 #[ignore]
 async fn test_thinking_model_no_think() {
     // Find a thinking model (qwen3 or cogito)
-    let model = find_ollama_model("qwen3")
-        .or_else(|| find_ollama_model("cogito"));
+    let model = find_ollama_model("qwen3").or_else(|| find_ollama_model("cogito"));
     let Some((name, path)) = model else {
         eprintln!("SKIP: no thinking model (qwen3/cogito) found");
         return;
@@ -211,9 +240,10 @@ async fn test_penalties_affect_output() {
     let spec = test_spec(&name, path);
     let loaded = engine.load(&spec).await.expect("model should load");
 
-    let pairs = vec![
-        ("user".to_string(), "List the numbers 1 through 20, one per line.".to_string()),
-    ];
+    let pairs = vec![(
+        "user".to_string(),
+        "List the numbers 1 through 20, one per line.".to_string(),
+    )];
     let prompt = loaded
         .format_prompt(&pairs)
         .unwrap_or("List the numbers 1 through 20, one per line.".to_string());
@@ -240,8 +270,16 @@ async fn test_penalties_affect_output() {
     assert!(!out_no.is_empty(), "no-penalty output should be non-empty");
     assert!(!out_with.is_empty(), "penalty output should be non-empty");
 
-    eprintln!("No penalty ({} chars): {}", out_no.len(), &out_no[..out_no.len().min(200)]);
-    eprintln!("With penalty ({} chars): {}", out_with.len(), &out_with[..out_with.len().min(200)]);
+    eprintln!(
+        "No penalty ({} chars): {}",
+        out_no.len(),
+        &out_no[..out_no.len().min(200)]
+    );
+    eprintln!(
+        "With penalty ({} chars): {}",
+        out_with.len(),
+        &out_with[..out_with.len().min(200)]
+    );
 
     // With very high penalties, output should be different (more varied/shorter)
     // We can't assert exact content, but lengths should differ
@@ -253,8 +291,7 @@ async fn test_penalties_affect_output() {
 #[tokio::test]
 #[ignore]
 async fn test_native_template_used() {
-    let Some((name, path)) = find_ollama_model("qwen3")
-        .or_else(|| find_ollama_model("gemma3"))
+    let Some((name, path)) = find_ollama_model("qwen3").or_else(|| find_ollama_model("gemma3"))
     else {
         eprintln!("SKIP: no model found");
         return;
@@ -273,7 +310,10 @@ async fn test_native_template_used() {
     eprintln!("Model: {}", name);
     eprintln!("Native template present: {}", native.is_some());
     if let Some(ref prompt) = native {
-        eprintln!("Formatted prompt preview: {}", &prompt[..prompt.len().min(300)]);
+        eprintln!(
+            "Formatted prompt preview: {}",
+            &prompt[..prompt.len().min(300)]
+        );
     }
 
     // All Ollama-pulled GGUF models should have embedded chat templates

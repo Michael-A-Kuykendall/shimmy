@@ -262,13 +262,9 @@ impl InferenceEngine for InferenceEngineAdapter {
         tracing::info!("model cache miss, loading: {}", spec.base_path.display());
         let backend = self.select_backend(spec);
         let loaded: Box<dyn LoadedModel> = match backend {
-            BackendChoice::SafeTensors => {
-                self.safetensors_engine.load(spec).await?
-            }
+            BackendChoice::SafeTensors => self.safetensors_engine.load(spec).await?,
             #[cfg(feature = "mlx")]
-            BackendChoice::MLX => {
-                self.mlx_engine.load(spec).await?
-            }
+            BackendChoice::MLX => self.mlx_engine.load(spec).await?,
             #[cfg(feature = "llama")]
             BackendChoice::Llama => self.llama_engine.load(spec).await?,
             #[cfg(feature = "huggingface")]
@@ -322,7 +318,6 @@ impl LoadedModel for UniversalModelWrapper {
         self.model.generate(prompt, opts, on_token).await
     }
 }
-
 
 #[cfg(test)]
 mod tests {
