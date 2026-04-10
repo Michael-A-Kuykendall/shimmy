@@ -376,6 +376,8 @@ pub async fn process_vision_request(
         top_p: 0.9,
         top_k: 40,
         repeat_penalty: 1.0,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
         seed: None,
         stream: false,
         stop_tokens: vec!["</s>".to_string(), "<|im_end|>".to_string()],

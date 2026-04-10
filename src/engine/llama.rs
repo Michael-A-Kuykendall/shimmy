@@ -1,8 +1,68 @@
 #![allow(clippy::too_many_arguments)]
 use anyhow::Result;
 use async_trait::async_trait;
+use std::collections::HashMap;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
+
+/// Cosine similarity between two strings based on character trigram frequencies.
+///
+/// Returns a value in [0.0, 1.0].  High similarity (>0.85) between consecutive
+/// output chunks indicates the model is generating repetitive content — the
+/// "contraction" phase of a semantic spring where reasoning excursions keep
+/// returning to the same location in meaning-space.
+fn trigram_cosine(a: &str, b: &str) -> f64 {
+    fn trigrams(s: &str) -> HashMap<&str, f64> {
+        let mut counts: HashMap<&str, f64> = HashMap::new();
+        let bytes = s.as_bytes();
+        if bytes.len() < 3 {
+            return counts;
+        }
+        // Use byte-level trigrams for speed; works for ASCII-heavy LLM output
+        for i in 0..bytes.len() - 2 {
+            if let Some(tri) = s.get(i..i + 3) {
+                *counts.entry(tri).or_default() += 1.0;
+            }
+        }
+        counts
+    }
+    let fa = trigrams(a);
+    let fb = trigrams(b);
+    if fa.is_empty() || fb.is_empty() {
+        return 0.0;
+    }
+    let mut dot = 0.0f64;
+    let mut norm_a = 0.0f64;
+    let mut norm_b = 0.0f64;
+    for (k, va) in &fa {
+        norm_a += va * va;
+        if let Some(vb) = fb.get(k) {
+            dot += va * vb;
+        }
+    }
+    for vb in fb.values() {
+        norm_b += vb * vb;
+    }
+    let denom = norm_a.sqrt() * norm_b.sqrt();
+    if denom < 1e-10 {
+        0.0
+    } else {
+        dot / denom
+    }
+}
+
+/// Largest byte offset <= pos that is a valid UTF-8 char boundary.
+/// Walks back at most 3 bytes (max UTF-8 char width), so O(1).
+fn floor_char_boundary(s: &str, pos: usize) -> usize {
+    if pos >= s.len() {
+        return s.len();
+    }
+    let mut p = pos;
+    while !s.is_char_boundary(p) {
+        p -= 1;
+    }
+    p
+}
 
 /// Smart thread detection optimized for inference performance
 /// Matches Ollama's approach: use physical cores with intelligent limits
@@ -493,6 +553,9 @@ impl LoadedModel for LlamaLoaded {
             .ctx
             .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock context: {}", e))?;
+        // Clear KV cache from any prior request — required when the model
+        // is cached and the context is reused across requests.
+        ctx.clear_kv_cache();
         let tokens = self.model.str_to_token(prompt, AddBos::Always)?;
 
         // Create batch with explicit logits configuration
@@ -508,14 +571,45 @@ impl LoadedModel for LlamaLoaded {
             LlamaSampler::temp(opts.temperature),
             LlamaSampler::top_p(opts.top_p, 1),
             LlamaSampler::top_k(opts.top_k),
-            // API changed order: (repeat_last_n, freq_penalty, presence_penalty, penalty)
-            LlamaSampler::penalties(64, 0.0, 0.0, opts.repeat_penalty),
+            // API: (repeat_last_n, freq_penalty, presence_penalty, penalty)
+            LlamaSampler::penalties(
+                64,
+                opts.frequency_penalty,
+                opts.presence_penalty,
+                opts.repeat_penalty,
+            ),
             LlamaSampler::greedy(),
         ])
         .with_tokens(tokens.iter().copied());
 
         let mut out = String::new();
         let mut all_tokens = tokens;
+
+        // Sliding-window KV cache eviction.
+        let n_ctx = ctx.n_ctx() as usize;
+        let evict_trigger = n_ctx * 3 / 4;
+        let evict_count = n_ctx / 4;
+
+        // Repetition detection via character-trigram cosine similarity.
+        //
+        // Every CHECK_INTERVAL tokens, split the last WINDOW_CHARS of output
+        // into two halves and compute character-trigram overlap.  If the
+        // halves are very similar (cosine > SIMILARITY_THRESHOLD), the model
+        // is generating repetitive content.
+        //
+        // This catches both exact repetition (same tokens) and semantic
+        // repetition (same meaning, different words) because phrase-level
+        // paraphrases share most character trigrams.
+        //
+        // The expected signal for degenerate loops is a "spring" pattern:
+        // the model makes an excursion (explores a reasoning path) then
+        // contracts back to the same semantic location.  High trigram
+        // similarity between consecutive windows is the contraction signal.
+        let mut repeat_check_counter: usize = 0;
+        const CHECK_INTERVAL: usize = 64;
+        const WINDOW_CHARS: usize = 600; // last 600 chars, split into 2×300
+        const SIMILARITY_THRESHOLD: f64 = 0.85; // cosine > 0.85 = repetitive
+        const MIN_OUTPUT_FOR_CHECK: usize = 800; // don't check until enough output
 
         for _ in 0..opts.max_tokens {
             // Sample from the last (and only) position with logits
@@ -561,10 +655,55 @@ impl LoadedModel for LlamaLoaded {
                 cb(piece.clone());
             }
 
+            // Repetition detection via character-trigram cosine
+            repeat_check_counter += 1;
+            if repeat_check_counter >= CHECK_INTERVAL && out.len() >= MIN_OUTPUT_FOR_CHECK {
+                repeat_check_counter = 0;
+
+                // Take the last WINDOW_CHARS of output, split into two halves
+                let window_start =
+                    floor_char_boundary(&out, out.len().saturating_sub(WINDOW_CHARS));
+                let window = &out[window_start..];
+                let mid = floor_char_boundary(window, window.len() / 2);
+                let half_a = &window[..mid];
+                let half_b = &window[mid..];
+
+                if !half_a.is_empty() && !half_b.is_empty() {
+                    let sim = trigram_cosine(half_a, half_b);
+                    if sim > SIMILARITY_THRESHOLD {
+                        tracing::warn!(
+                            "Repetition detected: trigram cosine={:.3} between output halves \
+                             (threshold={:.2}) — stopping generation ({} chars, {} tokens)",
+                            sim,
+                            SIMILARITY_THRESHOLD,
+                            out.len(),
+                            all_tokens.len()
+                        );
+                        break;
+                    }
+                }
+            }
+
             let mut step = LlamaBatch::new(1, 1);
             step.add(token, all_tokens.len() as i32, &[0], true)?;
             ctx.decode(&mut step)?;
             all_tokens.push(token);
+
+            // Sliding-window eviction: when KV cache is 75% full, drop
+            // the oldest 25% of entries and shift positions down.
+            if all_tokens.len() >= evict_trigger && evict_count > 0 {
+                let n_evict = evict_count as u32;
+                ctx.clear_kv_cache_seq(Some(0), Some(0), Some(n_evict))
+                    .map_err(|e| anyhow::anyhow!("KV evict rm: {:?}", e))?;
+                ctx.kv_cache_seq_add(0, Some(n_evict), None, -(evict_count as i32))
+                    .map_err(|e| anyhow::anyhow!("KV evict shift: {:?}", e))?;
+                all_tokens.drain(..evict_count);
+                tracing::debug!(
+                    "KV cache eviction: removed {} oldest tokens, {} remain",
+                    evict_count,
+                    all_tokens.len()
+                );
+            }
         }
 
         Ok(out)
@@ -689,5 +828,118 @@ mod tests {
         assert_eq!(spec.name, "valid");
         assert_eq!(spec.ctx_len, 4096);
         assert!(spec.template.is_some());
+    }
+    #[test]
+    fn test_floor_char_boundary_ascii() {
+        let s = "hello world";
+        for i in 0..s.len() {
+            assert_eq!(
+                floor_char_boundary(s, i),
+                i,
+                "ASCII pos {i} should be unchanged"
+            );
+        }
+        assert_eq!(floor_char_boundary(s, s.len()), s.len());
+        assert_eq!(floor_char_boundary(s, s.len() + 10), s.len());
+    }
+
+    #[test]
+    fn test_floor_char_boundary_2byte() {
+        // U+00D7 MULTIPLICATION SIGN: 2 bytes (0xC3 0x97)
+        let s = "ab\u{00D7}cd"; // bytes: a(1) b(1) x(2) c(1) d(1) = 6 total
+        assert_eq!(floor_char_boundary(s, 0), 0); // 'a'
+        assert_eq!(floor_char_boundary(s, 1), 1); // 'b'
+        assert_eq!(floor_char_boundary(s, 2), 2); // start of mult sign
+        assert_eq!(floor_char_boundary(s, 3), 2); // inside mult sign -> back to 2
+        assert_eq!(floor_char_boundary(s, 4), 4); // 'c'
+        assert_eq!(floor_char_boundary(s, 5), 5); // 'd'
+    }
+
+    #[test]
+    fn test_floor_char_boundary_3byte() {
+        // U+1D62 LATIN SUBSCRIPT SMALL LETTER I: 3 bytes (0xE1 0xB5 0xA2)
+        let s = "x\u{1D62}y"; // bytes: x(1) sub_i(3) y(1) = 5 total
+        assert_eq!(floor_char_boundary(s, 0), 0); // 'x'
+        assert_eq!(floor_char_boundary(s, 1), 1); // start of sub_i
+        assert_eq!(floor_char_boundary(s, 2), 1); // inside sub_i -> back to 1
+        assert_eq!(floor_char_boundary(s, 3), 1); // inside sub_i -> back to 1
+        assert_eq!(floor_char_boundary(s, 4), 4); // 'y'
+    }
+
+    #[test]
+    fn test_floor_char_boundary_4byte() {
+        // U+1F600 GRINNING FACE: 4 bytes (0xF0 0x9F 0x98 0x80)
+        let s = "a\u{1F600}b"; // bytes: a(1) emoji(4) b(1) = 6 total
+        assert_eq!(floor_char_boundary(s, 0), 0); // 'a'
+        assert_eq!(floor_char_boundary(s, 1), 1); // start of emoji
+        assert_eq!(floor_char_boundary(s, 2), 1); // inside emoji -> back to 1
+        assert_eq!(floor_char_boundary(s, 3), 1); // inside emoji -> back to 1
+        assert_eq!(floor_char_boundary(s, 4), 1); // inside emoji -> back to 1
+        assert_eq!(floor_char_boundary(s, 5), 5); // 'b'
+    }
+
+    #[test]
+    fn test_floor_char_boundary_edge_cases() {
+        let s = "hello";
+        assert_eq!(floor_char_boundary(s, 0), 0);
+        assert_eq!(floor_char_boundary(s, s.len()), s.len());
+        assert_eq!(floor_char_boundary(s, s.len() + 100), s.len());
+
+        let empty = "";
+        assert_eq!(floor_char_boundary(empty, 0), 0);
+        assert_eq!(floor_char_boundary(empty, 5), 0);
+    }
+
+    #[test]
+    fn test_repetition_detection_multibyte_no_panic() {
+        // Craft a string where byte 300 lands inside a 3-byte char.
+        // This is the exact scenario that crashed Shimmy on Sirius.
+        let prefix = "a".repeat(298); // 298 ASCII bytes
+        let multibyte = "\u{1D62}"; // 3 bytes at positions 298..301
+        let suffix = "b".repeat(600); // enough to exceed MIN_OUTPUT_FOR_CHECK
+        let out = format!("{}{}{}", prefix, multibyte, suffix);
+
+        assert!(
+            out.len() > 800,
+            "test string must exceed MIN_OUTPUT_FOR_CHECK"
+        );
+        assert!(
+            !out.is_char_boundary(300),
+            "byte 300 should be inside the 3-byte char"
+        );
+
+        // Simulate the repetition detection window splitting
+        let window_start = floor_char_boundary(&out, out.len().saturating_sub(600));
+        let window = &out[window_start..];
+        let mid = floor_char_boundary(window, window.len() / 2);
+        let half_a = &window[..mid];
+        let half_b = &window[mid..];
+
+        // Should not panic, and both halves should be non-empty
+        assert!(!half_a.is_empty());
+        assert!(!half_b.is_empty());
+
+        // Verify trigram_cosine also handles multi-byte input
+        let _sim = trigram_cosine(half_a, half_b);
+    }
+
+    #[test]
+    fn test_trigram_cosine_multibyte() {
+        // trigram_cosine uses s.get(i..i+3) which returns None for
+        // invalid boundaries -- verify it produces sane results
+        let a = "the value of \u{03C3} is calculated from \u{03A3}(x\u{1D62} - x\u{0304})\u{00B2}";
+        let b = "the value of \u{03C3} is calculated from \u{03A3}(x\u{1D62} - x\u{0304})\u{00B2}";
+        let sim = trigram_cosine(a, b);
+        assert!(
+            (sim - 1.0).abs() < 1e-6,
+            "identical strings should have cosine ~1.0, got {sim}"
+        );
+
+        let c = "completely different text without any math symbols at all here";
+        let sim2 = trigram_cosine(a, c);
+        assert!(
+            sim2 < 0.5,
+            "dissimilar strings should have low cosine, got {sim2}"
+        );
     }
 }

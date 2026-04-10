@@ -1,12 +1,21 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
 #[cfg(feature = "huggingface")]
 use super::{UniversalEngine, UniversalModel, UniversalModelSpec};
 
-/// Universal adapter that bridges legacy and new engine interfaces
+/// Universal adapter that bridges legacy and new engine interfaces.
+///
+/// Caches loaded models by file path so that repeated requests for the same
+/// model reuse the existing llama.cpp context instead of reloading from disk.
+/// The KV cache is cleared at the start of each generate() call (in the
+/// llama engine) so cached contexts produce correct results.
 pub struct InferenceEngineAdapter {
     #[cfg(feature = "huggingface")]
     huggingface_engine: super::huggingface::HuggingFaceEngine,
@@ -15,7 +24,11 @@ pub struct InferenceEngineAdapter {
     #[cfg(feature = "mlx")]
     mlx_engine: super::mlx::MLXEngine,
     safetensors_engine: super::safetensors_native::SafeTensorsEngine,
-    // Note: loaded_models removed as caching is not currently implemented
+    /// Model cache: base_path → shared loaded model.
+    /// Each cached model holds its native GGUF chat template (read once at
+    /// load time) and a Mutex-guarded llama.cpp context for sequential
+    /// inference.
+    loaded_cache: Arc<RwLock<HashMap<PathBuf, Arc<dyn LoadedModel>>>>,
 }
 
 impl Default for InferenceEngineAdapter {
@@ -34,6 +47,7 @@ impl InferenceEngineAdapter {
             #[cfg(feature = "mlx")]
             mlx_engine: super::mlx::MLXEngine::new(),
             safetensors_engine: super::safetensors_native::SafeTensorsEngine::new(),
+            loaded_cache: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -47,6 +61,7 @@ impl InferenceEngineAdapter {
             #[cfg(feature = "mlx")]
             mlx_engine: super::mlx::MLXEngine::new(),
             safetensors_engine: super::safetensors_native::SafeTensorsEngine::new(),
+            loaded_cache: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -193,26 +208,67 @@ enum BackendChoice {
     SafeTensors,
 }
 
+/// Thin handle returned by `load()`.  Each caller gets its own `Box` but
+/// all handles for the same model share a single `Arc<dyn LoadedModel>`,
+/// which holds the llama.cpp model, context (behind a Mutex), and the
+/// native GGUF chat template.
+struct CachedModelHandle {
+    inner: Arc<dyn LoadedModel>,
+}
+
+#[async_trait]
+impl LoadedModel for CachedModelHandle {
+    async fn generate(
+        &self,
+        prompt: &str,
+        opts: GenOptions,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<String> {
+        self.inner.generate(prompt, opts, on_token).await
+    }
+
+    async fn generate_vision(
+        &self,
+        image_data: &[u8],
+        prompt: &str,
+        opts: GenOptions,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<String> {
+        self.inner
+            .generate_vision(image_data, prompt, opts, on_token)
+            .await
+    }
+
+    fn format_prompt(&self, messages: &[(String, String)]) -> Option<String> {
+        self.inner.format_prompt(messages)
+    }
+}
+
 #[async_trait]
 impl InferenceEngine for InferenceEngineAdapter {
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>> {
-        // Select backend and load model directly (no caching for now to avoid complexity)
+        // Fast path: return cached model if already loaded for this path.
+        {
+            let cache = self.loaded_cache.read().await;
+            if let Some(cached) = cache.get(&spec.base_path) {
+                tracing::debug!("model cache hit: {}", spec.base_path.display());
+                return Ok(Box::new(CachedModelHandle {
+                    inner: Arc::clone(cached),
+                }));
+            }
+        }
+
+        // Cache miss — load model from the appropriate backend.
+        tracing::info!("model cache miss, loading: {}", spec.base_path.display());
         let backend = self.select_backend(spec);
-        match backend {
-            BackendChoice::SafeTensors => {
-                // Use native SafeTensors engine - NO Python dependency!
-                self.safetensors_engine.load(spec).await
-            }
+        let loaded: Box<dyn LoadedModel> = match backend {
+            BackendChoice::SafeTensors => self.safetensors_engine.load(spec).await?,
             #[cfg(feature = "mlx")]
-            BackendChoice::MLX => {
-                // Use MLX engine for Apple Silicon Metal GPU acceleration
-                self.mlx_engine.load(spec).await
-            }
+            BackendChoice::MLX => self.mlx_engine.load(spec).await?,
             #[cfg(feature = "llama")]
-            BackendChoice::Llama => self.llama_engine.load(spec).await,
+            BackendChoice::Llama => self.llama_engine.load(spec).await?,
             #[cfg(feature = "huggingface")]
             BackendChoice::HuggingFace => {
-                // Convert to UniversalModelSpec for huggingface backend (for HF model IDs)
                 let universal_spec = UniversalModelSpec {
                     name: spec.name.clone(),
                     backend: super::ModelBackend::HuggingFace {
@@ -226,11 +282,21 @@ impl InferenceEngine for InferenceEngineAdapter {
                     n_threads: spec.n_threads,
                 };
                 let universal_model = self.huggingface_engine.load(&universal_spec).await?;
-                Ok(Box::new(UniversalModelWrapper {
+                Box::new(UniversalModelWrapper {
                     model: universal_model,
-                }))
+                })
             }
+        };
+
+        // Convert Box<dyn LoadedModel> → Arc<dyn LoadedModel> and cache.
+        // SAFETY: LoadedModel: Send + Sync is enforced by the trait definition.
+        let arc: Arc<dyn LoadedModel> = Arc::from(loaded);
+        {
+            let mut cache = self.loaded_cache.write().await;
+            cache.insert(spec.base_path.clone(), Arc::clone(&arc));
         }
+
+        Ok(Box::new(CachedModelHandle { inner: arc }))
     }
 }
 
@@ -252,9 +318,6 @@ impl LoadedModel for UniversalModelWrapper {
         self.model.generate(prompt, opts, on_token).await
     }
 }
-
-// Note: Cached model references removed as they were unused placeholder code.
-// Future implementation should use Arc<dyn LoadedModel> for proper model sharing.
 
 #[cfg(test)]
 mod tests {

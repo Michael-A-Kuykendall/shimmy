@@ -371,6 +371,8 @@ mod tests {
             top_p: 0.9,
             top_k: 40,
             repeat_penalty: 1.1,
+            frequency_penalty: 0.0,
+            presence_penalty: 0.0,
             seed: Some(42),
             stream: false,
             stop_tokens: Vec::new(),

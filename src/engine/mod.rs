@@ -10,6 +10,8 @@ pub struct GenOptions {
     pub top_p: f32,
     pub top_k: i32,
     pub repeat_penalty: f32,
+    pub frequency_penalty: f32,
+    pub presence_penalty: f32,
     pub seed: Option<u32>,
     pub stream: bool,
     #[serde(default)]
@@ -24,6 +26,8 @@ impl Default for GenOptions {
             top_p: 0.9,
             top_k: 40,
             repeat_penalty: 1.1,
+            frequency_penalty: 0.0,
+            presence_penalty: 0.0,
             seed: None,
             stream: true,
             stop_tokens: Vec::new(),
