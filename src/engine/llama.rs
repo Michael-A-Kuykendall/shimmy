@@ -521,15 +521,18 @@ impl LoadedModel for LlamaLoaded {
         let mut all_tokens = tokens;
 
         // Sliding-window KV cache eviction.
-        // When the KV cache fills to 75% of n_ctx, evict the oldest 25% and
-        // shift remaining positions down.  The model loses attention to
-        // evicted tokens but retains its recent context.  The full output
-        // text is still accumulated in `out` (the caller receives everything
-        // the model generated).  This enables thinking models to reason at
-        // arbitrary length without hitting context limits.
         let n_ctx = ctx.n_ctx() as usize;
-        let evict_trigger = n_ctx * 3 / 4;  // 75% fill triggers eviction
-        let evict_count = n_ctx / 4;         // evict 25% each time
+        let evict_trigger = n_ctx * 3 / 4;
+        let evict_count = n_ctx / 4;
+
+        // Repetition detection: track recent tokens and stop when the model
+        // enters a degenerate loop (same N-gram repeating).  This prevents
+        // wasting minutes of compute on output that will never reach a
+        // conclusion.  The check runs every 128 tokens for efficiency.
+        let mut repeat_check_counter: usize = 0;
+        const REPEAT_CHECK_INTERVAL: usize = 128;
+        const REPEAT_WINDOW: usize = 256;  // look at last 256 tokens
+        const REPEAT_THRESHOLD: usize = 4; // same 8-token sequence 4 times = loop
 
         for _ in 0..opts.max_tokens {
             // Sample from the last (and only) position with logits
@@ -573,6 +576,32 @@ impl LoadedModel for LlamaLoaded {
             // Handle UTF-8 aware token streaming (Issue #139 fix)
             if let Some(cb) = on_token.as_mut() {
                 cb(piece.clone());
+            }
+
+            // Repetition detection: check every REPEAT_CHECK_INTERVAL tokens
+            // whether the last REPEAT_WINDOW tokens contain a repeated N-gram.
+            repeat_check_counter += 1;
+            if repeat_check_counter >= REPEAT_CHECK_INTERVAL && all_tokens.len() > REPEAT_WINDOW {
+                repeat_check_counter = 0;
+                let window = &all_tokens[all_tokens.len() - REPEAT_WINDOW..];
+                // Check for 8-token N-gram repeating REPEAT_THRESHOLD times
+                let ngram_len = 8;
+                if window.len() >= ngram_len * REPEAT_THRESHOLD {
+                    let target = &window[window.len() - ngram_len..];
+                    let mut count = 0usize;
+                    for chunk in window.windows(ngram_len) {
+                        if chunk == target {
+                            count += 1;
+                        }
+                    }
+                    if count >= REPEAT_THRESHOLD {
+                        tracing::warn!(
+                            "Repetition detected: {}-token N-gram repeated {} times in last {} tokens — stopping generation ({} tokens total)",
+                            ngram_len, count, REPEAT_WINDOW, all_tokens.len()
+                        );
+                        break;
+                    }
+                }
             }
 
             let mut step = LlamaBatch::new(1, 1);
