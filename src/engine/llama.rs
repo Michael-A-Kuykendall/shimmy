@@ -493,6 +493,9 @@ impl LoadedModel for LlamaLoaded {
             .ctx
             .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock context: {}", e))?;
+        // Clear KV cache from any prior request — required when the model
+        // is cached and the context is reused across requests.
+        ctx.clear_kv_cache();
         let tokens = self.model.str_to_token(prompt, AddBos::Always)?;
 
         // Create batch with explicit logits configuration
@@ -508,14 +511,25 @@ impl LoadedModel for LlamaLoaded {
             LlamaSampler::temp(opts.temperature),
             LlamaSampler::top_p(opts.top_p, 1),
             LlamaSampler::top_k(opts.top_k),
-            // API changed order: (repeat_last_n, freq_penalty, presence_penalty, penalty)
-            LlamaSampler::penalties(64, 0.0, 0.0, opts.repeat_penalty),
+            // API: (repeat_last_n, freq_penalty, presence_penalty, penalty)
+            LlamaSampler::penalties(64, opts.frequency_penalty, opts.presence_penalty, opts.repeat_penalty),
             LlamaSampler::greedy(),
         ])
         .with_tokens(tokens.iter().copied());
 
         let mut out = String::new();
         let mut all_tokens = tokens;
+
+        // Sliding-window KV cache eviction.
+        // When the KV cache fills to 75% of n_ctx, evict the oldest 25% and
+        // shift remaining positions down.  The model loses attention to
+        // evicted tokens but retains its recent context.  The full output
+        // text is still accumulated in `out` (the caller receives everything
+        // the model generated).  This enables thinking models to reason at
+        // arbitrary length without hitting context limits.
+        let n_ctx = ctx.n_ctx() as usize;
+        let evict_trigger = n_ctx * 3 / 4;  // 75% fill triggers eviction
+        let evict_count = n_ctx / 4;         // evict 25% each time
 
         for _ in 0..opts.max_tokens {
             // Sample from the last (and only) position with logits
@@ -565,6 +579,22 @@ impl LoadedModel for LlamaLoaded {
             step.add(token, all_tokens.len() as i32, &[0], true)?;
             ctx.decode(&mut step)?;
             all_tokens.push(token);
+
+            // Sliding-window eviction: when KV cache is 75% full, drop
+            // the oldest 25% of entries and shift positions down.
+            if all_tokens.len() >= evict_trigger && evict_count > 0 {
+                let n_evict = evict_count as u32;
+                ctx.clear_kv_cache_seq(Some(0), Some(0), Some(n_evict))
+                    .map_err(|e| anyhow::anyhow!("KV evict rm: {:?}", e))?;
+                ctx.kv_cache_seq_add(0, Some(n_evict), None, -(evict_count as i32))
+                    .map_err(|e| anyhow::anyhow!("KV evict shift: {:?}", e))?;
+                all_tokens.drain(..evict_count);
+                tracing::debug!(
+                    "KV cache eviction: removed {} oldest tokens, {} remain",
+                    evict_count,
+                    all_tokens.len()
+                );
+            }
         }
 
         Ok(out)

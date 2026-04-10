@@ -18,6 +18,10 @@ pub struct ChatCompletionRequest {
     #[serde(default)]
     pub top_p: Option<f32>,
     #[serde(default)]
+    pub frequency_penalty: Option<f32>,
+    #[serde(default)]
+    pub presence_penalty: Option<f32>,
+    #[serde(default)]
     pub stop: Option<StopTokens>,
 }
 
@@ -223,6 +227,12 @@ pub async fn chat_completions(
     if let Some(s) = req.stream {
         opts.stream = s;
     }
+    if let Some(fp) = req.frequency_penalty {
+        opts.frequency_penalty = fp;
+    }
+    if let Some(pp) = req.presence_penalty {
+        opts.presence_penalty = pp;
+    }
 
     // Auto-configure stop tokens based on template family
     let mut stop_tokens = fam.stop_tokens();
@@ -397,6 +407,8 @@ mod tests {
             top_p: None,
             stream: Some(false),
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Exercise handler code path (will gracefully fail due to no model)
@@ -474,6 +486,8 @@ mod tests {
             max_tokens: None,
             top_p: None,
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         let _response = chat_completions(State(state), Json(request)).await;
@@ -512,6 +526,8 @@ mod tests {
             max_tokens: Some(100),
             top_p: Some(0.9),
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Exercise streaming path (lines 132-213)
@@ -554,6 +570,8 @@ mod tests {
             max_tokens: Some(50),
             top_p: Some(0.8),
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Exercise non-streaming path (lines 214-244)
@@ -916,6 +934,8 @@ mod tests {
             max_tokens: Some(100),
             top_p: Some(0.9),
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Skip actual model loading in tests - models don't exist
@@ -933,6 +953,8 @@ mod tests {
             max_tokens: Some(50),
             top_p: None,
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Skip actual model loading in tests - models don't exist
@@ -994,6 +1016,8 @@ mod tests {
             max_tokens: None,
             top_p: None,
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         let _response = chat_completions(State(state), Json(invalid_request)).await;
