@@ -1,8 +1,55 @@
 #![allow(clippy::too_many_arguments)]
 use anyhow::Result;
 use async_trait::async_trait;
+use std::collections::HashMap;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
+
+/// Cosine similarity between two strings based on character trigram frequencies.
+///
+/// Returns a value in [0.0, 1.0].  High similarity (>0.85) between consecutive
+/// output chunks indicates the model is generating repetitive content — the
+/// "contraction" phase of a semantic spring where reasoning excursions keep
+/// returning to the same location in meaning-space.
+fn trigram_cosine(a: &str, b: &str) -> f64 {
+    fn trigrams(s: &str) -> HashMap<&str, f64> {
+        let mut counts: HashMap<&str, f64> = HashMap::new();
+        let bytes = s.as_bytes();
+        if bytes.len() < 3 {
+            return counts;
+        }
+        // Use byte-level trigrams for speed; works for ASCII-heavy LLM output
+        for i in 0..bytes.len() - 2 {
+            if let Some(tri) = s.get(i..i + 3) {
+                *counts.entry(tri).or_default() += 1.0;
+            }
+        }
+        counts
+    }
+    let fa = trigrams(a);
+    let fb = trigrams(b);
+    if fa.is_empty() || fb.is_empty() {
+        return 0.0;
+    }
+    let mut dot = 0.0f64;
+    let mut norm_a = 0.0f64;
+    let mut norm_b = 0.0f64;
+    for (k, va) in &fa {
+        norm_a += va * va;
+        if let Some(vb) = fb.get(k) {
+            dot += va * vb;
+        }
+    }
+    for vb in fb.values() {
+        norm_b += vb * vb;
+    }
+    let denom = norm_a.sqrt() * norm_b.sqrt();
+    if denom < 1e-10 {
+        0.0
+    } else {
+        dot / denom
+    }
+}
 
 /// Smart thread detection optimized for inference performance
 /// Matches Ollama's approach: use physical cores with intelligent limits
@@ -525,14 +572,26 @@ impl LoadedModel for LlamaLoaded {
         let evict_trigger = n_ctx * 3 / 4;
         let evict_count = n_ctx / 4;
 
-        // Repetition detection: track recent tokens and stop when the model
-        // enters a degenerate loop (same N-gram repeating).  This prevents
-        // wasting minutes of compute on output that will never reach a
-        // conclusion.  The check runs every 128 tokens for efficiency.
+        // Repetition detection via character-trigram cosine similarity.
+        //
+        // Every CHECK_INTERVAL tokens, split the last WINDOW_CHARS of output
+        // into two halves and compute character-trigram overlap.  If the
+        // halves are very similar (cosine > SIMILARITY_THRESHOLD), the model
+        // is generating repetitive content.
+        //
+        // This catches both exact repetition (same tokens) and semantic
+        // repetition (same meaning, different words) because phrase-level
+        // paraphrases share most character trigrams.
+        //
+        // The expected signal for degenerate loops is a "spring" pattern:
+        // the model makes an excursion (explores a reasoning path) then
+        // contracts back to the same semantic location.  High trigram
+        // similarity between consecutive windows is the contraction signal.
         let mut repeat_check_counter: usize = 0;
-        const REPEAT_CHECK_INTERVAL: usize = 128;
-        const REPEAT_WINDOW: usize = 256;  // look at last 256 tokens
-        const REPEAT_THRESHOLD: usize = 4; // same 8-token sequence 4 times = loop
+        const CHECK_INTERVAL: usize = 64;
+        const WINDOW_CHARS: usize = 600;           // last 600 chars, split into 2×300
+        const SIMILARITY_THRESHOLD: f64 = 0.85;    // cosine > 0.85 = repetitive
+        const MIN_OUTPUT_FOR_CHECK: usize = 800;   // don't check until enough output
 
         for _ in 0..opts.max_tokens {
             // Sample from the last (and only) position with logits
@@ -578,26 +637,35 @@ impl LoadedModel for LlamaLoaded {
                 cb(piece.clone());
             }
 
-            // Repetition detection: check every REPEAT_CHECK_INTERVAL tokens
-            // whether the last REPEAT_WINDOW tokens contain a repeated N-gram.
+            // Repetition detection via character-trigram cosine
             repeat_check_counter += 1;
-            if repeat_check_counter >= REPEAT_CHECK_INTERVAL && all_tokens.len() > REPEAT_WINDOW {
+            if repeat_check_counter >= CHECK_INTERVAL && out.len() >= MIN_OUTPUT_FOR_CHECK {
                 repeat_check_counter = 0;
-                let window = &all_tokens[all_tokens.len() - REPEAT_WINDOW..];
-                // Check for 8-token N-gram repeating REPEAT_THRESHOLD times
-                let ngram_len = 8;
-                if window.len() >= ngram_len * REPEAT_THRESHOLD {
-                    let target = &window[window.len() - ngram_len..];
-                    let mut count = 0usize;
-                    for chunk in window.windows(ngram_len) {
-                        if chunk == target {
-                            count += 1;
-                        }
-                    }
-                    if count >= REPEAT_THRESHOLD {
+
+                // Take the last WINDOW_CHARS of output, split into two halves
+                let window_start = out.len().saturating_sub(WINDOW_CHARS);
+                // Walk forward to a char boundary
+                let window_start = out[window_start..].char_indices()
+                    .next()
+                    .map(|(i, _)| window_start + i)
+                    .unwrap_or(window_start);
+                let window = &out[window_start..];
+                let mid = window.len() / 2;
+                // Find char boundary near midpoint
+                let mid = window[..mid].char_indices()
+                    .next_back()
+                    .map(|(i, _)| i + 1)
+                    .unwrap_or(mid);
+                let half_a = &window[..mid];
+                let half_b = &window[mid..];
+
+                if !half_a.is_empty() && !half_b.is_empty() {
+                    let sim = trigram_cosine(half_a, half_b);
+                    if sim > SIMILARITY_THRESHOLD {
                         tracing::warn!(
-                            "Repetition detected: {}-token N-gram repeated {} times in last {} tokens — stopping generation ({} tokens total)",
-                            ngram_len, count, REPEAT_WINDOW, all_tokens.len()
+                            "Repetition detected: trigram cosine={:.3} between output halves \
+                             (threshold={:.2}) — stopping generation ({} chars, {} tokens)",
+                            sim, SIMILARITY_THRESHOLD, out.len(), all_tokens.len()
                         );
                         break;
                     }
