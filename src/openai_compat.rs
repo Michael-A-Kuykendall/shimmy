@@ -225,7 +225,11 @@ pub async fn chat_completions(
     }
 
     // Auto-configure stop tokens based on template family
-    let mut stop_tokens = fam.stop_tokens();
+    let mut stop_tokens = if !spec.stop_tokens.is_empty() {
+        spec.stop_tokens.clone()
+    } else {
+        fam.stop_tokens()
+    };
     // Merge with user-provided stop tokens if any
     if let Some(user_stop) = req.stop {
         stop_tokens.extend(user_stop.into_vec());
@@ -496,6 +500,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
@@ -532,6 +537,7 @@ mod tests {
             template: Some("llama3".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
@@ -574,6 +580,7 @@ mod tests {
             template: Some("chatml".to_string()),
             ctx_len: 2048,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let fam = match spec_chatml.template.as_deref() {
@@ -591,6 +598,7 @@ mod tests {
             template: Some("llama3".to_string()),
             ctx_len: 2048,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let fam = match spec_llama3.template.as_deref() {
@@ -608,6 +616,7 @@ mod tests {
             template: Some("unknown".to_string()),
             ctx_len: 2048,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let fam = match spec_default.template.as_deref() {
@@ -845,6 +854,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
         registry.register(ModelEntry {
             name: "another-model".to_string(),
@@ -853,6 +863,7 @@ mod tests {
             template: Some("llama3".into()),
             ctx_len: Some(4096),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
@@ -880,6 +891,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(4096),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         registry.register(ModelEntry {
@@ -889,6 +901,7 @@ mod tests {
             template: Some("llama3".into()),
             ctx_len: Some(8192),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());

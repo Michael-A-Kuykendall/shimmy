@@ -281,6 +281,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         assert!(MLXEngine::is_mlx_compatible(&mlx_spec));
@@ -293,6 +294,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         assert!(MLXEngine::is_mlx_compatible(&llama_spec));
@@ -309,6 +311,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         let result = MLXModel::new(&spec).await;

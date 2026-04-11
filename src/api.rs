@@ -674,6 +674,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
@@ -709,6 +710,7 @@ mod tests {
             template: Some("llama3".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
@@ -826,6 +828,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = Box::new(InferenceEngineAdapter::new());
@@ -907,6 +910,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         // The registry might have discovered models too

@@ -52,6 +52,7 @@ mod tests {
             template: Some("chatml".to_string()),
             ctx_len: Some(4096),
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         registry.register(test_entry);
@@ -92,6 +93,7 @@ mod tests {
             template: None,
             ctx_len: None,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         registry1_mut.register(test_entry);
@@ -173,6 +175,7 @@ mod tests {
             template: Some("llama3".to_string()),
             ctx_len: Some(8192),
             n_threads: Some(8),
+            stop_tokens: Vec::new(),
         };
 
         registry_mut.register(production_model);
@@ -215,6 +218,7 @@ mod tests {
             template: Some("chatml".to_string()),
             ctx_len: Some(2048),
             n_threads: Some(2),
+            stop_tokens: Vec::new(),
         };
 
         registry.register(test_model);

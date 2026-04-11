@@ -22,6 +22,50 @@ pub struct Registry {
 // Alias for backward compatibility and mission expectations
 pub type ModelRegistry = Registry;
 
+/// Query Ollama /api/show for per-model stop tokens at model load time.
+fn query_ollama_stop_tokens(model_name: &str) -> Vec<String> {
+    let short = if model_name.contains("registry.ollama.ai/library/") {
+        let p: Vec<&str> = model_name.split('/').collect();
+        if p.len() >= 2 {
+            format!("{}:{}", p[p.len() - 2], p[p.len() - 1])
+        } else {
+            model_name.to_string()
+        }
+    } else {
+        model_name.to_string()
+    };
+    let body = format!(r#"{{"model":"{}"}}"#, short);
+    let out = match std::process::Command::new("curl")
+        .args([
+            "-s",
+            "-m",
+            "3",
+            "http://127.0.0.1:11434/api/show",
+            "-d",
+            &body,
+        ])
+        .output()
+    {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).to_string(),
+        _ => return Vec::new(),
+    };
+    let mut stops = Vec::new();
+    for line in out.split("\\n") {
+        let t = line.trim();
+        if t.starts_with("stop") {
+            if let Some(q1) = t.find('"') {
+                if let Some(q2) = t[q1 + 1..].find('"') {
+                    let tok = &t[q1 + 1..q1 + 1 + q2];
+                    if !tok.is_empty() && !stops.contains(&tok.to_string()) {
+                        stops.push(tok.to_string());
+                    }
+                }
+            }
+        }
+    }
+    stops
+}
+
 impl Registry {
     pub fn new() -> Self {
         Self {
@@ -104,6 +148,7 @@ impl Registry {
                 template: e.template.clone(),
                 ctx_len: e.ctx_len.unwrap_or(8192),
                 n_threads: e.n_threads,
+                stop_tokens: query_ollama_stop_tokens(&e.name),
             });
         }
 
@@ -116,6 +161,7 @@ impl Registry {
                 template: Some(self.infer_template(&discovered.name)),
                 ctx_len: 8192,
                 n_threads: None,
+                stop_tokens: query_ollama_stop_tokens(&discovered.name),
             });
         }
 

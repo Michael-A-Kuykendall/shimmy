@@ -321,6 +321,7 @@ pub async fn process_vision_request(
                 template: Some("chatml".to_string()),
                 ctx_len: 32768,
                 n_threads: None,
+                stop_tokens: Vec::new(),
             },
             "minicpm-v".to_string(),
         )

@@ -669,6 +669,7 @@ mod tests {
             template: Some("chatml".to_string()),
             ctx_len: 2048,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         // let result = engine.load(&spec).await; // Commented to avoid test file dependencies
@@ -684,6 +685,7 @@ mod tests {
             template: Some("chatml".to_string()),
             ctx_len: 4096,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         assert_eq!(spec.name, "valid");

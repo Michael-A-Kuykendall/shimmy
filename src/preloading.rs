@@ -456,6 +456,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         preloader.register_model("test-model".to_string(), spec).await;
@@ -477,6 +478,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         preloader.register_model("cache-test".to_string(), spec).await;
@@ -513,6 +515,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         preloader.register_model("usage-test".to_string(), spec).await;
@@ -548,6 +551,7 @@ mod tests {
                 template: None,
                 ctx_len: 2048,
                 n_threads: Some(4),
+                stop_tokens: Vec::new(),
             };
             preloader.register_model(format!("model-{}", i), spec).await;
         }
@@ -582,6 +586,7 @@ mod tests {
                 template: None,
                 ctx_len: 2048,
                 n_threads: Some(4),
+                stop_tokens: Vec::new(),
             };
             preloader.register_model(format!("candidate-{}", i), spec).await;
         }
@@ -618,6 +623,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         preloader.register_model("clear-test".to_string(), spec).await;
@@ -645,6 +651,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         preloader.register_model("concurrent-test".to_string(), spec).await;

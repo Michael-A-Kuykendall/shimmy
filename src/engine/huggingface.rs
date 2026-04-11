@@ -285,6 +285,7 @@ mod tests {
             template: None,
             ctx_len: 4096,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result = engine.load(&spec).await;
@@ -309,6 +310,7 @@ mod tests {
             template: None,
             ctx_len: 4096,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         // This will fail if Python isn't available, but tests the error path
@@ -401,6 +403,7 @@ mod tests {
             template: None,
             ctx_len: 4096,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result = engine.load(&wrong_backend_spec).await;
@@ -418,6 +421,7 @@ mod tests {
             template: None,
             ctx_len: 4096,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result = engine.load(&valid_spec).await;

@@ -79,6 +79,7 @@ impl TryFrom<UniversalModelSpec> for super::ModelSpec {
                 template: spec.template,
                 ctx_len: spec.ctx_len,
                 n_threads: spec.n_threads,
+                stop_tokens: Vec::new(),
             }),
             _ => Err(anyhow!(
                 "Cannot convert non-GGUF backend to legacy ModelSpec"
@@ -254,6 +255,7 @@ mod tests {
             ctx_len: 4096,
             device: "cpu".to_string(),
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result = engine.load(&spec).await;
@@ -285,6 +287,7 @@ mod tests {
             ctx_len: 2048,
             device: "cuda".to_string(),
             n_threads: Some(2),
+            stop_tokens: Vec::new(),
         };
 
         let result = engine.load(&spec).await;
@@ -312,6 +315,7 @@ mod tests {
             ctx_len: 2048,
             device: "cpu".to_string(),
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result = engine.load(&spec).await;
@@ -337,6 +341,7 @@ mod tests {
             ctx_len: 8192,
             device: "metal".to_string(),
             n_threads: Some(8),
+            stop_tokens: Vec::new(),
         };
 
         let result = engine.load(&spec).await;
@@ -422,6 +427,7 @@ mod tests {
             ctx_len: 4096,
             device: "cpu".to_string(),
             n_threads: Some(8),
+            stop_tokens: Vec::new(),
         };
 
         let result: Result<ModelSpec> = universal_spec.try_into();
@@ -448,6 +454,7 @@ mod tests {
             ctx_len: 2048,
             device: "cuda".to_string(),
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result: Result<ModelSpec> = universal_spec.try_into();
@@ -478,6 +485,7 @@ mod tests {
             ctx_len: 4096,
             device: "cpu".to_string(),
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result: Result<ModelSpec> = universal_spec.try_into();
@@ -499,6 +507,7 @@ mod tests {
             ctx_len: 8192,
             device: "metal".to_string(),
             n_threads: Some(4),
+            stop_tokens: Vec::new(),
         };
 
         let result: Result<ModelSpec> = universal_spec.try_into();
@@ -521,6 +530,7 @@ mod tests {
             ctx_len: 16384,
             device: "cuda".to_string(),
             n_threads: Some(16),
+            stop_tokens: Vec::new(),
         };
 
         let result: Result<ModelSpec> = universal_spec.try_into();
@@ -555,6 +565,7 @@ mod tests {
             ctx_len: 1024,
             device: "cpu".to_string(),
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result: Result<ModelSpec> = universal_spec.try_into();

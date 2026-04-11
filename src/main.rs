@@ -686,6 +686,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(8192),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         // Test engine creation (line 42)
@@ -765,6 +766,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let manual_models = registry.list();
@@ -817,6 +819,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = MockEngine;
@@ -854,6 +857,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = MockEngine;
@@ -904,6 +908,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = MockEngine;
@@ -1028,6 +1033,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(8192),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let models = reg.list();
@@ -1056,6 +1062,7 @@ mod tests {
             template: None,
             ctx_len: None,
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let after_count = registry.list().len();
@@ -1108,6 +1115,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(8192),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine: Box<dyn engine::InferenceEngine> =
@@ -1176,6 +1184,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
         let _engine = MockEngine;
         let state = Arc::new(AppState::new(
@@ -1362,6 +1371,7 @@ mod tests {
             template: None,
             ctx_len: None,
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         // Test maximal entry
@@ -1372,6 +1382,7 @@ mod tests {
             template: Some("llama3".to_string()),
             ctx_len: Some(8192),
             n_threads: Some(8),
+            stop_tokens: Vec::new(),
         });
 
         let models = registry.list();
@@ -1402,6 +1413,7 @@ mod tests {
             template: None,
             ctx_len: 1024,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let loaded = engine.load(&minimal_spec).await.unwrap();
@@ -1598,6 +1610,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = MockEngine;
@@ -1633,6 +1646,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         let engine = MockEngine;
@@ -1742,6 +1756,7 @@ mod tests {
             template: Some("chatml".into()),
             ctx_len: Some(2048),
             n_threads: None,
+            stop_tokens: Vec::new(),
         });
 
         // Create an engine that might fail

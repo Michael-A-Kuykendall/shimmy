@@ -365,6 +365,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: None,
+            stop_tokens: Vec::new(),
         }
     }
 
@@ -410,6 +411,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         let result = manager.load_model("test-model".to_string(), spec).await;
@@ -464,6 +466,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: None,
+            stop_tokens: Vec::new(),
         };
 
         manager

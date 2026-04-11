@@ -269,6 +269,7 @@ mod tests {
             template: None,
             ctx_len: 2048,
             n_threads: None,
+            stop_tokens: Vec::new(),
         }
     }
 

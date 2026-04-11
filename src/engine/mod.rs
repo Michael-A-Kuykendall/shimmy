@@ -75,6 +75,7 @@ pub struct ModelSpec {
     pub template: Option<String>,
     pub ctx_len: usize,
     pub n_threads: Option<i32>,
+    pub stop_tokens: Vec<String>,
 }
 
 #[cfg(feature = "huggingface")]
