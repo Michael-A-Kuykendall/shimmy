@@ -72,6 +72,8 @@ async fn test_chat_completions_model_not_found_response() {
         temperature: None,
         max_tokens: None,
         top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
         stop: None,
     };
 

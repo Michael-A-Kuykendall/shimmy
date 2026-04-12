@@ -493,6 +493,9 @@ impl LoadedModel for LlamaLoaded {
             .ctx
             .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock context: {}", e))?;
+        // Clear KV cache from any prior request — required when the model
+        // is cached and the context is reused across requests.
+        ctx.clear_kv_cache();
         let tokens = self.model.str_to_token(prompt, AddBos::Always)?;
 
         // Create batch with explicit logits configuration
@@ -504,18 +507,52 @@ impl LoadedModel for LlamaLoaded {
         }
         ctx.decode(&mut batch)?;
 
+        // Sampler chain order matches Ollama/llama.cpp defaults: penalties
+        // first (on full vocabulary), then filtering, then temperature, then
+        // probabilistic selection.
+        //
+        // Previous chain had three critical bugs:
+        //   1. Penalty parameters were in wrong order (freq/pres/repeat swapped)
+        //   2. Penalties applied AFTER top-k/top-p (only ~40 candidates)
+        //   3. Greedy final selection (no stochastic escape from loops)
+        let seed = opts.seed.unwrap_or_else(|| {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_millis() as u32)
+                .unwrap_or(42)
+        });
         let mut sampler = LlamaSampler::chain_simple([
-            LlamaSampler::temp(opts.temperature),
-            LlamaSampler::top_p(opts.top_p, 1),
+            // 1. Penalties on full vocabulary — must be first
+            //    API: (penalty_last_n, penalty_repeat, penalty_freq, penalty_present)
+            LlamaSampler::penalties(
+                64,
+                opts.repeat_penalty,
+                opts.frequency_penalty,
+                opts.presence_penalty,
+            ),
+            // 2. DRY: decaying repetition penalty for long-range patterns
+            LlamaSampler::dry(&self.model, 0.8, 1.75, 2, 64, ["\n", ":", "\"", "*"]),
+            // 3. Top-K filtering
             LlamaSampler::top_k(opts.top_k),
-            // API changed order: (repeat_last_n, freq_penalty, presence_penalty, penalty)
-            LlamaSampler::penalties(64, 0.0, 0.0, opts.repeat_penalty),
-            LlamaSampler::greedy(),
+            // 4. Nucleus (top-p) filtering
+            LlamaSampler::top_p(opts.top_p, 1),
+            // 5. Temperature scaling
+            LlamaSampler::temp(opts.temperature),
+            // 6. Probabilistic selection — allows stochastic escape from loops
+            LlamaSampler::dist(seed),
         ])
         .with_tokens(tokens.iter().copied());
 
         let mut out = String::new();
+        let num_prompt_tokens = tokens.len();
         let mut all_tokens = tokens;
+
+        // Sliding-window KV cache eviction: preserve prompt tokens (system
+        // prompt + user message) and only evict from generated output.
+        // Ollama uses numKeep to protect instruction context; we mirror that.
+        let n_ctx = ctx.n_ctx() as usize;
+        let evict_trigger = n_ctx * 3 / 4;
+        let evict_count = n_ctx / 4;
 
         for _ in 0..opts.max_tokens {
             // Sample from the last (and only) position with logits
@@ -541,8 +578,6 @@ impl LoadedModel for LlamaLoaded {
                 // Remove the stop token from the output, ensuring UTF-8 validity
                 for stop_token in &opts.stop_tokens {
                     if let Some(pos) = out.rfind(stop_token) {
-                        // Find the character boundary before the stop token
-                        // This prevents truncating in the middle of multi-byte Unicode characters
                         let truncate_pos = out
                             .char_indices()
                             .take_while(|(byte_pos, _)| *byte_pos <= pos)
@@ -565,6 +600,32 @@ impl LoadedModel for LlamaLoaded {
             step.add(token, all_tokens.len() as i32, &[0], true)?;
             ctx.decode(&mut step)?;
             all_tokens.push(token);
+
+            // Sliding-window eviction: when KV cache is 75% full, drop the
+            // oldest generated tokens while preserving the prompt (system +
+            // user message).  Previous code evicted from position 0, which
+            // destroyed the system prompt and caused the model to lose all
+            // instruction context.
+            if all_tokens.len() >= evict_trigger && evict_count > 0 {
+                // Never evict into the prompt region
+                let evictable = all_tokens.len() - num_prompt_tokens;
+                let actual_evict = evict_count.min(evictable);
+                if actual_evict > 0 {
+                    let start = num_prompt_tokens as u32;
+                    let end = start + actual_evict as u32;
+                    ctx.clear_kv_cache_seq(Some(0), Some(start), Some(end))
+                        .map_err(|e| anyhow::anyhow!("KV evict rm: {:?}", e))?;
+                    ctx.kv_cache_seq_add(0, Some(end), None, -(actual_evict as i32))
+                        .map_err(|e| anyhow::anyhow!("KV evict shift: {:?}", e))?;
+                    all_tokens.drain(num_prompt_tokens..num_prompt_tokens + actual_evict);
+                    tracing::debug!(
+                        "KV cache eviction: removed {} tokens after prompt ({} kept, {} remain)",
+                        actual_evict,
+                        num_prompt_tokens,
+                        all_tokens.len()
+                    );
+                }
+            }
         }
 
         Ok(out)

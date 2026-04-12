@@ -100,6 +100,8 @@ async fn test_chat_completions_error_handling_real() {
         temperature: Some(0.7),
         max_tokens: Some(50),
         top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
         stop: None,
     };
 
@@ -138,6 +140,8 @@ fn test_chat_completions_model_loading_failure() {
         temperature: Some(0.7),
         max_tokens: Some(100),
         top_p: Some(0.9),
+        frequency_penalty: None,
+        presence_penalty: None,
         stop: None,
     };
 
@@ -172,6 +176,8 @@ fn test_system_message_handling() {
         temperature: Some(0.5),
         max_tokens: Some(50),
         top_p: Some(0.8),
+        frequency_penalty: None,
+        presence_penalty: None,
         stop: None,
     };
 
@@ -200,6 +206,8 @@ fn test_streaming_request_processing() {
         temperature: Some(0.3),
         max_tokens: Some(50),
         top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
         stop: None,
     };
 
@@ -310,6 +318,8 @@ fn test_generation_options_parsing() {
         temperature: Some(0.8),
         max_tokens: Some(150),
         top_p: Some(0.95),
+        frequency_penalty: None,
+        presence_penalty: None,
         stop: None,
     };
 
@@ -332,6 +342,8 @@ fn test_generation_options_parsing() {
         temperature: None,
         max_tokens: None,
         top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
         stop: None,
     };
 

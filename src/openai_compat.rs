@@ -18,6 +18,10 @@ pub struct ChatCompletionRequest {
     #[serde(default)]
     pub top_p: Option<f32>,
     #[serde(default)]
+    pub frequency_penalty: Option<f32>,
+    #[serde(default)]
+    pub presence_penalty: Option<f32>,
+    #[serde(default)]
     pub stop: Option<StopTokens>,
 }
 
@@ -223,6 +227,12 @@ pub async fn chat_completions(
     if let Some(s) = req.stream {
         opts.stream = s;
     }
+    if let Some(fp) = req.frequency_penalty {
+        opts.frequency_penalty = fp;
+    }
+    if let Some(pp) = req.presence_penalty {
+        opts.presence_penalty = pp;
+    }
 
     // Auto-configure stop tokens based on template family
     let mut stop_tokens = fam.stop_tokens();
@@ -395,6 +405,8 @@ mod tests {
             temperature: None,
             max_tokens: None,
             top_p: None,
+            frequency_penalty: None,
+            presence_penalty: None,
             stream: Some(false),
             stop: None,
         };
@@ -473,6 +485,8 @@ mod tests {
             temperature: None,
             max_tokens: None,
             top_p: None,
+            frequency_penalty: None,
+            presence_penalty: None,
             stop: None,
         };
 
@@ -511,6 +525,8 @@ mod tests {
             temperature: Some(0.7),
             max_tokens: Some(100),
             top_p: Some(0.9),
+            frequency_penalty: None,
+            presence_penalty: None,
             stop: None,
         };
 
@@ -553,6 +569,8 @@ mod tests {
             temperature: Some(0.5),
             max_tokens: Some(50),
             top_p: Some(0.8),
+            frequency_penalty: None,
+            presence_penalty: None,
             stop: None,
         };
 
@@ -915,6 +933,8 @@ mod tests {
             temperature: Some(0.7),
             max_tokens: Some(100),
             top_p: Some(0.9),
+            frequency_penalty: None,
+            presence_penalty: None,
             stop: None,
         };
 
@@ -932,6 +952,8 @@ mod tests {
             temperature: Some(0.5),
             max_tokens: Some(50),
             top_p: None,
+            frequency_penalty: None,
+            presence_penalty: None,
             stop: None,
         };
 
@@ -993,6 +1015,8 @@ mod tests {
             temperature: None,
             max_tokens: None,
             top_p: None,
+            frequency_penalty: None,
+            presence_penalty: None,
             stop: None,
         };
 
