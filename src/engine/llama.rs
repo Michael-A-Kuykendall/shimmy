@@ -4,6 +4,41 @@ use async_trait::async_trait;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
+/// Character-trigram diversity: unique trigrams / total trigrams over a string.
+/// Used to detect degenerate repetitive output.  Healthy text > 0.25; loops < 0.10.
+fn trigram_diversity(s: &str) -> f64 {
+    let bytes = s.as_bytes();
+    if bytes.len() < 3 {
+        return 1.0;
+    }
+    let mut seen = std::collections::HashSet::new();
+    let mut total: usize = 0;
+    for i in 0..bytes.len() - 2 {
+        if let Some(tri) = s.get(i..i + 3) {
+            seen.insert(tri);
+            total += 1;
+        }
+    }
+    if total == 0 {
+        1.0
+    } else {
+        seen.len() as f64 / total as f64
+    }
+}
+
+/// Walk back from pos to nearest valid UTF-8 char boundary.  Prevents panics
+/// when the detection window boundary lands inside a multi-byte char.
+fn floor_char_boundary(s: &str, pos: usize) -> usize {
+    if pos >= s.len() {
+        return s.len();
+    }
+    let mut p = pos;
+    while !s.is_char_boundary(p) {
+        p -= 1;
+    }
+    p
+}
+
 /// Smart thread detection optimized for inference performance
 /// Matches Ollama's approach: use physical cores with intelligent limits
 #[allow(dead_code)]
@@ -544,6 +579,14 @@ impl LoadedModel for LlamaLoaded {
         .with_tokens(tokens.iter().copied());
 
         let mut out = String::new();
+
+        // Repetition detection via trigram diversity (every CHECK_INTERVAL tokens,
+        // measure unique/total char trigrams in the last RECENT_CHARS; stop if low).
+        let mut repeat_check_counter: usize = 0;
+        const CHECK_INTERVAL: usize = 32;
+        const RECENT_CHARS: usize = 400;
+        const DIVERSITY_THRESHOLD: f64 = 0.20;
+        const MIN_OUTPUT_FOR_CHECK: usize = 600;
         let num_prompt_tokens = tokens.len();
         let mut all_tokens = tokens;
 
@@ -594,6 +637,29 @@ impl LoadedModel for LlamaLoaded {
             // Handle UTF-8 aware token streaming (Issue #139 fix)
             if let Some(cb) = on_token.as_mut() {
                 cb(piece.clone());
+            }
+
+            // Repetition detection via trigram diversity of recent output
+            repeat_check_counter += 1;
+            if repeat_check_counter >= CHECK_INTERVAL && out.len() >= MIN_OUTPUT_FOR_CHECK {
+                repeat_check_counter = 0;
+
+                let recent_start =
+                    floor_char_boundary(&out, out.len().saturating_sub(RECENT_CHARS));
+                let recent = &out[recent_start..];
+                let diversity = trigram_diversity(recent);
+
+                if diversity < DIVERSITY_THRESHOLD {
+                    tracing::warn!(
+                        "Repetition detected: trigram diversity={:.3} in last {} chars                          (threshold={:.2}) — stopping generation ({} chars, {} tokens)",
+                        diversity,
+                        recent.len(),
+                        DIVERSITY_THRESHOLD,
+                        out.len(),
+                        all_tokens.len()
+                    );
+                    break;
+                }
             }
 
             let mut step = LlamaBatch::new(1, 1);
@@ -750,5 +816,100 @@ mod tests {
         assert_eq!(spec.name, "valid");
         assert_eq!(spec.ctx_len, 4096);
         assert!(spec.template.is_some());
+    }
+
+
+    #[test]
+    fn test_floor_char_boundary_ascii() {
+        let s = "hello world";
+        for i in 0..s.len() {
+            assert_eq!(
+                floor_char_boundary(s, i),
+                i,
+                "ASCII pos {i} should be unchanged"
+            );
+        }
+        assert_eq!(floor_char_boundary(s, s.len()), s.len());
+        assert_eq!(floor_char_boundary(s, s.len() + 10), s.len());
+    }
+
+    #[test]
+    fn test_floor_char_boundary_2byte() {
+        // U+00D7 MULTIPLICATION SIGN: 2 bytes (0xC3 0x97)
+        let s = "ab\u{00D7}cd"; // bytes: a(1) b(1) x(2) c(1) d(1) = 6 total
+        assert_eq!(floor_char_boundary(s, 0), 0); // 'a'
+        assert_eq!(floor_char_boundary(s, 1), 1); // 'b'
+        assert_eq!(floor_char_boundary(s, 2), 2); // start of mult sign
+        assert_eq!(floor_char_boundary(s, 3), 2); // inside mult sign -> back to 2
+        assert_eq!(floor_char_boundary(s, 4), 4); // 'c'
+        assert_eq!(floor_char_boundary(s, 5), 5); // 'd'
+    }
+
+    #[test]
+    fn test_floor_char_boundary_3byte() {
+        // U+1D62 LATIN SUBSCRIPT SMALL LETTER I: 3 bytes (0xE1 0xB5 0xA2)
+        let s = "x\u{1D62}y"; // bytes: x(1) sub_i(3) y(1) = 5 total
+        assert_eq!(floor_char_boundary(s, 0), 0); // 'x'
+        assert_eq!(floor_char_boundary(s, 1), 1); // start of sub_i
+        assert_eq!(floor_char_boundary(s, 2), 1); // inside sub_i -> back to 1
+        assert_eq!(floor_char_boundary(s, 3), 1); // inside sub_i -> back to 1
+        assert_eq!(floor_char_boundary(s, 4), 4); // 'y'
+    }
+
+    #[test]
+    fn test_floor_char_boundary_4byte() {
+        // U+1F600 GRINNING FACE: 4 bytes (0xF0 0x9F 0x98 0x80)
+        let s = "a\u{1F600}b"; // bytes: a(1) emoji(4) b(1) = 6 total
+        assert_eq!(floor_char_boundary(s, 0), 0); // 'a'
+        assert_eq!(floor_char_boundary(s, 1), 1); // start of emoji
+        assert_eq!(floor_char_boundary(s, 2), 1); // inside emoji -> back to 1
+        assert_eq!(floor_char_boundary(s, 3), 1); // inside emoji -> back to 1
+        assert_eq!(floor_char_boundary(s, 4), 1); // inside emoji -> back to 1
+        assert_eq!(floor_char_boundary(s, 5), 5); // 'b'
+    }
+
+    #[test]
+    fn test_floor_char_boundary_edge_cases() {
+        let s = "hello";
+        assert_eq!(floor_char_boundary(s, 0), 0);
+        assert_eq!(floor_char_boundary(s, s.len()), s.len());
+        assert_eq!(floor_char_boundary(s, s.len() + 100), s.len());
+
+        let empty = "";
+        assert_eq!(floor_char_boundary(empty, 0), 0);
+        assert_eq!(floor_char_boundary(empty, 5), 0);
+    }
+
+    #[test]
+    fn test_repetition_detection_multibyte_no_panic() {
+        // Craft a string where byte 300 lands inside a 3-byte char.
+        // This is the exact scenario that crashed Shimmy on Sirius.
+        let prefix = "a".repeat(298); // 298 ASCII bytes
+        let multibyte = "\u{1D62}"; // 3 bytes at positions 298..301
+        let suffix = "b".repeat(600); // enough to exceed MIN_OUTPUT_FOR_CHECK
+        let out = format!("{}{}{}", prefix, multibyte, suffix);
+
+        assert!(
+            out.len() > 800,
+            "test string must exceed MIN_OUTPUT_FOR_CHECK"
+        );
+        assert!(
+            !out.is_char_boundary(300),
+            "byte 300 should be inside the 3-byte char"
+        );
+
+        // Simulate the repetition detection window splitting
+        let window_start = floor_char_boundary(&out, out.len().saturating_sub(600));
+        let window = &out[window_start..];
+        let mid = floor_char_boundary(window, window.len() / 2);
+        let half_a = &window[..mid];
+        let half_b = &window[mid..];
+
+        // Should not panic, and both halves should be non-empty
+        assert!(!half_a.is_empty());
+        assert!(!half_b.is_empty());
+
+        // Verify trigram_diversity also handles multi-byte input
+        let _div = trigram_diversity(half_a);
     }
 }
