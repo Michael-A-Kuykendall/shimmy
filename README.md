@@ -34,7 +34,42 @@
 
 Shimmy is a **single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
 
-**🎉 NEW in v1.9.0**: One download, all GPU backends included! No compilation, no backend confusion - just download and run.
+**🎉 NEW in v1.10.0**: Shimmy now runs on [Airframe](#-airframe-engine), a pure-Rust WGSL GPU engine. No C++ toolchain, no backend flags, no compilation required. The llama.cpp path is [historically parked](#-llama-cpp-historical-note) and remains available via `--legacy`.
+
+## 🔥 Airframe Engine
+
+Starting in v1.10.0, Shimmy's default inference engine is **Airframe** — a pure-Rust WebGPU (WGSL) transformer runtime built from scratch.
+
+**Why this matters:**
+- No C++ toolchain required — Rust only, top to bottom
+- F32 precision throughout for deterministic, high-quality output
+- WGSL compute shaders work on any GPU via WebGPU (NVIDIA, AMD, Intel, integrated)
+- Model spec auto-derived from GGUF metadata — no hardcoded per-model constants
+- YaRN RoPE scaling for extended context: set `SHIMMY_MAX_CTX=8192` and go
+
+**Quick start with Airframe (v1.10.0+):**
+```bash
+# Set your model path and start serving
+SHIMMY_BASE_GGUF=/path/to/TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf ./shimmy serve
+
+# Extended context (4096 tokens, YaRN RoPE enabled automatically)
+SHIMMY_BASE_GGUF=/path/to/model.gguf SHIMMY_MAX_CTX=4096 ./shimmy serve
+```
+
+## ⚠️ llama.cpp: Historical Note
+
+The llama.cpp inference backend is **historically parked** as of v1.10.0. It is not deleted and continues to work, but it is no longer the default and will not receive new features.
+
+**Everything TinyLlama could do via llama.cpp works identically through Airframe.** As new model families are supported, they will be added to the Airframe engine first.
+
+To opt back to llama.cpp:
+```bash
+# Via CLI flag
+./shimmy serve --legacy --model-path /path/to/model.gguf
+
+# Via environment variable
+SHIMMY_ENGINE_BACKEND=llama ./shimmy serve --model-path /path/to/model.gguf
+```
 
 ## Developer Tools
 
@@ -43,27 +78,23 @@ Whether you're forking Shimmy or integrating it as a service, we provide complet
 ### Try it in 30 seconds
 
 ```bash
-# 1) Download pre-built binary (includes all GPU backends)
+# 1) Download pre-built binary
 # Windows:
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
-./shimmy.exe serve &
+set SHIMMY_BASE_GGUF=C:\path\to\model.gguf && ./shimmy.exe serve &
 
-# Linux:
+# Linux / macOS:
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64 -o shimmy && chmod +x shimmy
-./shimmy serve &
+SHIMMY_BASE_GGUF=/path/to/model.gguf ./shimmy serve &
 
-# macOS (Apple Silicon):
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
-./shimmy serve &
-
-# 2) See models and pick one
+# 2) See registered models
 ./shimmy list
 
 # 3) Smoke test the OpenAI API
 curl -s http://127.0.0.1:11435/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{
-        "model":"REPLACE_WITH_MODEL_FROM_list",
+        "model":"tinyllama-1.1b",
         "messages":[{"role":"user","content":"Say hi in 5 words."}],
         "max_tokens":32
       }' | jq -r '.choices[0].message.content'
@@ -125,22 +156,17 @@ print(resp.choices[0].message.content)
 
 ## 🧠 Advanced MOE (Mixture of Experts) Support
 
-**Run 70B+ models on consumer hardware** with intelligent CPU/GPU hybrid processing:
+> **Note**: MOE CPU offloading is available via the **llama.cpp legacy path** (`--legacy` flag or `SHIMMY_ENGINE_BACKEND=llama`). Airframe (the default engine in v2.0) does not yet support MoE models.
+
+**Run 70B+ models on consumer hardware** with intelligent CPU/GPU hybrid processing (legacy path):
 
 - **🔄 CPU MOE Offloading**: Automatically distribute model layers across CPU and GPU
 - **🧮 Intelligent Layer Placement**: Optimizes which layers run where for maximum performance
 - **💾 Memory Efficiency**: Fit larger models in limited VRAM by using system RAM strategically
-- **⚡ Hybrid Acceleration**: Get GPU speed where it matters most, CPU reliability everywhere else
-- **🎛️ Configurable**: `--cpu-moe` and `--n-cpu-moe` flags for fine control
 
 ```bash
-# Enable MOE CPU offloading during installation
-cargo install shimmy --features moe
-
-# Run with MOE hybrid processing
-shimmy serve --cpu-moe --n-cpu-moe 8
-
-# Automatically balances: GPU layers (fast) + CPU layers (memory-efficient)
+# Use llama.cpp legacy path for MoE models
+shimmy serve --legacy --cpu-moe --n-cpu-moe 8
 ```
 
 **Perfect for**: Large models (70B+), limited VRAM systems, cost-effective inference
@@ -343,10 +369,8 @@ Point your development tools to the displayed port — VSCode Copilot, Cursor, C
 ## 📦 Download & Install
 
 ### Package Managers
-- **Rust**: [`cargo install shimmy --features moe`](https://crates.io/crates/shimmy) *(recommended)*
-- **Rust (basic)**: [`cargo install shimmy`](https://crates.io/crates/shimmy)
+- **Rust**: [`cargo install shimmy`](https://crates.io/crates/shimmy) *(default Airframe engine, recommended)*
 - **VS Code**: [Shimmy Extension](https://marketplace.visualstudio.com/items?itemName=targetedwebresults.shimmy-vscode)
-- **Windows MSVC**: Uses `shimmy-llama-cpp-2` packages for better compatibility
 - **npm**: `npm install -g shimmy-js` *(planned)*
 - **Python**: `pip install shimmy` *(planned)*
 
@@ -368,10 +392,8 @@ cargo install shimmy
 
 **✅ Verified working:**
 - Intel and Apple Silicon Macs
-- Metal GPU acceleration (automatic)
-- MLX native acceleration for Apple Silicon
+- Metal GPU acceleration via wgpu (automatic)
 - Xcode 17+ compatibility
-- All LoRA adapter features
 
 ## Integration Examples
 
@@ -418,20 +440,22 @@ I built Shimmy to retain privacy-first control on my AI development and keep thi
 
 ### CLI Commands
 ```bash
-shimmy serve                    # Start server (auto port allocation)
-shimmy serve --bind 127.0.0.1:8080  # Manual port binding
-shimmy serve --cpu-moe --n-cpu-moe 8  # Enable MOE CPU offloading
-shimmy list                     # Show available models (LLM-filtered)
-shimmy discover                 # Refresh model discovery
-shimmy generate --name X --prompt "Hi"  # Test generation
-shimmy probe model-name         # Verify model loads
-shimmy gpu-info                 # Show GPU backend status
+shimmy serve                              # Start server (auto port allocation)
+shimmy serve --bind 127.0.0.1:8080        # Manual port binding
+shimmy serve --gpu-backend auto           # GPU auto-detect (default)
+shimmy list                               # Show available models
+shimmy discover                           # Refresh model discovery
+shimmy generate --name X --prompt "Hi"   # Test generation
+shimmy probe model-name                   # Verify model loads
+
+# Legacy llama.cpp path only:
+shimmy serve --legacy --cpu-moe --n-cpu-moe 8  # MOE hybrid CPU/GPU (legacy)
 ```
 
 ## Technical Architecture
 
 - **Rust + Tokio**: Memory-safe, async performance
-- **llama.cpp backend**: Industry-standard GGUF inference
+- **Airframe engine**: Pure-Rust WGSL GPU inference — no C++ toolchain, deterministic output, GGUF-native
 - **OpenAI API compatibility**: Drop-in replacement
 - **Dynamic port management**: Zero conflicts, auto-allocation
 - **Zero-config auto-discovery**: Just works™
