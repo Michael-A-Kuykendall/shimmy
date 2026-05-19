@@ -28,23 +28,23 @@ Shimmy is a sub-5MB, zero-config, OpenAI-compatible inference server targeting t
 - ✅ GGUF model auto-discovery from HuggingFace cache
 - ✅ VS Code extension integration
 - ✅ WebSocket streaming support
-- ✅ LoRA adapter foundation
+- ✅ LoRA adapter foundation (llama.cpp path)
+- ✅ **Airframe engine** — pure-Rust WGSL GPU inference, shipped in v2.0.0
+  - Deterministic GPU output, GGUF-native spec, YaRN RoPE extended context
+  - No CUDA toolkit or Vulkan SDK required; wgpu handles adapter selection
 
-## 🎯 Q4 2025 Milestones
-- [ ] **Enterprise Embeddings** - `/v1/embeddings` endpoint (targeting RAG workloads)
-- [ ] **Sub-50ms Startup** - Micro-benchmarking and optimization
-- [ ] **Model Marketplace** - Discovery improvements with popularity rankings
-- [ ] **Container-First** - Docker packaging and multi-platform binaries
-- [ ] **Enterprise Analytics** - Optional usage metrics and monitoring hooks
-- [ ] **10,000 User Milestone** - Community growth and feedback integration
+## 🎯 Q1–Q2 2026 Milestones
+- [ ] **Stop tokens from GGUF metadata** — read `tokenizer.ggml.eos_token_id` natively
+- [ ] **SafeTensors support** — ingest `.safetensors` model checkpoints directly
+- [ ] **Multi-model serving** — load balancing across multiple active models
+- [ ] **Enterprise Embeddings** — `/v1/embeddings` endpoint targeting RAG workloads
+- [ ] **Sub-50ms startup** — benchmarking and initialization optimization
 
 ## 🚀 2026 Strategic Initiatives
-- [ ] **Shimmy Console** - Terminal UI frontend with retro aesthetics and advanced controls
-- [ ] **Proprietary Integration** - Enhanced inference capabilities via custom Rust toolchain
-- [ ] **Developer Experience Suite** - Integrated development environment for AI workflows
-- [ ] **Multi-Model Orchestration** - Load balancing across multiple models
-- [ ] **Shimmy Cloud** - Enterprise cloud deployment and management platform
-- [ ] **Fortune 500 Adoption** - Target enterprise development teams
+- [ ] **Shimmy Console** — terminal UI frontend with retro aesthetics and advanced controls
+- [ ] **Developer Experience Suite** — integrated development environment for AI workflows
+- [ ] **Multi-Model Orchestration** — load balancing across multiple models
+- [ ] **Shimmy Cloud** — enterprise cloud deployment and management platform
 
 ## 🌟 Long-Term Vision (2027+)
 
