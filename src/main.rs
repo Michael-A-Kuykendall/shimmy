@@ -167,6 +167,10 @@ fn airframe_engine_selected(legacy: bool) -> bool {
     if legacy {
         return false;
     }
+    // Without the airframe feature compiled in, always use the adapter path.
+    if !cfg!(feature = "airframe") {
+        return false;
+    }
     // Default to Airframe. Only opt out via --legacy flag or SHIMMY_ENGINE_BACKEND=llama
     std::env::var("SHIMMY_ENGINE_BACKEND")
         .or_else(|_| std::env::var("SHIMMY_EXPERIMENTAL_BACKEND"))
@@ -221,7 +225,20 @@ async fn main() -> anyhow::Result<()> {
 
     // Choose the execution engine once at startup.
     let engine: Box<dyn engine::InferenceEngine> = if airframe_engine_selected(cli.legacy) {
-        Box::new(engine::airframe::AirframeEngine::new())
+        #[cfg(feature = "airframe")]
+        {
+            Box::new(engine::airframe::AirframeEngine::new())
+        }
+        #[cfg(not(feature = "airframe"))]
+        {
+            // Airframe feature not compiled in — fall back to adapter for this build.
+            // Release binaries always include the airframe feature.
+            tracing::warn!("Airframe engine selected but not compiled in; falling back to adapter");
+            let adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(
+                cli.gpu_backend.as_deref(),
+            );
+            Box::new(adapter)
+        }
     } else {
         #[cfg(feature = "llama")]
         {

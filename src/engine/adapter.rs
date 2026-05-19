@@ -1,7 +1,9 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
+use super::{InferenceEngine, LoadedModel, ModelSpec};
+#[cfg(feature = "huggingface")]
+use super::GenOptions;
 
 #[cfg(feature = "huggingface")]
 use super::{UniversalEngine, UniversalModel, UniversalModelSpec};
@@ -90,11 +92,19 @@ impl InferenceEngineAdapter {
         }
 
         // SECOND: Check for HuggingFace model IDs (format: "org/model-name")
-        #[cfg(feature = "huggingface")]
-        {
-            if path_str.contains('/') && !path_str.contains('\\') && !path_str.contains('.') {
-                // Looks like a HuggingFace model ID (has slash, no backslash, no file extension)
+        // This check runs regardless of feature flags to prevent false positives
+        // in the GGUF name-pattern check below.
+        if path_str.contains('/') && !path_str.contains('\\') && !path_str.contains('.') {
+            // Looks like a HuggingFace model ID (has slash, no backslash, no file extension)
+            #[cfg(feature = "huggingface")]
+            {
                 return BackendChoice::HuggingFace;
+            }
+            #[cfg(not(feature = "huggingface"))]
+            {
+                // HuggingFace ID detected but HF feature not compiled in — SafeTensors is the
+                // closest stateless fallback; Airframe handles the real inference path.
+                return BackendChoice::SafeTensors;
             }
         }
 
