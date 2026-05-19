@@ -414,9 +414,14 @@ mod regression_tests {
     fn test_template_inference_regression() {
         let registry = Registry::new();
 
-        // Test template inference for different model types
+        // Test template inference for different model types.
+        // Note: llama-7b-chat is a Llama 2 model — it correctly uses chatml, NOT the llama3
+        // template (which requires Llama 3's special token format). Only explicit Llama 3
+        // model names (containing "llama-3", "llama3", or "meta-llama-3") get the llama3 template.
         let test_cases = vec![
-            ("llama-7b-chat", "llama3"),
+            ("llama-7b-chat", "chatml"),         // Llama 2 → chatml
+            ("llama3-8b-instruct", "llama3"),    // Llama 3 → llama3
+            ("meta-llama-3-8b", "llama3"),       // Meta Llama 3 → llama3
             ("phi-3-mini", "chatml"),
             ("qwen2-instruct", "chatml"),
             ("mistral-7b", "chatml"),

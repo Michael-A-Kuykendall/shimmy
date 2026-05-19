@@ -19,9 +19,7 @@ pub struct Registry {
     pub discovered_models: HashMap<String, DiscoveredModel>,
 }
 
-// Alias for backward compatibility and mission expectations
-/// Use `Registry` directly.
-
+// Alias for backward compatibility and mission expectations; use `Registry` directly.
 impl Registry {
     pub fn new() -> Self {
         Self {

@@ -19,10 +19,13 @@ include = [
     "LICENSE",
     "build.rs"
 ]
+# Airframe depends on a path crate and cannot be published to crates.io
+publish = false
 
 [features]
-default = ["huggingface", "llama"]  # Now with working Windows MSVC support via shimmy-llama-cpp-2
+default = ["airframe", "huggingface", "llama"]  # Full local dev + binary builds
 # Engine backends
+airframe = ["dep:airframe"]  # Airframe native GPU engine (default in v2.0; requires ../airframe path)
 llama = ["dep:shimmy-llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
 mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
@@ -31,11 +34,11 @@ llama-cuda = ["llama", "shimmy-llama-cpp-2/cuda"] # NVIDIA CUDA GPU acceleration
 llama-vulkan = ["llama"] # Vulkan GPU acceleration (cross-platform)
 llama-opencl = ["llama"] # OpenCL GPU acceleration (AMD, Intel, etc.)
 # Convenience feature sets
-fast = ["huggingface"] # Fast compilation - no C++ deps
-full = ["huggingface", "llama", "mlx"] # Full compilation - includes all backends
-gpu = ["huggingface", "llama-cuda", "llama-vulkan", "llama-opencl"] # GPU-optimized build
-apple = ["huggingface", "mlx"] # Apple Silicon optimized - MLX + HuggingFace
-coverage = ["huggingface"] # Coverage testing - minimal deps for faster builds
+fast = ["huggingface"] # Fast compilation - no C++ or path deps (CI-safe)
+full = ["airframe", "huggingface", "llama", "mlx"] # Full compilation - includes all backends
+gpu = ["airframe", "huggingface"] # GPU-optimized build via Airframe
+apple = ["airframe", "huggingface"] # Apple Silicon - Airframe via Metal + HuggingFace
+coverage = ["huggingface"] # Coverage testing - no path deps, fast compile
 vision = ["dep:image", "dep:base64", "dep:chromiumoxide", "dep:ed25519-dalek", "dep:hex", "dep:sha2"] # Optional vision feature for image/web analysis
 
 [dependencies]
@@ -76,8 +79,8 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls", "stream"], defau
 # llama.cpp bindings (optional) - published shimmy-llama-cpp-2 with MoE CPU offloading support
 shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = false }
 
-# Airframe native GPU inference
-airframe = { path = "../" }
+# Airframe native GPU inference (optional — requires ../airframe path dep; not publishable to crates.io)
+airframe = { path = "../", optional = true }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
