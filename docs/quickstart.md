@@ -1,29 +1,29 @@
 # Quick Start: Shimmy in 30 Seconds
 
-**✨ NEW in v1.9.0**: One binary per platform with ALL GPU backends included! No compilation needed.
+**✨ NEW in v2.0.0**: Airframe GPU engine — pure-Rust WGSL inference. One binary per platform, no CUDA/Vulkan SDK required.
 
 ## 1. Download Pre-Built Binary
 
-Pick your platform - each includes automatic GPU detection:
+Pick your platform — all binaries use automatic WebGPU (wgpu) GPU detection:
 
 ```bash
-# Windows x64 (includes CUDA + Vulkan + OpenCL)
+# Windows x64
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
 
-# Linux x86_64 (includes CUDA + Vulkan + OpenCL)
+# Linux x86_64
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64 -o shimmy && chmod +x shimmy
 
-# macOS ARM64 (includes MLX for Apple Silicon)
+# macOS ARM64 (Apple Silicon)
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
 
-# macOS Intel (CPU-only)
+# macOS Intel
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-intel -o shimmy && chmod +x shimmy
 
-# Linux ARM64 (CPU-only)
+# Linux ARM64
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-aarch64 -o shimmy && chmod +x shimmy
 ```
 
-**That's it!** Your GPU (if available) will be detected automatically at runtime.
+**GPU detection is automatic.** Airframe uses wgpu to find the best adapter on your hardware.
 
 ## 2. Get a Model
 Place any `.gguf` file in one of these locations:

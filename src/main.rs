@@ -9,7 +9,6 @@ mod cache;
 mod cli;
 mod engine;
 mod invariant_ppt;
-mod main_integration;
 mod model_registry;
 mod observability;
 mod openai_compat;
@@ -207,19 +206,18 @@ async fn main() -> anyhow::Result<()> {
     let mut reg = Registry::with_discovery();
 
     // Register the default model
-    let default_model_path = std::env::var("SHIMMY_BASE_GGUF")
-        .unwrap_or_else(|_| {
-            // Airframe default: TinyLlama 1.1B Q4_0
-            "C:/Users/micha/repos/llama.cpp/models/TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf".into()
+    // Register default model when SHIMMY_BASE_GGUF is explicitly configured.
+    // Pass --model-path to the serve command if this env var is not set.
+    if let Ok(default_model_path) = std::env::var("SHIMMY_BASE_GGUF") {
+        reg.register(ModelEntry {
+            name: "tinyllama-1.1b".into(),
+            base_path: default_model_path.into(),
+            lora_path: std::env::var("SHIMMY_LORA_GGUF").ok().map(Into::into),
+            template: Some("chatml".into()),
+            ctx_len: Some(2048),
+            n_threads: None,
         });
-    reg.register(ModelEntry {
-        name: "tinyllama-1.1b".into(),
-        base_path: default_model_path.into(),
-        lora_path: std::env::var("SHIMMY_LORA_GGUF").ok().map(Into::into),
-        template: Some("chatml".into()),
-        ctx_len: Some(2048),
-        n_threads: None,
-    });
+    }
 
     // Choose the execution engine once at startup.
     let engine: Box<dyn engine::InferenceEngine> = if airframe_engine_selected(cli.legacy) {

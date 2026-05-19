@@ -20,7 +20,7 @@ pub struct Registry {
 }
 
 // Alias for backward compatibility and mission expectations
-pub type ModelRegistry = Registry;
+/// Use `Registry` directly.
 
 impl Registry {
     pub fn new() -> Self {
@@ -66,11 +66,11 @@ impl Registry {
     pub fn infer_template(&self, model_name: &str) -> String {
         let name_lower = model_name.to_lowercase();
 
-        // Check model name patterns for better template detection
-        if name_lower.contains("llama") {
+        // Only route to llama3 template when explicitly Llama 3 (uses different special tokens)
+        if name_lower.contains("llama-3") || name_lower.contains("llama3") || name_lower.contains("meta-llama-3") {
             "llama3".to_string()
         } else {
-            // Default to chatml for most models (phi, mistral, qwen, gemma, etc.)
+            // Everything else (TinyLlama, Llama 1/2, Mistral, Phi, Qwen, etc.) uses ChatML
             "chatml".to_string()
         }
     }
