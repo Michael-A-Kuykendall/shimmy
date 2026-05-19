@@ -21,6 +21,12 @@ impl AirframeEngine {
     }
 }
 
+impl Default for AirframeEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait]
 impl InferenceEngine for AirframeEngine {
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>> {
