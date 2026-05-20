@@ -2,14 +2,13 @@ use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 
 use super::{
-    huggingface::HuggingFaceEngine, llama::LlamaEngine, InferenceEngine, ModelBackend,
+    huggingface::HuggingFaceEngine, InferenceEngine, ModelBackend,
     UniversalEngine, UniversalModel, UniversalModelSpec,
 };
 
 /// Universal engine that routes to appropriate backend
 #[allow(dead_code)]
 pub struct ShimmyUniversalEngine {
-    llama_engine: LlamaEngine,
     huggingface_engine: HuggingFaceEngine,
 }
 
@@ -17,7 +16,6 @@ impl ShimmyUniversalEngine {
     #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
-            llama_engine: LlamaEngine::new(),
             huggingface_engine: HuggingFaceEngine::new(),
         }
     }
@@ -34,10 +32,7 @@ impl UniversalEngine for ShimmyUniversalEngine {
     async fn load(&self, spec: &UniversalModelSpec) -> Result<Box<dyn UniversalModel>> {
         match &spec.backend {
             ModelBackend::LlamaGGUF { .. } => {
-                // Convert to legacy ModelSpec and use LlamaEngine
-                let legacy_spec = spec.clone().try_into()?;
-                let loaded = self.llama_engine.load(&legacy_spec).await?;
-                Ok(Box::new(UniversalModelAdapter { model: loaded }))
+                Err(anyhow!("GGUF models require Airframe GPU engine; use the default Airframe backend"))
             }
             ModelBackend::HuggingFace { .. } => self.huggingface_engine.load(spec).await,
             ModelBackend::Candle { .. } => Err(anyhow!("Candle backend not yet implemented")),
@@ -63,7 +58,7 @@ impl UniversalModel for UniversalModelAdapter {
     }
 }
 
-/// Convert UniversalModelSpec to legacy ModelSpec for LlamaEngine compatibility
+/// Convert UniversalModelSpec to legacy ModelSpec (for GGUF path extraction)
 impl TryFrom<UniversalModelSpec> for super::ModelSpec {
     type Error = anyhow::Error;
 
@@ -125,13 +120,7 @@ mod tests {
         let engine = ShimmyUniversalEngine::new();
         // Verify the struct was created (we can't access private fields, but we can test creation)
         // The struct itself is zero-sized since engines are unit structs
-        assert_eq!(
-            std::mem::size_of_val(&engine),
-            std::mem::size_of::<(
-                crate::engine::llama::LlamaEngine,
-                crate::engine::huggingface::HuggingFaceEngine
-            )>()
-        );
+        assert_eq!(std::mem::size_of_val(&engine), 0);
     }
 
     #[test]
@@ -186,13 +175,7 @@ mod tests {
         }
 
         // Verify engine structure
-        assert_eq!(
-            std::mem::size_of_val(&engine),
-            std::mem::size_of::<(
-                crate::engine::llama::LlamaEngine,
-                crate::engine::huggingface::HuggingFaceEngine
-            )>()
-        );
+        assert_eq!(std::mem::size_of_val(&engine), 0);
     }
 
     #[test]
@@ -574,7 +557,7 @@ mod tests {
         // Verify the engine structs are properly sized
         let engine = ShimmyUniversalEngine::new();
 
-        // The struct contains two unit structs (LlamaEngine and HuggingFaceEngine)
+        // The struct contains a unit struct (HuggingFaceEngine)
         // Size should be greater than zero
         let size = std::mem::size_of_val(&engine);
         assert!(
