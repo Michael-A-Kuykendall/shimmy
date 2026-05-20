@@ -973,7 +973,7 @@ mod tests {
         let registry = model_registry::Registry::with_discovery();
 
         let mut enhanced_state = AppState::new(
-            Box::new(engine::llama::LlamaEngine::new()),
+            Box::new(engine::adapter::InferenceEngineAdapter::new()),
             registry.clone(),
         );
 
@@ -1114,7 +1114,7 @@ mod tests {
         if manual_count <= 1 {
             // Simulate enhanced state creation (lines 53-58)
             let mut enhanced_state = AppState::new(
-                Box::new(engine::llama::LlamaEngine::new()),
+                Box::new(engine::adapter::InferenceEngineAdapter::new()),
                 state.registry.clone(),
             );
             enhanced_state.registry.auto_register_discovered();
@@ -1477,7 +1477,7 @@ mod tests {
         if manual_count <= 1 {
             // Simulate enhanced state logic (lines 53-58)
             let mut enhanced_state = AppState::new(
-                Box::new(engine::llama::LlamaEngine::new()),
+                Box::new(engine::adapter::InferenceEngineAdapter::new()),
                 empty_registry.clone(),
             );
 

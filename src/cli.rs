@@ -18,7 +18,7 @@ pub struct Cli {
     )]
     pub model_dirs: Option<String>,
 
-    /// GPU backend to use for llama.cpp inference
+    /// GPU backend to use for inference (auto, cpu)
     #[arg(
         long,
         global = true,
@@ -34,7 +34,7 @@ pub struct Cli {
     #[arg(long, global = true, value_name = "N", conflicts_with = "cpu_moe")]
     pub n_cpu_moe: Option<usize>,
 
-    /// Use legacy llama.cpp backend instead of Airframe GPU
+    /// Use legacy CPU adapter instead of Airframe GPU
     #[arg(long, global = true)]
     pub legacy: bool,
 }

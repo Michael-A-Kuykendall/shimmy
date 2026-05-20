@@ -26,16 +26,11 @@ publish = true
 default = ["huggingface"]  # crates.io-safe default; release binaries built by CI with --features airframe
 # Engine backends
 airframe = ["dep:airframe"]  # Airframe native GPU engine (default in v2.0; requires ../airframe path)
-llama = ["dep:shimmy-llama-cpp-2"]
 huggingface = [] # Python integration, no additional Rust deps
 mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
-# GPU acceleration backends for llama.cpp
-llama-cuda = ["llama", "shimmy-llama-cpp-2/cuda"] # NVIDIA CUDA GPU acceleration
-llama-vulkan = ["llama"] # Vulkan GPU acceleration (cross-platform)
-llama-opencl = ["llama"] # OpenCL GPU acceleration (AMD, Intel, etc.)
 # Convenience feature sets
-fast = ["huggingface"] # Fast compilation - no C++ or path deps (CI-safe)
-full = ["airframe", "huggingface", "llama", "mlx"] # Full compilation - includes all backends
+fast = ["huggingface"] # Fast compilation - no path deps (CI-safe)
+full = ["airframe", "huggingface", "mlx"] # Full compilation - includes all backends
 gpu = ["airframe", "huggingface"] # GPU-optimized build via Airframe
 apple = ["airframe", "huggingface"] # Apple Silicon - Airframe via Metal + HuggingFace
 coverage = ["huggingface"] # Coverage testing - no path deps, fast compile
@@ -75,9 +70,6 @@ tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "5.0"
 reqwest = { version = "0.11", features = ["json", "rustls-tls", "stream"], default-features = false }
-
-# llama.cpp bindings (optional) - published shimmy-llama-cpp-2 with MoE CPU offloading support
-shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = false }
 
 # Airframe native GPU inference (optional — requires airframe submodule; path dep stripped on crates.io publish)
 airframe = { path = "airframe/", version = "0.0.1", optional = true }
