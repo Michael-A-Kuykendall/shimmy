@@ -1,141 +1,125 @@
-# Release Gates & Regression Tests - v1.7.2
+# Release Gates & Regression Tests — v2.0
 
-**Date:** October 9, 2025  
-**Branch:** `feature/mlx-native-support`  
-**Status:** Ready for testing
-
----
-
-## 📋 ACTUAL REGRESSION TEST FILES (User-Reported Issues)
-
-### Core Regression Suite
-- **`tests/regression_tests.rs`** - Main comprehensive regression suite
-  - Model registry operations
-  - Model discovery functionality  
-  - Template rendering (ChatML, Llama3)
-  - OpenAI API compatibility
-  - Qwen model ChatML detection (Issue #13)
-  - Custom model directories (Issue #12)
-  - Error handling robustness
-
-### User-Reported Issue Regression Tests
-1. **`tests/packaging_regression_test.rs`** - crates.io packaging (Issue #60, #83)
-2. **`tests/mlx_support_regression_test.rs`** - MLX in macOS binaries (Issue #68)
-3. **`tests/template_compilation_regression_test.rs`** - Template files (Issue #83)
-4. **`tests/model_discovery_regression_test.rs`** - Model discovery issues
-5. **`tests/streaming_regression_test.rs`** - Streaming functionality
-6. **`tests/version_regression_test.rs`** - Version validation
-7. **`tests/compilation_regression_test.rs`** - Compilation issues
-8. **`tests/apple_silicon_detection_test.rs`** - GPU detection (Issue #87)
-
-### Release Gate Integration
-- **`tests/release_gate_integration.rs`** - Release gate system validation
-  - Gate 1: Core Build Validation
-  - Gate 2: CUDA Build Timeout Detection (Issue #59)
-  - Gate 3: Template Packaging Protection (Issue #60)
-  - Gate 4: Binary Size Constitutional Limit (20MB)
-  - Gate 5: Test Suite Validation
-  - Gate 6: Documentation Validation
+**Date:** May 20, 2026  
+**Branch:** `main`  
+**Engine:** Airframe (wgpu/WebGPU — no CUDA, no llama.cpp)  
+**Status:** Active
 
 ---
 
-## 🚀 TEST EXECUTION COMMANDS
+## Release Gate Pipeline
 
-### Run ALL Regression Tests (User Issues)
-```bash
-cargo test --test regression_tests
-cargo test --test packaging_regression_test
-cargo test --test mlx_support_regression_test
-cargo test --test template_compilation_regression_test
-cargo test --test model_discovery_regression_test
-cargo test --test streaming_regression_test
-cargo test --test version_regression_test
-cargo test --test compilation_regression_test
-cargo test --test apple_silicon_detection_test
-```
+All 7 gates defined in `.github/workflows/release.yml` under the `preflight` job.
+Every gate must pass or the entire release stops.
 
-### Run Release Gates
+| Gate | Name | Covers |
+|------|------|--------|
+| 1/7 | Core Build | `cargo build --features airframe,huggingface` — GPU engine via submodule |
+| ~~2~~| ~~CUDA Timeout~~ | **Removed v2.0** — Airframe uses wgpu; no CUDA dependency |
+| 3/7 | Template Packaging | Docker templates included in crates.io package (Issue #60 regression) |
+| 4/7 | Binary Size | Constitutional 20 MB limit on `shimmy` binary |
+| 5/7 | Test Suite | `cargo test --lib --no-default-features --features huggingface` |
+| 5.1/7 | Airframe Compile Check | `cargo check --features airframe` — integration builds without errors |
+| 5.5/7 | Issue Regression | Per-issue regression tests (see list below) |
+| 6/7 | Documentation | `cargo doc --no-deps --features huggingface` |
+| 7/7 | crates.io Dry-Run | `cargo publish --dry-run --features huggingface` validates crates.io package |
+
+---
+
+## Regression Test Files
+
+### Active Test Files
+| File | Status |
+|------|--------|
+| `tests/regression_tests.rs` | ✅ Active — main issue regression suite |
+| `tests/release_gate_integration.rs` | ✅ Active — validates gate system itself |
+| `tests/template_compilation_regression_test.rs` | ✅ Active — template file inclusion |
+| `tests/compilation_regression_test.rs` | ✅ Active — compilation sanity |
+| `tests/apple_silicon_detection_test.rs` | ✅ Active — GPU detection (Issue #87) |
+| `tests/integration_tests.rs` | ✅ Active — API surface integration |
+| `tests/cli_integration_tests.rs` | ✅ Active — CLI surface |
+| `tests/gpu_backend_tests.rs` | ✅ Active — GPU backend selection |
+
+### Gate 5.5 Issue Regression Tests (in `regression_tests.rs`)
+| Test | Issue |
+|------|-------|
+| `test_issue_111_gpu_metrics_endpoint` | #111 — GPU metrics endpoint |
+| `test_issue_112_safetensors_engine_selection` | #112 — SafeTensors engine selection |
+| `test_issue_113_openai_api_frontend_compatibility` | #113 — OAI `/v1/models` endpoint |
+| `test_issue_113_ollama_api_tags_response_structure` | #113 — Ollama `/api/tags` endpoint |
+| `test_issue_114_mlx_distribution_features` | #114 — MLX distribution feature flags |
+| `test_issue_191_multi_part_content_array_deserialization` | #191 — Multi-part content array (422 fix) |
+| `test_qwen_model_template_detection` | #13 — Qwen ChatML template |
+| `test_custom_model_directory_environment_variables` | #12 — Custom model directories |
+
+---
+
+## Test Execution Commands
+
 ```bash
+# Gate 5 — Core lib tests
+cargo test --lib --no-default-features --features huggingface -- --test-threads=1
+
+# Gate 5.1 — Airframe compile check
+cargo check --features airframe
+
+# Gate 5.5 — Issue regression tests
+cargo test --test regression_tests --no-default-features --features huggingface
+
+# Gate validation system tests
 cargo test --test release_gate_integration
-```
 
-### Run Everything
-```bash
-cargo test --all-features
+# Full regression pass
+cargo test --no-default-features --features huggingface
 ```
 
 ---
 
-## ✅ TEST STATUS
-
-### Building
-- [⏳] Core build (`--features huggingface`) - IN PROGRESS
-- [ ] Full build (`--all-features`)
-- [ ] MLX build (`--features mlx`)
-- [ ] GPU build (`--features gpu`)
-
-### Regression Tests (User Issues)
-- [ ] Main regression suite (`regression_tests.rs`)
-- [ ] Packaging regression (Issue #60, #83)
-- [ ] MLX support regression (Issue #68)
-- [ ] Template compilation regression (Issue #83)
-- [ ] Model discovery regression
-- [ ] Streaming regression
-- [ ] Version regression
-- [ ] Compilation regression
-- [ ] Apple Silicon detection (Issue #87)
-
-### Release Gates
-- [ ] Gate 1: Core Build Validation
-- [ ] Gate 2: CUDA Timeout Detection (Issue #59)
-- [ ] Gate 3: Template Packaging (Issue #60)
-- [ ] Gate 4: Binary Size Limit (20MB)
-- [ ] Gate 5: Test Suite Validation
-- [ ] Gate 6: Documentation Validation
-
----
-
-## 🔧 PRE-RELEASE CHECKLIST
+## Pre-Release Checklist
 
 ### Code Quality
-- [ ] `cargo fmt -- --check` (formatting)
-- [ ] `cargo clippy --all-features` (no warnings)
+- [ ] `cargo fmt -- --check`
+- [ ] `cargo clippy --no-default-features --features huggingface` (no warnings)
 - [ ] `cargo deny check` (license check)
-- [ ] No compilation warnings
+- [ ] No compilation warnings on `--features airframe,huggingface`
 
 ### Documentation
-- [ ] README.md updated with MLX + MOE features
-- [ ] CHANGELOG.md has v1.7.2 entry
-- [ ] All new features documented
+- [ ] `CHANGELOG.md` updated with release version entry
+- [ ] `README.md` reflects current feature set
+- [ ] New features documented
 
 ### Version Management
-- [ ] Cargo.toml version bumped to 1.7.2
-- [ ] Git tag created for v1.7.2
+- [ ] `Cargo.toml` version bumped
+- [ ] Git tag created (format: `vX.Y.Z`)
 - [ ] Release notes prepared
 
----
-
-## 🎯 CURRENT BLOCKERS
-
-1. **Build in progress** - Waiting for `cargo build` to complete
-2. **Need to run full test suite** - Once build completes
-3. **Need to fix Cargo.toml dependency** - ✅ DONE (using published shimmy-llama-cpp-2)
+### Workflow Validation
+- [ ] `release.yml` `preflight` job passes on a test branch
+- [ ] `ci.yml` `test` job passes on current branch
 
 ---
 
-## 📝 NOTES
+## Feature Flag Reference
 
-### What Changed
-- ✅ Merged PR #97 (MOE CPU offloading)
-- ✅ Merged main into MLX branch
-- ✅ Fixed Cargo.toml to use published crates.io packages
-- ✅ Disabled pre-commit hooks
-- ✅ MLX workflow passing on GitHub Actions
+| Feature | Purpose | crates.io safe |
+|---------|---------|----------------|
+| `huggingface` | Model downloading, tokenizer — **default** | ✅ Yes |
+| `airframe` | Airframe GPU engine via submodule path dep | ❌ No (path dep) |
+| `full` | `huggingface + airframe` convenience alias | ❌ No |
+| `apple` | Apple Silicon convenience alias | platform-only |
 
-### Known Issues Fixed
-- Git dependency issue → Now using published `shimmy-llama-cpp-2` v0.1.123
-- Package name mismatch → Corrected with `package = "shimmy-llama-cpp-2"`
+**crates.io publish** uses `--no-default-features --features huggingface`.  
+**GitHub Release binaries** use `--features airframe,huggingface` (built in CI matrix).
 
 ---
 
-**Next Action:** Wait for build to complete, then run full test suite
+## What's Gone (v2.0)
+
+| Removed | Why |
+|---------|-----|
+| CUDA Gate (Gate 2) | Airframe uses wgpu; zero CUDA dependency |
+| `shimmy-llama-cpp-2` dependency | Replaced by Airframe GPU engine |
+| `--features llama` build path | No llama.cpp in this codebase |
+| MLX-specific release artifacts | Not part of v2.0 shipping target |
+| Binary size inflation from llama.cpp | Airframe is pure Rust; binary stays well under 20 MB |
+
