@@ -172,4 +172,96 @@ mod tests {
         assert_eq!(models.len(), 1);
         assert_eq!(models[0].name, "test");
     }
+
+    #[test]
+    fn test_infer_template_llama3_variants() {
+        let registry = Registry::new();
+        assert_eq!(registry.infer_template("llama-3-8b"), "llama3");
+        assert_eq!(registry.infer_template("llama3-70b"), "llama3");
+        assert_eq!(registry.infer_template("meta-llama-3-instruct"), "llama3");
+        assert_eq!(registry.infer_template("Meta-Llama-3.1-8B"), "llama3");
+    }
+
+    #[test]
+    fn test_infer_template_chatml_variants() {
+        let registry = Registry::new();
+        // These should all fall back to chatml
+        assert_eq!(registry.infer_template("tinyllama-1.1b"), "chatml");
+        assert_eq!(registry.infer_template("mistral-7b"), "chatml");
+        assert_eq!(registry.infer_template("phi-3-mini"), "chatml");
+        assert_eq!(registry.infer_template("qwen2-7b"), "chatml");
+        assert_eq!(registry.infer_template("llama-2-7b"), "chatml"); // Llama 2, not 3
+    }
+
+    #[test]
+    fn test_to_spec_registered_model() {
+        let mut registry = Registry::new();
+        let entry = ModelEntry {
+            name: "my-model".to_string(),
+            base_path: PathBuf::from("/models/my-model.gguf"),
+            lora_path: None,
+            template: Some("chatml".to_string()),
+            ctx_len: Some(4096),
+            n_threads: Some(8),
+        };
+        registry.register(entry);
+
+        let spec = registry.to_spec("my-model").unwrap();
+        assert_eq!(spec.name, "my-model");
+        assert_eq!(spec.ctx_len, 4096);
+        assert_eq!(spec.template.as_deref(), Some("chatml"));
+        assert_eq!(spec.n_threads, Some(8));
+    }
+
+    #[test]
+    fn test_to_spec_missing_model_returns_none() {
+        let registry = Registry::new();
+        assert!(registry.to_spec("does-not-exist").is_none());
+    }
+
+    #[test]
+    fn test_to_spec_ctx_len_defaults_to_2048() {
+        let mut registry = Registry::new();
+        let entry = ModelEntry {
+            name: "ctx-model".to_string(),
+            base_path: PathBuf::from("/models/ctx-model.gguf"),
+            lora_path: None,
+            template: None,
+            ctx_len: None, // No ctx_len set
+            n_threads: None,
+        };
+        registry.register(entry);
+
+        let spec = registry.to_spec("ctx-model").unwrap();
+        assert_eq!(spec.ctx_len, 2048);
+    }
+
+    #[test]
+    fn test_list_all_available_deduplicates() {
+        let mut registry = Registry::new();
+        registry.register(ModelEntry {
+            name: "model-a".to_string(),
+            base_path: PathBuf::from("/a"),
+            lora_path: None,
+            template: None,
+            ctx_len: None,
+            n_threads: None,
+        });
+        registry.register(ModelEntry {
+            name: "model-b".to_string(),
+            base_path: PathBuf::from("/b"),
+            lora_path: None,
+            template: None,
+            ctx_len: None,
+            n_threads: None,
+        });
+
+        let all = registry.list_all_available();
+        assert!(all.contains(&"model-a".to_string()));
+        assert!(all.contains(&"model-b".to_string()));
+        // All entries should be unique
+        let mut deduped = all.clone();
+        deduped.dedup();
+        assert_eq!(all, deduped);
+    }
 }
