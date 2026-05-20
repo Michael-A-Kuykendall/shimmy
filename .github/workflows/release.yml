@@ -106,6 +106,14 @@ jobs:
           # Test Issue #12 - Custom model directories
           cargo test --test regression_tests test_custom_model_directory_environment_variables --no-default-features --features huggingface  
           echo "✅ Issue #12 (Custom directories): Regression test passed"
+
+          # Test Issue #191 - Multi-part content array causes 422
+          cargo test --test regression_tests test_issue_191_multi_part_content_array_deserialization --no-default-features --features huggingface
+          echo "✅ Issue #191 (Multi-part content array): Regression test passed"
+
+          # Test Issue #113 - /api/tags Ollama endpoint response structure
+          cargo test --test regression_tests test_issue_113_ollama_api_tags_response_structure --no-default-features --features huggingface
+          echo "✅ Issue #113 (Ollama /api/tags endpoint): Regression test passed"
           
           echo "✅ All issue regression tests passed - no user-reported bug regressions detected"
           echo "::endgroup::"
