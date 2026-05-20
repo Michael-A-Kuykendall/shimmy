@@ -101,9 +101,10 @@ pub async fn generate(
         let mut opts_clone = opts.clone();
         opts_clone.stream = false; // internal generation collects tokens while we push per token
         let prompt_clone = prompt.clone();
+        let model_name = req.model.clone();
         tokio::spawn(async move {
             let tx_tokens = tx.clone();
-            let _ = loaded
+            if let Err(error) = loaded
                 .generate(
                     &prompt_clone,
                     opts_clone,
@@ -111,7 +112,15 @@ pub async fn generate(
                         let _ = tx_tokens.send(tok);
                     })),
                 )
-                .await;
+                .await
+            {
+                tracing::error!(
+                    "Streaming generation failed for model '{}': {}",
+                    model_name,
+                    error
+                );
+                let _ = tx.send(format!("[ERROR] {}", error));
+            }
             let _ = tx.send("[DONE]".into());
         });
         let stream = UnboundedReceiverStream::new(rx)
@@ -216,10 +225,11 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
     tokio::spawn({
         let prompt = prompt.clone();
+        let model_name = req.model.clone();
         let tx_done = tx.clone();
         async move {
             let tx_tokens = tx.clone();
-            let _ = loaded
+            if let Err(error) = loaded
                 .generate(
                     &prompt,
                     internal,
@@ -227,7 +237,15 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
                         let _ = tx_tokens.send(tok);
                     })),
                 )
-                .await;
+                .await
+            {
+                tracing::error!(
+                    "WebSocket generation failed for model '{}': {}",
+                    model_name,
+                    error
+                );
+                let _ = tx_done.send(format!("{{\"error\":\"{}\"}}", error));
+            }
             let _ = tx_done.send("[DONE]".into());
         }
     });

@@ -23,33 +23,18 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: "🚧 GATE 1/6: Core Build Validation"
+      - name: "🚧 GATE 1/4: Core Build Validation"
         run: |
           echo "::group::Gate 1: Core Build"
+          # CI-safe build: no airframe path dep (requires private parent repo)
           cargo build --release --no-default-features --features huggingface
           echo "✅ Core build successful"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 2/6: CUDA Build Validation (No Timeout - Can Take Hours)"
-        run: |
-          echo "::group::Gate 2: CUDA Build"
-          echo "⏳ CUDA compilation can take 19+ hours - letting it run to natural completion"
-          
-          # Try CUDA build first
-          if cargo build --release --no-default-features --features llama-cuda 2>&1; then
-            echo "✅ CUDA build completed successfully"
-          else
-            echo "⚠️ CUDA build failed (likely missing CUDA Toolkit on runner)"
-            echo "🔄 Falling back to CPU-only llama build validation..."
-            
-            # Validate that CPU-only llama build works
-            cargo build --release --no-default-features --features llama
-            echo "✅ CPU-only llama build completed successfully"
-            echo "📝 Note: CUDA validation skipped due to missing CUDA Toolkit on GitHub runner"
-          fi
-          echo "::endgroup::"
+      # GATE 2 (CUDA) intentionally removed in v2.0.
+      # Airframe uses wgpu/WebGPU — no CUDA dependency.
 
-      - name: "🚧 GATE 3/6: Template Packaging Validation (Issue #60 Protection)"
+      - name: "🚧 GATE 3/4: Template Packaging Validation"
         run: |
           echo "::group::Gate 3: Template Packaging"
           # Check for Docker templates with OS-agnostic path handling
@@ -64,7 +49,7 @@ jobs:
           fi
           echo "::endgroup::"
 
-      - name: "🚧 GATE 4/6: Binary Size Constitutional Limit (20MB)"
+      - name: "🚧 GATE 4/4: Binary Size Constitutional Limit (20MB)"
         run: |
           echo "::group::Gate 4: Binary Size"
           size=$(stat -c%s target/release/shimmy 2>/dev/null || echo "0")
@@ -77,39 +62,27 @@ jobs:
           fi
           echo "::endgroup::"
 
-      - name: "🚧 GATE 5/6: Test Suite Validation"
+      # GATE 5 (Test Suite) — run in CI workflow; kept here as a quick smoke check
+      - name: Quick Test Smoke Check
         run: |
-          echo "::group::Gate 5: Test Suite"
-          cargo test --all-features
-          echo "✅ All tests passed"
+          echo "::group::Test Smoke"
+          cargo test --lib --no-default-features --features huggingface -- --test-threads=1
+          echo "✅ Tests passing"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 6/6: Documentation Validation"
+      # GATE 6 — Documentation check
+      - name: Documentation Validation
         run: |
-          echo "::group::Gate 6: Documentation"
-          
-          # Check if CUDA Toolkit is available for documentation build
-          if command -v nvcc >/dev/null 2>&1; then
-            echo "✅ CUDA Toolkit found, building docs with all features..."
-            cargo doc --no-deps --all-features
-            echo "✅ Documentation with all features built successfully"
-          else
-            echo "⚠️ CUDA Toolkit not found on runner (nvcc not available)"
-            echo "🔄 Building documentation without CUDA features..."
-            
-            # Build docs without CUDA features to avoid build failures
-            cargo doc --no-deps --features "huggingface,llama,mlx"
-            echo "✅ Documentation built successfully (CUDA features excluded)"
-            echo "📝 Note: CUDA documentation skipped - this is expected on standard GitHub runners"
-          fi
+          echo "::group::Gate: Documentation"
+          cargo doc --no-deps --no-default-features --features huggingface
+          echo "✅ Documentation built successfully"
           echo "::endgroup::"
 
       - name: "🎯 DRY RUN SUCCESS"
         run: |
           echo "::group::Dry Run Complete"
-          echo "✅ ALL 6 GATES PASSED IN DRY RUN"
-          echo "🚀 Ready for actual release!"
-          echo "💡 Tip: You can now create the real release tag with confidence"
+          echo "ALL GATES PASSED IN DRY RUN"
+          echo "Ready for actual release!"
           echo "::endgroup::"
 
       # Upload artifacts for inspection

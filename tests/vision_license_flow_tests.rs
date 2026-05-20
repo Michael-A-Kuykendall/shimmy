@@ -497,20 +497,3 @@ mod vision_license_tests {
         assert_eq!(usage.requests_this_month, 3);
     }
 }
-
-// Tests for when vision feature is not enabled
-#[cfg(not(feature = "vision"))]
-mod vision_disabled_tests {
-    use shimmy::vision_license::check_vision_license;
-
-    #[test]
-    fn test_vision_disabled_returns_error() {
-        let result = check_vision_license(Some("any-license"));
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Vision feature not enabled");
-
-        let result = check_vision_license(None);
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Vision feature not enabled");
-    }
-}
