@@ -2,7 +2,7 @@
 
 **Vision:** The privacy-first local AI infrastructure that replaces cloud dependencies
 
-Shimmy is a sub-5MB, zero-config, OpenAI-compatible inference server targeting the **$50B+ AI inference market**. Its mission is **invisible infrastructure**: drop it in, it works.
+Shimmy is a zero-config, OpenAI-compatible inference server with a native WebGPU GPU engine. Its mission is **invisible infrastructure**: drop it in, it works.
 
 ## 🆓 Forever Free Commitment
 
@@ -33,12 +33,25 @@ Shimmy is a sub-5MB, zero-config, OpenAI-compatible inference server targeting t
   - Deterministic GPU output, GGUF-native spec, YaRN RoPE extended context
   - No CUDA toolkit or Vulkan SDK required; wgpu handles adapter selection
 
-## 🎯 Q1–Q2 2026 Milestones
+## 🎯 Q2–Q3 2026 Milestones
 - [ ] **Stop tokens from GGUF metadata** — read `tokenizer.ggml.eos_token_id` natively
+- [ ] **Quantization in Airframe** — Q4_K_M and Q8_0 inference on the WebGPU pipeline
 - [ ] **SafeTensors support** — ingest `.safetensors` model checkpoints directly
 - [ ] **Multi-model serving** — load balancing across multiple active models
 - [ ] **Enterprise Embeddings** — `/v1/embeddings` endpoint targeting RAG workloads
 - [ ] **Sub-50ms startup** — benchmarking and initialization optimization
+
+## 🧠 Airframe MoE Support (Planned)
+
+Mixture of Experts model support in the Airframe WebGPU engine — enabling Mixtral, DeepSeek, Qwen MoE
+and other sparse transformer architectures without falling back to `--legacy`.
+
+**Engineering estimate: 21 story points** across 7 work items (GGUF loader, router shaders,
+top-K selection, per-expert dispatch, output combine, buffer management).
+
+MoE models currently supported via `--legacy` (llama.cpp). Native Airframe MoE is post-quantization.
+
+→ See [docs/AIRFRAME_MOE_ROADMAP.md](docs/AIRFRAME_MOE_ROADMAP.md) for full engineering breakdown.
 
 ## 🚀 2026 Strategic Initiatives
 - [ ] **Shimmy Console** — terminal UI frontend with retro aesthetics and advanced controls
@@ -50,9 +63,8 @@ Shimmy is a sub-5MB, zero-config, OpenAI-compatible inference server targeting t
 
 ### Technical Excellence
 - **100% OpenAI API Parity** - Complete feature compatibility
-- **Sub-5MB Binary** - Maintain lightweight footprint (current: 4.8MB, 142x smaller than Ollama)
 - **Universal Deployment** - Zero configuration, runs anywhere
-- **Hardware Optimization** - SIMD/GPU acceleration within size constraints
+- **Hardware Optimization** - WebGPU/wgpu acceleration, MoE sparse dispatch
 - **Enterprise Reliability** - 99.99% uptime, consumer simplicity
 
 ### Market Expansion
