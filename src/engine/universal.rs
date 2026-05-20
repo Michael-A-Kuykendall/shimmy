@@ -118,9 +118,8 @@ mod tests {
     #[test]
     fn test_shimmy_universal_engine_new() {
         let engine = ShimmyUniversalEngine::new();
-        // Verify the struct was created (we can't access private fields, but we can test creation)
-        // The struct itself is zero-sized since engines are unit structs
-        assert_eq!(std::mem::size_of_val(&engine), 0);
+        // Verify the struct was created — it contains a HuggingFaceEngine field so size > 0
+        assert!(std::mem::size_of_val(&engine) > 0);
     }
 
     #[test]
@@ -174,8 +173,8 @@ mod tests {
             _ => panic!("Expected LlamaGGUF backend"),
         }
 
-        // Verify engine structure
-        assert_eq!(std::mem::size_of_val(&engine), 0);
+        // Verify engine structure — non-zero size (has huggingface_engine field)
+        assert!(std::mem::size_of_val(&engine) > 0);
     }
 
     #[test]

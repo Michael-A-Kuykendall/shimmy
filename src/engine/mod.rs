@@ -126,17 +126,6 @@ pub trait LoadedModel: Send + Sync {
         opts: GenOptions,
         on_token: Option<Box<dyn FnMut(String) + Send>>,
     ) -> Result<String>;
-
-    async fn generate_vision(
-        &self,
-        _image_data: &[u8],
-        _prompt: &str,
-        _opts: GenOptions,
-        _on_token: Option<Box<dyn FnMut(String) + Send>>,
-    ) -> Result<String> {
-        // Default implementation returns error - vision models should override
-        Err(anyhow!("Vision not supported by this model"))
-    }
 }
 
 #[cfg(feature = "huggingface")]
