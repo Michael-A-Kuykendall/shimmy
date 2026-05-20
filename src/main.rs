@@ -567,91 +567,37 @@ async fn main() -> anyhow::Result<()> {
             println!("🖥️  GPU Backend Information");
             println!();
 
-            // Check llama.cpp backend info
+            // Airframe engine (default in v2.0): adapter selected at runtime via wgpu
+            #[cfg(feature = "airframe")]
+            {
+                println!("⚡ Airframe Engine: ✅ Enabled (WebGPU via wgpu)");
+                println!("   Adapter is selected automatically at runtime.");
+                println!("   Run `shimmy serve` to see which GPU adapter is chosen.");
+                println!("   Supported: NVIDIA, AMD, Intel, Apple Silicon (Metal), integrated GPUs.");
+            }
+
+            #[cfg(not(feature = "airframe"))]
+            {
+                println!("⚡ Airframe Engine: Disabled (this build uses the huggingface engine)");
+                println!("   For GPU acceleration, download a release binary from GitHub Releases.");
+            }
+
+            // Legacy llama.cpp backend info (--legacy flag)
             #[cfg(feature = "llama")]
             {
-                use crate::engine::llama::LlamaEngine;
-                let llama_engine = LlamaEngine::new_with_backend(cli.gpu_backend.as_deref());
-                println!("🔧 llama.cpp Backend: {}", llama_engine.get_backend_info());
-
-                // Show available features
-                println!("📋 Available GPU Features:");
-                #[cfg(feature = "llama-cuda")]
-                println!("  ✅ CUDA support enabled");
-                #[cfg(not(feature = "llama-cuda"))]
-                println!("  ❌ CUDA support disabled");
-
-                #[cfg(feature = "llama-vulkan")]
-                println!("  ✅ Vulkan support enabled");
-                #[cfg(not(feature = "llama-vulkan"))]
-                println!("  ❌ Vulkan support disabled");
-
-                #[cfg(feature = "llama-opencl")]
-                println!("  ✅ OpenCL support enabled");
-                #[cfg(not(feature = "llama-opencl"))]
-                println!("  ❌ OpenCL support disabled");
+                println!();
+                println!("🔧 Legacy llama.cpp backend: ✅ Available (use --legacy or SHIMMY_ENGINE_BACKEND=llama)");
             }
 
             #[cfg(not(feature = "llama"))]
             {
-                println!("❌ llama.cpp backend not available (compile with --features llama)");
-            }
-
-            // Check MLX backend info
-            #[cfg(feature = "mlx")]
-            {
-                use crate::engine::mlx::MLXEngine;
-
-                if MLXEngine::is_hardware_supported() {
-                    // Check if MLX Python packages are available
-                    let python_available = MLXEngine::check_mlx_python_available();
-                    if python_available {
-                        println!("🍎 MLX Backend: ✅ Available (Apple Silicon + MLX installed)");
-                    } else {
-                        println!("🍎 MLX Backend: ⚠️  Hardware supported (Apple Silicon detected)");
-                        println!("   📦 MLX Python packages not found");
-                        println!("   💡 Install with: pip install mlx-lm");
-                    }
-                } else {
-                    println!("🍎 MLX Backend: ❌ Not supported (requires Apple Silicon macOS)");
-                }
-            }
-
-            #[cfg(not(feature = "mlx"))]
-            {
-                println!("🍎 MLX Backend: Disabled (compile with --features mlx)");
+                println!();
+                println!("🔧 Legacy llama.cpp backend: Disabled");
             }
 
             println!();
-            println!("💡 To enable GPU acceleration:");
-
-            #[cfg(target_os = "macos")]
-            if std::env::consts::ARCH == "aarch64" {
-                println!(
-                    "   cargo install shimmy --features apple        # Apple Silicon optimized"
-                );
-                println!("   cargo install shimmy --features gpu          # All GPU backends");
-                println!(
-                    "   pip install mlx-lm                           # For MLX Python support"
-                );
-            } else {
-                println!("   cargo install shimmy --features llama-cuda    # NVIDIA CUDA");
-                println!(
-                    "   cargo install shimmy --features llama-vulkan  # Cross-platform Vulkan"
-                );
-                println!("   cargo install shimmy --features llama-opencl  # AMD/Intel OpenCL");
-                println!("   cargo install shimmy --features gpu           # All GPU backends");
-            }
-
-            #[cfg(not(target_os = "macos"))]
-            {
-                println!("   cargo install shimmy --features llama-cuda    # NVIDIA CUDA");
-                println!(
-                    "   cargo install shimmy --features llama-vulkan  # Cross-platform Vulkan"
-                );
-                println!("   cargo install shimmy --features llama-opencl  # AMD/Intel OpenCL");
-                println!("   cargo install shimmy --features gpu           # All GPU backends");
-            }
+            println!("💡 GPU acceleration: download a release binary from GitHub Releases.");
+            println!("   https://github.com/Michael-A-Kuykendall/shimmy/releases/latest");
         }
         cli::Command::Init {
             template,
