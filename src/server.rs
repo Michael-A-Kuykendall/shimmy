@@ -150,6 +150,8 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
             post(openai_compat::chat_completions),
         )
         .route("/v1/models", get(openai_compat::models))
+        // Ollama-compatible endpoints (used by AnythingLLM, SillyTavern, Zed, Open WebUI)
+        .route("/api/tags", get(openai_compat::api_tags))
         // Anthropic Claude API compatibility
         .route("/v1/messages", post(anthropic_compat::messages));
 
