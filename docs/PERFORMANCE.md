@@ -2,7 +2,7 @@
 
 ## GPU Power Consumption
 
-Shimmy's GPU usage is comparable to Ollama since both use llama.cpp as the inference backend. Key differences:
+Shimmy v2.0 uses the Airframe WebGPU engine (wgpu), replacing the llama.cpp backend from v1.x. GPU memory and power consumption patterns are broadly similar since both approaches run the transformer on GPU.
 
 ### GPU Memory Usage
 - **Similar to Ollama**: Both use identical GGUF model loading, so GPU memory consumption per model is nearly identical
