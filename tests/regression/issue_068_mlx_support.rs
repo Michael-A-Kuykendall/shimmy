@@ -283,15 +283,15 @@ fn test_mlx_binary_status_messages() {
 
 #[test]
 fn test_mlx_regression_prevention() {
-    // Comprehensive test to prevent MLX regression issues
-
-    // 1. Test that apple feature set is correctly defined
+    // v2.0: MLX is a legacy-only option. The primary GPU path is Airframe/wgpu.
+    // Validate that Cargo.toml feature definitions are correct for v2.0.
     let cargo_toml =
         std::fs::read_to_string("Cargo.toml").expect("Should be able to read Cargo.toml");
 
+    // In v2.0, apple platform uses Airframe (wgpu/Metal) instead of MLX
     assert!(
-        cargo_toml.contains("apple = [\"huggingface\", \"mlx\"]"),
-        "Apple feature set should include MLX in Cargo.toml"
+        cargo_toml.contains("apple = [") && cargo_toml.contains("airframe"),
+        "Apple feature set should include airframe (wgpu/Metal) in v2.0 Cargo.toml"
     );
 
     // 2. Test release workflow includes macOS targets
@@ -304,19 +304,19 @@ fn test_mlx_regression_prevention() {
         "Release workflow should include macOS targets (both Intel and ARM64)"
     );
 
-    // 3. Test that MLX feature compiles without errors
+    // 3. MLX feature still compiles (legacy path, not default)
     let mlx_check = Command::new("cargo")
-        .args(["check", "--features", "mlx"])
+        .args(["check", "--no-default-features", "--features", "mlx"])
         .output()
         .expect("Failed to run cargo check with mlx");
 
     assert!(
         mlx_check.status.success(),
-        "MLX feature should compile successfully: {}",
+        "MLX feature should still compile as legacy option: {}",
         String::from_utf8_lossy(&mlx_check.stderr)
     );
 
-    println!("✅ MLX regression prevention test passed");
+    println!("MLX regression prevention test passed (v2.0 Airframe default)");
 }
 
 #[cfg(test)]

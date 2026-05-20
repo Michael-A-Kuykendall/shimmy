@@ -33,19 +33,9 @@ mod tests {
         let workflow_content =
             fs::read_to_string(workflow_path).expect("Failed to read release workflow file");
 
-        // Validate Windows builds include Vulkan support
-        assert!(
-            workflow_content.contains("llama-vulkan") || workflow_content.contains("Features="),
-            "Release workflow should build Windows binaries with Vulkan GPU support (Issue #129)"
-        );
-
-        // Validate macOS builds include MLX support
-        assert!(
-            workflow_content.contains("mlx"),
-            "Release workflow should build macOS binaries with MLX support for Apple Silicon"
-        );
-
-        // Validate we're actually building for Windows
+        // v2.0: GPU support via Airframe/wgpu. No CUDA/Vulkan/MLX in CI release workflow.
+        // Airframe is compiled locally and uploaded as release binaries.
+        // Validate that Windows and macOS targets are still present.
         assert!(
             workflow_content.contains("windows-latest")
                 && workflow_content.contains("x86_64-pc-windows-msvc"),
@@ -57,6 +47,12 @@ mod tests {
             workflow_content.contains("macos-latest"),
             "Release workflow should build macOS binaries"
         );
+
+        // Validate Airframe is referenced (v2.0 GPU engine)
+        assert!(
+            workflow_content.contains("airframe"),
+            "Release workflow should reference airframe (v2.0 GPU engine)"
+        );
     }
 
     #[test]
@@ -65,15 +61,14 @@ mod tests {
         let workflow_content =
             fs::read_to_string(workflow_path).expect("Failed to read release workflow file");
 
-        // Check for platform-specific feature logic
-        // Should have conditional logic for Windows vs macOS vs Linux
-        let has_conditional_logic = workflow_content.contains("if")
-            && (workflow_content.contains("windows") || workflow_content.contains("macos"))
-            && workflow_content.contains("FEATURES");
+        // v2.0: Release workflow builds for multiple platforms. Validate cross-platform targets.
+        let has_multi_platform = workflow_content.contains("ubuntu-latest")
+            && workflow_content.contains("windows-latest")
+            && workflow_content.contains("macos-latest");
 
         assert!(
-            has_conditional_logic,
-            "Release workflow should have platform-specific feature configuration"
+            has_multi_platform,
+            "Release workflow should build for Linux, Windows, and macOS"
         );
     }
 
@@ -81,13 +76,15 @@ mod tests {
     fn test_readme_documents_gpu_support_in_releases() {
         let readme = fs::read_to_string("README.md").expect("Failed to read README.md");
 
-        // Check that README mentions GPU support is available
+        // v2.0: GPU support via Airframe/wgpu. Check for wgpu/WebGPU mentions.
         let mentions_gpu = readme.to_lowercase().contains("gpu")
-            && (readme.to_lowercase().contains("vulkan") || readme.to_lowercase().contains("cuda"));
+            && (readme.to_lowercase().contains("wgpu")
+                || readme.to_lowercase().contains("webgpu")
+                || readme.to_lowercase().contains("airframe"));
 
         assert!(
             mentions_gpu,
-            "README should document GPU support availability"
+            "README should document GPU support (Airframe/wgpu in v2.0)"
         );
     }
 

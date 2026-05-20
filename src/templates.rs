@@ -318,4 +318,146 @@ mod tests {
         let stop_tokens = template.stop_tokens();
         assert_eq!(stop_tokens.len(), 0);
     }
+
+    #[test]
+    fn test_chatml_render_with_system_and_input() {
+        let template = TemplateFamily::ChatML;
+        let messages = vec![("user".to_string(), "Hello".to_string())];
+        let result = template.render(Some("You are helpful"), &messages, Some("New question"));
+        assert!(result.contains("<|im_start|>system\nYou are helpful<|im_end|>"));
+        assert!(result.contains("<|im_start|>user\nNew question<|im_end|>"));
+        assert!(result.contains("<|im_start|>assistant\n"));
+    }
+
+    #[test]
+    fn test_llama3_render_with_system_and_input() {
+        let template = TemplateFamily::Llama3;
+        let messages = vec![("user".to_string(), "Hi".to_string())];
+        let result = template.render(Some("Be concise"), &messages, Some("Ask me anything"));
+        assert!(result.contains("<|begin_of_text|><|start_header_id|>system<|end_header_id|>"));
+        assert!(result.contains("Be concise<|eot_id|>"));
+        assert!(result.contains("<|start_header_id|>assistant<|end_header_id|>"));
+    }
+
+    #[test]
+    fn test_openchat_render_with_input() {
+        let template = TemplateFamily::OpenChat;
+        let messages = vec![("user".to_string(), "Hello".to_string())];
+        let result = template.render(None, &messages, Some("Final question"));
+        assert!(result.contains("user: Final question\nassistant: "));
+    }
+
+    #[test]
+    fn test_openchat_render_no_input() {
+        let template = TemplateFamily::OpenChat;
+        let messages: Vec<(String, String)> = vec![];
+        let result = template.render(None, &messages, None);
+        assert_eq!(result, "assistant: ");
+    }
+
+    #[test]
+    fn test_generate_docker_template_creates_files() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        generate_docker_template(output, None).unwrap();
+        assert!(temp_dir.path().join("Dockerfile").exists());
+        assert!(temp_dir.path().join("docker-compose.yml").exists());
+        assert!(temp_dir.path().join("nginx.conf").exists());
+        assert!(temp_dir.path().join(".dockerignore").exists());
+    }
+
+    #[test]
+    fn test_generate_docker_template_project_name_substitution() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        generate_docker_template(output, Some("myproject")).unwrap();
+        let compose = fs::read_to_string(temp_dir.path().join("docker-compose.yml")).unwrap();
+        assert!(compose.contains("myproject-shimmy"));
+    }
+
+    #[test]
+    fn test_generate_kubernetes_template_creates_files() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        generate_kubernetes_template(output, Some("testapp")).unwrap();
+        assert!(temp_dir.path().join("deployment.yaml").exists());
+        assert!(temp_dir.path().join("service.yaml").exists());
+        assert!(temp_dir.path().join("configmap.yaml").exists());
+        let deployment = fs::read_to_string(temp_dir.path().join("deployment.yaml")).unwrap();
+        assert!(deployment.contains("testapp-deployment"));
+    }
+
+    #[test]
+    fn test_generate_railway_template_creates_files() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        generate_railway_template(output, None).unwrap();
+        assert!(temp_dir.path().join("railway.toml").exists());
+        assert!(temp_dir.path().join("Dockerfile").exists());
+    }
+
+    #[test]
+    fn test_generate_fly_template_creates_files() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        generate_fly_template(output, Some("myfly")).unwrap();
+        assert!(temp_dir.path().join("fly.toml").exists());
+        assert!(temp_dir.path().join("Dockerfile").exists());
+        let fly = fs::read_to_string(temp_dir.path().join("fly.toml")).unwrap();
+        assert!(fly.contains("myfly-ai"));
+    }
+
+    #[test]
+    fn test_generate_fastapi_template_creates_files() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        generate_fastapi_template(output, None).unwrap();
+        assert!(temp_dir.path().join("main.py").exists());
+        assert!(temp_dir.path().join("requirements.txt").exists());
+    }
+
+    #[test]
+    fn test_generate_express_template_creates_files() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        generate_express_template(output, Some("myexpress")).unwrap();
+        assert!(temp_dir.path().join("app.js").exists());
+        assert!(temp_dir.path().join("package.json").exists());
+        let pkg = fs::read_to_string(temp_dir.path().join("package.json")).unwrap();
+        assert!(pkg.contains("myexpress-shimmy-integration"));
+    }
+
+    #[test]
+    fn test_generate_template_dispatcher_docker() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        let msg = generate_template("docker", output, None).unwrap();
+        assert!(msg.contains("Docker template generated"));
+    }
+
+    #[test]
+    fn test_generate_template_dispatcher_kubernetes_alias() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let output = temp_dir.path().to_str().unwrap();
+        let msg = generate_template("k8s", output, Some("myapp")).unwrap();
+        assert!(msg.contains("Kubernetes template generated"));
+    }
+
+    #[test]
+    fn test_generate_template_dispatcher_all_types() {
+        let types = ["railway", "fly", "fastapi", "express"];
+        for template_type in &types {
+            let temp_dir = tempfile::TempDir::new().unwrap();
+            let output = temp_dir.path().to_str().unwrap();
+            let result = generate_template(template_type, output, None);
+            assert!(result.is_ok(), "Template type '{}' failed", template_type);
+        }
+    }
+
+    #[test]
+    fn test_generate_template_unknown_type() {
+        let result = generate_template("bogustype", "/tmp", None);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Unknown template type"));
+    }
 }

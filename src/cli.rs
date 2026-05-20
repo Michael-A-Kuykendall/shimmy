@@ -33,6 +33,10 @@ pub struct Cli {
     /// Offload first N MoE layers' expert tensors to CPU
     #[arg(long, global = true, value_name = "N", conflicts_with = "cpu_moe")]
     pub n_cpu_moe: Option<usize>,
+
+    /// Use legacy llama.cpp backend instead of Airframe GPU
+    #[arg(long, global = true)]
+    pub legacy: bool,
 }
 
 #[derive(Subcommand, Debug)]
