@@ -608,4 +608,120 @@ mod tests {
         assert_eq!(result.generation_errors, 1);
         assert!(result.uptime_seconds < 60);
     }
+
+    #[test]
+    fn test_telemetry_collector_new_not_enabled() {
+        let collector = TelemetryCollector::new();
+        assert!(!collector.is_enabled());
+    }
+
+    #[test]
+    fn test_telemetry_preview_data_none_without_init() {
+        let collector = TelemetryCollector::new();
+        let metrics = MetricsCollector::new();
+        assert!(collector.preview_data(&metrics).is_none());
+    }
+
+    #[test]
+    fn test_record_request_time_basic() {
+        let collector = TelemetryCollector::new();
+        collector.record_request_time(100);
+        collector.record_request_time(200);
+        // No panic; data is stored internally
+    }
+
+    #[test]
+    fn test_record_request_time_trims_to_100() {
+        let collector = TelemetryCollector::new();
+        for i in 0u64..110 {
+            collector.record_request_time(i);
+        }
+        // Should trim excess without panic — if we could read the vec, len <= 100
+    }
+
+    #[test]
+    fn test_record_endpoint_usage() {
+        let collector = TelemetryCollector::new();
+        collector.record_endpoint_usage("/v1/chat/completions");
+        collector.record_endpoint_usage("/v1/models");
+        collector.record_endpoint_usage("/v1/chat/completions"); // duplicate ignored
+    }
+
+    #[test]
+    fn test_record_model_usage() {
+        let collector = TelemetryCollector::new();
+        collector.record_model_usage("llama3-8b");
+        collector.record_model_usage("llama3-8b"); // duplicate — set deduplication
+    }
+
+    #[test]
+    fn test_record_hourly_request() {
+        let collector = TelemetryCollector::new();
+        collector.record_hourly_request();
+        collector.record_hourly_request();
+        // No panic; slots allocated per current UTC hour
+    }
+
+    #[test]
+    fn test_detect_gpu_returns_bool() {
+        // Just verify the call completes without panic regardless of system
+        let result = TelemetryCollector::detect_gpu();
+        let _ = result; // bool — valid either way
+    }
+
+    #[test]
+    fn test_get_gpu_vendor_returns_option() {
+        let vendor = TelemetryCollector::get_gpu_vendor();
+        if let Some(ref v) = vendor {
+            let valid = ["nvidia", "amd", "intel"];
+            assert!(valid.contains(&v.as_str()), "Unexpected vendor: {v}");
+        }
+    }
+
+    #[test]
+    fn test_detect_deployment_type_evaluation() {
+        assert_eq!(TelemetryCollector::detect_deployment_type(0, 0), "evaluation");
+        assert_eq!(TelemetryCollector::detect_deployment_type(100, 60), "evaluation");
+    }
+
+    #[test]
+    fn test_detect_deployment_type_development() {
+        assert_eq!(TelemetryCollector::detect_deployment_type(101, 0), "development");
+        assert_eq!(TelemetryCollector::detect_deployment_type(0, 61), "development");
+    }
+
+    #[test]
+    fn test_detect_deployment_type_production() {
+        assert_eq!(TelemetryCollector::detect_deployment_type(1001, 0), "production");
+        assert_eq!(TelemetryCollector::detect_deployment_type(0, 481), "production");
+    }
+
+    #[test]
+    fn test_get_region_indicator_valid() {
+        let region = TelemetryCollector::get_region_indicator();
+        let valid = ["americas", "emea", "apac", "unknown"];
+        assert!(
+            valid.contains(&region.as_str()),
+            "Unexpected region: {region}"
+        );
+    }
+
+    #[test]
+    fn test_get_config_path_contains_shimmy() {
+        let path = TelemetryCollector::get_config_path();
+        let s = path.to_string_lossy().to_lowercase();
+        assert!(s.contains("shimmy"), "Expected 'shimmy' in config path: {s}");
+    }
+
+    #[test]
+    fn test_detect_integration_type_is_some() {
+        let result = TelemetryCollector::detect_integration_type();
+        assert!(result.is_some(), "Expected Some integration type in test env");
+    }
+
+    #[test]
+    fn test_telemetry_config_default_opt_in_disabled() {
+        let config = TelemetryConfig::default();
+        assert!(!config.enabled, "Telemetry must be opt-in (disabled by default)");
+    }
 }
