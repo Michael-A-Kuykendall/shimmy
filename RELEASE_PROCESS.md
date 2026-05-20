@@ -1,4 +1,120 @@
-# Shimmy Release Process - No More Public Failures
+# Shimmy Release Process — v2.0
+
+This document describes the release process for Shimmy v2.0+ (Airframe GPU engine, wgpu/WebGPU backend).
+
+---
+
+## Gate Overview
+
+7 mandatory gates run in the `preflight` job of `release.yml`. All must pass or the release stops.
+
+| Gate | What it validates |
+|------|-------------------|
+| 1/7 — Core Build | `cargo build --features airframe,huggingface` succeeds with the Airframe submodule |
+| ~~2~~ | **Removed** — CUDA gate is gone. Airframe uses wgpu; no CUDA dependency exists. |
+| 3/7 — Template Packaging | Docker templates are included in the crates.io package (Issue #60 regression guard) |
+| 4/7 — Binary Size | `shimmy` binary stays under 20 MB constitutional limit |
+| 5/7 — Test Suite | `cargo test --lib --no-default-features --features huggingface` passes |
+| 5.1/7 — Airframe Compile | `cargo check --features airframe` — GPU engine integration compiles cleanly |
+| 5.5/7 — Issue Regression | Per-issue tests in `tests/regression_tests.rs` all pass |
+| 6/7 — Documentation | `cargo doc` builds without errors |
+| 7/7 — crates.io Dry-Run | `cargo publish --dry-run` validates the crates.io-safe feature set |
+
+---
+
+## Recommended Workflow
+
+### 1. Validate locally first (fastest)
+
+```bash
+# Core build with Airframe engine
+cd shimmy_integration
+cargo build --release --features airframe,huggingface
+
+# Non-GPU regression tests
+cargo test --no-default-features --features huggingface
+
+# Airframe compile check
+cargo check --features airframe
+
+# Issue regression tests
+cargo test --test regression_tests --no-default-features --features huggingface
+```
+
+### 2. Dry-run on the test branch (exact CI environment)
+
+```bash
+git checkout -b test-release-vX.Y.Z
+git push private test-release-vX.Y.Z
+# Wait for release.yml to run on GitHub Actions
+# Inspect gate results before tagging
+```
+
+> **Note:** Always push to `private`, never to `origin` (public repo).
+
+### 3. Tag and release
+
+```bash
+git checkout main
+git tag vX.Y.Z
+git push private vX.Y.Z
+
+# Clean up test branch
+git push private --delete test-release-vX.Y.Z
+git branch -d test-release-vX.Y.Z
+```
+
+---
+
+## Troubleshooting
+
+### Gate 1 (Core Build) fails
+- Ensure the `airframe` submodule is checked out: `git submodule update --init --recursive`
+- Verify `AIRFRAME_ACCESS_TOKEN` secret is set in the GitHub repo settings
+
+### Gate 3 (Template Packaging) fails
+- Check that `templates/docker/Dockerfile` exists and is committed
+- The system handles `Cargo.lock` changes automatically via `--allow-dirty`
+
+### Gate 4 (Binary Size) fails
+- Binary exceeded 20 MB — review recently added dependencies
+- `cargo bloat --release` to identify the largest contributors
+
+### Gate 5.1 (Airframe Compile) fails
+- The Airframe submodule at `airframe/` has a compilation error
+- `cargo check --features airframe` locally to see the error
+
+### Gate 5.5 (Issue Regression) fails
+- A specific issue regression test failed; the gate output names the test and issue number
+- Fix the regression before releasing
+
+### Gate 7 (crates.io Dry-Run) fails
+- If `path` dependency error: ensure publish uses `--no-default-features --features huggingface` (no `airframe` path dep)
+- If version conflict: bump the version in `Cargo.toml`
+
+---
+
+## Feature Flag Reference
+
+| Flag | crates.io safe | Included in published binary |
+|------|---------------|------------------------------|
+| `huggingface` | ✅ | ✅ crates.io install |
+| `airframe` | ❌ (path dep) | ✅ GitHub Release binary |
+| `full` / `apple` | ❌ | ✅ platform builds |
+
+The crates.io version (`cargo install shimmy`) ships with `huggingface` only.  
+GPU-accelerated Airframe binaries are distributed via GitHub Releases.
+
+---
+
+## Files in This System
+
+- `scripts/dry-run-release.sh` — Local gate emulation
+- `.github/workflows/release.yml` — Real release gates (7 gates)
+- `.github/workflows/ci.yml` — PR/push quality gates
+- `RELEASE_GATES_CHECKLIST.md` — Live gate status reference
+- `RELEASE_PROCESS.md` — This document
+
 
 This document describes the **bulletproof release process** that eliminates public CI failures through complete dry-run testing.
 

@@ -1,7 +1,6 @@
 /// Integration tests to validate the release gate system itself works correctly
 /// This ensures our release gates properly catch real issues and block releases
 use std::process::Command;
-use std::time::Duration;
 
 #[test]
 fn test_release_gate_system_exists() {
@@ -17,7 +16,7 @@ fn test_release_gate_system_exists() {
     // v2.0: Crates.io Gate 7 removed — publish = false (distributed as binaries).
     // Gates are now numbered /6 instead of /7.
     assert!(
-        workflow_content.contains("GATE 1/6: Core Build Validation"),
+        workflow_content.contains("GATE 1/7: Core Build Validation"),
         "Missing Gate 1 (Core Build)"
     );
     assert!(
@@ -29,21 +28,29 @@ fn test_release_gate_system_exists() {
         "Missing Gate 4 (Binary Size)"
     );
     assert!(
-        workflow_content.contains("GATE 5/6: Test Suite Validation"),
+        workflow_content.contains("GATE 5/7: Test Suite Validation"),
         "Missing Gate 5 (Test Suite)"
     );
     assert!(
-        workflow_content.contains("GATE 6/6: Documentation Validation"),
+        workflow_content.contains("GATE 5.1/7: Airframe Integration Compile Check"),
+        "Missing Gate 5.1 (Airframe Integration)"
+    );
+    assert!(
+        workflow_content.contains("GATE 5.5/7: Issue Regression Tests"),
+        "Missing Gate 5.5 (Issue Regression)"
+    );
+    assert!(
+        workflow_content.contains("GATE 6/7: Documentation Validation"),
         "Missing Gate 6 (Documentation)"
     );
-    // Verify intentional removal of CUDA and crates.io gates is documented in the workflow
+    assert!(
+        workflow_content.contains("GATE 7/7: crates.io Package Validation"),
+        "Missing Gate 7 (crates.io)"
+    );
+    // Verify intentional removal of CUDA gate (Gate 2) is documented in the workflow
     assert!(
         workflow_content.contains("GATE 2") && workflow_content.contains("intentionally removed"),
         "Workflow should document intentional removal of CUDA gate"
-    );
-    assert!(
-        workflow_content.contains("GATE 7") && workflow_content.contains("intentionally removed"),
-        "Workflow should document intentional removal of crates.io gate"
     );
 }
 
@@ -217,55 +224,9 @@ fn test_local_validation_scripts_exist() {
     // Note: Not testing bash script existence on Windows, but it should exist for Unix systems
 }
 
-#[test]
-fn test_gate_2_cuda_timeout_detection() {
-    // CUDA timeout detection test (Issue #59 protection)
-    // This test runs the full CUDA build to completion, regardless of duration
-
-    use std::time::Instant;
-    let start = Instant::now();
-
-    let output = Command::new("cargo")
-        .args(["check", "--no-default-features", "--features", "llama"])
-        .output();
-
-    let duration = start.elapsed();
-
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                println!(
-                    "✅ Gate 2 passed - CUDA check completed successfully in {:?}",
-                    duration
-                );
-            } else {
-                // Build failed - this could be due to missing CUDA, linking issues, etc.
-                // Log the failure but don't panic since CUDA availability varies by system
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                println!(
-                    "⚠️ Gate 2 - CUDA build failed after {:?}: {}",
-                    duration, stderr
-                );
-
-                // Only fail if this is a timeout-related issue or constitutional violation
-                if duration > Duration::from_secs(3600) {
-                    // 1 hour constitutional limit
-                    panic!(
-                        "Gate 2 FAILED - Build exceeded 1 hour constitutional limit: {:?}",
-                        duration
-                    );
-                }
-
-                // For other failures (missing CUDA, linker issues), log but continue
-                // This allows the gate to pass on systems without CUDA while still catching timeouts
-                println!("Gate 2 - Build failed due to system configuration, not timeout issues");
-            }
-        }
-        Err(e) => {
-            panic!("Gate 2 FAILED - Could not execute cargo build: {}", e);
-        }
-    }
-}
+// Gate 2 (CUDA timeout detection) removed in v2.0.
+// Airframe uses wgpu/WebGPU — no CUDA dependency exists. llama.cpp `llama` feature
+// is no longer part of this codebase.
 
 #[test]
 fn test_gate_7_cratesio_validation() {
