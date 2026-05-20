@@ -21,7 +21,7 @@ Shimmy v2.0 uses the Airframe WebGPU engine (wgpu), replacing the llama.cpp back
 
 | Metric | Shimmy | Ollama | Notes |
 |--------|--------|--------|-------|
-| **GPU Memory per Model** | Same | Same | Both use llama.cpp backend |
+| **GPU Memory per Model** | Same | Same | Both use GGUF model format |
 | **GPU Power Draw** | Same | Same | Identical inference workload |
 | **CPU RAM Overhead** | ~50MB* | 200MB+ | Shimmy more efficient |
 | **Startup Power Spike** | Low | High | Lightweight vs 680MB binary |
@@ -58,10 +58,12 @@ Model: Llama-3.1-70B (Q4_0)
 ## Optimization Features
 
 ### Automatic GPU Detection
-- **NVIDIA**: CUDA acceleration enabled automatically
-- **AMD**: ROCm support (requires ROCm installation)
-- **Apple**: Metal acceleration on macOS (M1/M2/M3)
-- **Intel**: GPU support via OpenVINO backend
+- **NVIDIA**: Vulkan / D3D12 backend selected via wgpu adapter enumeration
+- **AMD**: Vulkan backend (Linux / Windows); Metal on macOS via wgpu
+- **Apple Silicon**: Metal backend selected automatically
+- **Intel**: Vulkan / D3D12 adapter selected by wgpu
+
+Use `shimmy gpu-info` to see which adapter wgpu selected on your system.
 
 ### Memory Management
 - **Smart batching**: Processes multiple requests efficiently
@@ -71,7 +73,7 @@ Model: Llama-3.1-70B (Q4_0)
 ### Power Efficiency
 - **Fast startup**: No warmup period, immediate inference
 - **Efficient shutdown**: Clean VRAM release on exit
-- **Minimal overhead**: 5MB binary vs competitors' hundreds of MB
+- **Minimal overhead**: Single binary, no Python runtime, no daemon dependencies
 
 ## Benchmarking Tools
 
@@ -121,13 +123,13 @@ curl http://localhost:11434/health
 
 ### Identical Aspects
 - **Model loading**: Same GGUF format, same memory requirements
-- **Inference engine**: Both use llama.cpp, identical GPU utilization
-- **Model compatibility**: Same models work in both systems
+- **GPU utilization**: Both run the transformer on GPU; Shimmy uses Airframe (wgpu), Ollama uses llama.cpp
+- **Model compatibility**: Same GGUF models work in both systems
 
 ### Shimmy Advantages
 - **Lower system overhead**: 50MB vs 200MB+ base memory usage
 - **Faster startup**: <100ms vs 5-10s startup time
-- **Smaller footprint**: 5MB binary vs 680MB installation
+- **Smaller footprint**: Single binary vs 680MB Ollama installation
 
 ### Power Efficiency Summary
 ```

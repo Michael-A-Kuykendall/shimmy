@@ -133,28 +133,29 @@ export SHIMMY_MMAP=true
 
 ### GPU Support
 
-Shimmy automatically detects and supports GPU acceleration through llama.cpp:
+Shimmy v2.0 uses the **Airframe** engine (WebGPU via wgpu) for GPU acceleration. No CUDA toolkit, Vulkan SDK, or ROCm installation is required.
 
 **Supported GPU Vendors:**
-- **NVIDIA**: CUDA acceleration (automatic detection via `nvidia-smi`)
-- **AMD**: ROCm acceleration (detection via `rocm-smi`, `rocminfo`, or Windows device enumeration)
-- **Intel**: GPU acceleration via Intel GPU drivers
-- **Apple**: Metal acceleration (automatic on macOS with supported GPUs)
+- **NVIDIA**: D3D12 (Windows) or Vulkan (Linux) backend via wgpu
+- **AMD**: Vulkan backend (Linux/Windows); Metal on macOS via wgpu
+- **Intel**: D3D12 or Vulkan adapter selected by wgpu
+- **Apple Silicon**: Metal backend selected automatically
 
 **Requirements:**
-- **NVIDIA**: CUDA drivers and toolkit installed
-- **AMD**: ROCm toolkit for Linux, or compatible Windows drivers for Radeon GPUs
-- **Intel**: Latest Intel GPU drivers
+- Download a release binary from GitHub Releases (Airframe GPU engine included)
+- No additional SDK or driver installation needed for default path
 
 **Configuration:**
-No manual configuration required - GPU acceleration is automatically enabled when compatible hardware and drivers are detected. Falls back to CPU inference if GPU is unavailable.
+No manual configuration required — wgpu auto-selects the best GPU adapter.
 
 **Verification:**
-Check if your GPU is detected:
+Check which GPU adapter was selected:
 ```bash
-shimmy serve --bind 127.0.0.1:11435 --verbose
-# Look for GPU initialization messages in the output
+shimmy gpu-info
 ```
+
+**Legacy llama.cpp GPU (CUDA, ROCm, Vulkan):**
+Available via `--legacy` flag or `SHIMMY_ENGINE_BACKEND=llama`. See `docs/MIGRATION_v2.md`.
 
 ## Security Considerations
 
