@@ -35,7 +35,7 @@ impl Default for GenOptions {
 #[derive(Debug, Clone)]
 #[cfg(feature = "huggingface")]
 pub enum ModelBackend {
-    // GGUF via llama.cpp (existing)
+    // GGUF format (handled natively by Airframe GPU engine)
     LlamaGGUF {
         base_path: PathBuf,
         lora_path: Option<PathBuf>,
@@ -138,8 +138,6 @@ pub trait LoadedModel: Send + Sync {
         Err(anyhow!("Vision not supported by this model"))
     }
 }
-
-pub mod llama;
 
 #[cfg(feature = "huggingface")]
 pub mod huggingface;
