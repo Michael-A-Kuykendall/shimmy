@@ -34,7 +34,7 @@
 
 Shimmy is a **single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
 
-**🎉 NEW in v2.0.0**: Shimmy now runs on [Airframe](#-airframe-engine), a pure-Rust WGSL GPU engine. No C++ toolchain, no backend flags, no compilation required. The llama.cpp path is [historically parked](#%EF%B8%8F-llama.cpp-historical-note) and remains available via `--legacy`.
+**🎉 NEW in v2.0.0**: Shimmy now runs on [Airframe](#-airframe-engine), a pure-Rust WGSL GPU engine. No C++ toolchain, no backend flags, no compilation required.
 
 ## 🔥 Airframe Engine
 
@@ -56,20 +56,10 @@ SHIMMY_BASE_GGUF=/path/to/TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf ./shimmy serve
 SHIMMY_BASE_GGUF=/path/to/model.gguf SHIMMY_MAX_CTX=4096 ./shimmy serve
 ```
 
-## ⚠️ llama.cpp: Historical Note
+## 📦 Migrating from v1.x
 
-The llama.cpp inference backend is **historically parked** as of v1.10.0. It is not deleted and continues to work, but it is no longer the default and will not receive new features.
-
-**Everything TinyLlama could do via llama.cpp works identically through Airframe.** As new model families are supported, they will be added to the Airframe engine first.
-
-To opt back to llama.cpp:
-```bash
-# Via CLI flag
-./shimmy serve --legacy --model-path /path/to/model.gguf
-
-# Via environment variable
-SHIMMY_ENGINE_BACKEND=llama ./shimmy serve --model-path /path/to/model.gguf
-```
+The llama.cpp backend is **removed in v2.0.0**. The Airframe engine is the only inference path.
+See [docs/MIGRATION_v2.md](docs/MIGRATION_v2.md) for the step-by-step migration guide.
 
 ## Developer Tools
 
@@ -156,18 +146,9 @@ print(resp.choices[0].message.content)
 
 ## 🧠 Advanced MOE (Mixture of Experts) Support
 
-> **Note**: MOE CPU offloading is available via the **llama.cpp legacy path** (`--legacy` flag or `SHIMMY_ENGINE_BACKEND=llama`). Airframe (the default engine in v2.0) does not yet support MoE models.
+> **Note**: MoE (Mixture of Experts) CPU offloading is on the Airframe roadmap. See [docs/AIRFRAME_MOE_ROADMAP.md](docs/AIRFRAME_MOE_ROADMAP.md) for the implementation plan.
 
-**Run 70B+ models on consumer hardware** with intelligent CPU/GPU hybrid processing (legacy path):
-
-- **🔄 CPU MOE Offloading**: Automatically distribute model layers across CPU and GPU
-- **🧮 Intelligent Layer Placement**: Optimizes which layers run where for maximum performance
-- **💾 Memory Efficiency**: Fit larger models in limited VRAM by using system RAM strategically
-
-```bash
-# Use llama.cpp legacy path for MoE models
-shimmy serve --legacy --cpu-moe --n-cpu-moe 8
-```
+**Run 70B+ models on consumer hardware** — coming to the Airframe engine. Track progress on the [roadmap](docs/ROADMAP.md).
 
 **Perfect for**: Large models (70B+), limited VRAM systems, cost-effective inference
 
@@ -365,9 +346,6 @@ shimmy discover                           # Refresh model discovery
 shimmy generate --name X --prompt "Hi"   # Test generation
 shimmy probe model-name                   # Verify model loads
 shimmy gpu-info                           # Show selected WebGPU adapter
-
-# Legacy llama.cpp path only:
-shimmy serve --legacy --cpu-moe --n-cpu-moe 8  # MOE hybrid CPU/GPU (legacy)
 ```
 
 ## Technical Architecture
@@ -419,7 +397,6 @@ shimmy serve --legacy --cpu-moe --n-cpu-moe 8  # MOE hybrid CPU/GPU (legacy)
 |------|--------------|--------------|------------|
 | **Shimmy** | **<100ms** | **50MB** | **100%** |
 | Ollama | 5-10s | 200MB+ | Partial |
-| llama.cpp | 1-2s | 100MB | Via llama-server |
 
 ## Quality & Reliability
 

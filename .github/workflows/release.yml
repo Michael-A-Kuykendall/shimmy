@@ -26,7 +26,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: "🚧 GATE 1/6: Core Build Validation"
+      - name: "🚧 GATE 1/7: Core Build Validation"
         run: |
           echo "::group::Gate 1: Core Build"
           # Full build with Airframe engine (airframe submodule checked out above)
@@ -64,21 +64,21 @@ jobs:
           echo "✅ Binary size ${size} bytes within constitutional limit"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 5/6: Test Suite Validation"
+      - name: "🚧 GATE 5/7: Test Suite Validation"
         run: |
           echo "::group::Gate 5: Tests"
           cargo test --lib --no-default-features --features huggingface -- --test-threads=1
           echo "✅ Core tests passing"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 5.1/6: Airframe Integration Compile Check"
+      - name: "🚧 GATE 5.1/7: Airframe Integration Compile Check"
         run: |
           echo "::group::Gate 5.1: Airframe feature compiles cleanly"
           cargo check --features airframe
           echo "✅ Airframe engine integration compiles without errors"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 5.5/6: Issue Regression Tests"
+      - name: "🚧 GATE 5.5/7: Issue Regression Tests"
         run: |
           echo "::group::Gate 5.5: Issue Regression Prevention"
           echo "🔄 Running issue-specific regression tests to prevent user-reported bug regressions..."
@@ -118,7 +118,7 @@ jobs:
           echo "✅ All issue regression tests passed - no user-reported bug regressions detected"
           echo "::endgroup::"
 
-      - name: "🚧 GATE 6/6: Documentation Validation"
+      - name: "🚧 GATE 6/7: Documentation Validation"
         run: |
           echo "::group::Gate 6: Documentation"
           cargo doc --no-deps --no-default-features --features huggingface
@@ -141,7 +141,7 @@ jobs:
         id: gates
         run: |
           echo "ALL MANDATORY GATES PASSED"
-          echo "Gate 1: Core Build (Airframe GPU engine via submodule)"
+          echo "Gate 1/7: Core Build (Airframe GPU engine via submodule)"
           echo "Gate 3: Template Packaging (Issue #60)"
           echo "Gate 4: Binary Size Constitutional Limit"
           echo "Gate 5: Test Suite"
@@ -218,7 +218,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: true
-      GGML_CUDA_NO_GIT_VER: "1"  # Disable git version check in llama.cpp CMake
     steps:
       - uses: actions/checkout@v4
         with:
