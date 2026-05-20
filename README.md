@@ -13,6 +13,8 @@
   [![GitHub Stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=social)](https://github.com/Michael-A-Kuykendall/shimmy/stargazers)
 
   [![💝 Sponsor this project](https://img.shields.io/badge/💝_Sponsor_this_project-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/Michael-A-Kuykendall)
+
+  **Languages:** [简体中文](docs/USER_MANUAL.zh-CN.md) · [繁體中文](docs/USER_MANUAL.zh-TW.md)
 </div>
 
 **Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
