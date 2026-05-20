@@ -1,0 +1,4 @@
+[submodule "airframe"]
+	path = airframe
+	url = https://github.com/Michael-A-Kuykendall/airframe.git
+	branch = openclaw-local-provider

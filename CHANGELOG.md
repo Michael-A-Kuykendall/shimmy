@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-05-20
+
+### 🚀 **v2.0 PUBLIC RELEASE** — Airframe GPU Engine + Submodule Distribution
+
+This is the public release of Shimmy v2.0. The Airframe engine (introduced in v1.10.0 as an internal
+milestone) is now the officially declared default. Distribution architecture has been updated: Airframe
+ships as a git submodule in CI, enabling `--features airframe` release binaries for all platforms.
+The crates.io package (`cargo install shimmy`) provides the huggingface engine variant; GitHub Releases
+provide the full Airframe GPU binaries.
+
+### What's New Since v1.10.0
+
+**Distribution**
+- Airframe added as a git submodule — CI now builds all release binaries with GPU engine included
+- `publish = true`: `cargo install shimmy` now works (installs huggingface engine variant from crates.io)
+- GitHub Releases provide platform binaries with the full Airframe WebGPU engine
+
+**Versioning**
+- Formal v2.0.0 semantic version bump to signal the architectural break from llama.cpp v1.x
+- CHANGELOG moved from internal milestones to public release cadence
+
+**Migration Guide**
+- See `docs/MIGRATION_v2.md` for step-by-step migration from v1.x (llama.cpp) to v2.0 (Airframe)
+
 ## [1.10.0] - 2026-05-19
 
 ### 🔧 **AIRFRAME ENGINE** — Custom WGSL GPU Backend Replaces llama.cpp

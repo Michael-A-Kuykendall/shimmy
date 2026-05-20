@@ -2841,7 +2841,7 @@ dependencies = [
 
 [[package]]
 name = "shimmy"
-version = "1.10.0"
+version = "2.0.0"
 dependencies = [
  "airframe",
  "anyhow",
@@ -2915,7 +2915,9 @@ dependencies = [
 
 [[package]]
 name = "shimmytok"
-version = "0.7.1"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f2381f12d5c3f475feaf705354294803f350c13d0788f3ab367ac5979df9021"
 dependencies = [
  "fancy-regex",
  "rayon",

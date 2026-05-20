@@ -1,9 +1,9 @@
 [package]
 name = "shimmy"
-version = "1.10.0"
+version = "2.0.0"
 edition = "2021"
 license = "MIT"
-description = "Lightweight sub-5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading. Now with GitHub Spec-Kit integration for systematic development."
+description = "Lightweight Ollama-compatible inference server with native SafeTensors support. No Python dependencies, cross-platform WebGPU acceleration via Airframe."
 homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
 repository = "https://github.com/Michael-A-Kuykendall/shimmy"
 readme = "README.md"
@@ -19,11 +19,11 @@ include = [
     "LICENSE",
     "build.rs"
 ]
-# Airframe depends on a path crate and cannot be published to crates.io
-publish = false
+# crates.io publish: default features exclude airframe (path dep); full builds use --features airframe with submodule
+publish = true
 
 [features]
-default = ["airframe", "huggingface", "llama"]  # Full local dev + binary builds
+default = ["huggingface"]  # crates.io-safe default; release binaries built by CI with --features airframe
 # Engine backends
 airframe = ["dep:airframe"]  # Airframe native GPU engine (default in v2.0; requires ../airframe path)
 llama = ["dep:shimmy-llama-cpp-2"]
@@ -79,8 +79,8 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls", "stream"], defau
 # llama.cpp bindings (optional) - published shimmy-llama-cpp-2 with MoE CPU offloading support
 shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = false }
 
-# Airframe native GPU inference (optional — requires ../airframe path dep; not publishable to crates.io)
-airframe = { path = "../", optional = true }
+# Airframe native GPU inference (optional — requires airframe submodule; path dep stripped on crates.io publish)
+airframe = { path = "airframe/", version = "0.0.1", optional = true }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
@@ -119,4 +119,5 @@ name = "generation_performance"
 harness = false
 
 [workspace]
+exclude = ["airframe"]  # airframe submodule is its own workspace root
 
