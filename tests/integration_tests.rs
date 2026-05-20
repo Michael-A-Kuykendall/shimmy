@@ -10,7 +10,7 @@ async fn create_test_server() -> (String, tokio::task::JoinHandle<()>) {
     use shimmy::{model_registry::Registry, AppState};
 
     let registry = Registry::default();
-    let engine = Box::new(shimmy::engine::llama::LlamaEngine::new());
+    let engine = Box::new(shimmy::engine::adapter::InferenceEngineAdapter::new());
 
     let state = Arc::new(AppState::new(engine, registry));
 
