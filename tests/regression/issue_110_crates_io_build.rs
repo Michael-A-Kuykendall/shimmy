@@ -91,34 +91,34 @@ fn test_llama_cpp_dependency_compatibility() {
 
 #[test]
 fn test_crates_io_package_builds_successfully() {
-    // Comprehensive test that the entire package builds from crates.io format
-
-    // First test: Package creation succeeds
-    let package_output = Command::new("cargo")
-        .args(["package", "--allow-dirty"])
-        .output()
-        .expect("Failed to run cargo package");
-
+    // v2.0: publish = false is intentionally set because the airframe path dep
+    // (path = "../") cannot be published to crates.io. Shimmy is distributed as
+    // release binaries. Validate that this is correctly declared.
+    let cargo_toml =
+        std::fs::read_to_string("Cargo.toml").expect("Failed to read Cargo.toml");
     assert!(
-        package_output.status.success(),
-        "Package creation failed (Issue #110 regression): {}",
-        String::from_utf8_lossy(&package_output.stderr)
+        cargo_toml.contains("publish = false"),
+        "Cargo.toml should declare publish = false (path dep blocks crates.io publish)"
     );
 
-    // Second test: Package verification builds successfully
-    // (This runs the same verification that crates.io would run)
-    let verify_output = Command::new("cargo")
-        .args(["package", "--allow-dirty", "--no-verify"])
+    // Validate that the CI-safe feature set (no path dep) builds correctly
+    let build_output = Command::new("cargo")
+        .args([
+            "build",
+            "--no-default-features",
+            "--features",
+            "huggingface",
+        ])
         .output()
-        .expect("Failed to run cargo package verification");
+        .expect("Failed to run cargo build");
 
     assert!(
-        verify_output.status.success(),
-        "Package verification failed (Issue #110 regression): {}",
-        String::from_utf8_lossy(&verify_output.stderr)
+        build_output.status.success(),
+        "CI-safe feature set build failed: {}",
+        String::from_utf8_lossy(&build_output.stderr)
     );
 
-    println!("✅ Package builds successfully in crates.io format");
+    println!("Package distribution configuration validated (binary-only, no crates.io)");
 }
 
 #[test]
