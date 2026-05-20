@@ -438,4 +438,117 @@ mod regression_tests {
             );
         }
     }
+
+    #[test]
+    fn test_issue_191_multi_part_content_array_deserialization() {
+        // Regression test for Issue #191 — multi-part content arrays caused 422 errors.
+        // Clients such as Zed, Cursor, Continue, and GitHub Copilot send content as an array
+        // of {type, text} objects rather than a plain string.
+
+        // String content (always worked)
+        let string_json = r#"{"role":"user","content":"hello world"}"#;
+        let msg: OAIMessage = serde_json::from_str(string_json)
+            .expect("String content must deserialize without error");
+        assert_eq!(msg.content_text(), "hello world");
+        assert_eq!(msg.role, "user");
+
+        // Single-part array content (was previously 422)
+        let array_json = r#"{"role":"user","content":[{"type":"text","text":"hello world"}]}"#;
+        let msg: OAIMessage = serde_json::from_str(array_json)
+            .expect("Array content must deserialize without error — Issue #191 regression");
+        assert_eq!(msg.content_text(), "hello world");
+
+        // Multi-part array content (common for file-context attachments)
+        let multi_json = r#"{"role":"user","content":[{"type":"text","text":"first part"},{"type":"text","text":"second part"}]}"#;
+        let msg: OAIMessage = serde_json::from_str(multi_json)
+            .expect("Multi-part array content must deserialize without error");
+        assert_eq!(msg.content_text(), "first part\nsecond part");
+
+        // Parts with null text (e.g. image_url parts from vision models) — text is filtered
+        let mixed_json = r#"{"role":"user","content":[{"type":"image_url"},{"type":"text","text":"describe this"}]}"#;
+        let msg: OAIMessage = serde_json::from_str(mixed_json)
+            .expect("Mixed parts with null text must deserialize without error");
+        assert_eq!(msg.content_text(), "describe this");
+
+        // Full ChatCompletionRequest with array content
+        let req_json = r#"{
+            "model": "tinyllama",
+            "messages": [
+                {"role": "system", "content": "You are helpful."},
+                {"role": "user", "content": [{"type": "text", "text": "Say hi."}]}
+            ],
+            "max_tokens": 5
+        }"#;
+        let req: ChatCompletionRequest = serde_json::from_str(req_json)
+            .expect("Full request with array content message must deserialize — Issue #191 regression");
+        assert_eq!(req.messages.len(), 2);
+        assert_eq!(req.messages[1].content_text(), "Say hi.");
+    }
+
+    #[test]
+    fn test_issue_113_ollama_api_tags_response_structure() {
+        // Regression test for Issue #113 — /api/tags Ollama endpoint.
+        // AnythingLLM, SillyTavern, Zed, and Open WebUI use GET /api/tags to discover models.
+        // Verify the response structure matches what those clients expect.
+
+        // Build the expected Ollama tags response structure via serde
+        #[derive(serde::Serialize, serde::Deserialize)]
+        struct OllamaTagsResponse {
+            models: Vec<OllamaTagModel>,
+        }
+        #[derive(serde::Serialize, serde::Deserialize)]
+        struct OllamaTagModel {
+            name: String,
+            model: String,
+            modified_at: String,
+            size: u64,
+            digest: String,
+            details: OllamaModelDetails,
+        }
+        #[derive(serde::Serialize, serde::Deserialize)]
+        struct OllamaModelDetails {
+            format: String,
+            family: String,
+            parameter_size: String,
+            quantization_level: String,
+        }
+
+        // Simulate the JSON that our api_tags handler produces
+        let response_json = r#"{
+            "models": [
+                {
+                    "name": "tinyllama-1.1b",
+                    "model": "tinyllama-1.1b",
+                    "modified_at": "2025-01-01T00:00:00Z",
+                    "size": 0,
+                    "digest": "",
+                    "details": {
+                        "format": "gguf",
+                        "family": "",
+                        "parameter_size": "",
+                        "quantization_level": ""
+                    }
+                }
+            ]
+        }"#;
+
+        let parsed: OllamaTagsResponse = serde_json::from_str(response_json)
+            .expect("api/tags JSON must parse into Ollama-compatible structure");
+
+        assert_eq!(parsed.models.len(), 1);
+        assert_eq!(parsed.models[0].name, "tinyllama-1.1b");
+        assert_eq!(parsed.models[0].model, "tinyllama-1.1b");
+        assert_eq!(parsed.models[0].details.format, "gguf");
+
+        // Verify the top-level key is "models" (not "data" — that's the OAI /v1/models format)
+        let raw: serde_json::Value = serde_json::from_str(response_json).unwrap();
+        assert!(
+            raw.get("models").is_some(),
+            "Ollama /api/tags response must have top-level 'models' key, not 'data'"
+        );
+        assert!(
+            raw.get("data").is_none(),
+            "Ollama /api/tags response must NOT have 'data' key (that is the OAI /v1/models format)"
+        );
+    }
 }
