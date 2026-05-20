@@ -255,6 +255,14 @@ This release resolves critical Docker image publishing failures that prevented c
 - Added Docker build validation to release gates
 - Enhanced containerized deployment reliability
 
+## [1.7.4] - 2025-10-23
+
+### 🔧 Fixes
+
+- Auto-update `Cargo.lock` before `cargo publish` to prevent crates.io publish failures
+- Gate 4 now validates huggingface binary size (2.6 MB) instead of CUDA binary (26 MB)
+- ARM64 Linux CI/CD: remove unused macOS config from Cross.toml, silence cross-compilation warnings
+
 ## [1.7.3] - 2025-10-12
 
 ### 🎯 **SYSTEMATIC ENGINEERING EXCELLENCE** - Production Quality Release
@@ -440,7 +448,19 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 
 *This release transforms shimmy from a working prototype into an **ENTERPRISE-GRADE INFERENCE ENGINE** with systematic quality assurance and architectural integrity validation.*
 
-## [1.6.0] - 2025-01-03
+## [1.7.2] - 2025-10-10
+
+### 🔧 Fixes
+
+- Corrected feature flag names in Gate 6 documentation build step of the release workflow
+
+## [1.7.0] - 2025-10-08
+
+### 🐛 Bug Fixes
+
+- Added explicit version requirement for `llama-cpp-2` git dependency to unblock crates.io publishing
+
+## [1.6.0] - 2025-10-04
 
 ### 🎯 Windows CUDA Support (First in Rust LLM Ecosystem!)
 
@@ -496,6 +516,83 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 - **Performance Analysis**: Real benchmarking tools and GPU consumption data
 - **Metrics Transparency**: Complete disclosure of business intelligence collection
 - **Contributing Guidelines**: Clear maintainer process and legal requirements
+
+## [1.5.6] - 2025-09-23
+
+### 🐛 Bug Fixes
+
+- Strip carriage returns from version validation output to handle Windows line-ending differences (prevents false version mismatches on Windows CI)
+
+## [1.5.5] - 2025-09-22
+
+### 🔧 CI/CD
+
+- Comprehensive version validation added to CI/CD to prevent Issue #63 version mismatches for all forks
+- Added version regression test for Windows binary version mismatch
+
+## [1.5.4] - 2025-09-20
+
+### 🐛 Bug Fixes
+
+- Updated CUDA version to 12.6.0; release workflow made resilient to partial build failures
+
+## [1.5.3] - 2025-09-20
+
+### 🐛 Bug Fixes
+
+- Simplified to CUDA-only GPU in release CI for incremental stability testing
+
+## [1.5.2] - 2025-09-20
+
+### ✨ Features
+
+- GPU-enabled prebuilt release binaries: CUDA (NVIDIA) and Vulkan SDK installed in CI
+- Enabled MLX support in macOS release builds (Issue #68)
+- Enhanced OpenAI API compatibility for Open WebUI and AnythingLLM (Issue #70)
+
+## [1.5.1] - 2025-09-19
+
+### 🐛 Bug Fixes
+
+- Include template files in crates.io package to fix `cargo install` failures (Issue #64)
+
+## [1.5.0] - 2025-09-19
+
+### 🐛 Bug Fixes
+
+- Fixed GitHub Actions release workflow to prevent missing binaries in releases (Issue #57)
+- Improved error handling for missing models in OpenAI API compatibility layer
+- Added regression test for Windows binary version mismatch (Issue #63)
+
+## [1.4.2] - 2025-09-22
+
+### 🐛 Bug Fixes
+
+- Fixed template compilation failure affecting release builds
+- Improved Ollama model discovery for custom installation directories
+
+## [1.4.1] - 2025-09-17
+
+### 🐛 Bug Fixes
+
+- crates.io release fix: updated Cargo.lock and packaging for stable publish
+
+## [1.4.0] - 2025-09-17
+
+### ✨ Features
+
+**Shimmy Developer Ecosystem**
+- GPU backend support: CUDA, Vulkan, OpenCL backends added to build system
+- HuggingFace model ID detection for SafeTensors files
+- `cargo-deny` configuration for supply chain security (dependency audit)
+- 5 major advanced features: expanded API surface, enhanced model filtering
+- Comprehensive code quality improvements and CI enhancements
+
+## [1.3.5] - 2025-09-17
+
+### 🐛 Critical Fix
+
+- Fixed `anyhow` macro import collision causing build failures across all platforms
 
 ## [1.3.3] - 2025-09-15
 
@@ -573,6 +670,34 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 - Cloud platform deployment instructions (Railway, Render, Fly.io)
 - Cross-compilation guide for ARM64 Linux builds
 - Windows installation troubleshooting guide
+
+## [1.3.2] - 2025-09-12
+
+### 🐛 Bug Fixes
+
+**Issue #13: VSCode Integration with Qwen Models**
+- Fixed VSCode extension compatibility with Qwen3-4B-Instruct and other Qwen models
+- Enhanced automatic template detection for Qwen models (now uses ChatML template)
+- Added better error logging for model loading failures in OpenAI-compatible API
+- Improved error handling with detailed diagnostics for troubleshooting
+
+**Issue #12: Custom Model Directory Detection**
+- Added support for custom model directories via `SHIMMY_MODEL_PATHS` environment variable
+- Added support for `OLLAMA_MODELS` environment variable for Ollama model directories
+- Added `--model-dirs` global command-line option for specifying custom directories
+- Enhanced Windows multi-drive search for Ollama installations (C:, D:, E:, F: drives)
+- Improved model auto-discovery to handle Ollama installs on different drives
+
+### ✨ Enhancements
+
+- **Multi-Drive Support**: Automatic scanning of common Ollama paths across multiple Windows drives
+- **Template Detection**: Enhanced model template inference for Qwen, ChatGLM, Llama models
+- **CLI Improvements**: New global `--model-dirs` option works with all subcommands
+
+### 📖 Documentation
+
+- Created improved Homebrew formula using pre-built binaries (Issue #15)
+- Enhanced Windows and macOS installation guidance
 
 ## [1.3.1] - 2025-09-12
 
@@ -752,6 +877,12 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 - Enhanced performance optimization across platforms
 - Comprehensive testing and validation framework
 
+## [0.1.2] - 2025-09-04
+
+### 🐛 Bug Fixes
+
+- Added missing `rustup` target installation steps for cross-compilation in CI
+
 ## [0.1.1] - 2025-09-06
 
 ### ✨ Features
@@ -789,73 +920,6 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 - Cleaned up README markdown formatting for better readability
 - Fixed unused import warnings and code quality issues
 - Enhanced overall code organization and maintainability
-
-## [1.3.2] - 2025-09-12
-
-### 🐛 Bug Fixes
-
-**Issue #13: VSCode Integration with Qwen Models**
-- Fixed VSCode extension compatibility with Qwen3-4B-Instruct and other Qwen models
-- Enhanced automatic template detection for Qwen models (now uses ChatML template)
-- Added better error logging for model loading failures in OpenAI-compatible API
-- Improved error handling with detailed diagnostics for troubleshooting
-
-**Issue #12: Custom Model Directory Detection**
-- Added support for custom model directories via `SHIMMY_MODEL_PATHS` environment variable
-- Added support for `OLLAMA_MODELS` environment variable for Ollama model directories
-- Added `--model-dirs` global command-line option for specifying custom directories
-- Enhanced Windows multi-drive search for Ollama installations (C:, D:, E:, F: drives)
-- Improved model auto-discovery to handle Ollama installs on different drives
-
-### ✨ Enhancements
-
-- **Multi-Drive Support**: Automatic scanning of common Ollama paths across multiple Windows drives
-- **Template Detection**: Enhanced model template inference with better support for:
-  - Qwen models → ChatML template
-  - ChatGLM models → ChatML template
-  - Llama models → Llama3 template
-  - Improved fallback to OpenChat template
-- **Error Handling**: Added comprehensive error logging for debugging model loading issues
-- **CLI Improvements**: New global `--model-dirs` option works with all commands
-
-### 🛠️ Developer Experience
-
-- Added comprehensive regression testing suite
-- Fixed missing `discover_models_from_directory` function for benchmarking
-- Enhanced error messages with model-specific context
-- Improved code documentation and examples
-
-### 📖 Documentation
-
-**Issue #15: Homebrew Formula Improvements**
-- Created improved Homebrew formula using pre-built binaries instead of source compilation
-- Generated installation script for faster Homebrew installations
-- Provided migration path from source-based to binary-based Homebrew formula
-
-### 🎯 Usage Examples
-
-**Custom Model Directories:**
-```bash
-# Environment variables
-export SHIMMY_MODEL_PATHS="D:\models;E:\ollama\models"
-export OLLAMA_MODELS="F:\MyOllama\models"
-
-# Command line options
-shimmy --model-dirs "D:\models;E:\ollama\models" serve
-shimmy --model-dirs "/path/to/models" list
-```
-
-**VSCode Integration:**
-- Qwen3-4B-Instruct models now work seamlessly with VSCode extensions
-- Improved error reporting for troubleshooting integration issues
-
-### 🔧 Technical Details
-
-- Enhanced `ModelDiscovery` and `ModelAutoDiscovery` systems
-- Improved OpenAI API compatibility layer
-- Better template selection algorithm
-- Comprehensive Windows drive scanning
-- Added regression testing infrastructure
 
 ## [0.1.0] - 2025-09-02
 
