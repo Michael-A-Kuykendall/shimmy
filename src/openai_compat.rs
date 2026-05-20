@@ -5,10 +5,71 @@ use axum::{extract::State, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
+/// OpenAI spec allows `content` to be either a plain string or an array of content parts
+/// (used by Zed, Cursor, Continue, GitHub Copilot when attaching file context).
+/// We flatten arrays to a newline-joined string before passing to the engine.
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum MessageContent {
+    Text(String),
+    Parts(Vec<ContentPart>),
+}
+
+impl MessageContent {
+    pub fn into_text(self) -> String {
+        match self {
+            MessageContent::Text(s) => s,
+            MessageContent::Parts(parts) => parts
+                .into_iter()
+                .filter_map(|p| p.text)
+                .collect::<Vec<_>>()
+                .join("\n"),
+        }
+    }
+
+    pub fn as_text(&self) -> String {
+        match self {
+            MessageContent::Text(s) => s.clone(),
+            MessageContent::Parts(parts) => parts
+                .iter()
+                .filter_map(|p| p.text.as_deref().map(str::to_owned))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ContentPart {
+    #[serde(rename = "type")]
+    pub part_type: String,
+    pub text: Option<String>,
+}
+
+/// OpenAI-compatible message for incoming requests — supports both string and
+/// multi-part content arrays per the OpenAI Chat Completions spec.
+#[derive(Debug, Deserialize)]
+pub struct OAIMessage {
+    pub role: String,
+    pub content: MessageContent,
+}
+
+impl OAIMessage {
+    pub fn content_text(&self) -> String {
+        self.content.as_text()
+    }
+    pub fn into_chat_message(self) -> ChatMessage {
+        ChatMessage {
+            role: self.role,
+            content: self.content.into_text(),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ChatCompletionRequest {
     pub model: String,
-    pub messages: Vec<ChatMessage>,
+    pub messages: Vec<OAIMessage>,
     #[serde(default)]
     pub stream: Option<bool>,
     #[serde(default)]
@@ -111,6 +172,53 @@ pub struct Model {
     pub parent: Option<String>,
 }
 
+/// Ollama-compatible GET /api/tags endpoint.
+/// AnythingLLM, SillyTavern, Zed, and Open WebUI discover models via this route
+/// rather than (or in addition to) /v1/models.
+pub async fn api_tags(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    #[derive(Serialize)]
+    struct TagsResponse {
+        models: Vec<OllamaModel>,
+    }
+    #[derive(Serialize)]
+    struct OllamaModel {
+        name: String,
+        model: String,
+        modified_at: String,
+        size: u64,
+        digest: String,
+        details: OllamaDetails,
+    }
+    #[derive(Serialize)]
+    struct OllamaDetails {
+        format: String,
+        family: String,
+        parameter_size: String,
+        quantization_level: String,
+    }
+
+    let models = state
+        .registry
+        .list_all_available()
+        .into_iter()
+        .map(|name| OllamaModel {
+            model: name.clone(),
+            name,
+            modified_at: "2025-01-01T00:00:00Z".to_string(),
+            size: 0,
+            digest: "".to_string(),
+            details: OllamaDetails {
+                format: "gguf".to_string(),
+                family: "".to_string(),
+                parameter_size: "".to_string(),
+                quantization_level: "".to_string(),
+            },
+        })
+        .collect();
+
+    Json(TagsResponse { models })
+}
+
 pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let models = state
         .registry
@@ -183,23 +291,24 @@ pub async fn chat_completions(
     let pairs = req
         .messages
         .iter()
-        .map(|m| (m.role.clone(), m.content.clone()))
+        .map(|m| (m.role.clone(), m.content_text()))
         .collect::<Vec<_>>();
 
     // For chat completions, we need to trigger assistant response
     // Extract the last user message to use as input parameter
-    let last_user_message = req
+    let last_user_text: Option<String> = req
         .messages
         .iter()
         .rfind(|m| m.role == "user")
-        .map(|m| m.content.as_str());
+        .map(|m| m.content_text());
+    let last_user_message = last_user_text.as_deref();
 
     // Build conversation history without the last user message
     let history: Vec<_> = if last_user_message.is_some() {
         req.messages
             .iter()
             .take(req.messages.len().saturating_sub(1))
-            .map(|m| (m.role.clone(), m.content.clone()))
+            .map(|m| (m.role.clone(), m.content_text()))
             .collect()
     } else {
         pairs.clone()
