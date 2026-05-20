@@ -13,13 +13,12 @@ fn test_release_gate_system_exists() {
         workflow_content.contains("🚧 Release Gates - MANDATORY VALIDATION"),
         "Release workflow missing mandatory gate job"
     );
+    // v2.0: CUDA (Gate 2) removed — Airframe uses wgpu/WebGPU, not CUDA.
+    // v2.0: Crates.io Gate 7 removed — publish = false (distributed as binaries).
+    // Gates are now numbered /6 instead of /7.
     assert!(
-        workflow_content.contains("GATE 1/7: Core Build Validation"),
+        workflow_content.contains("GATE 1/6: Core Build Validation"),
         "Missing Gate 1 (Core Build)"
-    );
-    assert!(
-        workflow_content.contains("GATE 2/7: CUDA Build Validation"),
-        "Missing Gate 2 (CUDA Validation)"
     );
     assert!(
         workflow_content.contains("GATE 3/7: Template Packaging Validation"),
@@ -30,16 +29,21 @@ fn test_release_gate_system_exists() {
         "Missing Gate 4 (Binary Size)"
     );
     assert!(
-        workflow_content.contains("GATE 5/7: Test Suite Validation"),
+        workflow_content.contains("GATE 5/6: Test Suite Validation"),
         "Missing Gate 5 (Test Suite)"
     );
     assert!(
-        workflow_content.contains("GATE 6/7: Documentation Validation"),
+        workflow_content.contains("GATE 6/6: Documentation Validation"),
         "Missing Gate 6 (Documentation)"
     );
+    // Verify intentional removal of CUDA and crates.io gates is documented in the workflow
     assert!(
-        workflow_content.contains("GATE 7/7: Crates.io Publication Validation"),
-        "Missing Gate 7 (Crates.io Validation)"
+        workflow_content.contains("GATE 2") && workflow_content.contains("intentionally removed"),
+        "Workflow should document intentional removal of CUDA gate"
+    );
+    assert!(
+        workflow_content.contains("GATE 7") && workflow_content.contains("intentionally removed"),
+        "Workflow should document intentional removal of crates.io gate"
     );
 }
 
@@ -297,12 +301,17 @@ fn test_gate_7_cratesio_validation() {
         }
         println!("✅ Gate 7 (Crates.io) dry-run validation passed");
     } else {
-        // If it failed, make sure it's not due to missing token (expected in CI)
+        // If it failed, make sure it's a known/expected failure
         if stderr.contains("no upload token found") || stderr.contains("authentication") {
             println!(
                 "ℹ️ Gate 7 dry-run failed due to missing token (expected in test environment)"
             );
-            // This is expected - we can't publish in tests, but we can validate packaging
+        } else if stderr.contains("cannot be published")
+            || (stderr.contains("publish") && stderr.contains("true"))
+        {
+            // publish = false in Cargo.toml: intentional for v2.0 (Airframe path dep cannot
+            // be published to crates.io). Shimmy v2.0 is distributed as binaries.
+            println!("ℹ️ Gate 7 (Crates.io) skipped: publish = false is intentional for v2.0");
         } else {
             panic!(
                 "Gate 7 (Crates.io) dry-run failed with unexpected error: stderr={}, stdout={}",
