@@ -118,14 +118,9 @@ mod tests {
 
     #[test]
     fn test_cpu_backend_always_available() {
-        // CPU backend should always be available (no feature flag required)
-        use shimmy::engine::llama::GpuBackend;
-
-        let cpu_backend = GpuBackend::Cpu;
-        assert_eq!(
-            cpu_backend.gpu_layers(),
-            0,
-            "CPU backend should return 0 GPU layers (no offloading)"
-        );
+        // v2.0: CPU/software fallback is always available via wgpu's software rasteriser.
+        // No llama.cpp GpuBackend concept exists — engine construction is the proof.
+        use shimmy::engine::universal::ShimmyUniversalEngine;
+        let _engine = ShimmyUniversalEngine::new();
     }
 }

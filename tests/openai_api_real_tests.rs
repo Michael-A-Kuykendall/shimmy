@@ -4,7 +4,7 @@ use shimmy::{
     api::ChatMessage,
     engine::adapter::InferenceEngineAdapter,
     model_registry::{ModelEntry, Registry},
-    openai_compat::{self, ChatCompletionRequest, ModelsResponse},
+    openai_compat::{self, ChatCompletionRequest, MessageContent, ModelsResponse, OAIMessage},
     AppState,
 };
 use std::sync::Arc;
@@ -92,9 +92,9 @@ async fn test_chat_completions_error_handling_real() {
     // Test with non-existent model
     let request = ChatCompletionRequest {
         model: "nonexistent-model".to_string(),
-        messages: vec![ChatMessage {
+        messages: vec![OAIMessage {
             role: "user".to_string(),
-            content: "Hello".to_string(),
+            content: MessageContent::Text("Hello".to_string()),
         }],
         stream: Some(false),
         temperature: Some(0.7),
@@ -130,9 +130,9 @@ fn test_chat_completions_model_loading_failure() {
     // Test request structure for model loading scenarios
     let request = ChatCompletionRequest {
         model: "phi3-mini-4k-instruct".to_string(),
-        messages: vec![ChatMessage {
+        messages: vec![OAIMessage {
             role: "user".to_string(),
-            content: "Hello, this should fail to load the model".to_string(),
+            content: MessageContent::Text("Hello, this should fail to load the model".to_string()),
         }],
         stream: Some(false),
         temperature: Some(0.7),
@@ -159,13 +159,13 @@ fn test_system_message_handling() {
     let request = ChatCompletionRequest {
         model: "llama-3-8b-instruct".to_string(),
         messages: vec![
-            ChatMessage {
+            OAIMessage {
                 role: "system".to_string(),
-                content: "You are a helpful assistant specialized in math.".to_string(),
+                content: MessageContent::Text("You are a helpful assistant specialized in math.".to_string()),
             },
-            ChatMessage {
+            OAIMessage {
                 role: "user".to_string(),
-                content: "What is 2 + 2?".to_string(),
+                content: MessageContent::Text("What is 2 + 2?".to_string()),
             },
         ],
         stream: Some(false),
@@ -180,8 +180,8 @@ fn test_system_message_handling() {
     assert_eq!(request.messages.len(), 2);
     assert_eq!(request.messages[0].role, "system");
     assert_eq!(request.messages[1].role, "user");
-    assert!(request.messages[0].content.contains("assistant"));
-    assert!(request.messages[1].content.contains("2 + 2"));
+    assert!(request.messages[0].content_text().contains("assistant"));
+    assert!(request.messages[1].content_text().contains("2 + 2"));
     assert_eq!(request.temperature, Some(0.5));
 
     // This structure should be properly handled by the OpenAI compatibility layer
@@ -192,9 +192,9 @@ fn test_streaming_request_processing() {
     // Test streaming request structure (used by Open WebUI for real-time responses)
     let request = ChatCompletionRequest {
         model: "qwen2-7b-chat".to_string(),
-        messages: vec![ChatMessage {
+        messages: vec![OAIMessage {
             role: "user".to_string(),
-            content: "Count from 1 to 5".to_string(),
+            content: MessageContent::Text("Count from 1 to 5".to_string()),
         }],
         stream: Some(true),
         temperature: Some(0.3),
@@ -302,9 +302,9 @@ fn test_generation_options_parsing() {
     // Test that generation options are parsed correctly from OpenAI requests
     let request = ChatCompletionRequest {
         model: "test-model".to_string(),
-        messages: vec![ChatMessage {
+        messages: vec![OAIMessage {
             role: "user".to_string(),
-            content: "Test".to_string(),
+            content: MessageContent::Text("Test".to_string()),
         }],
         stream: Some(true),
         temperature: Some(0.8),
@@ -324,9 +324,9 @@ fn test_generation_options_parsing() {
     // Test default values handling
     let minimal_request = ChatCompletionRequest {
         model: "test-model".to_string(),
-        messages: vec![ChatMessage {
+        messages: vec![OAIMessage {
             role: "user".to_string(),
-            content: "Test".to_string(),
+            content: MessageContent::Text("Test".to_string()),
         }],
         stream: None,
         temperature: None,
@@ -356,7 +356,7 @@ fn test_openai_response_serialization() {
             message: ChatMessage {
                 role: "assistant".to_string(),
                 content: "Hello! How can I help you today?".to_string(),
-            },
+            }, // ChatMessage is the internal response type used by Choice
             finish_reason: Some("stop".to_string()),
         }],
         usage: Usage {

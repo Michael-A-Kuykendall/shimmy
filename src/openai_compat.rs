@@ -572,9 +572,9 @@ mod tests {
 
         let request = ChatCompletionRequest {
             model: "nonexistent-model".to_string(),
-            messages: vec![ChatMessage {
+            messages: vec![OAIMessage {
                 role: "user".to_string(),
-                content: "Hello".to_string(),
+                content: MessageContent::Text("Hello".to_string()),
             }],
             stream: Some(false),
             temperature: None,
@@ -610,9 +610,9 @@ mod tests {
 
         let request = ChatCompletionRequest {
             model: "test-streaming".to_string(),
-            messages: vec![ChatMessage {
+            messages: vec![OAIMessage {
                 role: "user".to_string(),
-                content: "Hello".to_string(),
+                content: MessageContent::Text("Hello".to_string()),
             }],
             stream: Some(true), // Enable streaming (line 132)
             temperature: Some(0.7),
@@ -647,13 +647,13 @@ mod tests {
         let request = ChatCompletionRequest {
             model: "test-non-streaming".to_string(),
             messages: vec![
-                ChatMessage {
+                OAIMessage {
                     role: "user".to_string(),
-                    content: "Hello".to_string(),
+                    content: MessageContent::Text("Hello".to_string()),
                 },
-                ChatMessage {
+                OAIMessage {
                     role: "assistant".to_string(),
-                    content: "Hi there!".to_string(),
+                    content: MessageContent::Text("Hi there!".to_string()),
                 },
             ],
             stream: Some(false), // Disable streaming (line 214)
@@ -1009,13 +1009,13 @@ mod tests {
         let _request_with_system = ChatCompletionRequest {
             model: "llama-3-8b-instruct".to_string(),
             messages: vec![
-                ChatMessage {
+                OAIMessage {
                     role: "system".to_string(),
-                    content: "You are a helpful assistant.".to_string(),
+                    content: MessageContent::Text("You are a helpful assistant.".to_string()),
                 },
-                ChatMessage {
+                OAIMessage {
                     role: "user".to_string(),
-                    content: "Hello!".to_string(),
+                    content: MessageContent::Text("Hello!".to_string()),
                 },
             ],
             stream: Some(false),
@@ -1031,9 +1031,9 @@ mod tests {
         // Test streaming request (used by Open WebUI)
         let _streaming_request = ChatCompletionRequest {
             model: "phi3-mini-4k-instruct".to_string(),
-            messages: vec![ChatMessage {
+            messages: vec![OAIMessage {
                 role: "user".to_string(),
-                content: "Count to 3".to_string(),
+                content: MessageContent::Text("Count to 3".to_string()),
             }],
             stream: Some(true),
             temperature: Some(0.5),
@@ -1092,9 +1092,9 @@ mod tests {
 
         let invalid_request = ChatCompletionRequest {
             model: "nonexistent-model".to_string(),
-            messages: vec![ChatMessage {
+            messages: vec![OAIMessage {
                 role: "user".to_string(),
-                content: "This should fail".to_string(),
+                content: MessageContent::Text("This should fail".to_string()),
             }],
             stream: Some(false),
             temperature: None,
