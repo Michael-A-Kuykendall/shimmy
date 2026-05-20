@@ -6,11 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-# NOTE: The `airframe` feature requires a path dep on `../airframe` (the private parent
-# repository). CI always uses `--no-default-features --features huggingface` so the path
-# dep is never resolved on runners. Release binaries that include the Airframe engine are
-# built locally and uploaded to releases; they are NOT produced by this workflow.
-
 env:
   CARGO_TERM_COLOR: always
 
@@ -21,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -47,6 +45,9 @@ jobs:
     needs: ppt-contracts
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -82,6 +83,9 @@ jobs:
     needs: test
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -140,6 +144,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -172,6 +179,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -196,7 +206,10 @@ jobs:
     - name: Clippy (huggingface)
       run: cargo clippy --no-default-features --features huggingface -- -D warnings
 
-  # Cross-Platform Build Verification (CI-safe feature set — no airframe path dep)
+    - name: Clippy (airframe)
+      run: cargo clippy --features airframe -- -D warnings
+
+  # Cross-Platform Build Verification
   build:
     name: Build (${{ matrix.target }})
     strategy:
@@ -215,6 +228,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
     - name: System dependencies (Linux)
       if: runner.os == 'Linux'
@@ -240,8 +256,8 @@ jobs:
 
     - name: Build (CI feature set)
       run: |
-        echo "Building ${{ matrix.target }} — CI-safe features (no airframe path dep)"
-        cargo build --release --target ${{ matrix.target }} --no-default-features --features huggingface
+        echo "Building ${{ matrix.target }} with Airframe GPU engine"
+        cargo build --release --target ${{ matrix.target }} --features airframe,huggingface
 
     - name: Verify binary
       shell: bash

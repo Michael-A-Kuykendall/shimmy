@@ -34,11 +34,11 @@
 
 Shimmy is a **single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
 
-**🎉 NEW in v1.10.0**: Shimmy now runs on [Airframe](#-airframe-engine), a pure-Rust WGSL GPU engine. No C++ toolchain, no backend flags, no compilation required. The llama.cpp path is [historically parked](#-llama-cpp-historical-note) and remains available via `--legacy`.
+**🎉 NEW in v2.0.0**: Shimmy now runs on [Airframe](#-airframe-engine), a pure-Rust WGSL GPU engine. No C++ toolchain, no backend flags, no compilation required. The llama.cpp path is [historically parked](#%EF%B8%8F-llama.cpp-historical-note) and remains available via `--legacy`.
 
 ## 🔥 Airframe Engine
 
-Starting in v1.10.0, Shimmy's default inference engine is **Airframe** — a pure-Rust WebGPU (WGSL) transformer runtime built from scratch.
+Starting in v2.0.0, Shimmy's default inference engine is **Airframe** — a pure-Rust WebGPU (WGSL) transformer runtime built from scratch.
 
 **Why this matters:**
 - No C++ toolchain required — Rust only, top to bottom
@@ -47,7 +47,7 @@ Starting in v1.10.0, Shimmy's default inference engine is **Airframe** — a pur
 - Model spec auto-derived from GGUF metadata — no hardcoded per-model constants
 - YaRN RoPE scaling for extended context: set `SHIMMY_MAX_CTX=8192` and go
 
-**Quick start with Airframe (v1.10.0+):**
+**Quick start with Airframe (v2.0.0+):**
 ```bash
 # Set your model path and start serving
 SHIMMY_BASE_GGUF=/path/to/TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf ./shimmy serve
@@ -182,163 +182,79 @@ shimmy serve --legacy --cpu-moe --n-cpu-moe 8
 
 ### Installation
 
-**✨ v1.9.0 NEW**: Download pre-built binaries with ALL GPU backends included!
+**v2.0.0**: Download pre-built binaries with Airframe WebGPU engine included!
 
-#### **📥 Pre-Built Binaries (Recommended - Zero Dependencies)**
+#### **📥 Pre-Built Binaries (Recommended — Zero Dependencies)**
 
-Pick your platform and download - no compilation needed:
+Pick your platform and download — no compilation needed, GPU acceleration included:
 
 ```bash
-# Windows x64 (includes CUDA + Vulkan + OpenCL)
+# Windows x64 (Airframe WebGPU engine)
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
 
-# Linux x86_64 (includes CUDA + Vulkan + OpenCL)
+# Linux x86_64 (Airframe WebGPU engine)
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64 -o shimmy && chmod +x shimmy
 
-# macOS ARM64 (includes MLX for Apple Silicon)
+# macOS ARM64 (Airframe with Metal backend via wgpu)
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
 
-# macOS Intel (CPU-only)
+# macOS Intel
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-intel -o shimmy && chmod +x shimmy
 
-# Linux ARM64 (CPU-only)
+# Linux ARM64 (huggingface engine; Airframe cross-compilation not yet supported)
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-aarch64 -o shimmy && chmod +x shimmy
 ```
 
-**That's it!** Your GPU will be detected automatically at runtime.
+**That's it!** The Airframe WebGPU adapter is selected automatically at runtime.
 
-#### **🛠️ Build from Source (Advanced)**
-
-Want to customize or contribute?
+#### **🛠️ Build from Source / cargo install**
 
 ```bash
-# Basic installation (CPU only)
-cargo install shimmy --features huggingface
+# Install from crates.io (huggingface engine — works without GPU)
+cargo install shimmy
 
-# Kitchen Sink builds (what pre-built binaries use):
-# Windows/Linux x64:
-cargo install shimmy --features huggingface,llama,llama-cuda,llama-vulkan,llama-opencl,vision
-
-# macOS ARM64:
-cargo install shimmy --features huggingface,llama,mlx,vision
-
-# CPU-only (any platform):
-cargo install shimmy --features huggingface,llama,vision
+# Build from source with Airframe GPU engine (requires airframe submodule)
+git clone https://github.com/Michael-A-Kuykendall/shimmy --recurse-submodules
+cd shimmy
+cargo build --release --features airframe,huggingface
 ```
 
-> **⚠️ Build Notes**:
-> - **Windows**: Install [LLVM](https://releases.llvm.org/download.html) first for libclang.dll
-> - **Recommended**: Use pre-built binaries to avoid dependency issues
-> - **Advanced users only**: Building from source requires C++ compiler + CUDA/Vulkan SDKs
+> **Note**: The GitHub Releases binaries already include the Airframe engine. Building from source with `--features airframe` is for contributors or custom builds.
 
 ### GPU Acceleration
 
-**✨ NEW in v1.9.0**: One binary per platform with automatic GPU detection!
-
-> **⚠️ IMPORTANT - Vision Feature Performance**:  
-> CPU-based vision inference (MiniCPM-V) is **5-10x slower** than GPU acceleration.  
-> **CPU**: 15-45 seconds per image | **GPU (CUDA/Vulkan)**: 2-8 seconds per image  
-> **For production vision workloads, GPU acceleration is strongly recommended.**
+**v2.0.0**: Airframe uses **WebGPU (wgpu)** for GPU acceleration. No backend flags, no driver installation beyond standard OS graphics drivers.
 
 #### **📥 Download Pre-Built Binaries (Recommended)**
 
-No compilation needed! Each binary includes ALL GPU backends for your platform:
+Release binaries include the Airframe engine with WebGPU support compiled in:
 
-| Platform | Download | GPU Support | Auto-Detects |
-|----------|----------|-------------|--------------|
-| **Windows x64** | [shimmy-windows-x86_64.exe](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe) | CUDA + Vulkan + OpenCL | ✅ |
-| **Linux x86_64** | [shimmy-linux-x86_64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64) | CUDA + Vulkan + OpenCL | ✅ |
-| **macOS ARM64** | [shimmy-macos-arm64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64) | MLX (Apple Silicon) | ✅ |
-| **macOS Intel** | [shimmy-macos-intel](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-intel) | CPU only | N/A |
-| **Linux ARM64** | [shimmy-linux-aarch64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-aarch64) | CPU only | N/A |
+| Platform | Download | GPU Backend | Notes |
+|----------|----------|-------------|-------|
+| **Windows x64** | [shimmy-windows-x86_64.exe](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe) | WebGPU (wgpu) | NVIDIA, AMD, Intel |
+| **Linux x86_64** | [shimmy-linux-x86_64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64) | WebGPU (wgpu) | NVIDIA, AMD, Intel |
+| **macOS ARM64** | [shimmy-macos-arm64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64) | Metal (via wgpu) | Apple Silicon |
+| **macOS Intel** | [shimmy-macos-intel](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-intel) | Metal (via wgpu) | Intel Mac |
+| **Linux ARM64** | [shimmy-linux-aarch64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-aarch64) | huggingface only | ARM cross-build |
 
-**How it works**: Download one file, run it. Shimmy automatically detects and uses your GPU!
+#### **🎯 How GPU Selection Works**
 
-```bash
-# Windows example
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
-./shimmy.exe serve --gpu-backend auto  # Auto-detects CUDA/Vulkan/OpenCL
-
-# Linux example  
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64 -o shimmy
-chmod +x shimmy
-./shimmy serve --gpu-backend auto  # Auto-detects CUDA/Vulkan/OpenCL
-
-# macOS ARM64 example
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy
-chmod +x shimmy  
-./shimmy serve  # Auto-detects MLX on Apple Silicon
-```
-
-#### **🎯 GPU Auto-Detection**
-
-Shimmy uses intelligent GPU detection with this priority order:
-
-1. **CUDA** (NVIDIA GPUs via nvidia-smi)
-2. **Vulkan** (Cross-platform GPUs via vulkaninfo)
-3. **OpenCL** (AMD/Intel GPUs via clinfo)
-4. **MLX** (Apple Silicon via system detection)
-5. **CPU** (Fallback if no GPU detected)
-
-**No manual configuration needed!** Just run with `--gpu-backend auto` (default).
-
-#### **🔧 Manual Backend Override**
-
-Want to force a specific backend? Use the `--gpu-backend` flag:
+Airframe uses wgpu's adapter enumeration. On first launch it selects the best available GPU adapter for your system — discrete GPU preferred over integrated, integrated over CPU fallback. No configuration needed.
 
 ```bash
-# Auto-detect (default - recommended)
-shimmy serve --gpu-backend auto
-
-# Force CPU (for testing or compatibility)
-shimmy serve --gpu-backend cpu
-
-# Force CUDA (NVIDIA GPUs only)
-shimmy serve --gpu-backend cuda
-
-# Force Vulkan (AMD/Intel/Cross-platform)
-shimmy serve --gpu-backend vulkan
-
-# Force OpenCL (AMD/Intel alternative)
-shimmy serve --gpu-backend opencl
-```
-
-**🛡️ Error Handling & Robustness**: If you force an unavailable backend (e.g., `--gpu-backend cuda` on AMD GPU), Shimmy will:
-1. ✅ Display clear error message explaining the issue
-2. ✅ Automatically fallback to next available backend in priority order
-3. ✅ Log which backend was actually used (check with `--verbose`)
-4. ✅ Continue serving requests (graceful degradation, no crashes)
-5. ✅ Support environment variable override: `SHIMMY_GPU_BACKEND=cuda`
-
-**Common scenarios**:
-- `--gpu-backend cuda` on non-NVIDIA → Falls back to Vulkan or OpenCL
-- `--gpu-backend vulkan` without drivers → Falls back to OpenCL or CPU
-- `--gpu-backend invalid` → Clear error + fallback to auto-detection
-- No GPU detected → Runs on CPU with performance warning
-
-**Environment Variable**: Set `SHIMMY_GPU_BACKEND=cuda` to override default without CLI flags.
-
-#### **🔍 Check GPU Support**
-```bash
-# Show detected GPU backends
+# Check selected adapter
 shimmy gpu-info
 
-# Check which backend is being used
-shimmy serve --gpu-backend auto --verbose
+# Start serving (GPU adapter auto-selected)
+shimmy serve
 ```
 
-#### **⚡ Binary Sizes**
+#### **🔧 Extended Context**
 
-- **GPU-enabled binaries** (Windows/Linux x64, macOS ARM64): ~40-50MB
-- **CPU-only binaries** (macOS Intel, Linux ARM64): ~20-30MB
-
-Trade-off: Slightly larger binaries for zero compilation and automatic GPU detection.
-
-#### **🛠️ Build from Source (Advanced)**
-
-Want to customize or contribute? Build from source:
-- Multiple backends can be compiled in, best one selected automatically
-- Use `--gpu-backend <backend>` to force specific backend
+```bash
+# YaRN RoPE scaling enables extended context automatically when SHIMMY_MAX_CTX is set
+SHIMMY_BASE_GGUF=/path/to/model.gguf SHIMMY_MAX_CTX=8192 shimmy serve
+```
 
 ### Get Models
 
@@ -369,7 +285,7 @@ Point your development tools to the displayed port — VSCode Copilot, Cursor, C
 ## 📦 Download & Install
 
 ### Package Managers
-- **Rust**: [`cargo install shimmy`](https://crates.io/crates/shimmy) *(default Airframe engine, recommended)*
+- **Rust**: [`cargo install shimmy`](https://crates.io/crates/shimmy) *(installs huggingface engine; for Airframe GPU, use GitHub Releases binaries)*
 - **VS Code**: [Shimmy Extension](https://marketplace.visualstudio.com/items?itemName=targetedwebresults.shimmy-vscode)
 - **npm**: `npm install -g shimmy-js` *(planned)*
 - **Python**: `pip install shimmy` *(planned)*
@@ -380,19 +296,19 @@ Point your development tools to the displayed port — VSCode Copilot, Cursor, C
 
 ### 🍎 macOS Support
 
-**Full compatibility confirmed!** Shimmy works flawlessly on macOS with Metal GPU acceleration.
+**Full compatibility confirmed!** Shimmy works on macOS with Metal GPU acceleration via wgpu.
 
 ```bash
-# Install dependencies
-brew install cmake rust
-
-# Install shimmy
+# Install from crates.io (huggingface engine)
 cargo install shimmy
+
+# For Airframe GPU engine, download the macOS binary from GitHub Releases:
+curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
 ```
 
 **✅ Verified working:**
 - Intel and Apple Silicon Macs
-- Metal GPU acceleration via wgpu (automatic)
+- Metal GPU acceleration via wgpu (automatic on Apple Silicon)
 - Xcode 17+ compatibility
 
 ## Integration Examples
@@ -442,11 +358,13 @@ I built Shimmy to retain privacy-first control on my AI development and keep thi
 ```bash
 shimmy serve                              # Start server (auto port allocation)
 shimmy serve --bind 127.0.0.1:8080        # Manual port binding
-shimmy serve --gpu-backend auto           # GPU auto-detect (default)
+shimmy serve --gpu-backend auto           # WebGPU adapter auto-select (default)
+shimmy serve --gpu-backend cpu            # Force CPU (disable GPU)
 shimmy list                               # Show available models
 shimmy discover                           # Refresh model discovery
 shimmy generate --name X --prompt "Hi"   # Test generation
 shimmy probe model-name                   # Verify model loads
+shimmy gpu-info                           # Show selected WebGPU adapter
 
 # Legacy llama.cpp path only:
 shimmy serve --legacy --cpu-moe --n-cpu-moe 8  # MOE hybrid CPU/GPU (legacy)
@@ -476,7 +394,7 @@ shimmy serve --legacy --cpu-moe --n-cpu-moe 8  # MOE hybrid CPU/GPU (legacy)
 
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/Michael-A-Kuykendall/shimmy/issues)
 - **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
-- **📖 Documentation**: [docs/](docs/) • [Engineering Methodology](docs/METHODOLOGY.md) • [OpenAI Compatibility Matrix](docs/OPENAI_COMPAT.md) • [Benchmarks (Reproducible)](docs/BENCHMARKS.md)
+- **📖 Documentation**: [docs/](docs/) • [Migration Guide v1→v2](docs/MIGRATION_v2.md) • [Engineering Methodology](docs/METHODOLOGY.md) • [OpenAI Compatibility Matrix](docs/OPENAI_COMPAT.md) • [Benchmarks (Reproducible)](docs/BENCHMARKS.md)
 - **💝 Sponsorship**: [GitHub Sponsors](https://github.com/sponsors/Michael-A-Kuykendall)
 
 ### Star History
@@ -485,7 +403,6 @@ shimmy serve --legacy --cpu-moe --n-cpu-moe 8  # MOE hybrid CPU/GPU (legacy)
 
 ### 🚀 Momentum Snapshot
 
-📦 **Sub-5MB single binary** (142x smaller than Ollama)
 🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**
 ⏱ **<1s startup**
 🦀 **100% Rust, no Python**
@@ -498,11 +415,11 @@ shimmy serve --legacy --cpu-moe --n-cpu-moe 8  # MOE hybrid CPU/GPU (legacy)
 
 ## ⚡ Performance Comparison
 
-| Tool | Binary Size | Startup Time | Memory Usage | OpenAI API |
-|------|-------------|--------------|--------------|------------|
-| **Shimmy** | **4.8MB** | **<100ms** | **50MB** | **100%** |
-| Ollama | 680MB | 5-10s | 200MB+ | Partial |
-| llama.cpp | 89MB | 1-2s | 100MB | Via llama-server |
+| Tool | Startup Time | Memory Usage | OpenAI API |
+|------|--------------|--------------|------------|
+| **Shimmy** | **<100ms** | **50MB** | **100%** |
+| Ollama | 5-10s | 200MB+ | Partial |
+| llama.cpp | 1-2s | 100MB | Via llama-server |
 
 ## Quality & Reliability
 
