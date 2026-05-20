@@ -34,22 +34,19 @@ full = ["airframe", "huggingface", "mlx"] # Full compilation - includes all back
 gpu = ["airframe", "huggingface"] # GPU-optimized build via Airframe
 apple = ["airframe", "huggingface"] # Apple Silicon - Airframe via Metal + HuggingFace
 coverage = ["huggingface"] # Coverage testing - no path deps, fast compile
-vision = ["dep:image", "dep:base64", "dep:chromiumoxide", "dep:ed25519-dalek", "dep:hex", "dep:sha2"] # Optional vision feature for image/web analysis
+llama = [] # Deprecated: llama.cpp removed in v2.0. Empty feature retained to silence cfg guards pending cleanup.
+llama-cuda = [] # Deprecated: llama.cpp CUDA backend removed in v2.0.
+llama-vulkan = [] # Deprecated: llama.cpp Vulkan backend removed in v2.0.
+llama-opencl = [] # Deprecated: llama.cpp OpenCL backend removed in v2.0.
 
 [dependencies]
 anyhow = "1"
 axum = { version = "0.7", features = ["http1", "json", "ws", "macros"] }
 async-trait = "0.1"
-base64 = { version = "0.21", optional = true }
 bytes = "1"
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4", features = ["derive"] }
 futures-util = "0.3"
-chromiumoxide = { version = "0.7", optional = true, default-features = false, features = ["tokio-runtime"] }
-ed25519-dalek = { version = "2", optional = true, features = ["std"] }
-hex = { version = "0.4", optional = true }
-image = { version = "0.24", optional = true }
-sha2 = { version = "0.10", optional = true }
 lazy_static = "1.5"
 memmap2 = "0.9"
 minijinja = { version = "2", features = ["loader"] }

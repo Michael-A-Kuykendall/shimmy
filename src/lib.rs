@@ -21,10 +21,6 @@ pub mod safetensors_adapter;
 pub mod server;
 pub mod templates;
 pub mod tools;
-#[cfg(feature = "vision")]
-pub mod vision;
-#[cfg(feature = "vision")]
-pub mod vision_license;
 pub mod util {
     pub mod diag;
     pub mod memory;
@@ -45,8 +41,6 @@ pub struct AppState {
     pub registry: model_registry::Registry,
     pub observability: observability::ObservabilityManager,
     pub response_cache: cache::ResponseCache,
-    #[cfg(feature = "vision")]
-    pub vision_license_manager: Option<crate::vision_license::VisionLicenseManager>,
 }
 
 impl AppState {
@@ -59,8 +53,6 @@ impl AppState {
             registry,
             observability: observability::ObservabilityManager::new(),
             response_cache: cache::ResponseCache::new(),
-            #[cfg(feature = "vision")]
-            vision_license_manager: Some(crate::vision_license::VisionLicenseManager::new()),
         }
     }
 }
