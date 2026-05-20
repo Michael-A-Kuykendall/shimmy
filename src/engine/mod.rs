@@ -151,4 +151,6 @@ pub mod universal;
 pub mod mlx;
 
 pub mod adapter;
+#[cfg(feature = "airframe")]
+pub mod airframe;
 pub mod safetensors_native;

@@ -490,4 +490,184 @@ mod tests {
             .to_string()
             .contains("Circular dependency"));
     }
+
+    #[test]
+    fn test_substitute_variables_with_values() {
+        let engine = WorkflowEngine::new(ToolRegistry::new());
+        let mut variables = HashMap::new();
+        variables.insert("name".to_string(), serde_json::json!("Alice"));
+        variables.insert("count".to_string(), serde_json::json!(42));
+
+        let result = engine
+            .substitute_variables("Hello {{name}}, count is {{count}}", &variables)
+            .unwrap();
+        assert_eq!(result, "Hello Alice, count is 42");
+    }
+
+    #[test]
+    fn test_substitute_variables_unknown_placeholder_preserved() {
+        let engine = WorkflowEngine::new(ToolRegistry::new());
+        let variables = HashMap::new();
+        let result = engine
+            .substitute_variables("Hello {{unknown}}", &variables)
+            .unwrap();
+        // Unresolved placeholders stay as-is
+        assert_eq!(result, "Hello {{unknown}}");
+    }
+
+    #[tokio::test]
+    async fn test_execute_workflow_data_transform_extract() {
+        let engine = WorkflowEngine::new(ToolRegistry::new());
+
+        let mut inputs = HashMap::new();
+        inputs.insert("greeting".to_string(), serde_json::json!("hello world"));
+
+        let request = WorkflowRequest {
+            workflow: Workflow {
+                id: "test-wf".to_string(),
+                name: "Test Workflow".to_string(),
+                description: "Unit test workflow".to_string(),
+                steps: vec![WorkflowStep {
+                    id: "extract_step".to_string(),
+                    step_type: WorkflowStepType::DataTransform {
+                        operation: "extract".to_string(),
+                        expression: "greeting".to_string(),
+                    },
+                    depends_on: vec![],
+                    parameters: serde_json::Value::Null,
+                }],
+                inputs,
+                outputs: vec!["extract_step".to_string()],
+            },
+            context: HashMap::new(),
+        };
+
+        let result = engine.execute_workflow(request).await.unwrap();
+        assert!(result.success);
+        assert_eq!(result.workflow_id, "test-wf");
+        assert_eq!(result.outputs["extract_step"], serde_json::json!("hello world"));
+    }
+
+    #[tokio::test]
+    async fn test_execute_workflow_missing_output_step() {
+        let engine = WorkflowEngine::new(ToolRegistry::new());
+
+        let request = WorkflowRequest {
+            workflow: Workflow {
+                id: "wf-missing".to_string(),
+                name: "Missing output".to_string(),
+                description: "Test missing output step".to_string(),
+                steps: vec![],
+                inputs: HashMap::new(),
+                outputs: vec!["nonexistent_step".to_string()],
+            },
+            context: HashMap::new(),
+        };
+
+        let result = engine.execute_workflow(request).await.unwrap();
+        assert!(!result.success);
+        assert!(result.error.as_deref().unwrap_or("").contains("Missing output steps"));
+    }
+
+    #[tokio::test]
+    async fn test_execute_workflow_data_transform_filter() {
+        let engine = WorkflowEngine::new(ToolRegistry::new());
+
+        let request = WorkflowRequest {
+            workflow: Workflow {
+                id: "filter-wf".to_string(),
+                name: "Filter Workflow".to_string(),
+                description: "Test filter operation".to_string(),
+                steps: vec![WorkflowStep {
+                    id: "filter_step".to_string(),
+                    step_type: WorkflowStepType::DataTransform {
+                        operation: "filter".to_string(),
+                        expression: "x > 5".to_string(),
+                    },
+                    depends_on: vec![],
+                    parameters: serde_json::Value::Null,
+                }],
+                inputs: HashMap::new(),
+                outputs: vec!["filter_step".to_string()],
+            },
+            context: HashMap::new(),
+        };
+
+        let result = engine.execute_workflow(request).await.unwrap();
+        assert!(result.success);
+        assert!(result.step_results["filter_step"].success);
+    }
+
+    #[tokio::test]
+    async fn test_execute_workflow_unsupported_operation_marks_step_failed() {
+        let engine = WorkflowEngine::new(ToolRegistry::new());
+
+        let request = WorkflowRequest {
+            workflow: Workflow {
+                id: "bad-op-wf".to_string(),
+                name: "Bad op".to_string(),
+                description: "Test unsupported operation".to_string(),
+                steps: vec![WorkflowStep {
+                    id: "bad_step".to_string(),
+                    step_type: WorkflowStepType::DataTransform {
+                        operation: "nonexistent_op".to_string(),
+                        expression: "anything".to_string(),
+                    },
+                    depends_on: vec![],
+                    parameters: serde_json::Value::Null,
+                }],
+                inputs: HashMap::new(),
+                outputs: vec!["bad_step".to_string()],
+            },
+            context: HashMap::new(),
+        };
+
+        let result = engine.execute_workflow(request).await.unwrap();
+        // Step fails due to unsupported operation
+        assert!(!result.step_results["bad_step"].success);
+    }
+
+    #[tokio::test]
+    async fn test_execute_workflow_calculate_order_linear_chain() {
+        let engine = WorkflowEngine::new(ToolRegistry::new());
+
+        let mut inputs = HashMap::new();
+        inputs.insert("data".to_string(), serde_json::json!("value"));
+
+        let request = WorkflowRequest {
+            workflow: Workflow {
+                id: "chain-wf".to_string(),
+                name: "Chain Workflow".to_string(),
+                description: "Two steps in order".to_string(),
+                steps: vec![
+                    WorkflowStep {
+                        id: "step_a".to_string(),
+                        step_type: WorkflowStepType::DataTransform {
+                            operation: "extract".to_string(),
+                            expression: "data".to_string(),
+                        },
+                        depends_on: vec![],
+                        parameters: serde_json::Value::Null,
+                    },
+                    WorkflowStep {
+                        id: "step_b".to_string(),
+                        step_type: WorkflowStepType::DataTransform {
+                            operation: "extract".to_string(),
+                            expression: "step_step_a".to_string(),
+                        },
+                        depends_on: vec!["step_a".to_string()],
+                        parameters: serde_json::Value::Null,
+                    },
+                ],
+                inputs,
+                outputs: vec!["step_b".to_string()],
+            },
+            context: HashMap::new(),
+        };
+
+        let result = engine.execute_workflow(request).await.unwrap();
+        // Both steps should have run
+        assert!(result.step_results.contains_key("step_a"));
+        assert!(result.step_results.contains_key("step_b"));
+    }
 }

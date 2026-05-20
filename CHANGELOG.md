@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-05-19
+
+### 🔧 **AIRFRAME ENGINE** — Custom WGSL GPU Backend Replaces llama.cpp
+
+This release replaces the llama.cpp inference backend with **Airframe**, a pure-Rust WGSL GPU inference engine. Airframe runs the entire transformer pipeline on GPU using WebGPU compute shaders with F32 precision throughout — no C++ dependencies, no build flags, no platform matrix headaches.
+
+The llama.cpp code path is **historically parked**, not deleted. It remains accessible via `--legacy` flag or `SHIMMY_ENGINE_BACKEND=llama` for anyone who needs it, but it is no longer the default and will not receive new features.
+
+### 🏆 What Changed
+
+**New Default Engine: Airframe**
+- Pure Rust — no C++ toolchain required at runtime
+- WGSL compute shaders compiled on first launch; no pre-compiled shader artifacts
+- F32 precision throughout (output head dequantized Q6_K → F32 on load)
+- YaRN RoPE scaling for extended context via `SHIMMY_MAX_CTX` env var
+- Stateless per-request inference with full KV cache reset between requests
+- Model spec auto-derived from GGUF metadata — works with any GGUF-format model
+
+**Model Configuration**
+- Set `SHIMMY_BASE_GGUF=/path/to/model.gguf` to configure the default model
+- Pass `--model-path /path/to/model.gguf` to the `serve` command as an alternative
+- No more hardcoded developer paths shipped in the binary
+
+**Chunked Prefill**
+- Prefill now processes prompts in 512-token chunks (was one giant dispatch)
+- Restores manageable GPU dispatch times at all context sizes
+- Extended context (`SHIMMY_MAX_CTX=4096`, `8192`, etc.) is viable again
+
+**Template Routing Fixed**
+- TinyLlama, Llama-1, and Llama-2 models now correctly use ChatML template
+- Llama-3 template reserved for models explicitly named `llama-3` / `llama3`
+
+### ⚠️ Migration Notes
+
+**llama.cpp is historically parked.** If you were using the default inference path:
+- Everything you could do with TinyLlama via llama.cpp works identically through Airframe
+- Opt back to llama.cpp with `--legacy` or `SHIMMY_ENGINE_BACKEND=llama` if needed
+
+**SHIMMY_BASE_GGUF is now required.** The default model is no longer hardcoded. Set the env var or pass `--model-path`.
+
+### 🔧 Internal Changes
+- Removed `main_integration` stub module
+- Cleaned all unused import warnings across the codebase
+- `GpuRuntime::load()` now derives ModelSpec from GGUF metadata instead of hardcoded TinyLlama constants
+
 ## [1.9.0] - 2026-01-09
 
 ### 🎉 **KITCHEN SINK ARCHITECTURE** - One Binary, All GPUs

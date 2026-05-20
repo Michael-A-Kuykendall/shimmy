@@ -10,7 +10,6 @@ pub mod cli;
 pub mod discovery;
 pub mod engine;
 pub mod error;
-pub mod main_integration;
 pub mod metrics;
 pub mod model_manager;
 pub mod model_registry;
