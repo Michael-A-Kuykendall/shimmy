@@ -155,11 +155,6 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
         // Anthropic Claude API compatibility
         .route("/v1/messages", post(anthropic_compat::messages));
 
-    #[cfg(feature = "vision")]
-    {
-        app = app.route("/api/vision", post(api::vision));
-    }
-
     let app = app.layer(middleware::from_fn(cors_layer)).with_state(state);
     axum::serve(listener, app).await?;
     Ok(())
