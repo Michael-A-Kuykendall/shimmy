@@ -65,15 +65,14 @@ If neither is set, the server will fail to start with a clear error message.
 
 ### 3. `--gpu-backend cuda/vulkan/opencl` flags are ignored
 
-In v1.x these flags selected the llama.cpp GPU backend. In v2.0, Airframe uses wgpu's adapter enumeration — the GPU is always auto-selected.
+In v1.x these flags selected the llama.cpp GPU backend. In v2.0, Airframe uses wgpu's adapter enumeration — the GPU is always auto-selected. The `--gpu-backend` flag is silently ignored by the Airframe engine.
 
 ```bash
 # v1.x: forced CUDA
 shimmy serve --gpu-backend cuda
 
-# v2.0: adapter is selected automatically; --gpu-backend auto/cpu are the only meaningful values
-shimmy serve                          # auto (default): best available GPU
-shimmy serve --gpu-backend cpu        # force CPU (useful for debugging)
+# v2.0: all --gpu-backend values are ignored; wgpu selects the best available adapter
+shimmy serve      # Airframe auto-selects GPU adapter via wgpu
 ```
 
 To see which GPU adapter was selected:

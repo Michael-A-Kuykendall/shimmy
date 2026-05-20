@@ -3,7 +3,7 @@
 ## Auto-Discovery
 - Automatically finds GGUF and SafeTensors models
 - Scans common directories and environment variables
-- Use `cargo run --features llama -- list` to see discovered models
+- Use `shimmy list` to see discovered models
 
 ## API Enhancements
 - Proper HTTP status codes (404 for missing models, 502 for generation failures)
