@@ -117,3 +117,28 @@ shimmy.exe
 
 # Console subproject (development/experimental)
 console/
+
+# GPU build artifacts (never commit — large binary outputs)
+target-gpu/
+*.rlib
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Crash dumps and diagnostic images
+*.stackdump
+bash.exe.stackdump
+00-diagnostic-startup.png
+
+# GPU test result artifacts
+gpu-test-results*.json
+
+# Internal workspace config
+docs/shimmy-workspace.code-workspace
+
+# Legacy llama.cpp headers and binaries (removed; use Airframe GPU)
+libs/headers/
+libs/windows-x86_64/llama.lib
+libs/vision/
