@@ -1,122 +1,88 @@
 # Windows GPU Build Guide
 
-This guide provides step-by-step instructions for building Shimmy with GPU acceleration on Windows.
+This guide covers GPU acceleration on Windows for Shimmy v2.0 (Airframe engine).
 
-## Prerequisites
+## v2.0: Airframe (wgpu) — No Manual Setup Required
 
-### Required Software
-- **Visual Studio 2022** with C++ build tools
-- **Rust** (latest stable version)
-- **Git** for cloning repositories
-- **CMake** (for building llama.cpp dependencies)
+Shimmy v2.0 uses **Airframe**, a pure-Rust WebGPU engine. On Windows, wgpu selects the best
+available adapter automatically (D3D12 on NVIDIA/AMD/Intel, Vulkan as fallback). No CUDA SDK,
+no Vulkan SDK, and no C++ compiler needed.
 
-### GPU-Specific Prerequisites
+### Download the Binary (Recommended)
+
+```bash
+curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
+set SHIMMY_BASE_GGUF=C:\path\to\model.gguf
+.\shimmy.exe serve
+```
+
+### Check GPU Adapter
+
+```bash
+.\shimmy.exe gpu-info
+```
+
+### Build from Source with Airframe
+
+Requires the airframe submodule (initialize with `--recurse-submodules`):
+
+```bash
+git clone https://github.com/Michael-A-Kuykendall/shimmy --recurse-submodules
+cd shimmy
+cargo build --release --features airframe,huggingface
+```
+
+## Extended Context
+
+```bash
+set SHIMMY_BASE_GGUF=C:\path\to\model.gguf
+set SHIMMY_MAX_CTX=8192
+.\shimmy.exe serve
+```
+
+---
+
+## Legacy: llama.cpp GPU Backends (v1.x — use `--legacy` flag)
+
+The llama.cpp CUDA/Vulkan/OpenCL backends are still available in v2.0 via the `--legacy` flag.
+They require their respective SDKs. This section is preserved for reference.
+
+### Prerequisites (legacy path only)
 
 #### For NVIDIA CUDA
-- **CUDA Toolkit 12.0+** (download from NVIDIA)
+- **CUDA Toolkit 12.0+**
 - Compatible NVIDIA GPU with compute capability 6.0+
 
 #### For OpenCL (AMD/Intel/NVIDIA)
 - **OpenCL SDK** or GPU vendor drivers
-- Compatible GPU with OpenCL 1.2+ support
 
 #### For Vulkan
-- **Vulkan SDK** (download from LunarG)
-- Compatible GPU with Vulkan 1.0+ support
+- **Vulkan SDK** (LunarG)
 
-## Build Instructions
-
-### 1. Clone Repository
+### Build Instructions (legacy path)
 
 ```bash
-git clone https://github.com/Michael-A-Kuykendall/shimmy.git
-cd shimmy
-```
-
-### 2. Choose GPU Backend
-
-#### Option A: NVIDIA CUDA Build
-```bash
+# CUDA
 cargo build --release --features llama-cuda
-```
 
-#### Option B: OpenCL Build (AMD/Intel/NVIDIA)
-```bash
+# OpenCL
 cargo build --release --features llama-opencl
-```
 
-#### Option C: Vulkan Build (Cross-Platform)
-```bash
+# Vulkan
 cargo build --release --features llama-vulkan
 ```
 
-#### Option D: All GPU Backends
+Use with `--legacy` flag to activate:
 ```bash
-cargo build --release --features gpu
+.\shimmy.exe serve --legacy --model-path C:\path\to\model.gguf --gpu-backend cuda
 ```
 
-### 3. Verify Build
+### Troubleshooting (legacy)
 
-```bash
-./target/release/shimmy.exe gpu-info
-```
+- **CUDA not found**: Ensure `nvcc` is in PATH
+- **OpenCL headers missing**: Install GPU vendor SDK
+- **Vulkan SDK missing**: Install from LunarG
 
-This should show your GPU backend as "available".
-
-## Installation from Source
-
-For permanent installation:
-
-```bash
-# Install specific GPU backend
-cargo install --path . --features llama-opencl
-
-# Or install all GPU backends
-cargo install --path . --features gpu
-```
-
-## Troubleshooting
-
-### Missing Template Files Error
-
-**Error**: `couldn't read '..\templates/docker/Dockerfile'`
-
-**Solution**: This indicates you're using an older version. Use the latest from source:
-```bash
-git clone https://github.com/Michael-A-Kuykendall/shimmy.git
-cargo install --path . --features llama-opencl
-```
-
-### MoE Method Compilation Errors
-
-**Error**: `no method named 'with_n_cpu_moe' found`
-
-**Solution**: This is from an older published version. The latest source has these methods properly handled.
-
-### CUDA Build Fails
-
-**Common Issues**:
-1. **CUDA Toolkit not found**: Ensure CUDA is in your PATH
-2. **Compute capability mismatch**: Check your GPU compatibility
-3. **Visual Studio version**: Ensure you have VS 2022 with C++ tools
-
-### OpenCL Build Fails
-
-**Common Issues**:
-1. **OpenCL headers missing**: Install your GPU vendor's SDK
-2. **No OpenCL runtime**: Update your GPU drivers
-
-## Performance Verification
-
-Test your GPU-accelerated build:
-
-```bash
-# Check GPU detection
-shimmy gpu-info
-
-# Run a simple generation test
-shimmy generate test-model --prompt "Hello" --max-tokens 50
-```
 
 ## Binary Distribution
 
