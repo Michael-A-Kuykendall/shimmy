@@ -205,7 +205,7 @@ async fn main() -> anyhow::Result<()> {
             base_path: default_model_path.into(),
             lora_path: std::env::var("SHIMMY_LORA_GGUF").ok().map(Into::into),
             template: Some("chatml".into()),
-            ctx_len: Some(2048),
+            ctx_len: Some(crate::model_registry::shimmy_ctx_len()),
             n_threads: None,
         });
     }

@@ -47,16 +47,61 @@ Starting in v2.0.0, Shimmy's default inference engine is **Airframe** — a pure
 - F32 precision throughout for deterministic, high-quality output
 - WGSL compute shaders work on any GPU via WebGPU (NVIDIA, AMD, Intel, integrated)
 - Model spec auto-derived from GGUF metadata — no hardcoded per-model constants
-- YaRN RoPE scaling for extended context: set `SHIMMY_MAX_CTX=8192` and go
+- YaRN RoPE scaling for extended context via `SHIMMY_MAX_CTX` — engine allocates KV cache and sets RoPE scale automatically (see [Extended Context](#-extended-context) below)
 
 **Quick start with Airframe (v2.0.0+):**
 ```bash
-# Set your model path and start serving
+# Default: 2048-token context
 SHIMMY_BASE_GGUF=/path/to/TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf ./shimmy serve
 
-# Extended context (4096 tokens, YaRN RoPE enabled automatically)
+# Extended context (4096 tokens — YaRN RoPE enabled automatically, KV cache resized)
 SHIMMY_BASE_GGUF=/path/to/model.gguf SHIMMY_MAX_CTX=4096 ./shimmy serve
 ```
+
+## 🎯 Supported Models
+
+Airframe v2.0 ships with GPU-verified support across **7 model architectures** and **5 quantization types**, covering the models most commonly run on consumer hardware. Context window is read directly from each model's GGUF metadata — no hardcoded limits.
+
+### ✅ Locally Validated (GPU Math Verified)
+
+| Model | Architecture | Quant | Size | Context | Min VRAM |
+|---|---|---|---|---|---|
+| [TinyLlama-1.1B-Chat-v1.0](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF) | Llama | Q4_0 | 638 MB | 2048 | ~800 MB |
+| [Llama-3.2-1B-Instruct](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF) | Llama | Q4_K_M | 770 MB | 131072* | ~1 GB |
+| [Llama-3.2-3B-Instruct](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF) | Llama | Q4_K_M | 1.9 GB | 131072* | ~2.5 GB |
+| [phi-2](https://huggingface.co/TheBloke/phi-2-GGUF) | Phi-2 | Q4_K_M | 1.7 GB | 2048 | ~2.2 GB |
+| [gemma-2-2b-it](https://huggingface.co/bartowski/gemma-2-2b-it-GGUF) | Gemma-2 | Q4_K_M | 1.6 GB | 8192 | ~2 GB |
+| [starcoder2-3b](https://huggingface.co/second-state/StarCoder2-3B-GGUF) | StarCoder2 | Q4_K_M | 1.8 GB | 16384 | ~2.3 GB |
+| [gpt2](https://huggingface.co/ggerganov/ggml/blob/main/gpt-2-117M-q4_0.bin) | GPT-2 | Q4_K_M | 107 MB | 1024 | ~200 MB |
+
+> \* Llama-3.2's native context is 131072 tokens. Airframe reads this from GGUF and allocates KV cache accordingly. Use `SHIMMY_MAX_CTX=8192` for a practical 8K window on consumer hardware (~256 MB KV cache for the 1B model).
+
+**GPU Math Verified** means the Airframe GPU dequantization shader produces results matching the CPU reference implementation, independently confirmed for every tensor type in each model. This is done via `quant_verify`, which tests 512 elements per quantization type per model.
+
+### ⏳ Roadmap — Larger Models (Require ≥16 GB VRAM)
+
+| Model | Architecture | Quant | Size | Status |
+|---|---|---|---|---|
+| deepseek-coder-6.7b-instruct | Llama | Q4_K_M | 3.9 GB | Pending remote GPU validation |
+| deepseek-llm-7b-chat | Llama | Q4_K_M | 4.0 GB | Pending remote GPU validation |
+| qwen2-7b-instruct | Qwen2 | Q4_K_M | 4.5 GB | Pending remote GPU validation |
+| Phi-3.5-mini-instruct | Phi-3 | Q4_K_M | 2.3 GB | Requires fused QKV support (planned) |
+
+### ✅ Supported Quantization Types
+
+| Type | GGML ID | Notes |
+|---|---|---|
+| `F32` | 0 | Raw floats — maximum precision |
+| `F16` | 1 | Half-precision floats |
+| `Q4_0` | 2 | 4-bit, 32-element blocks |
+| `Q8_0` | 8 | 8-bit, 32-element blocks |
+| `Q4_K` | 12 | 4-bit K-quant superblocks (256 elements) — used in Q4_K_M GGUFs |
+| `Q5_K` | 13 | 5-bit K-quant superblocks — used alongside Q4_K in mixed-precision models |
+| `Q6_K` | 14 | 6-bit K-quant superblocks — typically used for output/embedding layers |
+
+All types are implemented in both the GPU inference shader and a CPU reference implementation. GPU vs CPU agreement is validated for every type.
+
+**Auto-discovery is enabled.** If Shimmy finds GGUF models in your HuggingFace cache, Ollama directory, LM Studio cache (`~/.cache/lm-studio/models`), or local `./models/` folder, it will register and serve them automatically. See [docs/MODEL_EXPANSION.md](docs/MODEL_EXPANSION.md) for the full compatibility matrix.
 
 ## 📦 Migrating from v1.x
 
@@ -234,10 +279,43 @@ shimmy serve
 
 #### **🔧 Extended Context**
 
+`SHIMMY_MAX_CTX` overrides the context window at the engine level. When set above the model's native window, Airframe automatically engages YaRN RoPE scaling and resizes the KV cache accordingly.
+
 ```bash
-# YaRN RoPE scaling enables extended context automatically when SHIMMY_MAX_CTX is set
+# 4096-token context with YaRN (2x native window for TinyLlama)
+SHIMMY_BASE_GGUF=/path/to/model.gguf SHIMMY_MAX_CTX=4096 shimmy serve
+
+# 8192 tokens (4x native, higher RoPE compression)
 SHIMMY_BASE_GGUF=/path/to/model.gguf SHIMMY_MAX_CTX=8192 shimmy serve
 ```
+
+> **Note:** Extended context beyond 4096 is functional but not yet as deeply validated as the native 2048-token window. Accepted range is 512–131072. Values outside that range are silently ignored and 2048 is used.
+
+#### **💾 VRAM Sizing Reference**
+
+Airframe allocates VRAM at load time: **weights** + **KV cache**. The KV cache is F32 and scales linearly with context length (`n_layers × n_kv_heads × head_dim × ctx × 2 × 4 bytes`).
+
+**TinyLlama 1.1B Q4_0 — the v2.0 validated path:**
+
+| Context (`SHIMMY_MAX_CTX`) | KV cache | Weights | Total | Min VRAM |
+|---|---|---|---|---|
+| 2048 (default) | ~88 MB | ~638 MB | ~726 MB | **~800 MB** |
+| 4096 | ~176 MB | ~638 MB | ~814 MB | **~900 MB** |
+| 8192 | ~352 MB | ~638 MB | ~990 MB | **~1.1 GB** |
+| 16384 | ~704 MB | ~638 MB | ~1.3 GB | **~1.5 GB** |
+
+> Integrated graphics (Intel Iris, Apple M-series unified memory, AMD Vega) running at 2048 context is ~800 MB — comfortably inside the 2 GB allocation most integrated GPUs share with system RAM.
+
+**Scaling up to larger models** (architecture and quant support required — see [docs/MODEL_EXPANSION.md](docs/MODEL_EXPANSION.md)):
+
+| Model | Quant | Weights | KV @ 2048 ctx | Min VRAM |
+|---|---|---|---|---|
+| Llama 3.2 1B | Q4_0 | ~636 MB | ~128 MB | ~900 MB |
+| Llama 3.2 3B | Q4_0 | ~1.9 GB | ~448 MB | ~2.5 GB |
+| Mistral 7B | Q4_K_M | ~4.1 GB | ~512 MB | ~5 GB |
+| Llama 3 8B | Q4_K_M | ~4.7 GB | ~512 MB | ~5.5 GB |
+
+The KV cache formula for any model: `n_layers × n_kv_heads × head_dim × ctx × 2 × 4 bytes`. Multiply the 2048 baseline by your `SHIMMY_MAX_CTX` multiplier to get the extended context allocation.
 
 ### Get Models
 
@@ -248,9 +326,13 @@ Shimmy auto-discovers models from:
 - **Environment**: `SHIMMY_BASE_GGUF=path/to/model.gguf`
 
 ```bash
-# Download models that work out of the box
-huggingface-cli download microsoft/Phi-3-mini-4k-instruct-gguf --local-dir ./models/
-huggingface-cli download bartowski/Llama-3.2-1B-Instruct-GGUF --local-dir ./models/
+# Primary validated model for Airframe v2.0
+huggingface-cli download TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
+  --include "tinyllama-1.1b-chat-v1.0.Q4_0.gguf" --local-dir ./models/
+
+# Alternative 1B — also fits in the same hardware envelope
+huggingface-cli download bartowski/Llama-3.2-1B-Instruct-GGUF \
+  --include "*Q4_K_M*" --local-dir ./models/
 ```
 
 ### Start Server

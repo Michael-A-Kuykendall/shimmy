@@ -3,6 +3,16 @@ use crate::auto_discovery::{DiscoveredModel, ModelAutoDiscovery};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
 
+/// Read `SHIMMY_MAX_CTX` env var and return a validated context window size.
+/// Accepted range: 512–131072 tokens. Defaults to 2048 when unset or invalid.
+pub fn shimmy_ctx_len() -> usize {
+    std::env::var("SHIMMY_MAX_CTX")
+        .ok()
+        .and_then(|s| s.parse::<usize>().ok())
+        .filter(|&c| c >= 512 && c <= 131_072)
+        .unwrap_or(2048)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelEntry {
     pub name: String,
@@ -53,7 +63,7 @@ impl Registry {
                     base_path: discovered.path.clone(),
                     lora_path: discovered.lora_path.clone(),
                     template: Some(self.infer_template(name)),
-                    ctx_len: Some(2048),
+                    ctx_len: Some(shimmy_ctx_len()),
                     n_threads: None,
                 };
                 self.inner.insert(name.clone(), entry);
@@ -100,7 +110,7 @@ impl Registry {
                 base_path: e.base_path.clone(),
                 lora_path: e.lora_path.clone(),
                 template: e.template.clone(),
-                ctx_len: e.ctx_len.unwrap_or(2048),
+                ctx_len: e.ctx_len.unwrap_or_else(shimmy_ctx_len),
                 n_threads: e.n_threads,
             });
         }
@@ -112,7 +122,7 @@ impl Registry {
                 base_path: discovered.path.clone(),
                 lora_path: discovered.lora_path.clone(),
                 template: Some(self.infer_template(&discovered.name)),
-                ctx_len: 2048,
+                ctx_len: shimmy_ctx_len(),
                 n_threads: None,
             });
         }

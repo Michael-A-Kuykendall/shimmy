@@ -80,6 +80,7 @@ impl ModelAutoDiscovery {
             search_paths.push(PathBuf::from(home.clone()).join(".cache/huggingface/hub"));
             search_paths.push(PathBuf::from(home.clone()).join(".ollama/models"));
             search_paths.push(PathBuf::from(home.clone()).join(".lmstudio/models"));
+            search_paths.push(PathBuf::from(home.clone()).join(".cache/lm-studio/models"));
             search_paths.push(PathBuf::from(home.clone()).join("models"));
             search_paths.push(PathBuf::from(home).join(".local/share/shimmy/models"));
         }
@@ -89,6 +90,8 @@ impl ModelAutoDiscovery {
             search_paths.push(PathBuf::from(user_profile.clone()).join(".cache\\huggingface\\hub"));
             search_paths.push(PathBuf::from(user_profile.clone()).join(".ollama\\models"));
             search_paths.push(PathBuf::from(user_profile.clone()).join(".lmstudio\\models"));
+            search_paths.push(PathBuf::from(user_profile.clone()).join(".cache\\lm-studio\\models"));
+            search_paths.push(PathBuf::from(user_profile.clone()).join("AppData\\Roaming\\LM Studio\\models"));
             search_paths.push(PathBuf::from(user_profile.clone()).join("models"));
             search_paths
                 .push(PathBuf::from(user_profile.clone()).join("AppData\\Local\\shimmy\\models"));

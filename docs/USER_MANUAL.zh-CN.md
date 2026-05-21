@@ -219,16 +219,24 @@ Shimmy 使用 **GGUF 格式**的模型文件，这是目前最通用的量化模
 
 ### 推荐模型
 
-以下模型经过测试，可与 Shimmy 配合使用：
+以下模型已通过 GPU 数学验证（`quant_verify`），可与 Shimmy Airframe 引擎配合使用：
 
-| 模型 | 大小 | VRAM | 下载地址 |
-|------|------|------|---------|
-| Phi-3-mini-4k（4bit 量化） | ~2GB | 3GB | [HuggingFace](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) |
-| Llama-3.2-1B-Instruct | ~0.8GB | 2GB | [HuggingFace](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct-GGUF) |
-| Llama-3.2-3B-Instruct | ~2GB | 3GB | [HuggingFace](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct-GGUF) |
-| Mistral-7B-Instruct（Q4） | ~4GB | 5GB | [HuggingFace](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF) |
-| Qwen2.5-7B-Instruct（Q4） | ~4GB | 5GB | [HuggingFace](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF) |
-| DeepSeek-R1-1.5B | ~1GB | 2GB | [HuggingFace](https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF) |
+| 模型 | 架构 | 量化 | 大小 | 最小 VRAM | 下载地址 |
+|------|------|------|------|-----------|----------|
+| TinyLlama-1.1B-Chat | Llama | Q4_0 | 638MB | ~800MB | [HuggingFace](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF) |
+| Llama-3.2-1B-Instruct | Llama | Q4_K_M | ~770MB | ~1GB | [HuggingFace](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF) |
+| Llama-3.2-3B-Instruct | Llama | Q4_K_M | ~1.9GB | ~2.5GB | [HuggingFace](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF) |
+| phi-2 | Phi-2 | Q4_K_M | ~1.7GB | ~2.2GB | [HuggingFace](https://huggingface.co/TheBloke/phi-2-GGUF) |
+| gemma-2-2b-it | Gemma-2 | Q4_K_M | ~1.6GB | ~2GB | [HuggingFace](https://huggingface.co/bartowski/gemma-2-2b-it-GGUF) |
+| starcoder2-3b | StarCoder2 | Q4_K_M | ~1.8GB | ~2.3GB | [HuggingFace](https://huggingface.co/second-state/StarCoder2-3B-GGUF) |
+
+**以下模型需要更大显存（≥16GB），将在路线图中支持：**
+
+| 模型 | 量化 | 大小 | 状态 |
+|------|------|------|------|
+| deepseek-coder-6.7b-instruct | Q4_K_M | ~3.9GB | 待远程 GPU 验证 |
+| deepseek-llm-7b-chat | Q4_K_M | ~4.0GB | 待远程 GPU 验证 |
+| qwen2-7b-instruct | Q4_K_M | ~4.5GB | 待远程 GPU 验证 |
 
 ### 使用 huggingface-cli 下载
 
@@ -278,7 +286,7 @@ GGUF 文件名中的量化后缀含义：
 
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
-| `SHIMMY_MAX_CTX` | 模型原生（通常 2048） | 最大上下文 token 数，超过 2048 自动启用 YaRN |
+| `SHIMMY_MAX_CTX` | 模型原生（从 GGUF 自动读取） | 最大上下文 token 数，超过模型原生值时自动启用 YaRN |
 | `SHIMMY_ENGINE_BACKEND` | `airframe` | 推理引擎，设为 `airframe`（默认）或 `safetensors` |
 | `SHIMMY_PORT` | `11435` | 服务监听端口 |
 | `SHIMMY_BIND_ADDRESS` | `127.0.0.1:11435` | 服务监听地址 |
