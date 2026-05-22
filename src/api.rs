@@ -382,14 +382,14 @@ pub async fn model_status(
     }))
 }
 
-#[allow(dead_code)]
+#[allow(dead_code)] // route stub — reserved for future tool integration; not yet registered in router
 pub async fn list_tools(State(_state): State<Arc<AppState>>) -> impl IntoResponse {
     Json(serde_json::json!({
         "tools": []
     }))
 }
 
-#[allow(dead_code)]
+#[allow(dead_code)] // route stub — reserved for future tool execution; not yet registered in router
 pub async fn execute_tool(
     State(_state): State<Arc<AppState>>,
     Path(name): Path<String>,
@@ -401,7 +401,7 @@ pub async fn execute_tool(
     .into_response()
 }
 
-#[allow(dead_code)]
+#[allow(dead_code)] // route stub — reserved for future workflow execution; not yet registered in router
 pub async fn execute_workflow(
     State(_state): State<Arc<AppState>>,
     Json(_request): Json<serde_json::Value>,

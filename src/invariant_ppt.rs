@@ -84,7 +84,7 @@ pub fn contract_test(name: &str, required_invariants: &[&str]) {
 
 /// Exploration test helper - for temporary tests during development
 #[cfg(test)]
-#[allow(dead_code)]
+#[allow(dead_code)] // test-only helper; dead in non-test builds but retained for exploratory use
 pub fn explore_test<F>(name: &str, test_fn: F)
 where
     F: Fn() -> bool,
@@ -128,7 +128,7 @@ pub fn checked_invariants() -> Vec<String> {
 
 /// Get all failed invariants
 #[cfg(test)]
-#[allow(dead_code)]
+#[allow(dead_code)] // test-only helper; dead in non-test builds but retained for assertion introspection
 pub fn failed_invariants() -> Vec<String> {
     match FAILED_INVARIANTS.lock() {
         Ok(failed) => failed.clone(),

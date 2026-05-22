@@ -165,6 +165,47 @@ fn airframe_engine_selected(legacy: bool) -> bool {
         .unwrap_or(true)
 }
 
+/// Construct the inference engine based on CLI flags and compiled feature set.
+/// Centralises engine construction so that the serve path and the normal startup
+/// path use identical logic rather than duplicating the cfg-gated blocks.
+fn build_engine(
+    gpu_backend: Option<&str>,
+    legacy: bool,
+    cpu_moe: bool,
+    n_cpu_moe: Option<usize>,
+) -> Box<dyn engine::InferenceEngine> {
+    if airframe_engine_selected(legacy) {
+        #[cfg(feature = "airframe")]
+        {
+            return Box::new(engine::airframe::AirframeEngine::new());
+        }
+        #[cfg(not(feature = "airframe"))]
+        {
+            // Airframe feature not compiled in — fall back to adapter for this build.
+            // Release binaries always include the airframe feature.
+            tracing::warn!(
+                "Airframe engine selected but not compiled in; falling back to adapter"
+            );
+            return Box::new(engine::adapter::InferenceEngineAdapter::new_with_backend(
+                gpu_backend,
+            ));
+        }
+    }
+
+    #[cfg(feature = "llama")]
+    {
+        let mut adapter =
+            engine::adapter::InferenceEngineAdapter::new_with_backend(gpu_backend);
+        if cpu_moe || n_cpu_moe.is_some() {
+            adapter = adapter.with_moe_config(cpu_moe, n_cpu_moe);
+        }
+        return Box::new(adapter);
+    }
+
+    #[cfg(not(feature = "llama"))]
+    Box::new(engine::adapter::InferenceEngineAdapter::new_with_backend(gpu_backend))
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Version validation - prevents Issue #63 distribution of broken binaries
@@ -211,43 +252,8 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // Choose the execution engine once at startup.
-    let engine: Box<dyn engine::InferenceEngine> = if airframe_engine_selected(cli.legacy) {
-        #[cfg(feature = "airframe")]
-        {
-            Box::new(engine::airframe::AirframeEngine::new())
-        }
-        #[cfg(not(feature = "airframe"))]
-        {
-            // Airframe feature not compiled in — fall back to adapter for this build.
-            // Release binaries always include the airframe feature.
-            tracing::warn!("Airframe engine selected but not compiled in; falling back to adapter");
-            let adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(
-                cli.gpu_backend.as_deref(),
-            );
-            Box::new(adapter)
-        }
-    } else {
-        #[cfg(feature = "llama")]
-        {
-            let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(
-                cli.gpu_backend.as_deref(),
-            );
-
-            // Apply MoE configuration from global flags
-            if cli.cpu_moe || cli.n_cpu_moe.is_some() {
-                adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
-            }
-
-            Box::new(adapter)
-        }
-        #[cfg(not(feature = "llama"))]
-        {
-            let adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(
-                cli.gpu_backend.as_deref(),
-            );
-            Box::new(adapter)
-        }
-    };
+    let engine: Box<dyn engine::InferenceEngine> =
+        build_engine(cli.gpu_backend.as_deref(), cli.legacy, cli.cpu_moe, cli.n_cpu_moe);
 
     // Handle model-path registration for serve command
     if let cli::Command::Serve {
@@ -316,29 +322,9 @@ async fn main() -> anyhow::Result<()> {
             let manual_count = state.registry.list().len();
             if manual_count <= 1 && !airframe_engine_selected(cli.legacy) {
                 // Only the default phi3-lora entry and not using Airframe
-                // Create new engine with same configuration (including MoE if set)
-                let enhanced_engine: Box<dyn engine::InferenceEngine> = {
-                    #[cfg(feature = "llama")]
-                    {
-                        let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(
-                            cli.gpu_backend.as_deref(),
-                        );
-
-                        // Apply MoE configuration from global flags
-                        if cli.cpu_moe || cli.n_cpu_moe.is_some() {
-                            adapter = adapter.with_moe_config(cli.cpu_moe, cli.n_cpu_moe);
-                        }
-
-                        Box::new(adapter)
-                    }
-                    #[cfg(not(feature = "llama"))]
-                    {
-                        let adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(
-                            cli.gpu_backend.as_deref(),
-                        );
-                        Box::new(adapter)
-                    }
-                };
+                // Create new engine with same configuration for auto-discovery state.
+                let enhanced_engine: Box<dyn engine::InferenceEngine> =
+                    build_engine(cli.gpu_backend.as_deref(), cli.legacy, cli.cpu_moe, cli.n_cpu_moe);
 
                 let mut enhanced_state = AppState::new(enhanced_engine, state.registry.clone());
                 enhanced_state.registry.auto_register_discovered();
