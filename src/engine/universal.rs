@@ -7,13 +7,13 @@ use super::{
 };
 
 /// Universal engine that routes to appropriate backend
-#[allow(dead_code)]
+#[allow(dead_code)] // future routing layer — not yet wired into main engine dispatch
 pub struct ShimmyUniversalEngine {
     huggingface_engine: HuggingFaceEngine,
 }
 
 impl ShimmyUniversalEngine {
-    #[allow(dead_code)]
+    #[allow(dead_code)] // constructor for future routing layer
     pub fn new() -> Self {
         Self {
             huggingface_engine: HuggingFaceEngine::new(),
@@ -41,7 +41,7 @@ impl UniversalEngine for ShimmyUniversalEngine {
 }
 
 /// Adapter to make legacy LoadedModel work with UniversalModel
-#[allow(dead_code)]
+#[allow(dead_code)] // bridge type for future LoadedModel → UniversalModel migration
 struct UniversalModelAdapter {
     model: Box<dyn super::LoadedModel>,
 }
