@@ -314,7 +314,7 @@ impl TelemetryCollector {
         let avg_response_time = {
             let times = self.request_times.lock().unwrap_or_else(|e| {
                 tracing::warn!("Failed to lock request_times: {}", e);
-                panic!("Poisoned mutex: request_times")
+                e.into_inner()
             });
             if times.is_empty() {
                 0
@@ -328,7 +328,7 @@ impl TelemetryCollector {
                 .lock()
                 .unwrap_or_else(|e| {
                     tracing::warn!("Failed to lock endpoints_used: {}", e);
-                    panic!("Poisoned mutex: endpoints_used")
+                    e.into_inner()
                 })
                 .iter()
                 .cloned()
@@ -340,7 +340,7 @@ impl TelemetryCollector {
             .lock()
             .unwrap_or_else(|e| {
                 tracing::warn!("Failed to lock models_used: {}", e);
-                panic!("Poisoned mutex: models_used")
+                e.into_inner()
             })
             .len() as u64;
 
