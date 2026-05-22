@@ -142,6 +142,7 @@ impl InferenceEngineAdapter {
                 }
                 #[cfg(not(feature = "huggingface"))]
                 {
+                    // Compile-time misconfiguration: Ollama blob requires llama or huggingface feature.
                     panic!("Ollama blob detected but no backend enabled");
                 }
             }
@@ -167,6 +168,7 @@ impl InferenceEngineAdapter {
                 }
                 #[cfg(not(feature = "huggingface"))]
                 {
+                    // Compile-time misconfiguration: GGUF requires llama or huggingface feature.
                     panic!("GGUF model detected but no backend enabled");
                 }
             }
@@ -185,6 +187,7 @@ impl InferenceEngineAdapter {
             }
             #[cfg(not(feature = "llama"))]
             {
+                // Compile-time misconfiguration: at least one inference backend must be enabled.
                 panic!("No backend features enabled. Please compile with --features llama or --features huggingface");
             }
         }
