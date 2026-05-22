@@ -15,6 +15,7 @@ dependencies = [
 name = "airframe"
 version = "0.0.1"
 dependencies = [
+ "aho-corasick",
  "bytemuck",
  "byteorder",
  "chrono",
@@ -2304,9 +2305,7 @@ dependencies = [
 
 [[package]]
 name = "shimmytok"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f2381f12d5c3f475feaf705354294803f350c13d0788f3ab367ac5979df9021"
+version = "0.7.1"
 dependencies = [
  "fancy-regex",
  "rayon",
