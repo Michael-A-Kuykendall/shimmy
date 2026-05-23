@@ -78,8 +78,14 @@ impl InferenceEngineAdapter {
                     }
                     #[cfg(not(feature = "llama"))]
                     {
-                        // This shouldn't happen with default features, but handle gracefully
-                        panic!("GGUF file detected but llama feature not enabled. Please install with --features llama");
+                        // llama.cpp was removed in v2.0. GGUF requires the Airframe GPU engine
+                        // (shimmy_server_gpu) or a build compiled with the GPU backend.
+                        return BackendChoice::Unsupported(
+                            "GGUF models require the Airframe GPU engine. \
+                             Use shimmy_server_gpu or build with --features airframe. \
+                             See https://github.com/Michael-A-Kuykendall/shimmy for setup."
+                                .to_string(),
+                        );
                     }
                 }
                 #[cfg(feature = "mlx")]
@@ -142,8 +148,11 @@ impl InferenceEngineAdapter {
                 }
                 #[cfg(not(feature = "huggingface"))]
                 {
-                    // Compile-time misconfiguration: Ollama blob requires llama or huggingface feature.
-                    panic!("Ollama blob detected but no backend enabled");
+                    return BackendChoice::Unsupported(
+                        "Ollama blob models require the Airframe GPU engine or HuggingFace backend. \
+                         Use shimmy_server_gpu or build with --features airframe."
+                            .to_string(),
+                    );
                 }
             }
         }
@@ -168,8 +177,11 @@ impl InferenceEngineAdapter {
                 }
                 #[cfg(not(feature = "huggingface"))]
                 {
-                    // Compile-time misconfiguration: GGUF requires llama or huggingface feature.
-                    panic!("GGUF model detected but no backend enabled");
+                    return BackendChoice::Unsupported(
+                        "GGUF-named models require the Airframe GPU engine or HuggingFace backend. \
+                         Use shimmy_server_gpu or build with --features airframe."
+                            .to_string(),
+                    );
                 }
             }
         }
@@ -187,8 +199,10 @@ impl InferenceEngineAdapter {
             }
             #[cfg(not(feature = "llama"))]
             {
-                // Compile-time misconfiguration: at least one inference backend must be enabled.
-                panic!("No backend features enabled. Please compile with --features llama or --features huggingface");
+                BackendChoice::Unsupported(
+                    "No inference backend enabled. Build with --features airframe or --features huggingface."
+                        .to_string(),
+                )
             }
         }
     }
@@ -205,6 +219,7 @@ enum BackendChoice {
     #[allow(clippy::upper_case_acronyms)]
     MLX,
     SafeTensors,
+    Unsupported(String),
 }
 
 #[async_trait]
@@ -213,6 +228,9 @@ impl InferenceEngine for InferenceEngineAdapter {
         // Select backend and load model directly (no caching for now to avoid complexity)
         let backend = self.select_backend(spec);
         match backend {
+            BackendChoice::Unsupported(msg) => {
+                return Err(anyhow::anyhow!("{}", msg));
+            }
             BackendChoice::SafeTensors => {
                 // Use native SafeTensors engine - NO Python dependency!
                 self.safetensors_engine.load(spec).await
