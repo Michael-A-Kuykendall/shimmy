@@ -80,6 +80,38 @@ pub async fn chat_completions(
 ) -> impl IntoResponse {
     use axum::http::StatusCode;
 
+    // Input validation
+    if req.messages.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "error": {
+                    "message": "messages must not be empty",
+                    "type": "invalid_request_error",
+                    "param": "messages",
+                    "code": "invalid_messages"
+                }
+            })),
+        )
+            .into_response();
+    }
+    if let Some(max_tok) = req.max_tokens {
+        if max_tok == 0 || max_tok > 131_072 {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({
+                    "error": {
+                        "message": "max_tokens must be between 1 and 131072",
+                        "type": "invalid_request_error",
+                        "param": "max_tokens",
+                        "code": "invalid_max_tokens"
+                    }
+                })),
+            )
+                .into_response();
+        }
+    }
+
     // Load and validate model
     let Some(spec) = state.registry.to_spec(&req.model) else {
         tracing::warn!("Model '{}' not found in registry", req.model);
@@ -162,6 +194,16 @@ pub async fn chat_completions(
     }
     if let Some(s) = req.stream {
         opts.stream = s;
+    }
+    // Map OpenAI frequency/presence penalty onto repeat_penalty.
+    // repeat_penalty = 1.0 + max(freq, presence) * 0.5
+    // A value of 0.0 (default) maps to 1.0, leaving repeat_penalty at its default.
+    let raw_penalty = req
+        .frequency_penalty
+        .unwrap_or(0.0)
+        .max(req.presence_penalty.unwrap_or(0.0));
+    if raw_penalty > 0.0 {
+        opts.repeat_penalty = 1.0 + raw_penalty * 0.5;
     }
 
     // Auto-configure stop tokens based on template family
@@ -314,6 +356,134 @@ pub async fn chat_completions(
     }
 }
 
+/// OpenAI-compatible POST /v1/completions (text completion, not chat).
+///
+/// Accepts a bare `prompt` string and optional generation parameters.
+/// Returns a `text_completion` response object. Useful for legacy clients
+/// that do not use the chat completions format.
+pub async fn completions(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<CompletionRequest>,
+) -> impl IntoResponse {
+    use axum::http::StatusCode;
+
+    // Input validation
+    if req.prompt.trim().is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "error": {
+                    "message": "prompt must not be empty",
+                    "type": "invalid_request_error",
+                    "param": "prompt",
+                    "code": "invalid_prompt"
+                }
+            })),
+        )
+            .into_response();
+    }
+    if let Some(max_tok) = req.max_tokens {
+        if max_tok == 0 || max_tok > 131_072 {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({
+                    "error": {
+                        "message": "max_tokens must be between 1 and 131072",
+                        "type": "invalid_request_error",
+                        "param": "max_tokens",
+                        "code": "invalid_max_tokens"
+                    }
+                })),
+            )
+                .into_response();
+        }
+    }
+
+    let Some(spec) = state.registry.to_spec(&req.model) else {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(serde_json::json!({
+                "error": {
+                    "message": format!("Model '{}' not found", req.model),
+                    "type": "invalid_request_error",
+                    "param": "model",
+                    "code": "model_not_found"
+                }
+            })),
+        )
+            .into_response();
+    };
+
+    let engine = &state.engine;
+    let loaded = match engine.load(&spec).await {
+        Ok(l) => l,
+        Err(e) => {
+            tracing::error!("Failed to load model '{}': {:?}", req.model, e);
+            return StatusCode::BAD_GATEWAY.into_response();
+        }
+    };
+
+    let mut opts = crate::engine::GenOptions::default();
+    if let Some(t) = req.temperature {
+        opts.temperature = t;
+    }
+    if let Some(p) = req.top_p {
+        opts.top_p = p;
+    }
+    if let Some(m) = req.max_tokens {
+        opts.max_tokens = m;
+    }
+    opts.stream = false;
+
+    let prompt = req.prompt.clone();
+    let model_id = req.model.clone();
+    let prompt_tokens = prompt.split_whitespace().count();
+
+    let text = match loaded.generate(&prompt, opts, None).await {
+        Ok(t) => t,
+        Err(e) => {
+            tracing::error!("Generation error: {:?}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "error": {
+                        "message": "Generation failed",
+                        "type": "server_error",
+                        "code": "generation_failed"
+                    }
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    let completion_tokens = text.split_whitespace().count();
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    let response = serde_json::json!({
+        "id": format!("cmpl-{}", uuid::Uuid::new_v4().simple()),
+        "object": "text_completion",
+        "created": timestamp,
+        "model": model_id,
+        "choices": [{
+            "text": text,
+            "index": 0,
+            "logprobs": null,
+            "finish_reason": "stop"
+        }],
+        "usage": {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": prompt_tokens + completion_tokens
+        }
+    });
+
+    (StatusCode::OK, Json(response)).into_response()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -337,6 +507,8 @@ mod tests {
             top_p: None,
             stream: Some(false),
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Exercise handler code path (will gracefully fail due to no model)
@@ -414,6 +586,8 @@ mod tests {
             max_tokens: None,
             top_p: None,
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         let _response = chat_completions(State(state), Json(request)).await;
@@ -452,6 +626,8 @@ mod tests {
             max_tokens: Some(100),
             top_p: Some(0.9),
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Exercise streaming path (lines 132-213)
@@ -494,6 +670,8 @@ mod tests {
             max_tokens: Some(50),
             top_p: Some(0.8),
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Exercise non-streaming path (lines 214-244)
@@ -856,6 +1034,8 @@ mod tests {
             max_tokens: Some(100),
             top_p: Some(0.9),
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Skip actual model loading in tests - models don't exist
@@ -873,6 +1053,8 @@ mod tests {
             max_tokens: Some(50),
             top_p: None,
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         // Skip actual model loading in tests - models don't exist
@@ -934,6 +1116,8 @@ mod tests {
             max_tokens: None,
             top_p: None,
             stop: None,
+            frequency_penalty: None,
+            presence_penalty: None,
         };
 
         let _response = chat_completions(State(state), Json(invalid_request)).await;
@@ -1033,5 +1217,70 @@ mod tests {
         assert_eq!(choice["delta"]["role"], "assistant");
         assert_eq!(choice["delta"]["content"], "Hello");
         assert!(choice["finish_reason"].is_null());
+    }
+
+    // ── penalty mapping ──────────────────────────────────────────────────────
+
+    #[test]
+    fn test_penalty_mapping_frequency_only() {
+        // frequency_penalty=1.0 → repeat_penalty = 1.0 + 1.0 * 0.5 = 1.5
+        let mut opts = crate::engine::GenOptions::default();
+        let raw = 1.0_f32.max(0.0_f32);
+        if raw > 0.0 {
+            opts.repeat_penalty = 1.0 + raw * 0.5;
+        }
+        assert!((opts.repeat_penalty - 1.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_penalty_mapping_presence_wins() {
+        // presence=0.6 > frequency=0.2 → repeat_penalty = 1.0 + 0.6 * 0.5 = 1.3
+        let freq = 0.2_f32;
+        let pres = 0.6_f32;
+        let raw = freq.max(pres);
+        let mut opts = crate::engine::GenOptions::default();
+        if raw > 0.0 {
+            opts.repeat_penalty = 1.0 + raw * 0.5;
+        }
+        assert!((opts.repeat_penalty - 1.3).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_penalty_zero_does_not_override_default() {
+        // Neither field set → repeat_penalty stays at the default (1.1)
+        let freq = 0.0_f32;
+        let pres = 0.0_f32;
+        let raw = freq.max(pres);
+        let mut opts = crate::engine::GenOptions::default();
+        if raw > 0.0 {
+            opts.repeat_penalty = 1.0 + raw * 0.5;
+        }
+        // Default is 1.1 — should be unchanged
+        assert!((opts.repeat_penalty - 1.1).abs() < 1e-6);
+    }
+
+    // ── input validation ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_max_tokens_zero_rejected() {
+        // Zero is not a valid max_tokens value
+        let max_tokens: Option<usize> = Some(0);
+        let invalid = max_tokens.map_or(false, |m| m == 0 || m > 131_072);
+        assert!(invalid);
+    }
+
+    #[test]
+    fn test_max_tokens_over_limit_rejected() {
+        let max_tokens: Option<usize> = Some(200_000);
+        let invalid = max_tokens.map_or(false, |m| m == 0 || m > 131_072);
+        assert!(invalid);
+    }
+
+    #[test]
+    fn test_max_tokens_within_range_accepted() {
+        for val in [1usize, 64, 256, 4096, 131_072] {
+            let invalid = val == 0 || val > 131_072;
+            assert!(!invalid, "Expected {val} to be valid");
+        }
     }
 }

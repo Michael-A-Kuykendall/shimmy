@@ -19,6 +19,17 @@ provide the full Airframe GPU binaries.
 
 ### What's New Since v1.10.0
 
+**API**
+- Added `POST /v1/completions` text completion endpoint (OpenAI-compatible)
+- `POST /v1/chat/completions` now accepts `frequency_penalty` and `presence_penalty` fields; values map to `repeat_penalty = 1.0 + max(freq, presence) * 0.5`
+- Input validation: empty `messages` array returns 400; `max_tokens` of 0 or above 131072 returns 400
+
+**Inference**
+- Fixed stop token propagation: `<|eot_id|>` (Llama-3) and other model-specific stop tokens from chat templates now correctly terminate generation; previously they were silently dropped and the model would generate until `max_tokens`
+
+**Model Discovery**
+- Added `~/.cache/lm-studio/models` to auto-discovery search paths (fixes #184)
+
 **Distribution**
 - Airframe added as a git submodule — CI now builds all release binaries with GPU engine included
 - `publish = true`: `cargo install shimmy` now works (installs huggingface engine variant from crates.io)
