@@ -1207,3 +1207,14 @@ curl -N http://127.0.0.1:11435/v1/chat/completions \
 *本文档与 Shimmy 主仓库同步维护。如发现错误或有改进建议，欢迎提交 [Issue](https://github.com/Michael-A-Kuykendall/shimmy/issues) 或 Pull Request。*
 
 *[English README](../README.md) | [繁體中文手冊](USER_MANUAL.zh-TW.md)*
+
+---
+
+> 💝 **如果Shimmy对您有帮助，欢迎[赞助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款项 100
+---
+
+> 💝 **如果 Shimmy 对您有帮助，欢迎[赞助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款项 100% 用于保持项目永久免费。**
+> - **$5/月**：咖啡档 ☕ 赞助者徽章
+> - **$25/月**：Bug 优先处理 🐛 名字收录于 [SPONSORS.md](../SPONSORS.md)
+> - **$100/月**：企业支持 🏢 Logo 展示 + 每月答疑
+> - **$500/月**：基础设施合作 🚀 直接支持 + 路线图参与

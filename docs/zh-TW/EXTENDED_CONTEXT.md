@@ -125,3 +125,7 @@ $$\text{KV 快取（位元組）} = n_{\text{layers}} \times n_{\text{kv\_heads}
 - [量化格式詳解](QUANTIZATION.md) — 壓縮格式與顯存佔用
 - [故障排查指南](TROUBLESHOOTING.md) — 上下文溢出與 OOM 錯誤處理
 - [GPU 推論管線](GPU_PIPELINE.md) — KV 快取在 GPU 記憶體中的布局
+
+---
+
+> 💝 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款項 100% 用於保持專案永久免費。**

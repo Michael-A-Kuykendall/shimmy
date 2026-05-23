@@ -1197,3 +1197,11 @@ curl -N http://127.0.0.1:11435/v1/chat/completions \
 *本文件與 Shimmy 主儲存庫同步維護。如發現錯誤或有改進建議，歡迎提交 [Issue](https://github.com/Michael-A-Kuykendall/shimmy/issues) 或 Pull Request。*
 
 *[English README](../README.md) | [简体中文手册](USER_MANUAL.zh-CN.md)*
+
+---
+
+> 💝 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款項 100% 用於保持專案永久免費。**
+> - **$5/月**：咖啡檔 ☕ 贊助者徽章
+> - **$25/月**：Bug 優先處理 🐛 名字收錄於 [SPONSORS.md](../SPONSORS.md)
+> - **$100/月**：企業支援 🏢 Logo 展示 + 每月答疑
+> - **$500/月**：基礎設施合作 🚀 直接支援 + 路線圖參與

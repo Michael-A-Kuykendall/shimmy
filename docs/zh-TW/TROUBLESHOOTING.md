@@ -194,3 +194,7 @@ $env:LIBSHIMMY_MODEL_PATH = "D:\models\model.gguf"
 - [量化格式詳解](QUANTIZATION.md) — 不支援的量化格式
 - [擴展上下文視窗](EXTENDED_CONTEXT.md) — 上下文相關的 OOM
 - [GPU 推論管線](GPU_PIPELINE.md) — 底層架構
+
+---
+
+> 💝 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款項 100% 用於保持專案永久免費。**

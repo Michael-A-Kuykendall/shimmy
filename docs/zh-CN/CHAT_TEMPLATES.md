@@ -189,3 +189,7 @@ RUST_LOG=debug shimmy serve 2>&1 | grep -i template
 - [故障排查指南](TROUBLESHOOTING.md) — 生成质量问题的系统排查
 - [量化格式详解](QUANTIZATION.md) — 模型格式与兼容性
 - [GPU 推理管线](GPU_PIPELINE.md) — Token 采样链路
+
+---
+
+> 💝 **如果 Shimmy 对您有帮助，欢迎[赞助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款项 100% 用于保持项目永久免费。**
