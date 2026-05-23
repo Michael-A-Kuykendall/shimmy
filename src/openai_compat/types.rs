@@ -76,6 +76,28 @@ pub struct ChatCompletionRequest {
     pub top_p: Option<f32>,
     #[serde(default)]
     pub stop: Option<StopTokens>,
+    /// OpenAI-compatible penalty fields. Values in [0, 2].
+    /// We map the larger of the two onto `repeat_penalty` using the formula:
+    /// `repeat_penalty = 1.0 + max(frequency_penalty, presence_penalty) * 0.5`
+    #[serde(default)]
+    pub frequency_penalty: Option<f32>,
+    #[serde(default)]
+    pub presence_penalty: Option<f32>,
+}
+
+/// Request body for POST /v1/completions (legacy text completion).
+#[derive(Debug, Deserialize)]
+pub struct CompletionRequest {
+    pub model: String,
+    pub prompt: String,
+    #[serde(default)]
+    pub temperature: Option<f32>,
+    #[serde(default)]
+    pub max_tokens: Option<usize>,
+    #[serde(default)]
+    pub top_p: Option<f32>,
+    #[serde(default)]
+    pub stream: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -169,4 +191,52 @@ pub struct Model {
     pub root: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_completion_request_deserializes() {
+        let json = r#"{"model":"test","prompt":"hello"}"#;
+        let req: CompletionRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.model, "test");
+        assert_eq!(req.prompt, "hello");
+        assert!(req.temperature.is_none());
+        assert!(req.max_tokens.is_none());
+    }
+
+    #[test]
+    fn test_chat_request_accepts_penalty_fields() {
+        let json = r#"{"model":"m","messages":[],"frequency_penalty":0.5,"presence_penalty":0.3}"#;
+        let req: ChatCompletionRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.frequency_penalty, Some(0.5));
+        assert_eq!(req.presence_penalty, Some(0.3));
+    }
+
+    #[test]
+    fn test_chat_request_penalty_fields_default_to_none() {
+        let json = r#"{"model":"m","messages":[]}"#;
+        let req: ChatCompletionRequest = serde_json::from_str(json).unwrap();
+        assert!(req.frequency_penalty.is_none());
+        assert!(req.presence_penalty.is_none());
+    }
+
+    #[test]
+    fn test_stop_tokens_single() {
+        let json = r#"{"model":"m","messages":[],"stop":"</s>"}"#;
+        let req: ChatCompletionRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.stop.unwrap().into_vec(), vec!["</s>"]);
+    }
+
+    #[test]
+    fn test_stop_tokens_multiple() {
+        let json = r#"{"model":"m","messages":[],"stop":["</s>","<|eot_id|>"]}"#;
+        let req: ChatCompletionRequest = serde_json::from_str(json).unwrap();
+        let v = req.stop.unwrap().into_vec();
+        assert_eq!(v.len(), 2);
+        assert!(v.contains(&"</s>".to_string()));
+        assert!(v.contains(&"<|eot_id|>".to_string()));
+    }
 }

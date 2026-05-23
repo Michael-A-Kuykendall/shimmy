@@ -183,6 +183,9 @@ jobs:
         submodules: recursive
         token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
+    - name: Checkout Airframe engine (private path dep)
+      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
@@ -235,6 +238,9 @@ jobs:
       with:
         submodules: recursive
         token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
+
+    - name: Checkout Airframe engine (private path dep)
+      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe
 
     - name: System dependencies (Linux)
       if: runner.os == 'Linux'
@@ -303,6 +309,9 @@ jobs:
       with:
         submodules: recursive
         token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
+
+    - name: Checkout Airframe engine (private path dep)
+      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
