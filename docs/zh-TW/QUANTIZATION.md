@@ -180,3 +180,7 @@ cargo run --release --bin quant_verify
 - [擴展上下文視窗](EXTENDED_CONTEXT.md) — YaRN RoPE 縮放與顯存計算
 - [GPU 推論管線](GPU_PIPELINE.md) — 著色器調度與無綁定架構全解析
 - [故障排查指南](TROUBLESHOOTING.md) — 模型載入失敗與 OOM 錯誤處理
+
+---
+
+> 💝 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款項 100% 用於保持專案永久免費。**

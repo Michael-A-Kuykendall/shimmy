@@ -149,3 +149,7 @@ raw = max(frequency_penalty, presence_penalty)
 - [量化格式詳解](QUANTIZATION.md) — 著色器內部反量化
 - [擴展上下文視窗](EXTENDED_CONTEXT.md) — YaRN RoPE 縮放實作
 - [故障排查指南](TROUBLESHOOTING.md) — GPU 故障排查
+
+---
+
+> 💝 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款項 100% 用於保持專案永久免費。**

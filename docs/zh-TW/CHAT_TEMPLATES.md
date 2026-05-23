@@ -141,3 +141,7 @@ GPT4 Correct User: {user_message}<|end_of_turn|>GPT4 Correct Assistant:
 - [故障排查指南](TROUBLESHOOTING.md) — 生成品質問題的系統排查
 - [量化格式詳解](QUANTIZATION.md) — 模型格式與相容性
 - [GPU 推論管線](GPU_PIPELINE.md) — Token 採樣鏈路
+
+---
+
+> 💝 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款項 100% 用於保持專案永久免費。**
