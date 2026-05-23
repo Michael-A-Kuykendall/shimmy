@@ -4,7 +4,7 @@
 
 ### 輕量本地 AI 推論伺服器，相容 OpenAI API
 
-[简体中文](USER_MANUAL.zh-CN.md) · **繁體中文** · [English](../README.md)
+[📚 中文文件中心](zh-TW/README.md) · [简体中文](USER_MANUAL.zh-CN.md) · **繁體中文** · [English](../README.md)
 
 版本：v2.0.0 及以上 · 最後更新：2026 年 5 月
 
