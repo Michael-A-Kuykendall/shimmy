@@ -21,7 +21,20 @@ Shimmy 是一個以純 **Rust** 撰寫的本地 AI 推論伺服器，相容 **Op
 
 ---
 
-## 📚 文件索引
+## � 支持 Shimmy 的發展
+
+🚀 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有贊助款項 100% 用於保持專案永久免費。**
+
+- **$5/月**：咖啡檔 ☕ 永久感謝 + 贊助者徽章
+- **$25/月**：Bug 優先處理檔 🐛 優先支援 + 名字收錄於 [SPONSORS.md](../../SPONSORS.md)
+- **$100/月**：企業支援檔 🏢 Logo 展示 + 每月答疑
+- **$500/月**：基礎設施合作檔 🚀 直接支援 + 路線圖參與
+
+[**🎯 成為贊助者**](https://github.com/sponsors/Michael-A-Kuykendall) | 查看[贊助者名單](../../SPONSORS.md) 🙏
+
+---
+
+## �📚 文件索引
 
 ### 入門指南
 

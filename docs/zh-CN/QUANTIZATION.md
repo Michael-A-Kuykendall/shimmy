@@ -199,3 +199,7 @@ Q4_K   [tensor: blk.0.ffn_gate.weight] OK  (max_delta=0.000015)
 - [扩展上下文窗口](EXTENDED_CONTEXT.md) — YaRN RoPE 缩放与显存计算
 - [GPU 推理管线](GPU_PIPELINE.md) — 着色器调度与无绑定架构全解析
 - [故障排查指南](TROUBLESHOOTING.md) — 模型加载失败与 OOM 错误处理
+
+---
+
+> 💝 **如果 Shimmy 对您有帮助，欢迎[赞助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款项 100% 用于保持项目永久免费。**

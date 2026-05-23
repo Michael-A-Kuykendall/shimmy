@@ -148,3 +148,7 @@ YaRN 是一种近似方法，不能完全还原模型在超长上下文上的性
 - [量化格式详解](QUANTIZATION.md) — 压缩格式与显存占用
 - [故障排查指南](TROUBLESHOOTING.md) — 上下文溢出与 OOM 错误处理
 - [GPU 推理管线](GPU_PIPELINE.md) — KV 缓存在 GPU 内存中的布局
+
+---
+
+> 💝 **如果 Shimmy 对您有帮助，欢迎[赞助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有款项 100% 用于保持项目永久免费。**
