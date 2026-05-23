@@ -186,7 +186,7 @@ print(resp.choices[0].message.content)
 
 ## ⚡ Zero Configuration Required
 
-- **Automatically finds models** from Hugging Face cache, Ollama, local dirs
+- **Automatically finds models** from Hugging Face cache, Ollama, LM Studio (`~/.cache/lm-studio/models`), and local dirs
 - **Auto-allocates ports** to avoid conflicts
 - **Auto-detects LoRA adapters** for specialized models
 - **Just works** - no config files, no setup wizards
@@ -414,10 +414,24 @@ I built Shimmy to retain privacy-first control on my AI development and keep thi
 
 ### Endpoints
 - `GET /health` - Health check
-- `POST /v1/chat/completions` - OpenAI-compatible chat
+- `POST /v1/chat/completions` - OpenAI-compatible chat (streaming supported)
+- `POST /v1/completions` - OpenAI-compatible text completions
 - `GET /v1/models` - List available models
 - `POST /api/generate` - Shimmy native API
 - `GET /ws/generate` - WebSocket streaming
+
+### Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `SHIMMY_BASE_GGUF` | *(auto-discover)* | Path to GGUF model file loaded as the default model |
+| `SHIMMY_PORT` | `8080` | Port to listen on (Airframe server binary) |
+| `SHIMMY_BIND_ADDRESS` | `0.0.0.0:8080` | Full bind address (overrides port) |
+| `SHIMMY_MAX_CTX` | *(from GGUF)* | Override context window; activates YaRN RoPE scaling when above model native |
+| `SHIMMY_MODEL_PATHS` | *(see Zero Config)* | Colon-separated extra model search paths |
+| `SHIMMY_ENGINE_BACKEND` | `airframe` | `airframe` (default) or `llama` (legacy path) |
+| `SHIMMY_ROPE_SCALE` | *(auto)* | Override computed YaRN scale factor |
+| `RUST_BACKTRACE` | *(off)* | Set to `1` to print crash backtraces |
 
 ### CLI Commands
 ```bash
@@ -456,7 +470,7 @@ shimmy gpu-info                           # Show selected WebGPU adapter
 
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/Michael-A-Kuykendall/shimmy/issues)
 - **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
-- **📖 Documentation**: [docs/](docs/) • [Migration Guide v1→v2](docs/MIGRATION_v2.md) • [Engineering Methodology](docs/METHODOLOGY.md) • [OpenAI Compatibility Matrix](docs/OPENAI_COMPAT.md) • [Benchmarks (Reproducible)](docs/BENCHMARKS.md)
+- **📖 Documentation**: [docs/](docs/) • [Migration Guide v1→v2](docs/MIGRATION_v2.md) • [Engineering Methodology](docs/METHODOLOGY.md) • [OpenAI Compatibility Matrix](docs/OPENAI_COMPAT.md) • [Benchmarks (Reproducible)](docs/BENCHMARKS.md) • [Architecture](docs/ARCHITECTURE.md)
 - **💝 Sponsorship**: [GitHub Sponsors](https://github.com/sponsors/Michael-A-Kuykendall)
 
 ### Star History

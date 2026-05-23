@@ -65,6 +65,8 @@ impl ModelDiscovery {
             let home_path = PathBuf::from(home);
             discovery.add_search_path(home_path.join(".cache/huggingface"));
             discovery.add_search_path(home_path.join(".ollama/models"));
+            // LM Studio model cache (issue #184)
+            discovery.add_search_path(home_path.join(".cache/lm-studio/models"));
             discovery.add_search_path(home_path.join("models"));
         }
 

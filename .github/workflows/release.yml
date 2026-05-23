@@ -23,13 +23,16 @@ jobs:
           submodules: recursive
           token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
+      - name: Checkout Airframe engine (private path dep)
+        run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: "🚧 GATE 1/7: Core Build Validation"
         run: |
           echo "::group::Gate 1: Core Build"
-          # Full build with Airframe engine (airframe submodule checked out above)
+          # Full build with Airframe engine (cloned to ../airframe above)
           cargo build --release --features airframe,huggingface
           echo "✅ Core build with Airframe GPU engine successful"
           echo "::endgroup::"
@@ -223,6 +226,10 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
+
+      - name: Checkout Airframe engine (private path dep)
+        if: contains(matrix.features, 'airframe')
+        run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

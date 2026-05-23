@@ -61,6 +61,7 @@ impl AirframeModel {
             top_p: opts.top_p,
             repetition_penalty: opts.repeat_penalty,
             seed: opts.seed.unwrap_or(42) as u64,
+            extra_stop_tokens: opts.stop_tokens.clone(),
         }
     }
 }
@@ -101,5 +102,53 @@ impl LoadedModel for AirframeModel {
         .map_err(|e| anyhow::anyhow!("Airframe generation failed: {}", e))?;
 
         Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::engine::GenOptions;
+
+    #[test]
+    fn test_bridge_params_maps_basic_fields() {
+        let opts = GenOptions {
+            max_tokens: 128,
+            temperature: 0.5,
+            top_p: 0.85,
+            repeat_penalty: 1.2,
+            seed: Some(7),
+            stream: false,
+            stop_tokens: Vec::new(),
+        };
+        let p = AirframeModel::bridge_params(&opts);
+        assert_eq!(p.max_tokens, 128);
+        assert!((p.temperature - 0.5).abs() < 1e-6);
+        assert!((p.top_p - 0.85).abs() < 1e-6);
+        assert!((p.repetition_penalty - 1.2).abs() < 1e-6);
+        assert_eq!(p.seed, 7u64);
+        assert!(p.extra_stop_tokens.is_empty());
+    }
+
+    #[test]
+    fn test_bridge_params_propagates_stop_tokens() {
+        let opts = GenOptions {
+            stop_tokens: vec!["<|eot_id|>".to_string(), "<|im_end|>".to_string()],
+            ..GenOptions::default()
+        };
+        let p = AirframeModel::bridge_params(&opts);
+        assert_eq!(p.extra_stop_tokens.len(), 2);
+        assert!(p.extra_stop_tokens.contains(&"<|eot_id|>".to_string()));
+        assert!(p.extra_stop_tokens.contains(&"<|im_end|>".to_string()));
+    }
+
+    #[test]
+    fn test_bridge_params_seed_default_when_none() {
+        let opts = GenOptions {
+            seed: None,
+            ..GenOptions::default()
+        };
+        let p = AirframeModel::bridge_params(&opts);
+        assert_eq!(p.seed, 42u64);
     }
 }
