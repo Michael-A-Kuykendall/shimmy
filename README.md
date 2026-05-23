@@ -14,7 +14,7 @@
 
   [![💝 Sponsor this project](https://img.shields.io/badge/💝_Sponsor_this_project-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/Michael-A-Kuykendall)
 
-  **Languages:** [简体中文](docs/USER_MANUAL.zh-CN.md) · [繁體中文](docs/USER_MANUAL.zh-TW.md)
+  **Languages:** [简体中文](docs/zh-CN/README.md) · [繁體中文](docs/zh-TW/README.md)
 </div>
 
 **Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
@@ -29,6 +29,27 @@
 - **$500/month**: Infrastructure partner 🚀 - Direct support + roadmap input
 
 [**🎯 Become a Sponsor**](https://github.com/sponsors/Michael-A-Kuykendall) | See our amazing [sponsors](SPONSORS.md) 🙏
+
+---
+
+## Table of Contents
+
+- [What Is Shimmy?](#drop-in-openai-api-replacement-for-local-llms)
+- [🔥 Airframe Engine (v2.0)](#-airframe-engine)
+- [🎯 Supported Models](#-supported-models)
+- [📦 Migrating from v1.x](#-migrating-from-v1x)
+- [⚡ Quick Start (30 seconds)](#quick-start-30-seconds)
+- [🚀 OpenAI SDK Compatibility](#-compatible-with-openai-sdks-and-tools)
+- [🔧 Extended Context](#-extended-context)
+- [📥 Download & Install](#-download--install)
+- [🔗 Integration Examples](#integration-examples)
+- [📖 API Reference](#api-reference)
+- [❓ FAQ](#-faq)
+- [🏛️ Technical Architecture](#technical-architecture)
+- [📚 Documentation Hub](#-documentation-hub)
+- [🌍 Community & Support](#community--support)
+- [⚡ Performance](#-performance-comparison)
+- [License](#license--philosophy)
 
 ---
 
@@ -466,11 +487,89 @@ shimmy gpu-info                           # Show selected WebGPU adapter
 - **📊 Advanced Observability**: Real-time metrics with self-optimization and Prometheus integration
 - **🔗 RustChain Integration**: Universal workflow transpilation with workflow orchestration
 
+---
+
+## ❓ FAQ
+
+**Does Shimmy work on my GPU?**
+Shimmy uses WebGPU (via the Airframe engine) which runs on Vulkan, D3D12, and Metal — covering NVIDIA, AMD, Intel, and Apple Silicon. No CUDA required. See [GPU requirements in TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) if you hit adapter errors.
+
+**What's the difference between Shimmy and llama.cpp / Ollama?**
+Shimmy is written in pure Rust with no C++ toolchain dependency. The Airframe engine runs WGSL compute shaders compiled at startup — no pre-built binaries, no driver version pinning. The result is faster startup, lower memory overhead, and deterministic output. See the [GPU Pipeline doc](docs/GPU_PIPELINE.md) for internals.
+
+**Why do I need `SHIMMY_BASE_GGUF` or `LIBSHIMMY_MODEL_PATH`?**
+If you don't set these, Shimmy auto-discovers models in standard directories (`~/.cache/huggingface`, `~/.ollama`, `~/lm-studio/models`, `~/.cache/lm-studio/models`, `~/Library/Application Support/LMStudio`). Set `SHIMMY_BASE_GGUF` to override and point directly at a specific GGUF file.
+
+**Can I run multiple models at once?**
+Not currently — Shimmy loads one model per server instance. To serve multiple models, run multiple server instances on different ports. Hot-swapping models (reload without restart) is on the roadmap.
+
+**Why does generation stop before `max_tokens`?**
+The model reached a natural end-of-sequence token. For chat models this is expected behavior — the model signals it's done. If you want to force longer output, increase `max_tokens` and set `temperature > 0`. If generation stops on the wrong token, the model may be using the wrong chat template — see [CHAT_TEMPLATES.md](docs/CHAT_TEMPLATES.md).
+
+**Is there streaming support?**
+Set `"stream": true` in your request. Shimmy returns Server-Sent Events in the standard OpenAI streaming format.
+
+**Q4_K_M vs Q4_0 — which should I use?**
+`Q4_K_M` (K-quant) is consistently better quality than `Q4_0` for the same file size. Use `Q4_0` only when you need maximum compatibility or the model isn't available in K-quant. See [QUANTIZATION.md](docs/QUANTIZATION.md) for the full analysis.
+
+**Can I extend the context window beyond what the model was trained on?**
+Yes — set `SHIMMY_MAX_CTX` to any value. Airframe applies YaRN scaling automatically when the requested context exceeds the model's native context. Quality degrades gradually beyond 2× the native context. See [EXTENDED_CONTEXT.md](docs/EXTENDED_CONTEXT.md).
+
+---
+
+## 📚 Documentation Hub
+
+Full documentation lives in [docs/](docs/). Use this table to find what you need:
+
+### Getting Started
+| Document | Description |
+|---|---|
+| [docs/quickstart.md](docs/quickstart.md) | 5-minute getting started guide |
+| [docs/MIGRATION_v2.md](docs/MIGRATION_v2.md) | Migrating from Shimmy v1.x |
+| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | All environment variables and config options |
+| [docs/WINDOWS_GPU_BUILD_GUIDE.md](docs/WINDOWS_GPU_BUILD_GUIDE.md) | Windows-specific build instructions |
+
+### API & Integration
+| Document | Description |
+|---|---|
+| [docs/API.md](docs/API.md) | Complete API endpoint reference |
+| [docs/OPENAI_COMPAT.md](docs/OPENAI_COMPAT.md) | OpenAI compatibility matrix — what's supported |
+| [docs/INTEGRATION.md](docs/INTEGRATION.md) | Integrating with LangChain, OpenAI SDKs, etc. |
+| [docs/EXAMPLES.md](docs/EXAMPLES.md) | Runnable code examples |
+| [docs/CROSS_COMPILATION.md](docs/CROSS_COMPILATION.md) | Building for other targets (ARM, Linux from Windows) |
+
+### Engine Deep Dives
+| Document | Description |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System-level architecture and component map |
+| [docs/GPU_PIPELINE.md](docs/GPU_PIPELINE.md) | Bindless GPU architecture, WGSL shaders, dispatch patterns |
+| [docs/QUANTIZATION.md](docs/QUANTIZATION.md) | Q4_0, Q8_0, K-quant formats — bit-level internals |
+| [docs/EXTENDED_CONTEXT.md](docs/EXTENDED_CONTEXT.md) | YaRN RoPE scaling, VRAM math, context extension |
+| [docs/CHAT_TEMPLATES.md](docs/CHAT_TEMPLATES.md) | Chat template auto-detection and format reference |
+| [docs/MODEL_EXPANSION.md](docs/MODEL_EXPANSION.md) | Model onboarding protocol and acceptance gates |
+
+### Troubleshooting & Reference
+| Document | Description |
+|---|---|
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Diagnostic guide for GPU errors, model failures, port conflicts |
+| [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Performance tuning and token/sec benchmarks |
+| [docs/FEATURES.md](docs/FEATURES.md) | Complete feature list |
+
+### Development & Methodology
+| Document | Description |
+|---|---|
+| [docs/METHODOLOGY.md](docs/METHODOLOGY.md) | Engineering methodology and quality standards |
+| [docs/REGRESSION_TESTING.md](docs/REGRESSION_TESTING.md) | Regression testing approach |
+| [docs/ppt-invariant-testing.md](docs/ppt-invariant-testing.md) | Property-based and invariant testing details |
+| [docs/METRICS.md](docs/METRICS.md) | Observability and metrics reference |
+
+---
+
 ## Community & Support
 
 - **🐛 Bug Reports**: [GitHub Issues](https://github.com/Michael-A-Kuykendall/shimmy/issues)
 - **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
-- **📖 Documentation**: [docs/](docs/) • [Migration Guide v1→v2](docs/MIGRATION_v2.md) • [Engineering Methodology](docs/METHODOLOGY.md) • [OpenAI Compatibility Matrix](docs/OPENAI_COMPAT.md) • [Benchmarks (Reproducible)](docs/BENCHMARKS.md) • [Architecture](docs/ARCHITECTURE.md)
+- **📖 Documentation**: [Full Documentation Hub](#-documentation-hub) • [Migration Guide v1→v2](docs/MIGRATION_v2.md) • [Engineering Methodology](docs/METHODOLOGY.md) • [OpenAI Compatibility Matrix](docs/OPENAI_COMPAT.md) • [Architecture](docs/ARCHITECTURE.md) • [GPU Pipeline](docs/GPU_PIPELINE.md) • [Troubleshooting](docs/TROUBLESHOOTING.md)
 - **💝 Sponsorship**: [GitHub Sponsors](https://github.com/sponsors/Michael-A-Kuykendall)
 
 ### Star History
