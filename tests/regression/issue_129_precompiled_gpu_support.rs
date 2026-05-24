@@ -28,21 +28,27 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn test_release_workflow_includes_gpu_features() {
+    fn test_release_workflow_includes_supported_features() {
         let workflow_path = ".github/workflows/release.yml";
         let workflow_content =
             fs::read_to_string(workflow_path).expect("Failed to read release workflow file");
 
-        // Validate Windows builds include Vulkan support
+        // Validate public release builds include explicit feature sets
         assert!(
-            workflow_content.contains("llama-vulkan") || workflow_content.contains("Features="),
-            "Release workflow should build Windows binaries with Vulkan GPU support (Issue #129)"
+            workflow_content.contains("features: huggingface,llama"),
+            "Release workflow should define explicit core features for non-MLX targets"
         );
 
-        // Validate macOS builds include MLX support
+        // Validate Apple Silicon build includes MLX support
         assert!(
-            workflow_content.contains("mlx"),
+            workflow_content.contains("features: huggingface,llama,mlx"),
             "Release workflow should build macOS binaries with MLX support for Apple Silicon"
+        );
+
+        // Cleaned public scope should not compile vision feature flags
+        assert!(
+            !workflow_content.contains(",vision"),
+            "Release workflow should not include vision feature flags in cleaned public scope"
         );
 
         // Validate we're actually building for Windows

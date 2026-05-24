@@ -4,7 +4,7 @@
 
 # 📋 CURRENT STATUS - December 7, 2025
 
-## Active Work: Issue Resolution & Vision Module Development 🎯
+## Active Work: Issue Resolution and Release Quality 🎯
 
 ### IMMEDIATE PRIORITY: Fix All Open Issues (17 total)
 **Workflow for Each Issue:**
@@ -21,10 +21,8 @@
 3. **Medium**: #145 (Model support), #144 (MLX default), #143 (uvx support)
 4. **Low**: #153 (Swagger), #137 (Demo), #141 (OpenAI response.create), #150 (Server loads model), #151 (How shimmy works)
 
-### LONG-TERM: Vision Module Development
-- **Port Seer Tool**: Node.js vision analysis → Rust shimmy-vision feature
-- **Licensing**: Keygen integration for paid vision features
-- **Timeline**: After all issues resolved, implement vision module
+### Long-Term Focus
+- Keep this repository centered on core open-source Shimmy runtime and API behavior.
 
 ### Development Workflow Rules:
 - **NEVER work on main**: Always create feature branches
