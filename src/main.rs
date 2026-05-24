@@ -16,10 +16,6 @@ mod openai_compat;
 mod port_manager;
 mod server;
 mod templates;
-#[cfg(feature = "vision")]
-mod vision;
-#[cfg(feature = "vision")]
-mod vision_license;
 mod util {
     pub mod diag;
     pub mod memory;
@@ -36,28 +32,16 @@ pub struct AppState {
     pub registry: Registry,
     pub observability: observability::ObservabilityManager,
     pub response_cache: cache::ResponseCache,
-    #[cfg(feature = "vision")]
-    pub vision_license_manager: Option<crate::vision_license::VisionLicenseManager>,
 }
 
 impl AppState {
     pub fn new(engine: Box<dyn engine::InferenceEngine>, registry: Registry) -> Self {
-        #[allow(unused_mut)]
-        let mut state = Self {
+        Self {
             engine,
             registry,
             observability: observability::ObservabilityManager::new(),
             response_cache: cache::ResponseCache::new(),
-            #[cfg(feature = "vision")]
-            vision_license_manager: None,
-        };
-
-        #[cfg(feature = "vision")]
-        {
-            state.vision_license_manager = Some(crate::vision_license::VisionLicenseManager::new());
         }
-
-        state
     }
 }
 

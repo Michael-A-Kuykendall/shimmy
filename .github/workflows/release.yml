@@ -20,17 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure Git for private dependencies
-        run: |
-          git config --global url."https://${{ secrets.VISION_PRIVATE_TOKEN }}@github.com/".insteadOf "https://github.com/"
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: "🚧 GATE 1/7: Core Build Validation"
         run: |
           echo "::group::Gate 1: Core Build"
-          cargo build --release --no-default-features --features huggingface,llama,vision
+          cargo build --release --no-default-features --features huggingface,llama
           echo "✅ Core build successful"
           echo "::endgroup::"
 
@@ -224,7 +220,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             binary-name: shimmy
             artifact-name: shimmy-linux-aarch64
-            features: huggingface,llama,vision
+            features: huggingface,llama
             use-cross: true
 
           # Windows x64 - CPU only for GitHub runners
@@ -233,21 +229,21 @@ jobs:
             target: x86_64-pc-windows-msvc
             binary-name: shimmy.exe
             artifact-name: shimmy-windows-x86_64.exe
-            features: huggingface,llama,vision
+            features: huggingface,llama
 
           # macOS Intel - CPU only (MLX requires Apple Silicon)
           - os: macos-latest
             target: x86_64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-intel
-            features: huggingface,llama,vision
+            features: huggingface,llama
 
           # macOS ARM64 - MLX GPU for Apple Silicon
           - os: macos-latest
             target: aarch64-apple-darwin
             binary-name: shimmy
             artifact-name: shimmy-macos-arm64
-            features: huggingface,llama,mlx,vision
+            features: huggingface,llama,mlx
 
     runs-on: ${{ matrix.os }}
     env:
@@ -255,10 +251,6 @@ jobs:
       GGML_CUDA_NO_GIT_VER: "1"  # Disable git version check in llama.cpp CMake
     steps:
       - uses: actions/checkout@v4
-
-      - name: Configure Git for private dependencies
-        run: |
-          git config --global url."https://${{ secrets.VISION_PRIVATE_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

@@ -1,6 +1,0 @@
-LIBRARY shimmy_vision
-EXPORTS
-    shimmy_vision_process
-    shimmy_vision_parse
-    shimmy_vision_free
-    shimmy_vision_version

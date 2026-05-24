@@ -130,8 +130,7 @@ async fn metrics_endpoint(State(state): State<Arc<AppState>>) -> Json<Value> {
 
 pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    #[allow(unused_mut)]
-    let mut app = Router::new()
+    let app = Router::new()
         .route("/health", get(health_check))
         .route("/metrics", get(metrics_endpoint))
         .route("/diag", get(diag_handler))
@@ -152,11 +151,6 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
         .route("/v1/models", get(openai_compat::models))
         // Anthropic Claude API compatibility
         .route("/v1/messages", post(anthropic_compat::messages));
-
-    #[cfg(feature = "vision")]
-    {
-        app = app.route("/api/vision", post(api::vision));
-    }
 
     let app = app.layer(middleware::from_fn(cors_layer)).with_state(state);
     axum::serve(listener, app).await?;

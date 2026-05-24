@@ -191,13 +191,13 @@ cargo install shimmy --features huggingface
 
 # Kitchen Sink builds (what pre-built binaries use):
 # Windows/Linux x64:
-cargo install shimmy --features huggingface,llama,llama-cuda,llama-vulkan,llama-opencl,vision
+cargo install shimmy --features huggingface,llama,llama-cuda,llama-vulkan,llama-opencl
 
 # macOS ARM64:
-cargo install shimmy --features huggingface,llama,mlx,vision
+cargo install shimmy --features huggingface,llama,mlx
 
 # CPU-only (any platform):
-cargo install shimmy --features huggingface,llama,vision
+cargo install shimmy --features huggingface,llama
 ```
 
 > **⚠️ Build Notes**:
@@ -207,12 +207,7 @@ cargo install shimmy --features huggingface,llama,vision
 
 ### GPU Acceleration
 
-**✨ NEW in v1.9.0**: One binary per platform with automatic GPU detection!
-
-> **⚠️ IMPORTANT - Vision Feature Performance**:  
-> CPU-based vision inference (MiniCPM-V) is **5-10x slower** than GPU acceleration.  
-> **CPU**: 15-45 seconds per image | **GPU (CUDA/Vulkan)**: 2-8 seconds per image  
-> **For production vision workloads, GPU acceleration is strongly recommended.**
+**✨ NEW in v1.9.0**: One binary per platform with automatic GPU detection.
 
 #### **📥 Download Pre-Built Binaries (Recommended)**
 
