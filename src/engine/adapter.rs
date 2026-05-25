@@ -1,9 +1,9 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use super::{InferenceEngine, LoadedModel, ModelSpec};
 #[cfg(feature = "huggingface")]
 use super::GenOptions;
+use super::{InferenceEngine, LoadedModel, ModelSpec};
 
 #[cfg(feature = "huggingface")]
 use super::{UniversalEngine, UniversalModel, UniversalModelSpec};
@@ -206,7 +206,6 @@ impl InferenceEngineAdapter {
             }
         }
     }
-
 }
 
 #[derive(Debug, Clone, PartialEq)]

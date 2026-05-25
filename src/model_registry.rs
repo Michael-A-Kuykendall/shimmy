@@ -9,7 +9,7 @@ pub fn shimmy_ctx_len() -> usize {
     std::env::var("SHIMMY_MAX_CTX")
         .ok()
         .and_then(|s| s.parse::<usize>().ok())
-        .filter(|&c| c >= 512 && c <= 131_072)
+        .filter(|&c| (512..=131_072).contains(&c))
         .unwrap_or(2048)
 }
 
@@ -75,7 +75,10 @@ impl Registry {
         let name_lower = model_name.to_lowercase();
 
         // Only route to llama3 template when explicitly Llama 3 (uses different special tokens)
-        if name_lower.contains("llama-3") || name_lower.contains("llama3") || name_lower.contains("meta-llama-3") {
+        if name_lower.contains("llama-3")
+            || name_lower.contains("llama3")
+            || name_lower.contains("meta-llama-3")
+        {
             "llama3".to_string()
         } else {
             // Everything else (TinyLlama, Llama 1/2, Mistral, Phi, Qwen, etc.) uses ChatML

@@ -12,6 +12,7 @@ pub enum MessageContent {
 }
 
 impl MessageContent {
+    #[allow(dead_code)]
     pub fn into_text(self) -> String {
         match self {
             MessageContent::Text(s) => s,
@@ -38,6 +39,7 @@ impl MessageContent {
 #[derive(Debug, Deserialize)]
 pub struct ContentPart {
     #[serde(rename = "type")]
+    #[allow(dead_code)]
     pub part_type: String,
     pub text: Option<String>,
 }
@@ -54,6 +56,7 @@ impl OAIMessage {
     pub fn content_text(&self) -> String {
         self.content.as_text()
     }
+    #[allow(dead_code)]
     pub fn into_chat_message(self) -> ChatMessage {
         ChatMessage {
             role: self.role,
@@ -97,6 +100,8 @@ pub struct CompletionRequest {
     #[serde(default)]
     pub top_p: Option<f32>,
     #[serde(default)]
+    #[allow(dead_code)]
+    // accepted from clients for API compat; completions path forces stream=false
     pub stream: Option<bool>,
 }
 

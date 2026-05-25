@@ -94,8 +94,7 @@ fn test_crates_io_package_builds_successfully() {
     // v2.0: publish = false is intentionally set because the airframe path dep
     // (path = "../") cannot be published to crates.io. Shimmy is distributed as
     // release binaries. Validate that this is correctly declared.
-    let cargo_toml =
-        std::fs::read_to_string("Cargo.toml").expect("Failed to read Cargo.toml");
+    let cargo_toml = std::fs::read_to_string("Cargo.toml").expect("Failed to read Cargo.toml");
     assert!(
         cargo_toml.contains("publish = false"),
         "Cargo.toml should declare publish = false (path dep blocks crates.io publish)"

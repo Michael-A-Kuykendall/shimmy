@@ -419,9 +419,9 @@ mod regression_tests {
         // template (which requires Llama 3's special token format). Only explicit Llama 3
         // model names (containing "llama-3", "llama3", or "meta-llama-3") get the llama3 template.
         let test_cases = vec![
-            ("llama-7b-chat", "chatml"),         // Llama 2 → chatml
-            ("llama3-8b-instruct", "llama3"),    // Llama 3 → llama3
-            ("meta-llama-3-8b", "llama3"),       // Meta Llama 3 → llama3
+            ("llama-7b-chat", "chatml"),      // Llama 2 → chatml
+            ("llama3-8b-instruct", "llama3"), // Llama 3 → llama3
+            ("meta-llama-3-8b", "llama3"),    // Meta Llama 3 → llama3
             ("phi-3-mini", "chatml"),
             ("qwen2-instruct", "chatml"),
             ("mistral-7b", "chatml"),
@@ -479,8 +479,9 @@ mod regression_tests {
             ],
             "max_tokens": 5
         }"#;
-        let req: ChatCompletionRequest = serde_json::from_str(req_json)
-            .expect("Full request with array content message must deserialize — Issue #191 regression");
+        let req: ChatCompletionRequest = serde_json::from_str(req_json).expect(
+            "Full request with array content message must deserialize — Issue #191 regression",
+        );
         assert_eq!(req.messages.len(), 2);
         assert_eq!(req.messages[1].content_text(), "Say hi.");
     }

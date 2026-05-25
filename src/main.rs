@@ -101,7 +101,6 @@ fn print_startup_diagnostics(
     if airframe_selected {
         println!("🔧 Backend: Airframe (GPU)");
     } else {
-
         // GPU backend info
         #[cfg(feature = "llama")]
         {
@@ -171,8 +170,8 @@ fn airframe_engine_selected(legacy: bool) -> bool {
 fn build_engine(
     gpu_backend: Option<&str>,
     legacy: bool,
-    cpu_moe: bool,
-    n_cpu_moe: Option<usize>,
+    _cpu_moe: bool,
+    _n_cpu_moe: Option<usize>,
 ) -> Box<dyn engine::InferenceEngine> {
     if airframe_engine_selected(legacy) {
         #[cfg(feature = "airframe")]
@@ -183,9 +182,7 @@ fn build_engine(
         {
             // Airframe feature not compiled in — fall back to adapter for this build.
             // Release binaries always include the airframe feature.
-            tracing::warn!(
-                "Airframe engine selected but not compiled in; falling back to adapter"
-            );
+            tracing::warn!("Airframe engine selected but not compiled in; falling back to adapter");
             return Box::new(engine::adapter::InferenceEngineAdapter::new_with_backend(
                 gpu_backend,
             ));
@@ -194,8 +191,7 @@ fn build_engine(
 
     #[cfg(feature = "llama")]
     {
-        let mut adapter =
-            engine::adapter::InferenceEngineAdapter::new_with_backend(gpu_backend);
+        let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(gpu_backend);
         if cpu_moe || n_cpu_moe.is_some() {
             adapter = adapter.with_moe_config(cpu_moe, n_cpu_moe);
         }
@@ -203,7 +199,9 @@ fn build_engine(
     }
 
     #[cfg(not(feature = "llama"))]
-    Box::new(engine::adapter::InferenceEngineAdapter::new_with_backend(gpu_backend))
+    Box::new(engine::adapter::InferenceEngineAdapter::new_with_backend(
+        gpu_backend,
+    ))
 }
 
 #[tokio::main]
@@ -252,8 +250,12 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // Choose the execution engine once at startup.
-    let engine: Box<dyn engine::InferenceEngine> =
-        build_engine(cli.gpu_backend.as_deref(), cli.legacy, cli.cpu_moe, cli.n_cpu_moe);
+    let engine: Box<dyn engine::InferenceEngine> = build_engine(
+        cli.gpu_backend.as_deref(),
+        cli.legacy,
+        cli.cpu_moe,
+        cli.n_cpu_moe,
+    );
 
     // Handle model-path registration for serve command
     if let cli::Command::Serve {
@@ -323,8 +325,12 @@ async fn main() -> anyhow::Result<()> {
             if manual_count <= 1 && !airframe_engine_selected(cli.legacy) {
                 // Only the default phi3-lora entry and not using Airframe
                 // Create new engine with same configuration for auto-discovery state.
-                let enhanced_engine: Box<dyn engine::InferenceEngine> =
-                    build_engine(cli.gpu_backend.as_deref(), cli.legacy, cli.cpu_moe, cli.n_cpu_moe);
+                let enhanced_engine: Box<dyn engine::InferenceEngine> = build_engine(
+                    cli.gpu_backend.as_deref(),
+                    cli.legacy,
+                    cli.cpu_moe,
+                    cli.n_cpu_moe,
+                );
 
                 let mut enhanced_state = AppState::new(enhanced_engine, state.registry.clone());
                 enhanced_state.registry.auto_register_discovered();
@@ -546,13 +552,17 @@ async fn main() -> anyhow::Result<()> {
                 println!("⚡ Airframe Engine: ✅ Enabled (WebGPU via wgpu)");
                 println!("   Adapter is selected automatically at runtime.");
                 println!("   Run `shimmy serve` to see which GPU adapter is chosen.");
-                println!("   Supported: NVIDIA, AMD, Intel, Apple Silicon (Metal), integrated GPUs.");
+                println!(
+                    "   Supported: NVIDIA, AMD, Intel, Apple Silicon (Metal), integrated GPUs."
+                );
             }
 
             #[cfg(not(feature = "airframe"))]
             {
                 println!("⚡ Airframe Engine: Disabled (this build uses the huggingface engine)");
-                println!("   For GPU acceleration, download a release binary from GitHub Releases.");
+                println!(
+                    "   For GPU acceleration, download a release binary from GitHub Releases."
+                );
             }
 
             // Legacy llama.cpp backend info (--legacy flag)

@@ -30,9 +30,13 @@ mod issue_142_tests {
 
         // Shimmy v2.0 must not set any of these — they belong to llama.cpp
         // which is no longer present.
-        for var in &["GGML_CUDA", "GGML_VULKAN", "GGML_OPENCL",
-                     "GGML_OPENCL_PLATFORM", "GGML_OPENCL_DEVICE"]
-        {
+        for var in &[
+            "GGML_CUDA",
+            "GGML_VULKAN",
+            "GGML_OPENCL",
+            "GGML_OPENCL_PLATFORM",
+            "GGML_OPENCL_DEVICE",
+        ] {
             // We're checking Shimmy doesn't actively *set* them — they may exist
             // in the environment from the OS or other tools, so we just confirm
             // they're not set to "1" *by us*. The authoritative check is that
