@@ -71,6 +71,9 @@ ignore = [
     # rustls-pemfile unmaintained - transitive dependency through reqwest 0.11.x
     # We'll update when reqwest 0.12.x is stable and all our dependencies support it
     { id = "RUSTSEC-2025-0134", reason = "Transitive dep from reqwest 0.11.x - waiting for ecosystem to migrate to reqwest 0.12" },
+    # paste proc-macro no longer maintained - transitive through airframe -> wgpu-hal -> metal (Apple Metal backend)
+    # Not a security vulnerability; paste is stable and functional. Fix requires wgpu to update their Metal backend.
+    { id = "RUSTSEC-2024-0436", reason = "Transitive dep via airframe -> wgpu 27 -> wgpu-hal -> metal; maintenance advisory only, not a security vuln" },
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.
