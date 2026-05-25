@@ -161,7 +161,9 @@ fn test_system_message_handling() {
         messages: vec![
             OAIMessage {
                 role: "system".to_string(),
-                content: MessageContent::Text("You are a helpful assistant specialized in math.".to_string()),
+                content: MessageContent::Text(
+                    "You are a helpful assistant specialized in math.".to_string(),
+                ),
             },
             OAIMessage {
                 role: "user".to_string(),

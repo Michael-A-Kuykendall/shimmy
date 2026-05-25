@@ -53,7 +53,9 @@ fn test_error_response_serialization() {
 async fn test_chat_completions_model_not_found_response() {
     // Test the actual handler response for model not found
     use axum::{extract::State, Json};
-    use shimmy::openai_compat::{chat_completions, ChatCompletionRequest, MessageContent, OAIMessage};
+    use shimmy::openai_compat::{
+        chat_completions, ChatCompletionRequest, MessageContent, OAIMessage,
+    };
     use shimmy::{engine::adapter::InferenceEngineAdapter, model_registry::Registry, AppState};
     use std::sync::Arc;
 

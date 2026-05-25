@@ -545,7 +545,10 @@ mod tests {
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(result.success);
         assert_eq!(result.workflow_id, "test-wf");
-        assert_eq!(result.outputs["extract_step"], serde_json::json!("hello world"));
+        assert_eq!(
+            result.outputs["extract_step"],
+            serde_json::json!("hello world")
+        );
     }
 
     #[tokio::test]
@@ -566,7 +569,11 @@ mod tests {
 
         let result = engine.execute_workflow(request).await.unwrap();
         assert!(!result.success);
-        assert!(result.error.as_deref().unwrap_or("").contains("Missing output steps"));
+        assert!(result
+            .error
+            .as_deref()
+            .unwrap_or("")
+            .contains("Missing output steps"));
     }
 
     #[tokio::test]

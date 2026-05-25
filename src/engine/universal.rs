@@ -2,8 +2,8 @@ use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 
 use super::{
-    huggingface::HuggingFaceEngine, InferenceEngine, ModelBackend,
-    UniversalEngine, UniversalModel, UniversalModelSpec,
+    huggingface::HuggingFaceEngine, ModelBackend, UniversalEngine, UniversalModel,
+    UniversalModelSpec,
 };
 
 /// Universal engine that routes to appropriate backend
@@ -31,9 +31,9 @@ impl Default for ShimmyUniversalEngine {
 impl UniversalEngine for ShimmyUniversalEngine {
     async fn load(&self, spec: &UniversalModelSpec) -> Result<Box<dyn UniversalModel>> {
         match &spec.backend {
-            ModelBackend::LlamaGGUF { .. } => {
-                Err(anyhow!("GGUF models require Airframe GPU engine; use the default Airframe backend"))
-            }
+            ModelBackend::LlamaGGUF { .. } => Err(anyhow!(
+                "GGUF models require Airframe GPU engine; use the default Airframe backend"
+            )),
             ModelBackend::HuggingFace { .. } => self.huggingface_engine.load(spec).await,
             ModelBackend::Candle { .. } => Err(anyhow!("Candle backend not yet implemented")),
         }
