@@ -476,13 +476,11 @@ impl SafeTensorsModel {
         reverse_vocab.insert(2, "<unk>".to_string());
 
         // Add basic ASCII characters
-        let mut id = 3;
-        for c in 32u8..=126 {
+        for (c, id) in (32u8..=126).zip(3u32..) {
             // Printable ASCII
             let char_str = (c as char).to_string();
             vocab.insert(char_str.clone(), id);
             reverse_vocab.insert(id, char_str);
-            id += 1;
         }
 
         Ok(SimpleTokenizer {
