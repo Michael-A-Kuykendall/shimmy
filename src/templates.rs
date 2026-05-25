@@ -458,6 +458,9 @@ mod tests {
     fn test_generate_template_unknown_type() {
         let result = generate_template("bogustype", "/tmp", None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Unknown template type"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Unknown template type"));
     }
 }

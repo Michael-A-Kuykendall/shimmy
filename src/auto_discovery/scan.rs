@@ -121,7 +121,7 @@ impl ModelAutoDiscovery {
     /// Detects patterns like model-00001-of-00004.safetensors and groups them as single models
     pub(super) fn group_sharded_models(
         &self,
-        dir: &Path,
+        _dir: &Path,
         model_files: &[PathBuf],
     ) -> Result<Vec<DiscoveredModel>> {
         use regex::Regex;
@@ -137,10 +137,7 @@ impl ModelAutoDiscovery {
         let mut shard_groups: HashMap<String, Vec<PathBuf>> = HashMap::new();
 
         for file_path in model_files {
-            let filename = file_path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("");
+            let filename = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
             if let Some(caps) = shard_pattern.captures(filename) {
                 let base_name = caps[1].to_string();
                 let ext = caps[2].to_string();
@@ -310,7 +307,10 @@ impl ModelAutoDiscovery {
         })
     }
 
-    pub(super) fn parse_filename(&self, filename: &str) -> (String, Option<String>, Option<String>) {
+    pub(super) fn parse_filename(
+        &self,
+        filename: &str,
+    ) -> (String, Option<String>, Option<String>) {
         let lower = filename.to_lowercase();
 
         // Extract model type

@@ -680,20 +680,38 @@ mod tests {
 
     #[test]
     fn test_detect_deployment_type_evaluation() {
-        assert_eq!(TelemetryCollector::detect_deployment_type(0, 0), "evaluation");
-        assert_eq!(TelemetryCollector::detect_deployment_type(100, 60), "evaluation");
+        assert_eq!(
+            TelemetryCollector::detect_deployment_type(0, 0),
+            "evaluation"
+        );
+        assert_eq!(
+            TelemetryCollector::detect_deployment_type(100, 60),
+            "evaluation"
+        );
     }
 
     #[test]
     fn test_detect_deployment_type_development() {
-        assert_eq!(TelemetryCollector::detect_deployment_type(101, 0), "development");
-        assert_eq!(TelemetryCollector::detect_deployment_type(0, 61), "development");
+        assert_eq!(
+            TelemetryCollector::detect_deployment_type(101, 0),
+            "development"
+        );
+        assert_eq!(
+            TelemetryCollector::detect_deployment_type(0, 61),
+            "development"
+        );
     }
 
     #[test]
     fn test_detect_deployment_type_production() {
-        assert_eq!(TelemetryCollector::detect_deployment_type(1001, 0), "production");
-        assert_eq!(TelemetryCollector::detect_deployment_type(0, 481), "production");
+        assert_eq!(
+            TelemetryCollector::detect_deployment_type(1001, 0),
+            "production"
+        );
+        assert_eq!(
+            TelemetryCollector::detect_deployment_type(0, 481),
+            "production"
+        );
     }
 
     #[test]
@@ -710,18 +728,27 @@ mod tests {
     fn test_get_config_path_contains_shimmy() {
         let path = TelemetryCollector::get_config_path();
         let s = path.to_string_lossy().to_lowercase();
-        assert!(s.contains("shimmy"), "Expected 'shimmy' in config path: {s}");
+        assert!(
+            s.contains("shimmy"),
+            "Expected 'shimmy' in config path: {s}"
+        );
     }
 
     #[test]
     fn test_detect_integration_type_is_some() {
         let result = TelemetryCollector::detect_integration_type();
-        assert!(result.is_some(), "Expected Some integration type in test env");
+        assert!(
+            result.is_some(),
+            "Expected Some integration type in test env"
+        );
     }
 
     #[test]
     fn test_telemetry_config_default_opt_in_disabled() {
         let config = TelemetryConfig::default();
-        assert!(!config.enabled, "Telemetry must be opt-in (disabled by default)");
+        assert!(
+            !config.enabled,
+            "Telemetry must be opt-in (disabled by default)"
+        );
     }
 }
