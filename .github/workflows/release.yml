@@ -18,7 +18,7 @@ jobs:
     outputs:
       should_publish: ${{ steps.gates.outputs.should_publish }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
@@ -222,7 +222,7 @@ jobs:
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
@@ -278,7 +278,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
