@@ -69,9 +69,11 @@ dirs = "5.0"
 reqwest = { version = "0.11", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # Airframe native GPU inference (optional — path dep points to private sibling repo; never exposed in crates.io publish)
-# Local dev: airframe is checked out at ../ (parent of this workspace)
-# CI: clone private airframe repo to ../ before cargo build --features airframe
-airframe = { path = "../", version = "0.0.1", optional = true }
+# Local dev: airframe repo must be at ../airframe (sibling to this workspace)
+# CI: git clone <private airframe> ../airframe  before  cargo build --features airframe
+# shimmy_integration/ submodule (inside airframe): does NOT work for --features airframe builds;
+#   use the standalone shimmy-private/ checkout at repos/shimmy-private/ for GPU builds locally.
+airframe = { path = "../airframe", version = "0.0.1", optional = true }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
