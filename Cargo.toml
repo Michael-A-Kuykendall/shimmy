@@ -66,7 +66,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "5.0"
-reqwest = { version = "0.11", features = ["json", "rustls-tls", "stream"], default-features = false }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # Airframe native GPU inference (optional — path dep points to private sibling repo; never exposed in crates.io publish)
 # Local dev: airframe repo must be at ../airframe (sibling to this workspace)
