@@ -2324,6 +2324,8 @@ dependencies = [
 [[package]]
 name = "shimmytok"
 version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af96fc3bd2582df1625f82564b5559af2af0a89b9b03602cd25b8336e57f119c"
 dependencies = [
  "fancy-regex",
  "rayon",
