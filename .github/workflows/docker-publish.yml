@@ -3,8 +3,12 @@ name: Docker Publish
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Git tag or ref to build from (e.g. v2.0.0)"
+      source_ref:
+        description: "Git ref to build from (e.g. main or v2.0.0)"
+        required: true
+        default: "main"
+      image_tag:
+        description: "Docker image tag to publish (e.g. v2.0.0)"
         required: true
         default: "v2.0.0"
       push_latest:
@@ -25,7 +29,7 @@ jobs:
       - name: Checkout selected ref
         uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.source_ref }}
 
       - name: Build and push image
         env:
@@ -34,7 +38,7 @@ jobs:
           set -euo pipefail
 
           REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          TAG="${{ inputs.tag }}"
+          TAG="${{ inputs.image_tag }}"
 
           echo "Publishing ghcr.io/$REPO_LC:$TAG"
           if [ "${{ inputs.push_latest }}" = "true" ]; then
