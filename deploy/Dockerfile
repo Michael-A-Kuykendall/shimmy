@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Shimmy - optimized for cloud deployment
-FROM rust:stable-slim as builder
+FROM rust:slim AS builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
