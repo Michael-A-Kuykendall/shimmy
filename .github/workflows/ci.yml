@@ -150,7 +150,7 @@ jobs:
     - name: Upload coverage
       uses: codecov/codecov-action@v5
       with:
-        file: coverage/cobertura.xml
+        files: coverage/cobertura.xml
         flags: unittests
         name: shimmy-coverage
         fail_ci_if_error: false
