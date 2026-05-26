@@ -259,16 +259,16 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 #### **🛠️ Build from Source / cargo install**
 
 ```bash
-# Install from crates.io (huggingface engine — works without GPU)
+# Install from crates.io
 cargo install shimmy
 
-# Build from source with Airframe GPU engine (requires airframe submodule)
-git clone https://github.com/Michael-A-Kuykendall/shimmy --recurse-submodules
+# Build from source (huggingface engine, no GPU)
+git clone https://github.com/Michael-A-Kuykendall/shimmy
 cd shimmy
-cargo build --release --features airframe,huggingface
+cargo build --release
 ```
 
-> **Note**: The GitHub Releases binaries already include the Airframe engine. Building from source with `--features airframe` is for contributors or custom builds.
+> **Note**: The Airframe GPU engine is a private dependency and **cannot be built from source** by public users. The [pre-built release binaries](#-download-pre-built-binaries-recommended) already include Airframe compiled in — download those to get full GPU acceleration. `cargo install shimmy` installs the huggingface engine variant from crates.io.
 
 ### GPU Acceleration
 
