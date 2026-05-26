@@ -133,7 +133,7 @@ jobs:
           echo "::group::Gate 7: crates.io dry-run"
           # Validates the crates.io-safe feature set (default = huggingface, no airframe path dep)
           cargo publish --dry-run --allow-dirty --no-default-features --features huggingface 2>&1 | tee /tmp/publish_dry.txt
-          if grep -E "error|cannot be published" /tmp/publish_dry.txt; then
+          if grep -E "^error|cannot be published" /tmp/publish_dry.txt; then
             echo "❌ crates.io dry-run failed"
             exit 1
           fi
