@@ -1007,5 +1007,35 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 ### Free Forever Commitment
 Shimmy is committed to being free forever with no asterisks, no "free for now" periods, and no pivot to paid services. The MIT license ensures this commitment is legally binding.
 
-[Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.10.0...v2.0.0
+[1.10.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.9.0...v1.10.0
+[1.9.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.8.1...v1.9.0
+[1.8.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.8.0...v1.8.1
+[1.8.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.7.4...v1.8.0
+[1.7.4]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.7.3...v1.7.4
+[1.7.3]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.7.2...v1.7.3
+[1.7.2]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.7.0...v1.7.2
+[1.7.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.6.0...v1.7.0
+[1.6.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.5.6...v1.6.0
+[1.5.6]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.5.5...v1.5.6
+[1.5.5]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.5.4...v1.5.5
+[1.5.4]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.5.3...v1.5.4
+[1.5.3]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.5.2...v1.5.3
+[1.5.2]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.5.1...v1.5.2
+[1.5.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.4.2...v1.5.0
+[1.4.2]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.4.1...v1.4.2
+[1.4.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.3.5...v1.4.0
+[1.3.5]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.3.3...v1.3.5
+[1.3.3]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.3.2...v1.3.3
+[1.3.2]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.3.1...v1.3.2
+[1.3.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.2.0...v1.3.1
+[1.2.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v0.1.2...v1.0.0
+[0.1.2]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Michael-A-Kuykendall/shimmy/releases/tag/v0.1.0
