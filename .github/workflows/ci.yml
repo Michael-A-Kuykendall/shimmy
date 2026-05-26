@@ -16,20 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-      with:
-        submodules: recursive
-        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
-    - name: Checkout Airframe engine (private path dep)
-      # Airframe is a PRIVATE GPU engine depended on via Cargo path dep { path = "../airframe" }.
-      # It is versioned independently of Shimmy (see airframe/Cargo.toml).
-      # VERSIONING RULE: always pin to an explicit airframe release tag (e.g. v0.0.1).
-      #   - Tags are immutable — CI always gets the exact same engine commit.
-      #   - To upgrade: bump airframe's Cargo.toml version, create a new tag vX.Y.Z on
-      #     airframe/master, then update the --branch value here across all jobs.
-      #   - Never use a branch name here — branches are ephemeral and move unexpectedly.
-      #   - crates/console and crates/vision are NOT included in release tags (deferred products).
-      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -56,12 +43,7 @@ jobs:
     needs: ppt-contracts
     steps:
     - uses: actions/checkout@v5
-      with:
-        submodules: recursive
-        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
-    - name: Checkout Airframe engine (private path dep)
-      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -97,12 +79,7 @@ jobs:
     needs: test
     steps:
     - uses: actions/checkout@v5
-      with:
-        submodules: recursive
-        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
-    - name: Checkout Airframe engine (private path dep)
-      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -161,12 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-      with:
-        submodules: recursive
-        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
-    - name: Checkout Airframe engine (private path dep)
-      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -199,12 +171,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-      with:
-        submodules: recursive
-        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
-    - name: Checkout Airframe engine (private path dep)
-      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -255,12 +222,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
-      with:
-        submodules: recursive
-        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
-    - name: Checkout Airframe engine (private path dep)
-      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
     - name: System dependencies (Linux)
       if: runner.os == 'Linux'
@@ -326,12 +288,7 @@ jobs:
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
     - uses: actions/checkout@v5
-      with:
-        submodules: recursive
-        token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
-    - name: Checkout Airframe engine (private path dep)
-      run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable

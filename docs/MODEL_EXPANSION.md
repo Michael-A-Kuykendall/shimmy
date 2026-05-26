@@ -2,8 +2,8 @@
 
 ## How We Got Here: The Lineage
 
-**libshimmy** (`../libshimmy`) is where this engine was born. The founding constraint from its
-`SPEC.md` was deliberate and explicit:
+**Airframe** is where this engine was born. The founding constraint from the original design spec
+was deliberate and explicit:
 
 > *"v0 targets one pinned model artifact and fails fast otherwise."*
 >
@@ -12,12 +12,12 @@
 That choice drove the entire design. The engine was built FP32-first (correctness before
 optimization), with a single pinned model so there was no ambiguity in what "correct" meant.
 Once the CPU reference was provably correct against fixtures, the GPU bindless pipeline was added
-in `libshimmy/crates/airframe/`, proven to match the CPU reference, and then promoted into the
-standalone `airframe` crate that powers Shimmy v2.0.
+and proven to match the CPU reference, resulting in the standalone `airframe` crate that powers
+Shimmy v2.0.
 
 The 0.06 mean absolute logit error between the GPU engine and the CPU reference is the documented
 tolerance. It is lower precision than llama.cpp's Q8_0-input path — and that is intentional.
-libshimmy is higher precision; the difference comes from llama.cpp voluntarily adding quantization
+Airframe is higher precision; the difference comes from llama.cpp voluntarily adding quantization
 noise to its activations for AVX2 efficiency.
 
 ---
@@ -128,11 +128,11 @@ routes it to the correct shader.
 ### Step 4: Validate
 
 Run the conformance harness against a fixture produced by the CPU reference implementation.
-The acceptance criterion from the libshimmy expansion strategy:
+The acceptance criterion from the airframe expansion strategy:
 - Q8_0: expected max logit error ~0.1 vs FP32 reference (near-FP16 quality)
 - Q5_0: expected ~5-10% perplexity improvement over Q4_0
 
-**Estimated effort per quant type:** 3–6 hours based on libshimmy's own engineering estimates.
+**Estimated effort per quant type:** 3–6 hours based on prior engineering estimates.
 
 ### Priority order for next quants
 
@@ -205,7 +205,7 @@ At 7B+ with 4096 context, 8 GB VRAM is the practical floor.
 
 ## The Recommended Expansion Sequence
 
-Based on the libshimmy `EXPANSION_STRATEGY.md` and current engine state:
+Based on current engine state:
 
 ```
 Phase 1 (same arch, new quants)     — ~1-2 weeks

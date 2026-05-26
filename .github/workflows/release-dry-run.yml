@@ -26,7 +26,7 @@ jobs:
       - name: "🚧 GATE 1/4: Core Build Validation"
         run: |
           echo "::group::Gate 1: Core Build"
-          # CI-safe build: no airframe path dep (requires private parent repo)
+          # CI-safe build: huggingface feature only (no GPU hardware on CI runners)
           cargo build --release --no-default-features --features huggingface
           echo "✅ Core build successful"
           echo "::endgroup::"
