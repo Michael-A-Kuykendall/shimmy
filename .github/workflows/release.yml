@@ -21,10 +21,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
-
-      - name: Checkout Airframe engine (private path dep)
-        run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -227,10 +223,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
-
-      - name: Checkout Airframe engine (private path dep)
-        run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -288,7 +280,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
