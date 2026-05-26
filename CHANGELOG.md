@@ -7,50 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-05-20
+## [2.0.0] - 2026-05-26
 
-### 🚀 **v2.0 PUBLIC RELEASE** — Airframe GPU Engine + Submodule Distribution
+### 🚀 **v2.0 PUBLIC RELEASE** — Airframe GPU Engine
 
-This is the public release of Shimmy v2.0. The Airframe engine (introduced in v1.10.0 as an internal
-milestone) is now the officially declared default. Distribution architecture has been updated: Airframe
-ships as a git submodule in CI, enabling `--features airframe` release binaries for all platforms.
-The crates.io package (`cargo install shimmy`) provides the huggingface engine variant; GitHub Releases
-provide the full Airframe GPU binaries.
+This release replaces the llama.cpp inference backend with **Airframe**, a pure-Rust WGSL GPU inference engine. Airframe runs the entire transformer pipeline on GPU using WebGPU compute shaders — no C++ dependencies, no build flags, no platform matrix headaches. This is a major architectural break from v1.x.
 
-### What's New Since v1.10.0
+The llama.cpp code path is **historically parked**, not deleted. It remains accessible via `--legacy` flag or `SHIMMY_ENGINE_BACKEND=llama` if needed.
 
-**API**
-- Added `POST /v1/completions` text completion endpoint (OpenAI-compatible)
-- `POST /v1/chat/completions` now accepts `frequency_penalty` and `presence_penalty` fields; values map to `repeat_penalty = 1.0 + max(freq, presence) * 0.5`
-- Input validation: empty `messages` array returns 400; `max_tokens` of 0 or above 131072 returns 400
-
-**Inference**
-- Fixed stop token propagation: `<|eot_id|>` (Llama-3) and other model-specific stop tokens from chat templates now correctly terminate generation; previously they were silently dropped and the model would generate until `max_tokens`
-
-**Model Discovery**
-- Added `~/.cache/lm-studio/models` to auto-discovery search paths (fixes #184)
-
-**Distribution**
-- Airframe added as a git submodule — CI now builds all release binaries with GPU engine included
-- `publish = true`: `cargo install shimmy` now works (installs huggingface engine variant from crates.io)
-- GitHub Releases provide platform binaries with the full Airframe WebGPU engine
-
-**Versioning**
-- Formal v2.0.0 semantic version bump to signal the architectural break from llama.cpp v1.x
-- CHANGELOG moved from internal milestones to public release cadence
-
-**Migration Guide**
-- See `docs/MIGRATION_v2.md` for step-by-step migration from v1.x (llama.cpp) to v2.0 (Airframe)
-
-## [1.10.0] - 2026-05-19
-
-### 🔧 **AIRFRAME ENGINE** — Custom WGSL GPU Backend Replaces llama.cpp
-
-This release replaces the llama.cpp inference backend with **Airframe**, a pure-Rust WGSL GPU inference engine. Airframe runs the entire transformer pipeline on GPU using WebGPU compute shaders with F32 precision throughout — no C++ dependencies, no build flags, no platform matrix headaches.
-
-The llama.cpp code path is **historically parked**, not deleted. It remains accessible via `--legacy` flag or `SHIMMY_ENGINE_BACKEND=llama` for anyone who needs it, but it is no longer the default and will not receive new features.
-
-### 🏆 What Changed
+### What's New Since v1.9.0
 
 **New Default Engine: Airframe**
 - Pure Rust — no C++ toolchain required at runtime
@@ -60,32 +25,38 @@ The llama.cpp code path is **historically parked**, not deleted. It remains acce
 - Stateless per-request inference with full KV cache reset between requests
 - Model spec auto-derived from GGUF metadata — works with any GGUF-format model
 
+**API**
+- Added `POST /v1/completions` text completion endpoint (OpenAI-compatible)
+- `POST /v1/chat/completions` now accepts `frequency_penalty` and `presence_penalty` fields; values map to `repeat_penalty = 1.0 + max(freq, presence) * 0.5`
+- Input validation: empty `messages` array returns 400; `max_tokens` of 0 or above 131072 returns 400
+
+**Inference**
+- Fixed stop token propagation: `<|eot_id|>` (Llama-3) and other model-specific stop tokens from chat templates now correctly terminate generation; previously they were silently dropped and the model would generate until `max_tokens`
+- Chunked prefill: prompts now processed in 512-token chunks (was one giant dispatch) — extended context viable again
+
 **Model Configuration**
 - Set `SHIMMY_BASE_GGUF=/path/to/model.gguf` to configure the default model
 - Pass `--model-path /path/to/model.gguf` to the `serve` command as an alternative
 - No more hardcoded developer paths shipped in the binary
 
-**Chunked Prefill**
-- Prefill now processes prompts in 512-token chunks (was one giant dispatch)
-- Restores manageable GPU dispatch times at all context sizes
-- Extended context (`SHIMMY_MAX_CTX=4096`, `8192`, etc.) is viable again
+**Model Discovery**
+- Added `~/.cache/lm-studio/models` to auto-discovery search paths (fixes #184)
 
 **Template Routing Fixed**
 - TinyLlama, Llama-1, and Llama-2 models now correctly use ChatML template
 - Llama-3 template reserved for models explicitly named `llama-3` / `llama3`
 
-### ⚠️ Migration Notes
+**Distribution**
+- `cargo install shimmy` now works — crates.io package uses huggingface engine variant
+- GitHub Releases provide platform binaries with the full Airframe WebGPU engine
 
-**llama.cpp is historically parked.** If you were using the default inference path:
-- Everything you could do with TinyLlama via llama.cpp works identically through Airframe
-- Opt back to llama.cpp with `--legacy` or `SHIMMY_ENGINE_BACKEND=llama` if needed
+### ⚠️ Migration from v1.x
 
 **SHIMMY_BASE_GGUF is now required.** The default model is no longer hardcoded. Set the env var or pass `--model-path`.
 
-### 🔧 Internal Changes
-- Removed `main_integration` stub module
-- Cleaned all unused import warnings across the codebase
-- `GpuRuntime::load()` now derives ModelSpec from GGUF metadata instead of hardcoded TinyLlama constants
+**llama.cpp is historically parked.** Everything you could do with TinyLlama via llama.cpp works identically through Airframe. Opt back with `--legacy` or `SHIMMY_ENGINE_BACKEND=llama` if needed.
+
+See `docs/MIGRATION_v2.md` for full migration steps.
 
 ## [1.9.0] - 2026-01-09
 
