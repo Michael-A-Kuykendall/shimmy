@@ -244,6 +244,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y musl-tools musl-dev
 
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev build-essential cmake
+
       - name: Install cross for ARM64 cross-compilation
         if: matrix.use-cross == true
         run: |
