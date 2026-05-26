@@ -367,11 +367,12 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
           # Build the Docker image
-          docker build -f deploy/Dockerfile -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} -t ghcr.io/${{ github.repository }}:latest .
+          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          docker build -f deploy/Dockerfile -t ghcr.io/$REPO_LC:${{ github.ref_name }} -t ghcr.io/$REPO_LC:latest .
           
           # Push both tagged and latest versions
-          docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-          docker push ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/$REPO_LC:${{ github.ref_name }}
+          docker push ghcr.io/$REPO_LC:latest
           
           echo "✅ Docker image published successfully!"
-          echo "🐳 Users can now run: docker run ghcr.io/${{ github.repository }}:latest"
+          echo "🐳 Users can now run: docker run ghcr.io/$REPO_LC:latest"
