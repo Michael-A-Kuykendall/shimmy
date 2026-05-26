@@ -1,0 +1,53 @@
+name: Docker Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag or ref to build from (e.g. v2.0.0)"
+        required: true
+        default: "v2.0.0"
+      push_latest:
+        description: "Also push :latest"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docker-publish:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected ref
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Build and push image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          TAG="${{ inputs.tag }}"
+
+          echo "Publishing ghcr.io/$REPO_LC:$TAG"
+          if [ "${{ inputs.push_latest }}" = "true" ]; then
+            echo "Also publishing ghcr.io/$REPO_LC:latest"
+          fi
+
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+          docker build -f deploy/Dockerfile -t "ghcr.io/$REPO_LC:$TAG" .
+
+          docker push "ghcr.io/$REPO_LC:$TAG"
+
+          if [ "${{ inputs.push_latest }}" = "true" ]; then
+            docker tag "ghcr.io/$REPO_LC:$TAG" "ghcr.io/$REPO_LC:latest"
+            docker push "ghcr.io/$REPO_LC:latest"
+          fi
