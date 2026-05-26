@@ -191,13 +191,12 @@ jobs:
           # Linux x86_64 - SKIPPED - Built in reuse-gate-binary job above
           # Prevents artifact naming conflict (409 error)
 
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
             binary-name: shimmy
             artifact-name: shimmy-linux-aarch64
-            features: huggingface  # cross-compilation; Airframe requires native wgpu build
-            use-cross: true
-            optional: true
+            features: huggingface  # native ARM64 runner; Airframe requires native wgpu build
+            use-cross: false
 
           # Windows x64 — Airframe GPU engine included
           - os: windows-latest
