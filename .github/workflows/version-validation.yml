@@ -17,9 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     name: "🔍 Version Consistency Check"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Need full history for tag comparison
+          token: ${{ secrets.AIRFRAME_ACCESS_TOKEN }}
+
+      - name: Clone Airframe engine
+        run: git clone https://x-access-token:${{ secrets.AIRFRAME_ACCESS_TOKEN }}@github.com/Michael-A-Kuykendall/airframe.git ../airframe --branch v0.0.1 --depth 1
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
