@@ -30,6 +30,23 @@
 
 ## Roadmap
 
+### Linux ARM64 Airframe GPU Enablement
+*Planned — tracked for post-v2.0 stabilization*
+
+Goal: ship a Linux ARM64 release binary with Airframe GPU engine enabled (instead of huggingface-only fallback).
+
+Scope:
+- Enable and validate Airframe engine build path for `aarch64-unknown-linux-gnu`
+- Ensure runtime adapter selection works on real ARM64 hardware (including NVIDIA GB10 class devices)
+- Keep current Linux ARM64 binary available until Airframe parity is validated
+
+Acceptance criteria:
+- `shimmy-linux-aarch64` release artifact reports Airframe enabled in `gpu-info`
+- CI release workflow builds Linux ARM64 with Airframe without manual intervention
+- Smoke test coverage includes Linux ARM64 Airframe serve + generation path
+
+Tracked in: https://github.com/Michael-A-Kuykendall/shimmy/issues/131
+
 ### OpenAI Responses API (`POST /v1/responses`)
 *Planned — near-term*
 
