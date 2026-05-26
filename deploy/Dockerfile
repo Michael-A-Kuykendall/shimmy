@@ -18,6 +18,11 @@ RUN mkdir -p /airframe/src && \
 
 # Copy manifests
 COPY Cargo.toml Cargo.lock ./
+COPY build.rs ./
+
+# Cargo parses bench targets from manifest and src compiles templates via include_str!.
+COPY benches ./benches
+COPY templates ./templates
 
 # Copy source code
 COPY src ./src
