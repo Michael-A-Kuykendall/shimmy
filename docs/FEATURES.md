@@ -27,3 +27,27 @@
   - `~/.cache/huggingface/`
   - `~/models/`
   - Parent directory of SHIMMY_BASE_GGUF
+
+## Roadmap
+
+### OpenAI Responses API (`POST /v1/responses`)
+*Planned — near-term*
+
+Support for OpenAI's Responses API, a newer alternative to Chat Completions.
+
+Request shape:
+```json
+{
+  "model": "local",
+  "input": "Hello",
+  "instructions": "You are helpful",
+  "max_output_tokens": 512,
+  "temperature": 0.7
+}
+```
+
+Response access: `output[0].content[0].text`
+
+Implementation is a new route + shape translation layer on top of the existing inference path — no engine changes required. Tool support (web search, code interpreter) is out of scope for v1.
+
+Tracked in: https://github.com/Michael-A-Kuykendall/shimmy/issues/141
