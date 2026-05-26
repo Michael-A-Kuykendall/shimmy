@@ -10,6 +10,12 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Cargo still resolves the optional airframe path dependency during metadata checks,
+# so create a minimal local placeholder to keep the Docker build self-contained.
+RUN mkdir -p /airframe/src && \
+    printf '[package]\nname = "airframe"\nversion = "0.0.1"\nedition = "2021"\n\n[lib]\npath = "src/lib.rs"\n' > /airframe/Cargo.toml && \
+    printf 'pub fn _placeholder() {}\n' > /airframe/src/lib.rs
+
 # Copy manifests
 COPY Cargo.toml Cargo.lock ./
 
