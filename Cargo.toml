@@ -19,13 +19,12 @@ include = [
     "LICENSE",
     "build.rs"
 ]
-# crates.io publish: default features exclude airframe (path dep); full builds use --features airframe with submodule
 publish = true
 
 [features]
-default = ["huggingface"]  # crates.io-safe default; release binaries built by CI with --features airframe
+default = ["airframe", "huggingface"]  # Full GPU build; use --no-default-features --features huggingface for CPU-only
 # Engine backends
-airframe = ["dep:airframe"]  # Airframe native GPU engine (default in v2.0; requires ../airframe path)
+airframe = ["dep:airframe"]  # Airframe native GPU engine
 huggingface = [] # Python integration, no additional Rust deps
 mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
 # Convenience feature sets
@@ -68,10 +67,8 @@ uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "5.0"
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
-# Airframe native GPU inference (optional — public crate on crates.io)
-# GPU release binaries are built by private CI with --features airframe
-# Local dev and CI: cargo build --features airframe resolves from crates.io
-airframe = { version = "0.0.1", optional = true }
+# Airframe native GPU inference — public crate on crates.io
+airframe = { version = "0.1", optional = true }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
