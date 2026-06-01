@@ -431,10 +431,10 @@ mod tests {
         // Should include home-based paths. Use slash-normalized comparison so
         // the test passes on Windows (PathBuf uses backslashes on Windows).
         assert!(
-            discovery
-                .search_paths
-                .iter()
-                .any(|p| p.to_string_lossy().replace('\\', "/").contains(".cache/huggingface")),
+            discovery.search_paths.iter().any(|p| p
+                .to_string_lossy()
+                .replace('\\', "/")
+                .contains(".cache/huggingface")),
             "Expected .cache/huggingface in search paths, got: {:?}",
             discovery.search_paths
         );

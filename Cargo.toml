@@ -1,9 +1,7 @@
 [package]
 name = "shimmy"
 version = "2.1.0"
-# publish = false while airframe 0.2.1 is local (path dep). Remove path dep and
-# this line once airframe 0.2.1 is published to crates.io, then `cargo publish`.
-publish = false
+publish = true
 edition = "2021"
 license = "MIT"
 description = "Lightweight Ollama-compatible inference server with native SafeTensors support. No Python dependencies, cross-platform WebGPU acceleration via Airframe."
@@ -70,7 +68,7 @@ dirs = "5.0"
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # Airframe native GPU inference — public crate on crates.io
-airframe = { version = "0.2.1", path = "../airframe", optional = true }
+airframe = { version = "0.2.1", optional = true }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
