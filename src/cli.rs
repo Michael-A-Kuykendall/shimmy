@@ -37,6 +37,27 @@ pub struct Cli {
     /// Use legacy CPU adapter instead of Airframe GPU
     #[arg(long, global = true)]
     pub legacy: bool,
+
+    /// Enable TurboShimmy INT4 KV cache to cut VRAM usage ~60% with minimal quality loss.
+    /// Values: f32 (default, full precision) | int4 (TurboShimmy — recommended for 4GB+ GPUs)
+    #[arg(
+        long,
+        global = true,
+        value_name = "MODE",
+        default_value = "f32",
+        value_parser = ["f32", "int4"],
+        help = "KV cache precision: f32 (default) or int4 (TurboShimmy — ~60% less VRAM)"
+    )]
+    pub kv_quant: String,
+
+    /// Prefill chunk size for long-context stability on Windows (default: 64).
+    /// If you see GPU TDR crashes on long prompts, set this to 8 or 16.
+    #[arg(long, global = true, value_name = "N")]
+    pub prefill_chunk: Option<u32>,
+
+    /// Override maximum context length (tokens). Default: model's native context from GGUF.
+    #[arg(long, global = true, value_name = "N")]
+    pub ctx: Option<u32>,
 }
 
 #[derive(Subcommand, Debug)]
