@@ -1782,7 +1782,15 @@ mod tests {
         print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 4, false, "f32");
         print_startup_diagnostics("1.6.0", Some("vulkan"), false, None, 1, false, "f32");
         print_startup_diagnostics("1.6.0", Some("opencl"), false, None, 6, false, "f32");
-        print_startup_diagnostics("1.6.0", Some("custom-backend"), false, None, 3, false, "f32");
+        print_startup_diagnostics(
+            "1.6.0",
+            Some("custom-backend"),
+            false,
+            None,
+            3,
+            false,
+            "f32",
+        );
 
         // Test completed successfully
     }
@@ -1828,7 +1836,15 @@ mod tests {
         let model_count = 0;
 
         // Call diagnostics as serve command would
-        print_startup_diagnostics(version, gpu_backend, cpu_moe, n_cpu_moe, model_count, true, "f32");
+        print_startup_diagnostics(
+            version,
+            gpu_backend,
+            cpu_moe,
+            n_cpu_moe,
+            model_count,
+            true,
+            "f32",
+        );
 
         // Test completed - verifies function signature matches usage
     }

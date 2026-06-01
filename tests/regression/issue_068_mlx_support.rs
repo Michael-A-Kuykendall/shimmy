@@ -170,7 +170,12 @@ fn test_ci_build_matrix_features() {
 
     // CI-safe feature set (no path dep, no GPU)
     let ci_safe_test = Command::new("cargo")
-        .args(["check", "--no-default-features", "--features", "huggingface"])
+        .args([
+            "check",
+            "--no-default-features",
+            "--features",
+            "huggingface",
+        ])
         .output()
         .expect("Failed to check huggingface-only features");
 
