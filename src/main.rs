@@ -661,6 +661,7 @@ mod tests {
         }
     }
 
+    #[serial_test::serial]
     #[tokio::test]
     async fn test_main_initialization_paths() {
         // Test initialization paths in main() - lines 25-44
@@ -691,6 +692,7 @@ mod tests {
         // Test completed successfully
     }
 
+    #[serial_test::serial]
     #[tokio::test]
     async fn test_environment_variable_handling() {
         // Test environment variable handling (lines 35-36)
@@ -1002,6 +1004,7 @@ mod tests {
         }
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_model_registration_with_env_vars() {
         // Test model registration with environment variables (lines 33-40)
@@ -1084,6 +1087,7 @@ mod tests {
     }
 
     // Integration-style tests that exercise main execution paths without actually running main()
+    #[serial_test::serial]
     #[tokio::test]
     async fn test_serve_command_execution_simulation() {
         // Simulate serve command execution (lines 47-84)

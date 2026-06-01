@@ -49,44 +49,31 @@ fn test_template_files_included_in_package() {
 #[test]
 fn test_llama_cpp_dependency_compatibility() {
     // Regression test for Issue #110 - API incompatibility with llama-cpp-2
+    //
+    // v2.0: llama-cpp-2 was removed. The `llama` feature is now an empty stub
+    // (declared in Cargo.toml as `llama = []`) so existing CI scripts that pass
+    // `--features llama` don't hard-error. The primary engine is airframe (GPU).
 
-    // This test verifies that our usage of llama-cpp-2 APIs is compatible
-    // by compiling the llama engine module specifically
+    // Verify the llama stub is declared in Cargo.toml
+    let cargo_toml = std::fs::read_to_string("Cargo.toml").expect("Failed to read Cargo.toml");
+    assert!(
+        cargo_toml.contains("llama"),
+        "Cargo.toml should still declare a `llama` feature stub for backwards compatibility"
+    );
+
+    // Verify the default GPU engine (airframe) compiles cleanly
     let output = Command::new("cargo")
-        .args([
-            "build",
-            "--no-default-features",
-            "--features",
-            "llama",
-            "--lib",
-        ])
+        .args(["build", "--features", "airframe", "--lib"])
         .output()
-        .expect("Failed to test llama dependency compatibility");
+        .expect("Failed to build with airframe feature");
 
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "Airframe engine build failed (Issue #110 guard): {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
-        // Check for the specific API error from Issue #110
-        if stderr.contains("with_n_cpu_moe") {
-            panic!(
-                "Issue #110 regression: llama-cpp-2 API incompatibility detected: {}",
-                stderr
-            );
-        }
-
-        // Check for other potential API compatibility issues
-        if stderr.contains("method named") && stderr.contains("LlamaModelParams") {
-            panic!("llama-cpp-2 API compatibility issue detected: {}", stderr);
-        }
-
-        // If it's a different build error, still fail but with context
-        panic!(
-            "llama feature build failed (potential Issue #110 regression): {}",
-            stderr
-        );
-    }
-
-    println!("✅ llama-cpp-2 dependency API compatibility verified");
+    println!("✅ Issue #110: llama stub present; airframe engine compiles cleanly");
 }
 
 #[test]
@@ -124,14 +111,14 @@ fn test_crates_io_package_builds_successfully() {
 fn test_no_missing_include_str_files() {
     // Specific test for the include_str! template file issue from Issue #110
 
-    // Build with the exact features that would be used by cargo install
+    // Build with the exact CI-safe features (v2.0: llama removed, default is airframe)
     let output = Command::new("cargo")
         .args([
             "build",
             "--release",
             "--no-default-features",
             "--features",
-            "huggingface,llama", // Default features for cargo install
+            "huggingface", // v2.0 CI-safe set; llama removed in v2.0
         ])
         .output()
         .expect("Failed to test include_str! files");
@@ -192,7 +179,7 @@ fn test_issue_110_user_experience_simulation() {
             "--quiet",
             "--no-default-features",
             "--features",
-            "huggingface,llama", // Default cargo install features
+            "huggingface", // v2.0: llama removed; huggingface is the CI-safe feature set
         ])
         .output()
         .expect("Failed to simulate user build");
