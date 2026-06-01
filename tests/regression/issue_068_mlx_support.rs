@@ -154,34 +154,44 @@ fn test_regression_issue_68_scenarios() {
 
 #[test]
 fn test_ci_build_matrix_features() {
-    // Test the feature combinations used in the CI build matrix
+    // Test the feature combinations used in the CI build matrix.
+    // v2.0: llama.cpp removed; the default GPU engine is airframe.
 
-    // Test Linux features
-    let linux_test = Command::new("cargo")
-        .args([
-            "check",
-            "--no-default-features",
-            "--features",
-            "huggingface,llama",
-        ])
+    // Primary build target: airframe GPU engine (replaces huggingface,llama from v1.x)
+    let gpu_test = Command::new("cargo")
+        .args(["check", "--features", "airframe"])
         .output()
-        .expect("Failed to check Linux features");
+        .expect("Failed to check airframe feature");
 
     assert!(
-        linux_test.status.success(),
-        "Linux feature set should compile"
+        gpu_test.status.success(),
+        "Airframe GPU feature set should compile (v2.0 default)"
     );
 
-    // Test macOS features (the fix for Issue #68)
-    let macos_test = Command::new("cargo")
-        .args(["check", "--no-default-features", "--features", "apple"])
+    // CI-safe feature set (no path dep, no GPU)
+    let ci_safe_test = Command::new("cargo")
+        .args(["check", "--no-default-features", "--features", "huggingface"])
         .output()
-        .expect("Failed to check macOS features");
+        .expect("Failed to check huggingface-only features");
 
     assert!(
-        macos_test.status.success(),
-        "macOS feature set should compile"
+        ci_safe_test.status.success(),
+        "CI-safe (huggingface-only) feature set should compile"
     );
+
+    // macOS/Apple feature set — only checked on macOS to avoid cross-compile failure
+    #[cfg(target_os = "macos")]
+    {
+        let macos_test = Command::new("cargo")
+            .args(["check", "--no-default-features", "--features", "apple"])
+            .output()
+            .expect("Failed to check macOS features");
+
+        assert!(
+            macos_test.status.success(),
+            "macOS feature set should compile"
+        );
+    }
 
     println!("✅ CI build matrix feature combinations test passed");
 }
