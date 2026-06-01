@@ -13,6 +13,13 @@ services:
       - SHIMMY_BASE_GGUF=/app/models      # Point to mounted models
       - SHIMMY_PORT=11434                 # Server port
       - SHIMMY_HOST=0.0.0.0              # Listen on all interfaces
+      # TurboShimmy v2.1 — cut KV cache VRAM ~60% (recommended for 4 GB GPUs)
+      # Uncomment to enable INT4 KV quantization:
+      # - SHIMMY_KV_QUANT=int4
+      # Uncomment to reduce prefill chunk size (prevents Windows TDR crashes on long prompts):
+      # - SHIMMY_PREFILL_CHUNK=8
+      # Uncomment to override max context length (default: model's native ctx from GGUF):
+      # - SHIMMY_MAX_CTX=4096
     restart: unless-stopped
     deploy:
       resources:

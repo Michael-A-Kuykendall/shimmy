@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-06-02
+
+### Added
+- **TurboShimmy INT4 KV cache** — per-head-vector INT4 compression for KV buffers,
+  cutting KV VRAM usage ~7× with no measured retrieval loss. Enable via
+  `SHIMMY_KV_QUANT=int4`. See airframe 0.2.0 release notes.
+
+### Fixed
+- **wgpu 27 staging-buffer panic on GTX 1050 Ti and similar older GPUs** (issue #205,
+  reported by @Kuntey). Upgraded to airframe 0.2.1, which fixes `max_buffer_size`
+  being incorrectly capped to `max_storage_buffer_binding_size`. On some older GPU/driver
+  stacks these limits differ, causing a deferred validation error that wgpu 27 surfaced as
+  a cryptic "Staging Buffer is invalid" panic. A pre-flight size guard now returns a clear
+  error message if the model exceeds the GPU's binding limit.
+- Removed spurious `WARNING: Missing Norm Tensor post_attention_norm/post_ffw_norm` log
+  spam for Llama, Mistral, Phi and Qwen models. These tensors are Gemma-only.
+
+### Changed
+- Airframe dependency updated to 0.2.1.
+
+---
+
 ## [2.0.0] - 2026-05-26
 
 ### 🚀 **v2.0 PUBLIC RELEASE** — Airframe GPU Engine

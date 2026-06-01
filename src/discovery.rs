@@ -428,15 +428,24 @@ mod tests {
 
         let discovery = ModelDiscovery::from_env();
 
-        // Should include home-based paths
-        assert!(discovery
-            .search_paths
-            .iter()
-            .any(|p| p.to_string_lossy().contains(".cache/huggingface")));
-        assert!(discovery
-            .search_paths
-            .iter()
-            .any(|p| p.to_string_lossy().contains("models")));
+        // Should include home-based paths. Use slash-normalized comparison so
+        // the test passes on Windows (PathBuf uses backslashes on Windows).
+        assert!(
+            discovery
+                .search_paths
+                .iter()
+                .any(|p| p.to_string_lossy().replace('\\', "/").contains(".cache/huggingface")),
+            "Expected .cache/huggingface in search paths, got: {:?}",
+            discovery.search_paths
+        );
+        assert!(
+            discovery
+                .search_paths
+                .iter()
+                .any(|p| p.to_string_lossy().contains("models")),
+            "Expected models dir in search paths, got: {:?}",
+            discovery.search_paths
+        );
 
         // Restore original environment
         env::remove_var("HOME");
