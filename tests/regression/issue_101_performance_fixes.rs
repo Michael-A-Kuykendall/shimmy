@@ -72,6 +72,7 @@ mod issue_101_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_ollama_models_environment_variable() {
         // Test that OLLAMA_MODELS environment variable is supported
         use shimmy::discovery::discover_models_from_directory;
@@ -98,6 +99,7 @@ mod issue_101_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_issue_101_all_fixes_integrated() {
         // Meta-test ensuring all three fixes work together
 
