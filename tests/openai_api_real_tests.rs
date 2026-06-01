@@ -101,6 +101,8 @@ async fn test_chat_completions_error_handling_real() {
         max_tokens: Some(50),
         top_p: None,
         stop: None,
+        frequency_penalty: None,
+        presence_penalty: None,
     };
 
     let response = openai_compat::chat_completions(State(state), Json(request)).await;
@@ -139,6 +141,8 @@ fn test_chat_completions_model_loading_failure() {
         max_tokens: Some(100),
         top_p: Some(0.9),
         stop: None,
+        frequency_penalty: None,
+        presence_penalty: None,
     };
 
     // Verify request structure for model loading scenarios
@@ -175,6 +179,8 @@ fn test_system_message_handling() {
         max_tokens: Some(50),
         top_p: Some(0.8),
         stop: None,
+        frequency_penalty: None,
+        presence_penalty: None,
     };
 
     // Verify the request structure is correct for multi-message scenarios
@@ -203,6 +209,8 @@ fn test_streaming_request_processing() {
         max_tokens: Some(50),
         top_p: None,
         stop: None,
+        frequency_penalty: None,
+        presence_penalty: None,
     };
 
     // Verify streaming request structure
@@ -313,6 +321,8 @@ fn test_generation_options_parsing() {
         max_tokens: Some(150),
         top_p: Some(0.95),
         stop: None,
+        frequency_penalty: None,
+        presence_penalty: None,
     };
 
     // Verify the request structure matches what Open WebUI/AnythingLLM send
@@ -335,6 +345,8 @@ fn test_generation_options_parsing() {
         max_tokens: None,
         top_p: None,
         stop: None,
+        frequency_penalty: None,
+        presence_penalty: None,
     };
 
     assert!(minimal_request.stream.is_none());

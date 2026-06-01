@@ -36,6 +36,7 @@
 
 - [What Is Shimmy?](#drop-in-openai-api-replacement-for-local-llms)
 - [🔥 Airframe Engine (v2.0)](#-airframe-engine)
+- [⚡ TurboShimmy INT4 KV (v2.1)](#-turboshimmy-int4-kv)
 - [🎯 Supported Models](#-supported-models)
 - [📦 Migrating from v1.x](#-migrating-from-v1x)
 - [⚡ Quick Start (30 seconds)](#quick-start-30-seconds)
@@ -59,6 +60,8 @@ Shimmy is a **single-binary** that provides **100% OpenAI-compatible endpoints**
 
 **🎉 NEW in v2.0.0**: Shimmy now runs on [Airframe](#-airframe-engine), a pure-Rust WGSL GPU engine. No C++ toolchain, no backend flags, no compilation required.
 
+**⚡ NEW in v2.1.0**: [TurboShimmy INT4 KV](#-turboshimmy-int4-kv) — ~7× less KV cache VRAM with one flag. Run Llama-3.2-3B on 4 GB GPUs.
+
 ## 🔥 Airframe Engine
 
 Starting in v2.0.0, Shimmy's default inference engine is **Airframe** — a pure-Rust WebGPU (WGSL) transformer runtime built from scratch.
@@ -78,6 +81,61 @@ SHIMMY_BASE_GGUF=/path/to/TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf ./shimmy serve
 # Extended context (4096 tokens — YaRN RoPE enabled automatically, KV cache resized)
 SHIMMY_BASE_GGUF=/path/to/model.gguf SHIMMY_MAX_CTX=4096 ./shimmy serve
 ```
+
+## ⚡ TurboShimmy INT4 KV
+
+**TurboShimmy** is Shimmy's on-GPU INT4 KV-cache compression system, shipping in v2.1.0. It squeezes the KV cache from 32-bit floats down to per-head-vector 4-bit integers — entirely in WGSL compute shaders with no CPU roundtrips — delivering ~7× less KV VRAM with no measurable quality loss at normal context lengths.
+
+**One flag. ~7× less KV VRAM. Same output quality.**
+
+```bash
+# Enable TurboShimmy on any GGUF model
+./shimmy serve --kv-quant int4
+
+# Or via environment variable (docker-compose, systemd, etc.)
+SHIMMY_KV_QUANT=int4 ./shimmy serve
+
+# Windows GPU + long prompts: reduce per-dispatch work to prevent TDR resets
+./shimmy serve --kv-quant int4 --prefill-chunk 8
+```
+
+**Why it matters** — TurboShimmy changes what fits on your GPU:
+
+| GPU VRAM | Without TurboShimmy | With TurboShimmy (`--kv-quant int4`) |
+|---|---|---|
+| 3 GB | Llama-3.2-1B only | **Llama-3.2-3B fits ✅** |
+| 4 GB | Llama-3.2-3B, ctx=2048 (tight) | **Llama-3.2-3B at ctx=8192 ✅** |
+| 6 GB | 3B models, short context | **7B models with reasonable context ✅** |
+
+**VRAM comparison (Llama-3.2-3B, ctx=2048):**
+
+| Mode | KV cache | Total VRAM | Min GPU needed |
+|---|---|---|---|
+| Default (f32) | ~512 MB | ~2.4 GB | 3 GB (tight) |
+| TurboShimmy (int4) | **~72 MB** | **~2.0 GB** | **2.5 GB ✅** |
+
+**VRAM comparison (TinyLlama 1.1B, ctx=2048):**
+
+| Mode | KV cache | Total VRAM |
+|---|---|---|
+| Default (f32) | 88 MB | ~700 MB |
+| TurboShimmy (int4) | **~13 MB** | **~650 MB** |
+
+**When to use TurboShimmy:**
+
+| Situation | Recommendation |
+|---|---|
+| 3B model on a 4 GB GPU | `--kv-quant int4` — enables models that wouldn't fit otherwise |
+| 7B model at ctx=4096+ | `--kv-quant int4` — cuts KV from ~512 MB → ~72 MB |
+| Short chat sessions (ctx ≤ 2048) | `--kv-quant int4` — safe, no quality tradeoff |
+| Long-form generation (ctx > 8192) | Default `f32` — keep maximum quality |
+| Windows GPU + TDR crashes on long prompts | `--kv-quant int4 --prefill-chunk 8` |
+
+**How it works:** Each K/V head vector is independently quantized to 4-bit integers with a per-vector F32 scale factor, encoded as packed nibbles by WGSL compute shaders. Dequantization happens on-the-fly when computing attention scores — also on GPU. The Airframe engine's helical context-shift operates directly on the packed INT4 representation. No CPU roundtrips at any step. Full architecture details in the [Airframe engine](https://github.com/Michael-A-Kuykendall/airframe).
+
+> **Quality validation:** Needle-in-a-haystack benchmarks on Llama-3.2-3B show zero retrieval degradation vs F32 at ctx≤2048 across all tested depths (15%, 50%, 85%). Full benchmark data and setup guide: [TurboShimmy on the wiki](https://github.com/Michael-A-Kuykendall/shimmy/wiki/TurboShimmy).
+
+> **Windows stability:** Airframe v0.2.1 ships a `device.on_uncaptured_error` handler so GPU validation errors surface as clean HTTP 500 responses instead of crashes. Use `--prefill-chunk 8` to prevent Windows TDR resets during long prefills on older GPUs (GTX 10xx/16xx series).
 
 ## 🎯 Supported Models
 
@@ -452,6 +510,8 @@ I built Shimmy to retain privacy-first control on my AI development and keep thi
 | `SHIMMY_MODEL_PATHS` | *(see Zero Config)* | Colon-separated extra model search paths |
 | `SHIMMY_ENGINE_BACKEND` | `airframe` | `airframe` (default) or `llama` (legacy path) |
 | `SHIMMY_ROPE_SCALE` | *(auto)* | Override computed YaRN scale factor |
+| `SHIMMY_KV_QUANT` | `f32` | KV cache quantization: `f32` (default) or `int4` ([TurboShimmy](#-turboshimmy-int4-kv)) |
+| `SHIMMY_PREFILL_CHUNK` | `64` | Tokens per prefill dispatch. Set to `8` on Windows if you see GPU TDR resets on long prompts |
 | `RUST_BACKTRACE` | *(off)* | Set to `1` to print crash backtraces |
 
 ### CLI Commands
@@ -460,6 +520,8 @@ shimmy serve                              # Start server (auto port allocation)
 shimmy serve --bind 127.0.0.1:8080        # Manual port binding
 shimmy serve --gpu-backend auto           # WebGPU adapter auto-select (default)
 shimmy serve --gpu-backend cpu            # Force CPU (disable GPU)
+shimmy serve --kv-quant int4              # Enable TurboShimmy INT4 KV cache compression
+shimmy serve --kv-quant int4 --prefill-chunk 8  # INT4 + Windows TDR prevention
 shimmy list                               # Show available models
 shimmy discover                           # Refresh model discovery
 shimmy generate --name X --prompt "Hi"   # Test generation
