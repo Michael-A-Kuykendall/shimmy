@@ -114,6 +114,7 @@ fn test_multiple_model_format_discovery() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_environment_variable_model_paths() {
     // Test that environment variables for model paths are properly handled
     let temp_dir1 = TempDir::new().unwrap();

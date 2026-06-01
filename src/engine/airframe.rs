@@ -116,6 +116,7 @@ mod tests {
             max_tokens: 128,
             temperature: 0.5,
             top_p: 0.85,
+            top_k: 40,
             repeat_penalty: 1.2,
             seed: Some(7),
             stream: false,

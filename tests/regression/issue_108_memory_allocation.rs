@@ -32,18 +32,18 @@ fn test_memory_estimation_utilities() {
 
 #[test]
 fn test_moe_disabled_warning_compilation() {
-    // Test that MoE disabled warnings compile and don't cause runtime errors
-
-    // This test ensures the warning system compiles correctly
+    // v2.0: llama.cpp removed. MoE was llama-only (#[cfg(feature = "llama")]).
+    // Verify that the codebase compiles cleanly without llama — MoE cfg guards
+    // must not produce errors when the llama feature is absent.
     let output = Command::new("cargo")
         .args([
             "build",
             "--no-default-features",
             "--features",
-            "huggingface,llama",
+            "huggingface", // v2.0 CI-safe feature; no llama
         ])
         .output()
-        .expect("Failed to test MoE warning compilation");
+        .expect("Failed to test build without llama/MoE");
 
     assert!(
         output.status.success(),
@@ -87,18 +87,24 @@ fn test_issue_108_cli_flags_still_work() {
     let help_output = Command::new("cargo")
         .args([
             "run",
+            "--features",
+            "airframe", // v2.0 default engine
             "--bin",
             "shimmy",
-            "--no-default-features",
-            "--features",
-            "huggingface,llama",
             "--",
             "--help",
         ])
         .output()
         .expect("Failed to get help output");
 
-    let help_text = String::from_utf8_lossy(&help_output.stdout);
+    // clap may write --help to stdout (exit 0) or stderr; check both
+    let help_stdout = String::from_utf8_lossy(&help_output.stdout);
+    let help_stderr = String::from_utf8_lossy(&help_output.stderr);
+    let help_text = if help_stdout.contains("--cpu-moe") || help_stdout.len() > 50 {
+        help_stdout
+    } else {
+        help_stderr
+    };
 
     // Verify MoE flags still exist
     assert!(

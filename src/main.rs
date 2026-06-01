@@ -95,11 +95,16 @@ fn print_startup_diagnostics(
     #[cfg_attr(not(feature = "llama"), allow(unused_variables))] n_cpu_moe: Option<usize>,
     model_count: usize,
     airframe_selected: bool,
+    kv_quant: &str,
 ) {
     println!("🎯 Shimmy v{}", version);
 
     if airframe_selected {
-        println!("🔧 Backend: Airframe (GPU)");
+        if kv_quant == "int4" {
+            println!("⚡ Backend: Airframe (GPU) + TurboShimmy INT4 KV — ~60% less VRAM");
+        } else {
+            println!("🔧 Backend: Airframe (GPU)");
+        }
     } else {
         // GPU backend info
         #[cfg(feature = "llama")]
@@ -147,6 +152,11 @@ fn print_startup_diagnostics(
 
     // Model count
     println!("📦 Models: {} available", model_count);
+    if airframe_selected && kv_quant == "int4" {
+        println!("💡 TurboShimmy active: enable with --kv-quant int4 (already on)");
+    } else if airframe_selected {
+        println!("💡 Tip: add --kv-quant int4 to enable TurboShimmy (INT4 KV, ~60% less VRAM)");
+    }
 }
 
 fn airframe_engine_selected(legacy: bool) -> bool {
@@ -230,6 +240,19 @@ async fn main() -> anyhow::Result<()> {
     // Add custom model directories from command line to environment
     if let Some(model_dirs) = &cli.model_dirs {
         std::env::set_var("SHIMMY_MODEL_PATHS", model_dirs);
+    }
+
+    // TurboShimmy: pass KV quant mode and tuning knobs to Airframe via env vars.
+    // Airframe reads these directly; setting them here ensures CLI flags take precedence
+    // over any existing env vars while still allowing env-var-only configuration.
+    if cli.kv_quant == "int4" {
+        std::env::set_var("SHIMMY_KV_QUANT", "int4");
+    }
+    if let Some(chunk) = cli.prefill_chunk {
+        std::env::set_var("SHIMMY_PREFILL_CHUNK", chunk.to_string());
+    }
+    if let Some(ctx) = cli.ctx {
+        std::env::set_var("SHIMMY_MAX_CTX", ctx.to_string());
     }
 
     // Initialize registry with auto-discovery
@@ -317,6 +340,7 @@ async fn main() -> anyhow::Result<()> {
                 cli.n_cpu_moe,
                 state.registry.list().len(),
                 use_airframe,
+                &cli.kv_quant,
             );
             println!("🚀 Starting server on {}", addr);
 
@@ -637,6 +661,7 @@ mod tests {
         }
     }
 
+    #[serial_test::serial]
     #[tokio::test]
     async fn test_main_initialization_paths() {
         // Test initialization paths in main() - lines 25-44
@@ -667,6 +692,7 @@ mod tests {
         // Test completed successfully
     }
 
+    #[serial_test::serial]
     #[tokio::test]
     async fn test_environment_variable_handling() {
         // Test environment variable handling (lines 35-36)
@@ -978,6 +1004,7 @@ mod tests {
         }
     }
 
+    #[serial_test::serial]
     #[test]
     fn test_model_registration_with_env_vars() {
         // Test model registration with environment variables (lines 33-40)
@@ -1060,6 +1087,7 @@ mod tests {
     }
 
     // Integration-style tests that exercise main execution paths without actually running main()
+    #[serial_test::serial]
     #[tokio::test]
     async fn test_serve_command_execution_simulation() {
         // Simulate serve command execution (lines 47-84)
@@ -1741,8 +1769,8 @@ mod tests {
         // Test basic startup diagnostics output (no MoE)
         // This test verifies the function runs without panic
         // We can't easily capture println! output in tests, but we verify the logic works
-        print_startup_diagnostics("1.6.0", None, false, None, 3, true);
-        print_startup_diagnostics("1.6.0", Some("auto"), false, None, 5, true);
+        print_startup_diagnostics("1.6.0", None, false, None, 3, true, "f32");
+        print_startup_diagnostics("1.6.0", Some("auto"), false, None, 5, true, "int4");
 
         // Test completed successfully - no panic means diagnostics formatted correctly
     }
@@ -1750,11 +1778,11 @@ mod tests {
     #[test]
     fn test_print_startup_diagnostics_with_backends() {
         // Test diagnostics with different GPU backends
-        print_startup_diagnostics("1.6.0", Some("cpu"), false, None, 2, false);
-        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 4, false);
-        print_startup_diagnostics("1.6.0", Some("vulkan"), false, None, 1, false);
-        print_startup_diagnostics("1.6.0", Some("opencl"), false, None, 6, false);
-        print_startup_diagnostics("1.6.0", Some("custom-backend"), false, None, 3, false);
+        print_startup_diagnostics("1.6.0", Some("cpu"), false, None, 2, false, "f32");
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 4, false, "f32");
+        print_startup_diagnostics("1.6.0", Some("vulkan"), false, None, 1, false, "f32");
+        print_startup_diagnostics("1.6.0", Some("opencl"), false, None, 6, false, "f32");
+        print_startup_diagnostics("1.6.0", Some("custom-backend"), false, None, 3, false, "f32");
 
         // Test completed successfully
     }
@@ -1763,9 +1791,9 @@ mod tests {
     #[cfg(feature = "llama")]
     fn test_print_startup_diagnostics_with_moe() {
         // Test diagnostics with MoE configuration
-        print_startup_diagnostics("1.6.0", Some("cuda"), true, None, 2, false);
-        print_startup_diagnostics("1.6.0", Some("cuda"), false, Some(16), 2, false);
-        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 5, false);
+        print_startup_diagnostics("1.6.0", Some("cuda"), true, None, 2, false, "f32");
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, Some(16), 2, false, "f32");
+        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 5, false, "f32");
 
         // Test completed successfully
     }
@@ -1773,7 +1801,7 @@ mod tests {
     #[test]
     fn test_print_startup_diagnostics_zero_models() {
         // Test diagnostics with zero models (edge case)
-        print_startup_diagnostics("1.6.0", None, false, None, 0, true);
+        print_startup_diagnostics("1.6.0", None, false, None, 0, true, "f32");
 
         // Should not panic even with 0 models
         // (The actual serve command will exit with error, but diagnostics should print)
@@ -1782,8 +1810,8 @@ mod tests {
     #[test]
     fn test_print_startup_diagnostics_many_models() {
         // Test diagnostics with many models (like user's 13+ scenario)
-        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 13, false);
-        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 25, false);
+        print_startup_diagnostics("1.6.0", Some("cuda"), false, None, 13, false, "f32");
+        print_startup_diagnostics("1.6.0", Some("auto"), true, None, 25, false, "f32");
 
         // Test completed successfully
     }
@@ -1800,7 +1828,7 @@ mod tests {
         let model_count = 0;
 
         // Call diagnostics as serve command would
-        print_startup_diagnostics(version, gpu_backend, cpu_moe, n_cpu_moe, model_count, true);
+        print_startup_diagnostics(version, gpu_backend, cpu_moe, n_cpu_moe, model_count, true, "f32");
 
         // Test completed - verifies function signature matches usage
     }
@@ -1817,6 +1845,6 @@ mod tests {
         );
 
         // Call diagnostics with real version
-        print_startup_diagnostics(version, None, false, None, 1, true);
+        print_startup_diagnostics(version, None, false, None, 1, true, "f32");
     }
 }
