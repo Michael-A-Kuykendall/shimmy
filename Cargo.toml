@@ -1,124 +1,116 @@
 [package]
 name = "shimmy"
-version = "0.1.0"
+version = "1.9.0"
 edition = "2021"
-
-[dependencies]
-axum = "0.7"
-tokio = { version = "1.0", features = ["full"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-clap = { version = "4.0", features = ["derive"] }
-anyhow = "1.0"
-tracing = "0.1"
-tracing-subscriber = "0.3"
-futures = "0.3"
-reqwest = { version = "0.11", features = ["json"] }
-uuid = { version = "1.0", features = ["v4"] }
-tempfile = "3.0"
-regex = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-base64 = "0.21"
-sha2 = "0.10"
-hex = "0.4"
-dirs = "5.0"
-path-absolutize = "3.0"
-tokio-tungstenite = "0.20"
-tungstenite = "0.20"
-futures-util = { version = "0.3", features = ["sink", "std"] }
-serial_test = "2.0"
-criterion = "0.5"
-once_cell = "1.0"
-parking_lot = "0.12"
-dashmap = "5.0"
-itertools = "0.12"
-rayon = "1.0"
-bytes = "1.0"
-mime_guess = "2.0"
-walkdir = "2.0"
-glob = "0.3"
-toml = "0.8"
-config = "0.14"
-env_logger = "0.10"
-log = "0.4"
-thiserror = "1.0"
-async-trait = "0.1"
-pin-project-lite = "0.2"
-tower = "0.4"
-tower-http = { version = "0.4", features = ["cors"] }
-headers = "0.3"
-hyper = { version = "0.14", features = ["full"] }
-http = "0.2"
-url = "2.0"
-percent-encoding = "2.0"
-data-encoding = "2.0"
-ring = "0.16"
-rustls = "0.21"
-webpki-roots = "0.25"
-tokio-rustls = "0.24"
-native-tls = "0.2"
-rustls-pemfile = "1.0"
-tokio-native-tls = "0.3"
-openssl = "0.10"
-tokio-openssl = "0.6"
-socks = "0.3"
-trust-dns-resolver = "0.23"
-hickory-resolver = "0.24"
-resolv-conf = "0.7"
-hostname = "0.3"
-if-addrs = "0.10"
-local-ip-address = "0.5"
-public-ip = "0.2"
-mac_address = "1.0"
-sys-info = "0.9"
-systemstat = "0.2"
-psutil = "3.2"
-heim = { version = "0.1", features = ["cpu", "disk", "host", "memory", "net"] }
-nvml-wrapper = "0.9"
-gpu-info = "0.1"
-vulkan = "0.1"
-metal = "0.1"
-opencl = "0.1"
-cuda-runtime-sys = "0.1"
-cudarc = "0.9"
-candle-core = "0.3"
-candle-nn = "0.3"
-candle-transformers = "0.3"
-hf-hub = "0.3"
-tokenizers = "0.13"
-ort = "1.14"
-tract-onnx = "0.20"
-tract-core = "0.20"
-tract-nnef = "0.20"
-tract-tensorflow = "0.20"
-tch = "0.12"
-llama-cpp-2 = { version = "0.1", optional = true }
-safetensors = "0.4"
-memmap2 = "0.7"
-ggml = "0.1"
-ctransformers = "0.2"
-llama-rs = "0.1"
-llama-cpp-sys-2 = "0.1"
-llama-cpp-bindings = "0.1"
-llama-cpp = "0.1"
+license = "MIT"
+description = "Lightweight sub-5MB Ollama alternative with native SafeTensors support. No Python dependencies, 2x faster loading. Now with GitHub Spec-Kit integration for systematic development."
+homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
+repository = "https://github.com/Michael-A-Kuykendall/shimmy"
+readme = "README.md"
+keywords = ["llm", "local-ai", "inference", "server", "api"]
+categories = ["command-line-utilities", "web-programming::http-server"]
+authors = ["Michael A. Kuykendall <michaelallenkuykendall@gmail.com>"]
+include = [
+    "src/**/*",
+    "templates/**/*",
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "LICENSE",
+    "build.rs"
+]
 
 [features]
-default = []
-llama = ["llama-cpp-2"]
-console = []
-http-adapter = []
+default = ["huggingface", "llama"]  # Now with working Windows MSVC support via shimmy-llama-cpp-2
+# Engine backends
+llama = ["dep:shimmy-llama-cpp-2"]
+huggingface = [] # Python integration, no additional Rust deps
+mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
+# GPU acceleration backends for llama.cpp
+llama-cuda = ["llama", "shimmy-llama-cpp-2/cuda"] # NVIDIA CUDA GPU acceleration
+llama-vulkan = ["llama"] # Vulkan GPU acceleration (cross-platform)
+llama-opencl = ["llama"] # OpenCL GPU acceleration (AMD, Intel, etc.)
+# Convenience feature sets
+fast = ["huggingface"] # Fast compilation - no C++ deps
+full = ["huggingface", "llama", "mlx"] # Full compilation - includes all backends
+gpu = ["huggingface", "llama-cuda", "llama-vulkan", "llama-opencl"] # GPU-optimized build
+apple = ["huggingface", "mlx"] # Apple Silicon optimized - MLX + HuggingFace
+coverage = ["huggingface"] # Coverage testing - minimal deps for faster builds
+vision = ["dep:image", "dep:base64", "dep:chromiumoxide", "dep:ed25519-dalek", "dep:hex", "dep:sha2"] # Optional vision feature for image/web analysis
 
-[[bin]]
-name = "shimmy"
-path = "src/main.rs"
+[dependencies]
+anyhow = "1"
+axum = { version = "0.7", features = ["http1", "json", "ws", "macros"] }
+async-trait = "0.1"
+base64 = { version = "0.21", optional = true }
+bytes = "1"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive"] }
+futures-util = "0.3"
+chromiumoxide = { version = "0.7", optional = true, default-features = false, features = ["tokio-runtime"] }
+ed25519-dalek = { version = "2", optional = true, features = ["std"] }
+hex = { version = "0.4", optional = true }
+image = { version = "0.24", optional = true }
+sha2 = { version = "0.10", optional = true }
+lazy_static = "1.5"
+memmap2 = "0.9"
+minijinja = { version = "2", features = ["loader"] }
+parking_lot = "0.12"
+rand = "0.8"
+regex = "1"
+safetensors = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sys-info = "0.9"
+sysinfo = "0.30"
+tempfile = "3"
+thiserror = "1"
+tokio = { version = "1", features = ["macros","rt-multi-thread","signal","process","fs"] }
+tokio-stream = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+dirs = "5.0"
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
 
-[lib]
-name = "shimmy"
-path = "src/lib.rs"
+# llama.cpp bindings (optional) - published shimmy-llama-cpp-2 with MoE CPU offloading support
+shimmy-llama-cpp-2 = { version = "0.1.123", optional = true, default-features = false }
 
-[[example]]
-name = "theme_validator"
-path = "examples/theme_validator.rs"
+[dev-dependencies]
+tokio-tungstenite = "0.20"
+criterion = { version = "0.5", features = ["html_reports"] }
+serial_test = "3.1"  # For serialized test execution
+# Additional dependencies for mock testing infrastructure
+tempfile = "3"  # For creating temporary test directories
+rand = "0.8"    # For randomized testing scenarios (already in main deps)
+assert_cmd = "2"  # For CLI testing
+predicates = "3"  # For assertion predicates in tests
+tower = { version = "0.5", features = ["util"] }  # For test oneshot helper
+# Note: tempfile is already in main dependencies, rand is already in main dependencies
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"
+
+# Optimize build times for development
+[profile.dev]
+opt-level = 1
+debug = true
+
+# Faster builds for dependencies
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
+
+# Benchmark configuration  
+[[bench]]
+name = "model_loading"
+harness = false
+
+[[bench]]
+name = "generation_performance"
+harness = false
 
 [workspace]
-members = []
+
