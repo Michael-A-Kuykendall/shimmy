@@ -7,7 +7,6 @@
 *Your logo could be here*
 
 ## Bug Prioritizers ($25+/month)
-- **[Omar McIver](https://github.com/omarmciver)** - Priority support + featured sponsor
 
 ## Coffee Tier Heroes ($5+/month)
 *Your support could be here*
