@@ -24,6 +24,8 @@ include = [
 [features]
 default = ["airframe"]  # Airframe WebGPU engine; use --no-default-features for CPU-only
 airframe = ["dep:airframe"]  # Airframe native GPU engine (crates.io)
+# Console feature — local AI development platform (in progress)
+console = ["dep:shimmy-console-lib", "dep:tokio-tungstenite", "dep:crossterm"]
 # CI-safe build — no GPU hardware required
 fast = []
 coverage = []
@@ -65,6 +67,11 @@ reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], defau
 # Airframe native GPU inference — public crate on crates.io
 airframe = { version = "0.2.1", optional = true }
 
+# Console feature dependencies (optional)
+shimmy-console-lib = { workspace = true, optional = true }
+tokio-tungstenite = { version = "0.20", optional = true }
+crossterm = { version = "0.27", optional = true }
+
 [dev-dependencies]
 tokio-tungstenite = "0.20"
 criterion = { version = "0.5", features = ["html_reports"] }
@@ -102,4 +109,10 @@ name = "generation_performance"
 harness = false
 
 [workspace]
+members = ["console"]
+
+[workspace.dependencies]
+shimmy-console-lib = { version = "1.0.0", path = "./console" }
+tokio-tungstenite = "0.20"
+crossterm = "0.27"
 

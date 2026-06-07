@@ -155,7 +155,11 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
         // Anthropic Claude API compatibility
         .route("/v1/messages", post(anthropic_compat::messages));
 
-    let app = app.layer(middleware::from_fn(cors_layer)).with_state(state);
+    let app = app.layer(middleware::from_fn(cors_layer)).with_state(state.clone());
+
+    #[cfg(feature = "console")]
+    let app = app.merge(shimmy_console_lib::create_websocket_router());
+
     axum::serve(listener, app).await?;
     Ok(())
 }

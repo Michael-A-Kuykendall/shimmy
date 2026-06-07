@@ -100,6 +100,32 @@ pub enum Command {
     },
     /// Show GPU backend information and capabilities
     GpuInfo,
+
+    #[cfg(feature = "console")]
+    /// Start an interactive AI chat session
+    Chat {
+        #[arg(long)]
+        model: Option<String>,
+        #[arg(long)]
+        session: Option<String>,
+    },
+    #[cfg(feature = "console")]
+    /// Edit a file with AI assistance
+    Edit {
+        file: String,
+        #[arg(long)]
+        model: Option<String>,
+        #[arg(long)]
+        preview: bool,
+    },
+    #[cfg(feature = "console")]
+    /// Analyze a path with AI assistance
+    Analyze {
+        path: String,
+        #[arg(long)]
+        model: Option<String>,
+    },
+
     /// Initialize integration templates for deployment platforms
     Init {
         /// Template type: docker, kubernetes, railway, fly, fastapi, express

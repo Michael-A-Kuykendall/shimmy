@@ -606,6 +606,20 @@ async fn main() -> anyhow::Result<()> {
             println!("💡 GPU acceleration: download a release binary from GitHub Releases.");
             println!("   https://github.com/Michael-A-Kuykendall/shimmy/releases/latest");
         }
+
+        #[cfg(feature = "console")]
+        cli::Command::Chat { model, session } => {
+            shimmy_console_lib::chat::execute_chat(model, session).await?;
+        }
+        #[cfg(feature = "console")]
+        cli::Command::Edit { file, model, preview } => {
+            shimmy_console_lib::edit::execute_edit(&file, model, preview).await?;
+        }
+        #[cfg(feature = "console")]
+        cli::Command::Analyze { path, model } => {
+            shimmy_console_lib::analyze::execute_analyze(&path, model).await?;
+        }
+
         cli::Command::Init {
             template,
             output,
