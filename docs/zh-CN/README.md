@@ -33,7 +33,6 @@ Shimmy 是一个用纯 **Rust** 编写的本地 AI 推理服务器，兼容 **Op
 [**🎯 成为赞助者**](https://github.com/sponsors/Michael-A-Kuykendall) | 查看[赞助者名单](../../SPONSORS.md) 🙏
 
 ---
-
 ## 📚 文档索引
 
 ### 入门指南
@@ -138,7 +137,6 @@ SHIMMY_KV_QUANT=int4 ./shimmy serve
 > **品质验证：** 在 Llama-3.2-3B 上进行的“大海捕针”基准测试表明，ctx≤2048 时 INT4 对比 F32 检索准确率零退化（各测试深度 15%〈50%〈85% 均为 100%）。详细文档：[TurboShimmy Wiki](https://github.com/Michael-A-Kuykendall/shimmy/wiki/TurboShimmy-zh-CN)。
 
 ---
-
 ## 🖥️ 已验证的 GPU 支持
 
 | 平台 | GPU 类型 | 后端 |
@@ -178,7 +176,6 @@ Shimmy 是纯 Rust 实现，无 Python 运行时，无 C++ 依赖，启动时间
 
 **如何在 4 GB 显存的显卡上运行 3B 模型？**
 启用 TurboShimmy：`SHIMMY_KV_QUANT=int4 ./shimmy serve`。这将 KV 显存减少约 7 倍，使 Llama-3.2-3B 能在 2.5 GB 总显存下运行。详见 [turboshimmy.md](../turboshimmy.md)。
-
 **上下文长度不够怎么办？**
 设置 `SHIMMY_MAX_CTX=8192`（或更高）即可，Airframe 会自动应用 YaRN RoPE 缩放。注意超出模型原生上下文 2 倍以上时质量会有所下降。详见[扩展上下文窗口](EXTENDED_CONTEXT.md)。
 
