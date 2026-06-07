@@ -21,20 +21,7 @@ Shimmy 是一個以純 **Rust** 撰寫的本地 AI 推論伺服器，相容 **Op
 
 ---
 
-## � 支持 Shimmy 的發展
-
-🚀 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有贊助款項 100% 用於保持專案永久免費。**
-
-- **$5/月**：咖啡檔 ☕ 永久感謝 + 贊助者徽章
-- **$25/月**：Bug 優先處理檔 🐛 優先支援 + 名字收錄於 [SPONSORS.md](../../SPONSORS.md)
-- **$100/月**：企業支援檔 🏢 Logo 展示 + 每月答疑
-- **$500/月**：基礎設施合作檔 🚀 直接支援 + 路線圖參與
-
-[**🎯 成為贊助者**](https://github.com/sponsors/Michael-A-Kuykendall) | 查看[贊助者名單](../../SPONSORS.md) 🙏
-
----
-
-## �📚 文件索引
+## 📚 文件索引
 
 ### 入門指南
 
@@ -132,9 +119,6 @@ Shimmy 是純 Rust 實作，無 Python 執行環境，無 C++ 相依，啟動時
 
 **如何選擇模型量化格式？**
 日常使用首選 `Q4_K_M`——在檔案大小和推論品質之間取得了最好的平衡。若追求最高品質且顯存充足，選 `Q8_0`。詳見[量化格式詳解](QUANTIZATION.md)。
-
-**如何在 4 GB 顯示記憶體的顯示卡上執行 3B 模型？**
-啟用 TurboShimmy：`SHIMMY_KV_QUANT=int4 ./shimmy serve`。這將 KV 顯示記憶體減少約 7 倍，使 Llama-3.2-3B 能在 2.5 GB 總顯示記憶體下執行。詳見[上方 TurboShimmy 節](#turboshimmy-int4-kv--v210-)。
 
 **上下文長度不夠怎麼辦？**
 設定 `SHIMMY_MAX_CTX=8192`（或更高）即可，Airframe 會自動套用 YaRN RoPE 縮放。注意超出模型原生上下文 2 倍以上時品質會有所下降。詳見[擴展上下文視窗](EXTENDED_CONTEXT.md)。

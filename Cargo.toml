@@ -22,21 +22,16 @@ include = [
 ]
 
 [features]
-default = ["airframe", "huggingface"]  # Full GPU build; use --no-default-features --features huggingface for CPU-only
-# Engine backends
-airframe = ["dep:airframe"]  # Airframe native GPU engine
-huggingface = [] # Python integration, no additional Rust deps
-mlx = [] # Apple MLX integration for Metal GPU acceleration on Apple Silicon
-# Convenience feature sets
-fast = ["huggingface"] # Fast compilation - no path deps (CI-safe)
-full = ["airframe", "huggingface", "mlx"] # Full compilation - includes all backends
-gpu = ["airframe", "huggingface"] # GPU-optimized build via Airframe
-apple = ["airframe", "huggingface"] # Apple Silicon - Airframe via Metal + HuggingFace
-coverage = ["huggingface"] # Coverage testing - no path deps, fast compile
-llama = [] # Deprecated: llama.cpp removed in v2.0. Empty feature retained to silence cfg guards pending cleanup.
-llama-cuda = [] # Deprecated: llama.cpp CUDA backend removed in v2.0.
-llama-vulkan = [] # Deprecated: llama.cpp Vulkan backend removed in v2.0.
-llama-opencl = [] # Deprecated: llama.cpp OpenCL backend removed in v2.0.
+default = ["airframe"]  # Airframe WebGPU engine; use --no-default-features for CPU-only
+airframe = ["dep:airframe"]  # Airframe native GPU engine (crates.io)
+# CI-safe build — no GPU hardware required
+fast = []
+coverage = []
+# Deprecated stubs — llama.cpp removed in v2.0
+llama = []
+llama-cuda = []
+llama-vulkan = []
+llama-opencl = []
 
 [dependencies]
 anyhow = "1"

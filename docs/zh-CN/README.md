@@ -21,20 +21,7 @@ Shimmy 是一个用纯 **Rust** 编写的本地 AI 推理服务器，兼容 **Op
 
 ---
 
-## � 支持 Shimmy 的发展
-
-🚀 **如果 Shimmy 对您有帮助，欢迎[赞助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有赞助款项 100% 用于保持项目永久免费。**
-
-- **$5/月**：咖啡档 ☕ 永久感谢 + 赞助者徽章
-- **$25/月**：Bug 优先处理档 🐛 优先支持 + 名字收录于 [SPONSORS.md](../../SPONSORS.md)
-- **$100/月**：企业支持档 🏢 Logo 展示 + 每月答疑
-- **$500/月**：基础设施合作档 🚀 直接支持 + 路线图参与
-
-[**🎯 成为赞助者**](https://github.com/sponsors/Michael-A-Kuykendall) | 查看[赞助者名单](../../SPONSORS.md) 🙏
-
----
-
-## �📚 文档索引
+## 📚 文档索引
 
 ### 入门指南
 
@@ -97,40 +84,6 @@ curl http://127.0.0.1:11435/v1/chat/completions \
 
 ---
 
-## ⚡ TurboShimmy INT4 KV —— v2.1.0 新功能
-
-**TurboShimmy** 是 Shimmy v2.1.0 带来的纯 GPU INT4 KV 缓存压缩系统。通过 WGSL 计算着色器，将 KV 缓存从 32 位浮点数压缩为逐头向量 4 位整数，全程在 GPU 上完成。**一行指令，约 7 倍 KV 显存节省，输出品质不变。**
-
-```bash
-# 启用 TurboShimmy
-SHIMMY_KV_QUANT=int4 ./shimmy serve
-
-# 或通过命令行参数
-./shimmy serve --kv-quant int4
-
-# Windows + 长提示：预防 GPU TDR 重置
-./shimmy serve --kv-quant int4 --prefill-chunk 8
-```
-
-**TurboShimmy 改变了消费级 GPU 的可用范围：**
-
-| GPU 显存 | 未启用 TurboShimmy | 启用后（`--kv-quant int4`） |
-|---|---|---|
-| 3 GB | 仅能运行 Llama-3.2-1B | **Llama-3.2-3B 可运行 ✅** |
-| 4 GB | Llama-3.2-3B，ctx=2048（勉强） | **Llama-3.2-3B，ctx=8192 ✅** |
-| 6 GB | 3B 模型，短上下文 | **7B 模型，合理上下文 ✅** |
-
-**显存对比（Llama-3.2-3B，ctx=2048）：**
-
-| 模式 | KV 缓存 | 总显存 | 最低显存 |
-|---|---|---|---|
-| 默认（f32） | ~512 MB | ~2.4 GB | 3 GB（勉强） |
-| TurboShimmy（int4） | **~72 MB** | **~2.0 GB** | **2.5 GB ✅** |
-
-> **品质验证：** 在 Llama-3.2-3B 上进行的“大海捕针”基准测试表明，ctx≤2048 时 INT4 对比 F32 检索准确率零退化（各测试深度 15%〈50%〈85% 均为 100%）。详细文档：[TurboShimmy Wiki](https://github.com/Michael-A-Kuykendall/shimmy/wiki/TurboShimmy-zh-CN)。
-
----
-
 ## 🖥️ 已验证的 GPU 支持
 
 | 平台 | GPU 类型 | 后端 |
@@ -166,9 +119,6 @@ Shimmy 是纯 Rust 实现，无 Python 运行时，无 C++ 依赖，启动时间
 
 **如何选择模型量化格式？**
 日常使用首选 `Q4_K_M`——在文件大小和推理质量之间取得了最好的平衡。若追求最高质量且显存充足，选 `Q8_0`。详见[量化格式详解](QUANTIZATION.md)。
-
-**如何在 4 GB 显存的显卡上运行 3B 模型？**
-启用 TurboShimmy：`SHIMMY_KV_QUANT=int4 ./shimmy serve`。这将 KV 显存减少约 7 倍，使 Llama-3.2-3B 能在 2.5 GB 总显存下运行。详见[上方 TurboShimmy 节](#turboshimmy-int4-kv--v210-)。
 
 **上下文长度不够怎么办？**
 设置 `SHIMMY_MAX_CTX=8192`（或更高）即可，Airframe 会自动应用 YaRN RoPE 缩放。注意超出模型原生上下文 2 倍以上时质量会有所下降。详见[扩展上下文窗口](EXTENDED_CONTEXT.md)。

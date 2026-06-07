@@ -31,42 +31,6 @@ impl Default for GenOptions {
     }
 }
 
-// Universal backend support - true shim architecture
-#[derive(Debug, Clone)]
-#[cfg(feature = "huggingface")]
-pub enum ModelBackend {
-    // GGUF format (handled natively by Airframe GPU engine)
-    LlamaGGUF {
-        base_path: PathBuf,
-        lora_path: Option<PathBuf>,
-    },
-
-    // HuggingFace + PEFT (your personal models!)
-    HuggingFace {
-        base_model_id: String,      // "microsoft/Phi-3-mini-4k-instruct"
-        peft_path: Option<PathBuf>, // "./phi3-personal-h100-cloud"
-        use_local: bool,            // Use cached vs download
-    },
-
-    // Pure Rust Candle (future)
-    Candle {
-        model_path: PathBuf,
-        adapter_path: Option<PathBuf>,
-    },
-}
-
-#[derive(Debug, Clone)]
-#[cfg(feature = "huggingface")]
-pub struct UniversalModelSpec {
-    pub name: String,
-    pub backend: ModelBackend,
-    pub template: Option<String>,
-    pub ctx_len: usize,
-    pub device: String, // "cpu", "cuda", "metal"
-    pub n_threads: Option<i32>,
-}
-
-// Legacy ModelSpec for backward compatibility
 #[derive(Debug, Clone)]
 pub struct ModelSpec {
     pub name: String,
@@ -77,42 +41,6 @@ pub struct ModelSpec {
     pub n_threads: Option<i32>,
 }
 
-#[cfg(feature = "huggingface")]
-impl From<ModelSpec> for UniversalModelSpec {
-    fn from(spec: ModelSpec) -> Self {
-        UniversalModelSpec {
-            name: spec.name,
-            backend: ModelBackend::LlamaGGUF {
-                base_path: spec.base_path,
-                lora_path: spec.lora_path,
-            },
-            template: spec.template,
-            ctx_len: spec.ctx_len,
-            device: "cpu".to_string(),
-            n_threads: spec.n_threads,
-        }
-    }
-}
-
-// Universal Engine trait - supports any backend
-#[async_trait]
-#[cfg(feature = "huggingface")]
-pub trait UniversalEngine: Send + Sync {
-    async fn load(&self, spec: &UniversalModelSpec) -> Result<Box<dyn UniversalModel>>;
-}
-
-#[async_trait]
-#[cfg(feature = "huggingface")]
-pub trait UniversalModel: Send + Sync {
-    async fn generate(
-        &self,
-        prompt: &str,
-        opts: GenOptions,
-        on_token: Option<Box<dyn FnMut(String) + Send>>,
-    ) -> Result<String>;
-}
-
-// Legacy trait for backward compatibility
 #[async_trait]
 pub trait InferenceEngine: Send + Sync {
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>>;
@@ -127,15 +55,6 @@ pub trait LoadedModel: Send + Sync {
         on_token: Option<Box<dyn FnMut(String) + Send>>,
     ) -> Result<String>;
 }
-
-#[cfg(feature = "huggingface")]
-pub mod huggingface;
-
-#[cfg(feature = "huggingface")]
-pub mod universal;
-
-#[cfg(feature = "mlx")]
-pub mod mlx;
 
 pub mod adapter;
 #[cfg(feature = "airframe")]

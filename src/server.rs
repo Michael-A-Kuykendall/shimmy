@@ -113,8 +113,7 @@ async fn metrics_endpoint(State(state): State<Arc<AppState>>) -> Json<Value> {
             "memory_available_mb": memory_info.avail / 1024
         },
         "features": {
-            "llama": cfg!(feature = "llama"),
-            "huggingface": cfg!(feature = "huggingface")
+            "airframe": cfg!(feature = "airframe")
         },
         "endpoints": [
             "/health",
