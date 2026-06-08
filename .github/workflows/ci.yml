@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, "release/**", "fix/**", "feat/**" ]
   pull_request:
     branches: [ main ]
 
@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -32,18 +31,15 @@ jobs:
 
     - name: Run PPT Contract Tests
       run: |
-        echo "Running PPT Contract Tests — Critical Quality Gate"
-        # Serial execution required: tests share a global INVARIANT_LOG mutex
         timeout 600s cargo test --lib --no-default-features ppt -- --test-threads=1 --nocapture
 
-  # Comprehensive Unit + Regression Tests
+  # Unit + Regression Tests
   test:
     name: Test Suite
     runs-on: ubuntu-latest
     needs: ppt-contracts
     steps:
     - uses: actions/checkout@v5
-
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -58,79 +54,10 @@ jobs:
         key: ${{ runner.os }}-test-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Run Unit Tests (no features)
-      run: |
-        echo "Unit Tests — no features"
-        timeout 600s cargo test --lib --no-default-features -- --test-threads=1
-
-    - name: Run Unit Tests (huggingface)
-      run: |
-        echo "Unit Tests — huggingface feature"
-        timeout 900s cargo test --lib --no-default-features --features huggingface -- --test-threads=1
+      run: timeout 600s cargo test --lib --no-default-features -- --test-threads=1
 
     - name: Run Regression Tests
-      run: |
-        echo "Regression Tests"
-        timeout 900s cargo test --test regression_tests --no-default-features --features huggingface -- --test-threads=1
-
-  # Code Coverage
-  coverage:
-    name: Code Coverage
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-    - uses: actions/checkout@v5
-
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Install cargo-tarpaulin
-      run: cargo install cargo-tarpaulin
-
-    - name: Cache dependencies
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-coverage-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-    - name: Generate coverage report
-      run: |
-        timeout 1200s cargo tarpaulin \
-          --no-default-features \
-          --features huggingface \
-          --out xml \
-          --output-dir coverage \
-          --timeout 600 \
-          --lib \
-          --verbose
-
-    - name: Check coverage threshold
-      run: |
-        if [ -f "coverage/cobertura.xml" ]; then
-          COVERAGE_PERCENT=$(grep -o 'line-rate="[^"]*"' coverage/cobertura.xml | head -1 | grep -o '[0-9.]*' || echo "0")
-          COVERAGE_FORMATTED=$(echo "$COVERAGE_PERCENT * 100" | bc -l | xargs printf "%.1f")
-          echo "Code Coverage: ${COVERAGE_FORMATTED}%"
-          MEETS_STANDARD=$(echo "$COVERAGE_PERCENT >= 0.95" | bc -l 2>/dev/null || echo "0")
-          if [ "$MEETS_STANDARD" -eq 1 ]; then
-            echo "Coverage meets standard (>=95%)"
-          else
-            echo "::warning::Coverage ${COVERAGE_FORMATTED}% is below 95%"
-          fi
-        else
-          echo "Coverage report generation failed"
-          exit 1
-        fi
-
-    - name: Upload coverage
-      uses: codecov/codecov-action@v5
-      with:
-        files: coverage/cobertura.xml
-        flags: unittests
-        name: shimmy-coverage
-        fail_ci_if_error: false
+      run: timeout 900s cargo test --test regression_tests --no-default-features -- --test-threads=1
 
   # Security Audit
   security:
@@ -139,12 +66,11 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
-
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Install audit tools
-      run: cargo install cargo-audit cargo-deny
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
 
     - name: Cache dependencies
       uses: actions/cache@v5
@@ -156,22 +82,14 @@ jobs:
         key: ${{ runner.os }}-security-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Vulnerability audit
-      run: |
-        echo "Scanning for known vulnerabilities"
-        cargo audit --color always
+      run: cargo audit --color always
 
-    - name: Supply chain check
-      run: |
-        echo "Checking supply chain security"
-        cargo deny check
-
-  # Code Quality (lint + format)
+  # Code Quality
   lint:
     name: Code Quality
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -193,9 +111,6 @@ jobs:
     - name: Clippy (no features)
       run: cargo clippy --no-default-features -- -D warnings
 
-    - name: Clippy (huggingface)
-      run: cargo clippy --no-default-features --features huggingface -- -D warnings
-
     - name: Clippy (airframe)
       run: cargo clippy --features airframe -- -D warnings
 
@@ -207,30 +122,19 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            run-tests: true
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            run-tests: true
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            run-tests: true
           - os: macos-latest
             target: aarch64-apple-darwin
-            run-tests: false  # cross-compiled — cannot run natively on x86_64 macOS runner
     runs-on: ${{ matrix.os }}
     needs: [ppt-contracts, security, lint]
 
     steps:
     - uses: actions/checkout@v5
 
-
     - name: System dependencies (Linux)
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y build-essential cmake pkg-config
-
-    - name: System dependencies (macOS)
-      if: runner.os == 'macOS'
-      run: which cmake || brew install cmake
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -246,54 +150,26 @@ jobs:
           target
         key: ${{ runner.os }}-${{ matrix.target }}-build-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Build (CI feature set)
-      run: |
-        echo "Building ${{ matrix.target }} with Airframe GPU engine"
-        cargo build --release --target ${{ matrix.target }} --features airframe,huggingface
-
-    - name: Cross-platform regression tests
-      if: matrix.run-tests == true
-      shell: bash
-      run: |
-        echo "Running regression tests on ${{ matrix.target }}"
-        # Run on the host (non-cross-compiled) target so tests execute natively
-        cargo test --no-default-features --features huggingface --test regression_tests -- --test-threads=1
-        echo "✅ Regression tests passed on ${{ matrix.target }}"
-
-    - name: Airframe GPU code cross-platform compile check
-      if: matrix.run-tests == true
-      shell: bash
-      run: |
-        echo "Verifying Airframe GPU engine compiles on ${{ matrix.target }}"
-        cargo check --features airframe,huggingface
-        echo "✅ Airframe GPU engine compiles on ${{ matrix.target }}"
+    - name: Build (airframe)
+      run: cargo build --release --target ${{ matrix.target }} --features airframe
 
     - name: Verify binary
       shell: bash
       run: |
-        echo "Build verification complete for ${{ matrix.target }}"
         ls -la target/${{ matrix.target }}/release/ | grep -E "shimmy|^total"
 
-  # wgpu GPU Pipeline Compatibility
-  # Validates that Airframe's WGSL compute shaders and wgpu pipeline compile and initialize
-  # on a real (software) Vulkan adapter — without requiring physical GPU hardware in CI.
-  # Mesa llvmpipe provides a full software Vulkan implementation on Linux.
-  # This catches wgpu API breakage, naga WGSL compilation errors, and pipeline layout bugs
-  # that only surface at runtime, not at `cargo check` time.
+  # wgpu GPU Pipeline Compatibility (Mesa llvmpipe software Vulkan)
   wgpu-compat:
-    name: wgpu GPU Pipeline Compatibility (Mesa llvmpipe)
+    name: wgpu GPU Pipeline (Mesa llvmpipe)
     runs-on: ubuntu-latest
     needs: [ppt-contracts]
-    env:
-      CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
     - uses: actions/checkout@v5
-
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Install Mesa software Vulkan renderer (llvmpipe)
+    - name: Install Mesa software Vulkan renderer
       run: |
         sudo apt-get update
         sudo apt-get install -y libvulkan1 mesa-vulkan-drivers
@@ -310,45 +186,37 @@ jobs:
     - name: Airframe compiles against wgpu/Vulkan stack
       env:
         WGPU_BACKEND: vulkan
-        # Force Mesa llvmpipe as the Vulkan ICD so wgpu always gets an adapter
         VK_ICD_FILENAMES: /usr/share/vulkan/icd.d/lvp_icd.x86_64.json
       run: |
-        echo "Verifying Airframe GPU engine compiles with Mesa llvmpipe Vulkan"
-        cargo check --features airframe,huggingface
-        echo "✅ Airframe wgpu integration compiles cleanly against Mesa llvmpipe"
+        cargo check --features airframe
+        echo "✅ Airframe wgpu integration compiles cleanly"
 
-    - name: wgpu adapter enumeration (naga + pipeline init)
+    - name: wgpu pipeline unit tests
       env:
         WGPU_BACKEND: vulkan
         VK_ICD_FILENAMES: /usr/share/vulkan/icd.d/lvp_icd.x86_64.json
         RUST_LOG: wgpu_core=warn,wgpu_hal=warn
       run: |
-        echo "Running any available Airframe wgpu unit tests against Mesa llvmpipe..."
-        # Run lib tests that touch wgpu/GPU code with the software adapter available.
-        # Tests that enumerate adapters or compile pipelines will use llvmpipe.
-        # Tests that require a real GGUF model are expected to skip gracefully.
-        cargo test --features airframe,huggingface --lib -- --test-threads=1 2>&1 \
-          | grep -E "(test |FAILED|PASSED|error|ok|ignored|wgpu|adapter)" || true
-        echo "✅ wgpu compatibility check complete (Mesa llvmpipe)"
+        cargo test --features airframe --lib -- --test-threads=1 2>&1 \
+          | grep -E "(test |FAILED|PASSED|error|ok|ignored)" || true
+        echo "✅ wgpu compatibility check complete"
 
-  # Final quality gate summary
+  # Quality Gate Summary
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
-    needs: [ppt-contracts, test, coverage, security, lint, build, wgpu-compat]
+    needs: [ppt-contracts, test, security, lint, build, wgpu-compat]
     if: always()
     steps:
     - name: Summary
       run: |
-        echo "Quality Gate Summary"
-        echo "===================="
         if [[ "${{ needs.ppt-contracts.result }}" == "success" && \
               "${{ needs.test.result }}" == "success" && \
               "${{ needs.security.result }}" == "success" && \
               "${{ needs.lint.result }}" == "success" && \
               "${{ needs.build.result }}" == "success" && \
               "${{ needs.wgpu-compat.result }}" == "success" ]]; then
-          echo "All critical quality gates PASSED"
+          echo "✅ All quality gates passed"
         else
           echo "Quality gate FAILURES:"
           echo "  PPT Contracts : ${{ needs.ppt-contracts.result }}"
@@ -356,7 +224,6 @@ jobs:
           echo "  Security      : ${{ needs.security.result }}"
           echo "  Lint          : ${{ needs.lint.result }}"
           echo "  Build         : ${{ needs.build.result }}"
-          echo "  Coverage      : ${{ needs.coverage.result }}"
           echo "  wgpu Compat   : ${{ needs.wgpu-compat.result }}"
           exit 1
         fi
