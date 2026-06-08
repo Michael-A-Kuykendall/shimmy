@@ -143,3 +143,17 @@ libs/headers/
 libs/windows-x86_64/llama.lib
 libs/vision/
 themes/
+
+# Internal developer docs — never committed (session notes, AI handoffs, audits)
+docs/internal/
+
+# Untracked archaeology/recovery docs (safe to ignore, disk-only)
+SHIMMY_CONSOLE_SHAPE_AUDIT.md
+SHIMMY_CONSOLE_TOOLS_ARCHITECTURE.md
+SHIMMY_RUSTCHAIN_INTEGRATION_ARCHITECTURE.md
+docs/ARCHAEOLOGY_DRIVEN_RECONSTRUCTION_PLAN.md
+docs/CONSOLE_RUNTIME_DEPENDENCY_MAP.md
+docs/HANDOFF_SESSION_2026-01-13.md
+docs/RECONSTRUCTION_MISSING.md
+docs/RECONSTRUCTION_TARGETS_FINAL.md
+docs/claude_local_tool_specification.md
