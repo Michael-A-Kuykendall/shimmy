@@ -7,8 +7,11 @@ use thiserror::Error;
 
 pub mod analysis;
 pub mod command;
+pub mod docs;
 pub mod file_ops;
 pub mod git;
+pub mod image;
+pub mod loader;
 pub mod system;
 
 #[derive(Debug, Error)]
@@ -125,6 +128,11 @@ impl ToolRegistry {
         self.tools.lock().unwrap().keys().cloned().collect()
     }
 
+    /// Remove a tool from the registry by name.
+    pub fn remove(&self, name: &str) {
+        self.tools.lock().unwrap().remove(name);
+    }
+
     /// Return OpenAI-compatible tool definitions for the chat API
     pub fn to_openai_tools(&self) -> Vec<Value> {
         self.tools
@@ -165,5 +173,8 @@ pub fn build_default_registry() -> ToolRegistry {
     registry.register(Arc::new(analysis::SyntaxCheckTool));
     registry.register(Arc::new(command::ShellCommandTool));
     registry.register(Arc::new(system::SystemInfoTool));
+    registry.register(Arc::new(image::ReadImageTool));
+    registry.register(Arc::new(docs::ExplainCommandTool));
+    registry.register(Arc::new(docs::GetHelpTool));
     registry
 }

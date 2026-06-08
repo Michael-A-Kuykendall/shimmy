@@ -9,4 +9,5 @@ pub use commands::edit;
 pub use license::LicenseClient;
 pub use license::LicenseStatus;
 pub use tools::{build_default_registry, Tool, ToolArgs, ToolError, ToolRegistry, ToolResult};
+pub use tools::loader::{apply_manifest, ToolManifest};
 pub use websocket::create_websocket_router;
