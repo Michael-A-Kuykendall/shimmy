@@ -30,7 +30,7 @@ jobs:
       with:
         targets: ${{ matrix.target }}
     - name: Build
-      run: cargo build --release --target ${{ matrix.target }} --features airframe,huggingface
+      run: cargo build --release --target ${{ matrix.target }} --features airframe
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
