@@ -85,7 +85,7 @@ jobs:
           echo "🧪 Testing that binary reports correct version..."
 
           # Build the project
-          cargo build --release --no-default-features --features "huggingface"
+          cargo build --release --no-default-features --features airframe
 
           # Test version output
           VERSION_OUTPUT=$(./target/release/shimmy --version)
@@ -152,7 +152,7 @@ jobs:
           echo "🔍 Validating dependencies and version consistency..."
 
           # Check that Cargo.lock is consistent
-          cargo check --locked --no-default-features --features "huggingface"
+          cargo check --locked --no-default-features --features airframe
 
           if [ $? -eq 0 ]; then
             echo "✅ Dependency check passed - Cargo.lock is consistent"
