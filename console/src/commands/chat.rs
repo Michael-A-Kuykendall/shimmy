@@ -4,9 +4,10 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::io::{self, Write};
 
+use crate::config::ConsoleConfig;
+use crate::session::Session;
 use crate::tools::{build_default_registry, ToolArgs};
 
-const DEFAULT_BASE_URL: &str = "http://127.0.0.1:11435";
 const MAX_TOOL_ROUNDS: usize = 10;
 
 // ── OpenAI-compatible message types ──────────────────────────────────────────
@@ -79,30 +80,62 @@ struct AssistantMessage {
     tool_calls: Option<Vec<ToolCall>>,
 }
 
+// ── Workspace context helpers ─────────────────────────────────────────────────
+
+fn build_workspace_context() -> String {
+    let cwd = std::env::current_dir()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|_| ".".to_string());
+
+    // Get recent git log (last 5 commits)
+    let git_log = std::process::Command::new("git")
+        .args(["log", "--oneline", "-5"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+        .unwrap_or_default();
+
+    // Get top-level file listing (tracked + untracked, up to 30)
+    let file_list = std::process::Command::new("git")
+        .args(["ls-files", "--others", "--cached", "--exclude-standard"])
+        .output()
+        .map(|o| {
+            let stdout = String::from_utf8_lossy(&o.stdout).to_string();
+            stdout.lines().take(30).collect::<Vec<_>>().join("\n")
+        })
+        .unwrap_or_default();
+
+    let mut ctx = format!("Working directory: {}", cwd);
+    if !git_log.is_empty() {
+        ctx.push_str(&format!("\n\nRecent commits:\n{}", git_log.trim()));
+    }
+    if !file_list.is_empty() {
+        ctx.push_str(&format!("\n\nProject files (up to 30):\n{}", file_list.trim()));
+    }
+    ctx
+}
+
 // ── Main entry point ──────────────────────────────────────────────────────────
 
 pub async fn execute_chat(model: Option<String>, _session: Option<String>) -> Result<()> {
-    let base_url = std::env::var("SHIMMY_URL").unwrap_or_else(|_| DEFAULT_BASE_URL.into());
-    let model =
-        model.unwrap_or_else(|| std::env::var("SHIMMY_MODEL").unwrap_or_else(|_| "default".into()));
+    let config = ConsoleConfig::from_env();
+    let base_url = config.base_url.clone();
+    let model = model.unwrap_or_else(|| config.model.clone());
 
     let registry = build_default_registry();
     let client = reqwest::Client::new();
 
-    // System prompt with project context
-    let cwd = std::env::current_dir()
-        .map(|p| p.to_string_lossy().to_string())
-        .unwrap_or_else(|_| ".".into());
+    // Build workspace-aware system prompt
+    let workspace_ctx = build_workspace_context();
     let system = format!(
-        "You are a local AI development assistant. \
-        The user's working directory is: {}\n\
-        You have access to tools for reading/writing files, running git commands, \
-        executing shell commands, and analyzing projects. \
-        Use tools when needed to help the user.",
-        cwd
+        "You are a local AI development assistant. {}\n\
+         You have access to tools for reading/writing files, running git commands, \
+         executing shell commands, and analyzing projects. \
+         Use tools when needed to help the user.",
+        workspace_ctx
     );
 
     let mut messages: Vec<Message> = vec![Message::system(system)];
+    let mut session = Session::new();
 
     println!("shimmy chat — model: {} @ {}", model, base_url);
     println!("Type your message, or 'exit' to quit.\n");
@@ -121,6 +154,10 @@ pub async fn execute_chat(model: Option<String>, _session: Option<String>) -> Re
         if input == "exit" || input == "quit" {
             break;
         }
+
+        // Track user message in session
+        let user_msg_json = serde_json::json!({ "role": "user", "content": input });
+        session.add_message(user_msg_json);
 
         messages.push(Message::user(&input));
 
@@ -206,10 +243,20 @@ pub async fn execute_chat(model: Option<String>, _session: Option<String>) -> Re
                 continue;
             }
 
-            // No tool calls — print the response and break inner loop
-            if let Some(content) = assistant_msg.content {
+            // No tool calls — print the response and save to session
+            if let Some(ref content) = assistant_msg.content {
                 println!("\n{}\n", content);
+                // Track assistant message in session
+                let assistant_msg_json = serde_json::json!({
+                    "role": assistant_msg.role,
+                    "content": content
+                });
+                session.add_message(assistant_msg_json);
             }
+
+            // Persist session after each complete exchange
+            let _ = session.save(&config.session_dir);
+
             break;
         }
     }
