@@ -182,6 +182,8 @@ All types are implemented in both the GPU inference shader and a CPU reference i
 
 **Auto-discovery is enabled.** If Shimmy finds GGUF models in your HuggingFace cache, Ollama directory, LM Studio cache (`~/.cache/lm-studio/models`), or local `./models/` folder, it will register and serve them automatically. See [docs/MODEL_EXPANSION.md](docs/MODEL_EXPANSION.md) for the full compatibility matrix.
 
+**SafeTensors format** (`.safetensors`) is supported for model loading — Shimmy routes `.safetensors` files through the `safetensors_native` module. Full inference via the Airframe engine for SafeTensors is a P2 roadmap item (see [docs/v2-roadmap.md](docs/v2-roadmap.md)).
+
 ## 📦 Migrating from v1.x
 
 The llama.cpp backend is **removed in v2.0.0**. The Airframe engine is the only inference path.
@@ -308,7 +310,7 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 # macOS Intel
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-intel -o shimmy && chmod +x shimmy
 
-# Linux ARM64 (huggingface engine; Airframe cross-compilation not yet supported)
+# Linux ARM64 (Airframe engine; cross-compilation available)
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-aarch64 -o shimmy && chmod +x shimmy
 ```
 
@@ -317,16 +319,16 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 #### **🛠️ Build from Source / cargo install**
 
 ```bash
-# Install from crates.io
+# Install from crates.io (Airframe GPU engine)
 cargo install shimmy
 
-# Build from source (huggingface engine, no GPU)
+# Build from source
 git clone https://github.com/Michael-A-Kuykendall/shimmy
 cd shimmy
-cargo build --release
+cargo build --release --features airframe
 ```
 
-> **Note**: The Airframe GPU engine is a private dependency and **cannot be built from source** by public users. The [pre-built release binaries](#-download-pre-built-binaries-recommended) already include Airframe compiled in — download those to get full GPU acceleration. `cargo install shimmy` installs the huggingface engine variant from crates.io.
+`cargo install shimmy` or `cargo build --release --features airframe` both give you the full Airframe GPU engine. Airframe is publicly available on [crates.io](https://crates.io/crates/airframe).
 
 ### GPU Acceleration
 
@@ -342,7 +344,7 @@ Release binaries include the Airframe engine with WebGPU support compiled in:
 | **Linux x86_64** | [shimmy-linux-x86_64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64) | WebGPU (wgpu) | NVIDIA, AMD, Intel |
 | **macOS ARM64** | [shimmy-macos-arm64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64) | Metal (via wgpu) | Apple Silicon |
 | **macOS Intel** | [shimmy-macos-intel](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-intel) | Metal (via wgpu) | Intel Mac |
-| **Linux ARM64** | [shimmy-linux-aarch64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-aarch64) | huggingface only | ARM cross-build |
+| **Linux ARM64** | [shimmy-linux-aarch64](https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-aarch64) | Airframe (WebGPU) | ARM cross-build |
 
 #### **🎯 How GPU Selection Works**
 
@@ -429,7 +431,7 @@ Point your development tools to the displayed port — VSCode Copilot, Cursor, C
 ## 📦 Download & Install
 
 ### Package Managers
-- **Rust**: [`cargo install shimmy`](https://crates.io/crates/shimmy) *(installs huggingface engine; for Airframe GPU, use GitHub Releases binaries)*
+- **Rust**: [`cargo install shimmy`](https://crates.io/crates/shimmy) *(installs Airframe GPU engine)*
 - **VS Code**: [Shimmy Extension](https://marketplace.visualstudio.com/items?itemName=targetedwebresults.shimmy-vscode)
 - **npm**: `npm install -g shimmy-js` *(planned)*
 - **Python**: `pip install shimmy` *(planned)*
@@ -443,10 +445,10 @@ Point your development tools to the displayed port — VSCode Copilot, Cursor, C
 **Full compatibility confirmed!** Shimmy works on macOS with Metal GPU acceleration via wgpu.
 
 ```bash
-# Install from crates.io (huggingface engine)
+# Install from crates.io (Airframe GPU engine)
 cargo install shimmy
 
-# For Airframe GPU engine, download the macOS binary from GitHub Releases:
+# For Airframe GPU engine, you can also download the macOS binary from GitHub Releases:
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
 ```
 
@@ -508,7 +510,7 @@ I built Shimmy to retain privacy-first control on my AI development and keep thi
 | `SHIMMY_BIND_ADDRESS` | `0.0.0.0:8080` | Full bind address (overrides port) |
 | `SHIMMY_MAX_CTX` | *(from GGUF)* | Override context window; activates YaRN RoPE scaling when above model native |
 | `SHIMMY_MODEL_PATHS` | *(see Zero Config)* | Colon-separated extra model search paths |
-| `SHIMMY_ENGINE_BACKEND` | `airframe` | `airframe` (default) or `llama` (legacy path) |
+| `SHIMMY_ENGINE_BACKEND` | `airframe` | `airframe` (default) |
 | `SHIMMY_ROPE_SCALE` | *(auto)* | Override computed YaRN scale factor |
 | `SHIMMY_KV_QUANT` | `f32` | KV cache quantization: `f32` (default) or `int4` ([TurboShimmy](#-turboshimmy-int4-kv)) |
 | `SHIMMY_PREFILL_CHUNK` | `64` | Tokens per prefill dispatch. Set to `8` on Windows if you see GPU TDR resets on long prompts |

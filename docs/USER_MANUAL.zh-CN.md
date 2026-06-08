@@ -165,21 +165,21 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 chmod +x shimmy
 ```
 
-> **ARM64 注意**：Linux ARM64 版本使用 HuggingFace 引擎。Airframe 的 ARM64 交叉编译支持正在开发中。
+> **ARM64 注意**：Linux ARM64 版本使用 Airframe 引擎，支持交叉编译。
 
 ### 方式二：通过 cargo 安装
 
 ```bash
-# 从 crates.io 安装（使用 HuggingFace 引擎，无需 GPU 即可运行）
+# 从 crates.io 安装（Airframe GPU 引擎）
 cargo install shimmy
 ```
 
 ### 方式三：从源码构建（含 Airframe 引擎）
 
 ```bash
-git clone https://github.com/Michael-A-Kuykendall/shimmy --recurse-submodules
+git clone https://github.com/Michael-A-Kuykendall/shimmy
 cd shimmy
-cargo build --release --features airframe,huggingface
+cargo build --release --features airframe
 
 # 构建完成后，二进制文件位于：
 ./target/release/shimmy
@@ -1109,21 +1109,21 @@ curl http://127.0.0.1:11435/api/health
 ### 构建步骤
 
 ```bash
-# 克隆仓库（含 Airframe 子模块）
-git clone https://github.com/Michael-A-Kuykendall/shimmy --recurse-submodules
+# 克隆仓库
+git clone https://github.com/Michael-A-Kuykendall/shimmy
 cd shimmy
 
-# 构建（仅 HuggingFace 引擎，快速构建，适合 CI）
+# 构建（含 Airframe GPU 引擎，默认，推荐用于正式使用）
 cargo build --release
 
-# 构建（含 Airframe GPU 引擎，推荐用于正式使用）
-cargo build --release --features airframe,huggingface
+# 构建（CPU-only，无 Airframe GPU）
+cargo build --release --no-default-features
 
 # 运行测试
-cargo test --features huggingface
+cargo test
 
 # 安装到系统
-cargo install --path . --features airframe,huggingface
+cargo install --path .
 ```
 
 ### 交叉编译

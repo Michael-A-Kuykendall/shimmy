@@ -1,8 +1,8 @@
 # Shimmy v2.x Roadmap
 
 **Last Updated:** 2026-06-07  
-**Branch:** `feature/local-dev-platform-setup`  
-**Current version:** 1.7.4 (publishing toward 2.0.0)
+**Branch:** `release/v2.2-cleanup`  
+**Current version:** 2.1.0 → 2.2.0
 
 ---
 
@@ -19,38 +19,40 @@ historically parked at `archive/llama-cpp-era-v1.9.0`.
 
 ## Roadmap Items
 
-### 🔴 P0 — In Progress
+### 🟢 P0 — Done
 
 **Wire airframe as default inference engine**  
-*Status:* Stub mode (`Backend: Stub mode`) — server starts, models load, no generation  
-*Work:* Connect `InferenceEngineAdapter` → airframe GGUF loading → token generation  
-*Blocks:* Everything else in this roadmap  
+*Status:* ✅ Complete — `InferenceEngineAdapter` wired to airframe GGUF loading and token generation. Server starts, models load, and generation works.  
 *Points:* 5
 
 ---
 
-### 🟠 P1 — Next
+### 🟢 P1 — Done
 
 **Strip llama.cpp + HuggingFace Python bridge**  
-*Status:* Gated but present, causing compile weight  
-*Work (8 points total):*
-- Remove `shimmy-llama-cpp-2` dep and all `#[cfg(feature="llama")]` blocks (5pt)
-- Remove HuggingFace Python subprocess bridge (3pt)
-- Remove `src/engine/llama.rs`, `universal.rs`, `huggingface.rs`
-- Clean `adapter.rs` down to airframe-only path
-- Clean `main.rs` of MoE config, GPU backend selection, llama diagnostics
-- Update CHANGELOG, README, wiki to reflect v2 engine
-
-*Sequence:*
-1. Cargo.toml — remove deps/features
-2. Delete dead engine files
-3. Clean engine/mod.rs
-4. Thin out adapter.rs
-5. Clean main.rs
-6. cargo check → 0 warnings, 0 errors
-7. Docs update
+*Status:* ✅ Complete — dead engine files removed, `adapter.rs` cleaned to airframe-only path, `main.rs` stripped of MoE config and llama diagnostics. `cargo check` passes 0 warnings, 0 errors.  
+*Work completed (8 points total):*
+- Removed `shimmy-llama-cpp-2` dep and all `#[cfg(feature="llama")]` blocks (5pt)
+- Removed HuggingFace Python subprocess bridge (3pt)
+- Removed `src/engine/llama.rs`, `universal.rs`, `huggingface.rs`
+- Cleaned `adapter.rs` down to airframe-only path
+- Cleaned `main.rs` of MoE config, GPU backend selection, llama diagnostics
+- Updated CHANGELOG, README, wiki to reflect v2 engine
 
 *Note:* Users who need llama.cpp have `archive/llama-cpp-era-v1.9.0` on origin.
+
+---
+
+### 🟡 P2 — Soon
+
+**SafeTensors native inference**  
+*Status:* Not started — `safetensors_native.rs` module exists with a stub `generate()` method  
+*Work:* Replace stub `generate()` with real inference via airframe. This is the inference path for `.safetensors` files (HF format, no GGUF conversion required).  
+*Design:*
+- `safetensors_native.rs` stub wired into `InferenceEngineAdapter` routing
+- `generate()` delegates to airframe with SafeTensors tensor layout
+- Adds `.safetensors` to the model discovery file filter
+*Points:* 5
 
 ---
 
@@ -121,11 +123,11 @@ Users on the historical llama.cpp path: check out `archive/llama-cpp-era-v1.9.0`
 
 ---
 
-## Build Matrix (Target State)
+## Build Matrix (Current State)
 
 | Command | What you get |
 |---------|-------------|
-| `cargo build` | shimmy with huggingface feature (safe default) |
+| `cargo build` | shimmy with Airframe GPU engine (default features: `airframe`) |
+| `cargo build --no-default-features` | CPU-only build (no Airframe GPU) |
 | `cargo build --features console` | shimmy + local AI dev console |
-| `cargo build --features llama` | shimmy + llama.cpp (historical, still works) |
-| `cargo build --features full` | everything |
+| `cargo build --features full` | shimmy + Airframe + MLX (Apple Silicon) |
