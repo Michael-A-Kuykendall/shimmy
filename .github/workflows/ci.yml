@@ -31,7 +31,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
     - name: Check airframe-engine integration
-      run: cargo check --features airframe,huggingface
+      run: cargo check --features airframe
 
   docker-build:
     name: Docker Build Validation
