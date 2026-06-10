@@ -608,16 +608,68 @@ async fn main() -> anyhow::Result<()> {
         }
 
         #[cfg(feature = "console")]
-        cli::Command::Chat { model, session } => {
-            shimmy_console_lib::chat::execute_chat(model, session).await?;
-        }
-        #[cfg(feature = "console")]
-        cli::Command::Edit { file, model, preview } => {
-            shimmy_console_lib::edit::execute_edit(&file, model, preview).await?;
-        }
-        #[cfg(feature = "console")]
-        cli::Command::Analyze { path, model } => {
-            shimmy_console_lib::analyze::execute_analyze(&path, model).await?;
+        cli::Command::Console { theme, model } => {
+            // shimmy console — spawn server and open browser UI
+            // 1. Find free port
+            // 2. Spawn shimmy serve as child
+            // 3. Wait for /health
+            // 4. Open browser to theme URL
+            // 5. Wait for Ctrl+C, then kill child
+
+            use std::process::Command as StdCommand;
+
+            // Find free port
+            let port = shimmy_console_lib::embedded_server::find_free_port()
+                .expect("failed to find free port");
+            let bind_addr = format!("127.0.0.1:{}", port);
+            let base_url = format!("http://{}", bind_addr);
+
+            println!("🎮 Starting shimmy console (theme: {})...", theme);
+            println!("   Server will bind to {}", bind_addr);
+
+            // Build model path - use provided path or default to TinyLlama
+            let model_path = model.unwrap_or_else(|| {
+                "D:/shimmy-test-models/gguf_collection/TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf".to_string()
+            });
+
+            // Spawn shimmy serve
+            let mut child = StdCommand::new(std::env::current_exe()?)
+                .args(["serve", "--bind", &bind_addr, "--model-path", &model_path])
+                .spawn()
+                .expect("failed to spawn shimmy serve");
+
+            // Wait for server to be ready
+            println!("   Waiting for server to be ready...");
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async {
+                shimmy_console_lib::embedded_server::wait_for_ready(&base_url, 30)
+                    .await
+                    .expect("server failed to start")
+            });
+
+            println!("✅ Server ready at {}", base_url);
+
+            // Open browser
+            let theme_url = format!("http://localhost:5173?theme={}", theme);
+            println!("🌐 Opening {} ...", theme_url);
+            open::that(&theme_url).expect("failed to open browser");
+
+            println!();
+            println!("🎮 Shimmy Console is running!");
+            println!("   Press Ctrl+C to exit");
+            println!();
+
+            // Wait for Ctrl+C
+            std::panic::set_hook(Box::new(|_| {})); // Ignore ctrl+c panic
+            if let Err(e) = std::io::stdin().read_line(&mut String::new()) {
+                eprintln!("Warning: stdin error: {}", e);
+            }
+
+            // Cleanup
+            println!("🧹 Shutting down server...");
+            let _ = child.kill();
+            let _ = child.wait();
+            println!("✅ Done");
         }
 
         cli::Command::Init {

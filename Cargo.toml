@@ -73,6 +73,7 @@ airframe = { path = "../airframe", optional = true }
 shimmy-console-lib = { workspace = true, optional = true }
 tokio-tungstenite = { version = "0.20", optional = true }
 crossterm = { version = "0.27", optional = true }
+open = "5"  # For opening browser from `shimmy console`
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"

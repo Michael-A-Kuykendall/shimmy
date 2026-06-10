@@ -102,26 +102,12 @@ pub enum Command {
     GpuInfo,
 
     #[cfg(feature = "console")]
-    /// Start an interactive AI chat session
-    Chat {
-        #[arg(long)]
-        model: Option<String>,
-        #[arg(long)]
-        session: Option<String>,
-    },
-    #[cfg(feature = "console")]
-    /// Edit a file with AI assistance
-    Edit {
-        file: String,
-        #[arg(long)]
-        model: Option<String>,
-        #[arg(long)]
-        preview: bool,
-    },
-    #[cfg(feature = "console")]
-    /// Analyze a path with AI assistance
-    Analyze {
-        path: String,
+    /// Start the themed browser console (Arcade theme by default)
+    Console {
+        /// Theme name: arcade (free), or paid themes (coming soon)
+        #[arg(long, default_value = "arcade")]
+        theme: String,
+        /// Skip the theme chooser and launch directly with this model
         #[arg(long)]
         model: Option<String>,
     },
