@@ -8,6 +8,7 @@ pub enum TemplateFamily {
     ChatML,
     Llama3,
     OpenChat,
+    TinyLlama,
 }
 
 impl TemplateFamily {
@@ -65,6 +66,27 @@ impl TemplateFamily {
                 }
                 s
             }
+            TemplateFamily::TinyLlama => {
+                // TinyLlama Chat v1.0: <|system|>\n...\n</s>\n<|user|>\n...\n</s>\n<|assistant|>\n
+                let mut s = String::new();
+                if let Some(sys) = system {
+                    s.push_str(&format!("<|system|>\n{}</s>\n", sys));
+                }
+                for (role, content) in messages {
+                    let tag = match role.as_str() {
+                        "assistant" => "assistant",
+                        "system" => "system",
+                        _ => "user",
+                    };
+                    s.push_str(&format!("<|{}|>\n{}</s>\n", tag, content));
+                }
+                if let Some(inp) = input {
+                    s.push_str(&format!("<|user|>\n{}</s>\n<|assistant|>\n", inp));
+                } else {
+                    s.push_str("<|assistant|>\n");
+                }
+                s
+            }
         }
     }
 
@@ -74,6 +96,7 @@ impl TemplateFamily {
             TemplateFamily::ChatML => vec!["<|im_end|>".to_string(), "<|im_start|>".to_string()],
             TemplateFamily::Llama3 => vec!["<|eot_id|>".to_string(), "<|end_of_text|>".to_string()],
             TemplateFamily::OpenChat => vec![],
+            TemplateFamily::TinyLlama => vec!["</s>".to_string()],
         }
     }
 }

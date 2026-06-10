@@ -73,15 +73,14 @@ impl Registry {
 
     pub fn infer_template(&self, model_name: &str) -> String {
         let name_lower = model_name.to_lowercase();
-
-        // Only route to llama3 template when explicitly Llama 3 (uses different special tokens)
-        if name_lower.contains("llama-3")
+        if name_lower.contains("tinyllama") {
+            "tinyllama".to_string()
+        } else if name_lower.contains("llama-3")
             || name_lower.contains("llama3")
             || name_lower.contains("meta-llama-3")
         {
             "llama3".to_string()
         } else {
-            // Everything else (TinyLlama, Llama 1/2, Mistral, Phi, Qwen, etc.) uses ChatML
             "chatml".to_string()
         }
     }
@@ -198,12 +197,17 @@ mod tests {
     #[test]
     fn test_infer_template_chatml_variants() {
         let registry = Registry::new();
-        // These should all fall back to chatml
-        assert_eq!(registry.infer_template("tinyllama-1.1b"), "chatml");
         assert_eq!(registry.infer_template("mistral-7b"), "chatml");
         assert_eq!(registry.infer_template("phi-3-mini"), "chatml");
         assert_eq!(registry.infer_template("qwen2-7b"), "chatml");
-        assert_eq!(registry.infer_template("llama-2-7b"), "chatml"); // Llama 2, not 3
+        assert_eq!(registry.infer_template("llama-2-7b"), "chatml");
+    }
+
+    #[test]
+    fn test_infer_template_tinyllama() {
+        let registry = Registry::new();
+        assert_eq!(registry.infer_template("tinyllama-1.1b"), "tinyllama");
+        assert_eq!(registry.infer_template("TinyLlama-1.1B-Chat-v1.0.Q4_0"), "tinyllama");
     }
 
     #[test]

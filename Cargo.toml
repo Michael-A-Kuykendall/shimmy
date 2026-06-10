@@ -65,7 +65,9 @@ dirs = "5.0"
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # Airframe native GPU inference — public crate on crates.io
-airframe = { version = "0.2.1", optional = true }
+# Airframe native GPU inference — local path dep for in-progress fixes
+# TODO: switch back to crates.io once fixes are published as v0.2.2
+airframe = { path = "../airframe", optional = true }
 
 # Console feature dependencies (optional)
 shimmy-console-lib = { workspace = true, optional = true }

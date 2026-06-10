@@ -13,9 +13,7 @@ dependencies = [
 
 [[package]]
 name = "airframe"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a3c7d50c80a0945129e6cfc41125037e946f2fcc5b48e3a09e25a75e6ad2107"
+version = "0.2.2"
 dependencies = [
  "aho-corasick",
  "bytemuck",
@@ -1494,8 +1492,6 @@ checksum = "c5a2d376baa530d1238d133232d15e239abad80d05838b4b59354e5268af431f"
 [[package]]
 name = "libfse"
 version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20ae97c006f0decc1514d5b6168f2a3506d80458fef022d75a3e9ed69d9b85e9"
 dependencies = [
  "aho-corasick",
 ]
@@ -2710,6 +2706,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "axum",
+ "chrono",
  "crossterm",
  "dirs",
  "futures-util",

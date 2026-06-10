@@ -140,13 +140,19 @@ pub async fn chat_completions(
     let fam = match spec.template.as_deref() {
         Some("chatml") => crate::templates::TemplateFamily::ChatML,
         Some("llama3") | Some("llama-3") => crate::templates::TemplateFamily::Llama3,
+        Some("tinyllama") => crate::templates::TemplateFamily::TinyLlama,
         _ => {
-            // Auto-detect template based on model name
-            if req.model.to_lowercase().contains("qwen")
-                || req.model.to_lowercase().contains("chatglm")
+            // Auto-detect from model name and path — check most specific first
+            let model_lower = req.model.to_lowercase();
+            let path_lower = spec.base_path.to_string_lossy().to_lowercase();
+            if model_lower.contains("tinyllama") || path_lower.contains("tinyllama") {
+                crate::templates::TemplateFamily::TinyLlama
+            } else if model_lower.contains("qwen")
+                || model_lower.contains("chatglm")
+                || path_lower.contains("qwen")
             {
                 crate::templates::TemplateFamily::ChatML
-            } else if req.model.to_lowercase().contains("llama") {
+            } else if model_lower.contains("llama") || path_lower.contains("llama") {
                 crate::templates::TemplateFamily::Llama3
             } else {
                 crate::templates::TemplateFamily::OpenChat

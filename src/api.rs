@@ -1146,3 +1146,181 @@ mod tests {
         assert_eq!(request.messages.as_ref().unwrap().len(), 1);
     }
 }
+
+// ─── /ws/console — Theme Protocol WebSocket Handler ─────────────────────────
+//
+// Speaks the Shimmy Console frontend contract:
+//   Client → Server: { "type": "get_models" }
+//   Server → Client: { "type": "models_response", "models": [...], "success": true }
+//
+//   Client → Server: { "type": "select_model", "model_name": "..." }
+//   Server → Client: { "type": "model_selected", "success": true, "model_name": "..." }
+//
+//   Client → Server: { "type": "generate", "prompt": "...", "stream": true }
+//   Server → Client: { "token": "..." }  (repeated)
+//   Server → Client: { "type": "generation_complete" }
+//
+// This is the primary connection point for all themes.
+// The HTTP endpoints (/v1/chat/completions, /v1/models) remain for OpenAI compat.
+
+pub async fn ws_console(
+    State(state): State<Arc<AppState>>,
+    ws: axum::extract::WebSocketUpgrade,
+) -> impl IntoResponse {
+    ws.on_upgrade(move |socket| handle_ws_console(state, socket))
+}
+
+async fn handle_ws_console(state: Arc<AppState>, mut socket: WebSocket) {
+    use axum::extract::ws::Message as WsMsg;
+
+    let mut selected_model: Option<String> = None;
+
+    loop {
+        let raw = match socket.recv().await {
+            Some(Ok(WsMsg::Text(t))) => t,
+            Some(Ok(WsMsg::Close(_))) | None => break,
+            Some(Ok(_)) => continue, // ping/pong/binary — ignore
+            Some(Err(_)) => break,
+        };
+
+        let Ok(req) = serde_json::from_str::<serde_json::Value>(&raw) else {
+            continue;
+        };
+
+        match req["type"].as_str() {
+
+            // ── get_models ────────────────────────────────────────────────
+            Some("get_models") => {
+                let model_list: Vec<serde_json::Value> = state
+                    .registry
+                    .discovered_models
+                    .values()
+                    .map(|m| {
+                        serde_json::json!({
+                            "name": m.name,
+                            "display_name": m.name,
+                            "parameter_count": m.parameter_count,
+                            "quantization": m.quantization,
+                            "size_bytes": m.size_bytes,
+                            "loaded": false,
+                            "supported_features": ["chat"],
+                            "source": "discovered"
+                        })
+                    })
+                    .collect();
+
+                let resp = serde_json::json!({
+                    "type": "models_response",
+                    "models": model_list,
+                    "success": true
+                });
+                let _ = socket.send(WsMsg::Text(resp.to_string())).await;
+            }
+
+            // ── select_model ──────────────────────────────────────────────
+            Some("select_model") => {
+                let name = req["model_name"]
+                    .as_str()
+                    .unwrap_or("")
+                    .to_string();
+                selected_model = Some(name.clone());
+                let resp = serde_json::json!({
+                    "type": "model_selected",
+                    "success": true,
+                    "model_name": name
+                });
+                let _ = socket.send(WsMsg::Text(resp.to_string())).await;
+            }
+
+            // ── generate ─────────────────────────────────────────────────
+            Some("generate") => {
+                let prompt = req["prompt"].as_str().unwrap_or("").to_string();
+                let max_tokens = req["max_tokens"].as_u64().map(|n| n as usize);
+
+                // Resolve model: use selected or first available
+                let model_name = match &selected_model {
+                    Some(m) => m.clone(),
+                    None => match state.registry.discovered_models.keys().next() {
+                        Some(m) => m.clone(),
+                        None => {
+                            let err = serde_json::json!({
+                                "type": "error",
+                                "message": "No models available"
+                            });
+                            let _ = socket.send(WsMsg::Text(err.to_string())).await;
+                            continue;
+                        }
+                    },
+                };
+
+                let Some(spec) = state.registry.to_spec(&model_name) else {
+                    let err = serde_json::json!({
+                        "type": "error",
+                        "message": format!("Model not found: {}", model_name)
+                    });
+                    let _ = socket.send(WsMsg::Text(err.to_string())).await;
+                    continue;
+                };
+
+                let Ok(loaded) = state.engine.load(&spec).await else {
+                    let err = serde_json::json!({
+                        "type": "error",
+                        "message": "Failed to load model"
+                    });
+                    let _ = socket.send(WsMsg::Text(err.to_string())).await;
+                    continue;
+                };
+
+                let mut opts = GenOptions::default();
+                if let Some(m) = max_tokens {
+                    opts.max_tokens = m;
+                }
+                opts.stream = false;
+
+                let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+                tokio::spawn({
+                    let prompt = prompt.clone();
+                    let model_name = model_name.clone();
+                    let tx_done = tx.clone();
+                    async move {
+                        let tx_tokens = tx.clone();
+                        if let Err(e) = loaded
+                            .generate(
+                                &prompt,
+                                opts,
+                                Some(Box::new(move |tok| {
+                                    let _ = tx_tokens.send(tok);
+                                })),
+                            )
+                            .await
+                        {
+                            tracing::error!(
+                                "ws_console generation failed for '{}': {}",
+                                model_name, e
+                            );
+                        }
+                        let _ = tx_done.send("[DONE]".into());
+                    }
+                });
+
+                // Stream tokens to the client
+                while let Some(piece) = rx.recv().await {
+                    if piece == "[DONE]" {
+                        break;
+                    }
+                    let msg = serde_json::json!({ "token": piece });
+                    if socket.send(WsMsg::Text(msg.to_string())).await.is_err() {
+                        return; // client disconnected
+                    }
+                }
+
+                let done = serde_json::json!({ "type": "generation_complete" });
+                let _ = socket.send(WsMsg::Text(done.to_string())).await;
+            }
+
+            _ => {
+                // Unknown message type — silently ignore per contract
+            }
+        }
+    }
+}

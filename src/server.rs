@@ -133,6 +133,8 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
     let mut app = Router::new()
         .route("/health", get(health_check))
         .route("/metrics", get(metrics_endpoint))
+        .route("/api/metrics", get(metrics_endpoint))  // alias for theme frontend
+        .route("/discover", get(discover_handler))      // theme auto-discovery
         .route("/diag", get(diag_handler))
         .route("/api/generate", post(api::generate))
         .route("/api/models", get(api::list_models))
@@ -144,6 +146,7 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
         .route("/api/tools/:name/execute", post(api::execute_tool))
         .route("/api/workflows/execute", post(api::execute_workflow))
         .route("/ws/generate", get(api::ws_generate))
+        .route("/ws/console", get(api::ws_console))    // theme WebSocket — primary
         .route(
             "/v1/chat/completions",
             post(openai_compat::chat_completions),
@@ -157,11 +160,27 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
 
     let app = app.layer(middleware::from_fn(cors_layer)).with_state(state.clone());
 
-    #[cfg(feature = "console")]
-    let app = app.merge(shimmy_console_lib::create_websocket_router());
+    // NOTE: /ws/console is wired directly in the main router above.
+    // shimmy_console_lib stub superseded — no feature flag needed.
 
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+/// Discovery endpoint — lets the theme frontend auto-detect this backend.
+/// useShimmy.ts scans ports 11430–11439 for this response.
+async fn discover_handler() -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "backends": [{
+            "port": 11435,
+            "url": "http://127.0.0.1:11435",
+            "validation": {
+                "health_check": true,
+                "models_endpoint": true,
+                "websocket_endpoint": true
+            }
+        }]
+    }))
 }
 
 /// GPU detection for metrics endpoint
