@@ -13,9 +13,9 @@ dependencies = [
 
 [[package]]
 name = "airframe"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a3c7d50c80a0945129e6cfc41125037e946f2fcc5b48e3a09e25a75e6ad2107"
+checksum = "94bdcedf4dd96131a9bb8676d39f00d92ee313e7c4f42f38c364cd44c18f4128"
 dependencies = [
  "aho-corasick",
  "bytemuck",
@@ -2288,7 +2288,7 @@ dependencies = [
 
 [[package]]
 name = "shimmy"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "airframe",
  "anyhow",
