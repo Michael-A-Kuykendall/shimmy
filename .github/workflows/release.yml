@@ -8,6 +8,10 @@ on:
       - test-release  # Test on specific branch
   workflow_dispatch:  # Allow manual testing
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   # 🚧 MANDATORY RELEASE GATES - ALL MUST PASS OR ENTIRE RELEASE STOPS
   preflight:
