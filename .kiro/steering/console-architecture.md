@@ -5,6 +5,10 @@
 
 ---
 
+## FULL WORKSTREAM DOC: `docs/internal/CONSOLE_WORKSTREAM_2026-06-10.md`
+
+Read that first. It has everything.
+
 ## DO NOT BUILD A NEW CONSOLE HERE
 
 The shimmy-console implementation lives in:
