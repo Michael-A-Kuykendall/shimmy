@@ -1,67 +1,65 @@
-# Shimmy Console — Where It Lives
+# Shimmy Console — Architecture
 
-**Consolidated:** 2026-06-10  
-**Status:** Canonical implementation is in the airframe repo, NOT here.
+**Corrected:** 2026-06-10  
+**Authoritative source:** `docs/internal/CONSOLE_WORKSTREAM_2026-06-10.md` — READ THIS FIRST.
 
 ---
 
-## FULL WORKSTREAM DOC: `docs/internal/CONSOLE_WORKSTREAM_2026-06-10.md`
+## What `shimmy console` IS
 
-Read that first. It has everything.
-
-## DO NOT BUILD A NEW CONSOLE HERE
-
-The shimmy-console implementation lives in:
+A **browser-based themed UI**, shipped as a paid sub-feature of shimmy.
 
 ```
-airframe/crates/console/     ← THIS IS THE ONE
-branch: release/v0.2.2-clean
+shimmy console [theme]
+  → finds free port
+  → spawns `shimmy serve` as a child process (no second terminal)
+  → opens the themed web UI in the browser
+  → UI connects over WebSocket to /ws/console on the local airframe engine
+  → user picks a model (model chooser), chats, uses agentic tools
 ```
 
-Compiles clean as of 2026-06-10. Zero errors, zero warnings.
+Free tier ships the **arcade** theme. Paid themes gated by license (URL TBD).
 
 ---
 
-## What Lives in THIS Repo (shimmy)
+## What `shimmy console` IS NOT
 
-### `shimmy/console/` — Dead Skeleton
-The `console/` workspace crate in this repo is a **dead skeleton** on the `feature/console` branch.
-It has `embedded_server.rs` scaffolding and stub commands. Do not extend it.
-It is kept only for git history. The real work is in airframe.
-
-### `shimmy/src/` — Feature Stubs (Intentionally Preserved)
-The `#[cfg(feature = "console")]` stubs in `src/main.rs` and `src/cli.rs` are
-**intentionally kept** as the future integration point. When shimmy-console is ready
-to ship as part of the public shimmy binary, these stubs get wired to the
-`shimmy-console-lib` crate (published from airframe/crates/console).
-
-Do not remove these stubs. Do not extend them here. They are placeholders only.
+It is **NOT** `airframe/crates/console/`. That airframe crate is a separate
+**developer terminal tool** (chat REPL + tools). Same word, different product.
+Do not use it as shimmy console. Do not build the browser product on top of it.
 
 ---
 
-## Integration Plan (Future)
+## Where Things Live
 
-When console is ready to go public:
-1. Publish `airframe/crates/console` as `shimmy-console-lib` on crates.io
-2. Wire the `#[cfg(feature = "console")]` stubs in shimmy to call it
-3. Ship as `shimmy console [theme]` subcommand
-
----
-
-## Theme System
-
-- Default theme: **`arcade`** (approved 2026-06-10, replaces any prior "amiga" references)
-- Themes live in `~/.shimmy/themes/{name}/`
-- User config: `~/.shimmy/config.toml`
-
----
-
-## Prior Console Branches in This Repo
-
-| Branch | What it was | Status |
+| Piece | Location | State |
 |---|---|---|
-| `feature/console` | Dead console skeleton + Phase 1 tools | Superseded — signposted |
-| `shimmy-console` | Old recovery branch | Ancient — ignore |
+| `/ws/console` WebSocket handler | `shimmy/src/api.rs` | ✅ committed |
+| `/discover` endpoint | `shimmy/src/api.rs` | ✅ committed |
+| `shimmy console [theme]` CLI command | `shimmy/src/cli.rs` | ⬜ to be wired |
+| Embedded server spawn helpers | `shimmy/console/embedded_server.rs` | ✅ `find_free_port()`, `wait_for_ready()` |
+| Arcade theme frontend | `C:\Users\micha\repos\arcade` (GitHub: `Michael-A-Kuykendall/arcade`) | ✅ renamed, scrubbed, model chooser exists |
+| Local working copy of arcade | `shimmy/console/themes/arcade/` | gitignored, reference only |
+| `#[cfg(feature="console")]` stubs | `shimmy/src/main.rs`, `cli.rs` | preserved — integration point |
+
+---
+
+## What's Left (next session)
+
+1. Wire `Command::Console { theme }` in `cli.rs` — spawn serve, open browser
+2. Build the theme chooser screen in arcade (extend existing styles; model chooser already exists)
+3. Model discovery "Add folder" in UI → writes `~/.shimmy/config.toml` `model_dirs`
+4. License gate stub (print URL, exit)
+5. Test end-to-end with TinyLlama
+
+See `docs/internal/CONSOLE_WORKSTREAM_2026-06-10.md` for the full plan and the
+two-terminal prototype command to verify the stack works today.
+
+---
+
+## Theme
+
+Default theme: **`arcade`** (was `amiga-ai-interface`, renamed everywhere, no "amiga" remains).
 
 ---
 
