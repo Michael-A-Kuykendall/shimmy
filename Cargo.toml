@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "2.1.0"
+version = "2.2.0"
 publish = true
 edition = "2021"
 license = "MIT"
@@ -68,7 +68,7 @@ dirs = "5.0"
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # Airframe native GPU inference — public crate on crates.io
-airframe = { version = "0.2.1", optional = true }
+airframe = { version = "0.2.2", optional = true }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"

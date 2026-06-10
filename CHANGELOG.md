@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-06-09
+
+### Fixed
+- **Multi-architecture model loading** — Qwen3, Qwen2, Gemma-2, Phi-3 family models now
+  load correctly via airframe 0.2.2. Previously these architectures silently failed due
+  to a hardcoded Llama key prefix in the GGUF metadata parser.
+- **Qwen3 tied embeddings** — Qwen3 models that share output.weight with token_embd.weight
+  now load and run correctly.
+- **Context cap safety** — Large-context models (Qwen2-7B n_ctx=32768) no longer cause
+  memory exhaustion on CPU oracle generation paths.
+
+### Changed
+- Airframe dependency updated to 0.2.2.
+- Shimmy version bumped to 2.2.0.
+
+---
+
 ## [2.1.0] - 2026-06-02
 
 ### Added
