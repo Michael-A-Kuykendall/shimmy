@@ -1293,45 +1293,49 @@ async fn handle_ws_console(state: Arc<AppState>, mut socket: WebSocket) {
                 }
                 opts.stream = false;
 
-                let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
-                tokio::spawn({
-                    let prompt = prompt.clone();
-                    let model_name = model_name.clone();
-                    let tx_done = tx.clone();
-                    async move {
-                        let tx_tokens = tx.clone();
-                        if let Err(e) = loaded
-                            .generate(
-                                &prompt,
-                                opts,
-                                Some(Box::new(move |tok| {
-                                    let _ = tx_tokens.send(tok);
-                                })),
-                            )
-                            .await
-                        {
-                            tracing::error!(
-                                "ws_console generation failed for '{}': {}",
-                                model_name, e
-                            );
+                // Apply chat template + stop tokens (same logic as openai_compat)
+                let fam = match spec.template.as_deref() {
+                    Some("chatml") => crate::templates::TemplateFamily::ChatML,
+                    Some("llama3") | Some("llama-3") => crate::templates::TemplateFamily::Llama3,
+                    Some("tinyllama") => crate::templates::TemplateFamily::TinyLlama,
+                    _ => {
+                        let n = model_name.to_lowercase();
+                        if n.contains("tinyllama") {
+                            crate::templates::TemplateFamily::TinyLlama
+                        } else if n.contains("qwen") || n.contains("chatglm") {
+                            crate::templates::TemplateFamily::ChatML
+                        } else if n.contains("llama-3") || n.contains("llama3") {
+                            crate::templates::TemplateFamily::Llama3
+                        } else {
+                            crate::templates::TemplateFamily::OpenChat
                         }
-                        let _ = tx_done.send("[DONE]".into());
                     }
-                });
+                };
+                let rendered = fam.render(None, &[("user".to_string(), prompt.clone())], None);
+                opts.stop_tokens = fam.stop_tokens();
 
-                // Stream tokens to the client
-                while let Some(piece) = rx.recv().await {
-                    if piece == "[DONE]" {
-                        break;
+                // Use non-streaming generate — full response, then chunk and send
+                match loaded.generate(&rendered, opts, None).await {
+                    Ok(text) => {
+                        // Send response split into words for a streaming feel
+                        for chunk in text.split_inclusive(' ') {
+                            let msg = serde_json::json!({ "token": chunk });
+                            if socket.send(WsMsg::Text(msg.to_string())).await.is_err() {
+                                return;
+                            }
+                        }
+                        let done = serde_json::json!({ "type": "generation_complete" });
+                        let _ = socket.send(WsMsg::Text(done.to_string())).await;
                     }
-                    let msg = serde_json::json!({ "token": piece });
-                    if socket.send(WsMsg::Text(msg.to_string())).await.is_err() {
-                        return; // client disconnected
+                    Err(e) => {
+                        tracing::error!("ws_console generation failed for '{}': {}", model_name, e);
+                        let err = serde_json::json!({
+                            "type": "error",
+                            "message": format!("Generation failed: {}", e)
+                        });
+                        let _ = socket.send(WsMsg::Text(err.to_string())).await;
                     }
                 }
-
-                let done = serde_json::json!({ "type": "generation_complete" });
-                let _ = socket.send(WsMsg::Text(done.to_string())).await;
             }
 
             _ => {
