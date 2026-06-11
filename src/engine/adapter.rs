@@ -98,14 +98,20 @@ mod tests {
     #[test]
     fn test_safetensors_routes_to_safetensors() {
         let a = InferenceEngineAdapter::new();
-        assert_eq!(a.select_backend(&spec("m", "model.safetensors")), BackendChoice::SafeTensors);
+        assert_eq!(
+            a.select_backend(&spec("m", "model.safetensors")),
+            BackendChoice::SafeTensors
+        );
     }
 
     #[test]
     #[cfg(feature = "airframe")]
     fn test_gguf_routes_to_airframe() {
         let a = InferenceEngineAdapter::new();
-        assert_eq!(a.select_backend(&spec("m", "model.gguf")), BackendChoice::Airframe);
+        assert_eq!(
+            a.select_backend(&spec("m", "model.gguf")),
+            BackendChoice::Airframe
+        );
     }
 
     #[test]
