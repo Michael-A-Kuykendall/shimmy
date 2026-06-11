@@ -640,17 +640,14 @@ async fn main() -> anyhow::Result<()> {
 
             // Wait for server to be ready
             println!("   Waiting for server to be ready...");
-            let runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(async {
-                shimmy_console_lib::embedded_server::wait_for_ready(&base_url, 30)
-                    .await
-                    .expect("server failed to start")
-            });
+            shimmy_console_lib::embedded_server::wait_for_ready(&base_url, 30)
+                .await
+                .expect("server failed to start");
 
             println!("✅ Server ready at {}", base_url);
 
-            // Open browser
-            let theme_url = format!("http://localhost:5173?theme={}", theme);
+            // Open browser — arcade dev server default port is 8080
+            let theme_url = format!("http://localhost:8080?theme={}", theme);
             println!("🌐 Opening {} ...", theme_url);
             open::that(&theme_url).expect("failed to open browser");
 
@@ -659,11 +656,8 @@ async fn main() -> anyhow::Result<()> {
             println!("   Press Ctrl+C to exit");
             println!();
 
-            // Wait for Ctrl+C
-            std::panic::set_hook(Box::new(|_| {})); // Ignore ctrl+c panic
-            if let Err(e) = std::io::stdin().read_line(&mut String::new()) {
-                eprintln!("Warning: stdin error: {}", e);
-            }
+            // Wait for Ctrl+C via tokio signal
+            tokio::signal::ctrl_c().await.ok();
 
             // Cleanup
             println!("🧹 Shutting down server...");
