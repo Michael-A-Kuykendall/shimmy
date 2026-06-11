@@ -647,7 +647,8 @@ async fn main() -> anyhow::Result<()> {
             println!("✅ Server ready at {}", base_url);
 
             // Open browser — arcade dev server default port is 8080
-            let theme_url = format!("http://localhost:8080?theme={}", theme);
+            // Pass shimmy server port via URL param so arcade can connect directly
+            let theme_url = format!("http://localhost:8080?theme={}&port={}", theme, port);
             println!("🌐 Opening {} ...", theme_url);
             open::that(&theme_url).expect("failed to open browser");
 
