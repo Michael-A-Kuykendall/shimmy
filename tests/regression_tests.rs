@@ -376,18 +376,15 @@ mod regression_tests {
             // MLX feature is disabled - that's also valid
         }
 
-        // Test that Cargo.toml includes MLX feature definition
+        // Test that Cargo.toml includes key feature definitions
         let cargo_toml = include_str!("../Cargo.toml");
         assert!(
-            cargo_toml.contains("mlx = []"),
-            "MLX feature should be defined in Cargo.toml"
+            cargo_toml.contains("airframe") || cargo_toml.contains("huggingface"),
+            "Cargo.toml should contain core feature definitions"
         );
 
-        // Test that Apple Silicon convenience feature includes MLX
-        assert!(
-            cargo_toml.contains("apple = ["),
-            "Apple convenience feature should exist"
-        );
+        // v2.2 cleanup: mlx and apple features were removed (llama.cpp backend removed)
+        // This is intentional — no assertion needed for removed features
     }
 
     #[test]
