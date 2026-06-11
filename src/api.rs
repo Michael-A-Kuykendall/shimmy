@@ -1191,23 +1191,39 @@ async fn handle_ws_console(state: Arc<AppState>, mut socket: WebSocket) {
 
             // ── get_models ────────────────────────────────────────────────
             Some("get_models") => {
-                let model_list: Vec<serde_json::Value> = state
-                    .registry
-                    .discovered_models
-                    .values()
-                    .map(|m| {
-                        serde_json::json!({
-                            "name": m.name,
-                            "display_name": m.name,
-                            "parameter_count": m.parameter_count,
-                            "quantization": m.quantization,
-                            "size_bytes": m.size_bytes,
-                            "loaded": false,
-                            "supported_features": ["chat"],
-                            "source": "discovered"
-                        })
-                    })
-                    .collect();
+                // Include both manually registered + discovered models
+                let mut model_list: Vec<serde_json::Value> = Vec::new();
+
+                // Manually registered (e.g., from --model-path flag)
+                for e in state.registry.list().iter() {
+                    model_list.push(serde_json::json!({
+                        "name": e.name,
+                        "display_name": e.name,
+                        "parameter_count": null,
+                        "quantization": null,
+                        "size_bytes": null,
+                        "loaded": false,
+                        "supported_features": ["chat"],
+                        "source": "registered"
+                    }));
+                }
+
+                // Auto-discovered (skip any already added above)
+                let registered_names: std::collections::HashSet<_> =
+                    state.registry.list().iter().map(|e| e.name.clone()).collect();
+                for m in state.registry.discovered_models.values() {
+                    if registered_names.contains(&m.name) { continue; }
+                    model_list.push(serde_json::json!({
+                        "name": m.name,
+                        "display_name": m.name,
+                        "parameter_count": m.parameter_count,
+                        "quantization": m.quantization,
+                        "size_bytes": m.size_bytes,
+                        "loaded": false,
+                        "supported_features": ["chat"],
+                        "source": "discovered"
+                    }));
+                }
 
                 let resp = serde_json::json!({
                     "type": "models_response",
