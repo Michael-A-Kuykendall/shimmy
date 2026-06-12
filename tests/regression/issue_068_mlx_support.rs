@@ -63,6 +63,7 @@ fn test_apple_feature_set_compilation() {
 }
 
 #[test]
+#[ignore = "vestigial v1.x MLX assertion: shimmy 2.2.0 removed the MLX gpu-info output entirely (feature `mlx` is empty, `apple` does not include it); kept for upstream parity"]
 fn test_gpu_info_with_mlx_compiled() {
     // Skip on non-macOS platforms since MLX is Apple-specific
     if !cfg!(target_os = "macos") {
@@ -248,6 +249,7 @@ fn test_mlx_status_messages_comprehensive() {
 }
 
 #[test]
+#[ignore = "vestigial v1.x MLX assertion: shimmy 2.2.0 removed the MLX gpu-info output entirely (feature `mlx` is empty, `apple` does not include it); kept for upstream parity"]
 fn test_mlx_binary_status_messages() {
     // Skip on non-macOS platforms since MLX is Apple-specific
     if !cfg!(target_os = "macos") {
