@@ -190,14 +190,23 @@ fn test_issue_110_user_experience_simulation() {
         String::from_utf8_lossy(&build_result.stderr)
     );
 
-    // Step 3: Verify binary actually works
-    let binary_path = if cfg!(windows) {
-        "target/debug/shimmy.exe"
+    // Step 3: Verify binary actually works. The binary lands in ./target when
+    // shimmy builds standalone, but in the workspace-root target dir when shimmy
+    // is a member of an enclosing cargo workspace (e.g. the meta repo).
+    let binary_name = if cfg!(windows) {
+        "shimmy.exe"
     } else {
-        "target/debug/shimmy"
+        "shimmy"
     };
+    let binary_path = [
+        format!("target/debug/{binary_name}"),
+        format!("../target/debug/{binary_name}"),
+    ]
+    .into_iter()
+    .find(|p| std::path::Path::new(p).exists())
+    .expect("built shimmy binary not found in ./target or workspace ../target");
 
-    let version_result = Command::new(binary_path)
+    let version_result = Command::new(&binary_path)
         .arg("--version")
         .output()
         .expect("Failed to test binary functionality");

@@ -126,8 +126,22 @@ fn test_binary_version_output() {
         String::from_utf8_lossy(&output.stderr)
     );
 
-    // Test version output
-    let version_output = Command::new("./target/release/shimmy")
+    // Test version output. The binary lands in ./target when shimmy builds
+    // standalone, but in the workspace-root target dir when shimmy is a
+    // member of an enclosing cargo workspace (e.g. the meta repo).
+    let binary_name = if cfg!(windows) {
+        "shimmy.exe"
+    } else {
+        "shimmy"
+    };
+    let binary_path = [
+        format!("./target/release/{binary_name}"),
+        format!("../target/release/{binary_name}"),
+    ]
+    .into_iter()
+    .find(|p| std::path::Path::new(p).exists())
+    .expect("built shimmy binary not found in ./target or workspace ../target");
+    let version_output = Command::new(&binary_path)
         .arg("--version")
         .output()
         .expect("Failed to run shimmy --version");

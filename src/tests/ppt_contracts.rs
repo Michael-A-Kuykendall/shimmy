@@ -1,7 +1,25 @@
 // PPT Contract Tests for Shimmy
 // These tests ensure that critical invariants are always checked during execution
 
+#[cfg(all(
+    test,
+    any(
+        feature = "llama",
+        feature = "llama-cuda",
+        feature = "llama-vulkan",
+        feature = "llama-opencl"
+    )
+))]
 use crate::invariant_ppt::shimmy_invariants::*;
+#[cfg(all(
+    test,
+    any(
+        feature = "llama",
+        feature = "llama-cuda",
+        feature = "llama-vulkan",
+        feature = "llama-opencl"
+    )
+))]
 use crate::invariant_ppt::*;
 
 // PPT tests require actual model loading, which needs a compiled backend

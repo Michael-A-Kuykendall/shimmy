@@ -1,7 +1,7 @@
 [package]
 name = "shimmy"
 version = "2.2.0"
-publish = true
+publish = false
 edition = "2021"
 license = "MIT"
 description = "Lightweight Ollama-compatible inference server with native SafeTensors support. No Python dependencies, cross-platform WebGPU acceleration via Airframe."

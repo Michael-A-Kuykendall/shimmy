@@ -6,7 +6,6 @@
 /// **v2.0 resolution**: The llama.cpp GpuBackend enum and gpu_layers() concept are removed
 /// entirely. Airframe (wgpu) handles GPU offloading at the dispatch level — all tensor ops
 /// run on the selected wgpu adapter automatically.
-
 #[cfg(test)]
 mod tests {
     use shimmy::engine::universal::ShimmyUniversalEngine;

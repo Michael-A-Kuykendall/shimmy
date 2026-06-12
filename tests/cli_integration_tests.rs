@@ -1,3 +1,7 @@
+// Fork note (FlexNetOS/meta workspace): assert_cmd::Command::cargo_bin is
+// deprecated on current stable; keep upstream test code intact and allow it.
+#![allow(deprecated)]
+
 use assert_cmd::Command;
 use predicates::prelude::*;
 use std::fs;

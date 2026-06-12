@@ -1265,14 +1265,14 @@ mod tests {
     fn test_max_tokens_zero_rejected() {
         // Zero is not a valid max_tokens value
         let max_tokens: Option<usize> = Some(0);
-        let invalid = max_tokens.map_or(false, |m| m == 0 || m > 131_072);
+        let invalid = max_tokens.is_some_and(|m| m == 0 || m > 131_072);
         assert!(invalid);
     }
 
     #[test]
     fn test_max_tokens_over_limit_rejected() {
         let max_tokens: Option<usize> = Some(200_000);
-        let invalid = max_tokens.map_or(false, |m| m == 0 || m > 131_072);
+        let invalid = max_tokens.is_some_and(|m| m == 0 || m > 131_072);
         assert!(invalid);
     }
 
