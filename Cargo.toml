@@ -106,5 +106,3 @@ harness = false
 name = "generation_performance"
 harness = false
 
-[workspace]
-
