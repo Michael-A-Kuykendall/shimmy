@@ -2,6 +2,23 @@
 /// This ensures our release gates properly catch real issues and block releases
 use std::process::Command;
 
+/// Locate the freshly built shimmy debug binary in both standalone (./target)
+/// and enclosing-workspace (../target) layouts (e.g. the meta repo workspace).
+fn shimmy_debug_binary() -> String {
+    let name = if cfg!(windows) {
+        "shimmy.exe"
+    } else {
+        "shimmy"
+    };
+    [
+        format!("./target/debug/{name}"),
+        format!("../target/debug/{name}"),
+    ]
+    .into_iter()
+    .find(|p| std::path::Path::new(p).exists())
+    .expect("built shimmy debug binary not found in ./target or workspace ../target")
+}
+
 #[test]
 fn test_release_gate_system_exists() {
     // Validate that release.yml contains the mandatory gates
@@ -140,14 +157,23 @@ fn test_gate_4_binary_size_constitutional_limit() {
         "Failed to build binary for size test"
     );
 
-    // Test constitutional 20MB limit (debug binary path)
-    let binary_path = if cfg!(windows) {
-        "target/debug/shimmy.exe"
-    } else {
-        "target/debug/shimmy"
-    };
+    // Test constitutional 20MB limit (debug binary path; resolves both
+    // standalone ./target and enclosing-workspace ../target layouts)
+    let binary_path = shimmy_debug_binary();
 
-    if let Ok(metadata) = std::fs::metadata(binary_path) {
+    // The constitutional limit guards the standalone release process. Inside an
+    // enclosing cargo workspace (e.g. the meta repo) the root workspace ignores
+    // shimmy's own [profile.dev] (cargo: "profiles for the non root package will
+    // be ignored"), so the dev binary carries full debuginfo and the limit does
+    // not apply.
+    if binary_path.starts_with("../") {
+        eprintln!(
+            "skipping constitutional size check: built under enclosing workspace profile ({binary_path})"
+        );
+        return;
+    }
+
+    if let Ok(metadata) = std::fs::metadata(&binary_path) {
         let size = metadata.len();
         let max_size = 20 * 1024 * 1024; // 20MB constitutional limit
 

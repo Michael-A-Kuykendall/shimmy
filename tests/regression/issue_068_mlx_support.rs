@@ -4,6 +4,23 @@
 /// and prevents regression of the issue where macOS binaries were missing MLX features.
 use std::process::Command;
 
+/// Locate the freshly built shimmy debug binary in both standalone (./target)
+/// and enclosing-workspace (../target) layouts (e.g. the meta repo workspace).
+fn shimmy_debug_binary() -> String {
+    let name = if cfg!(windows) {
+        "shimmy.exe"
+    } else {
+        "shimmy"
+    };
+    [
+        format!("./target/debug/{name}"),
+        format!("../target/debug/{name}"),
+    ]
+    .into_iter()
+    .find(|p| std::path::Path::new(p).exists())
+    .expect("built shimmy debug binary not found in ./target or workspace ../target")
+}
+
 #[test]
 fn test_mlx_feature_compilation() {
     // Test that MLX feature can be compiled
@@ -66,7 +83,7 @@ fn test_gpu_info_with_mlx_compiled() {
     );
 
     // Test gpu-info command
-    let gpu_info_output = Command::new("./target/debug/shimmy")
+    let gpu_info_output = Command::new(shimmy_debug_binary())
         .arg("gpu-info")
         .output()
         .expect("Failed to run shimmy gpu-info");
@@ -250,7 +267,7 @@ fn test_mlx_binary_status_messages() {
     );
 
     // Test the gpu-info command output for specific MLX status messages
-    let gpu_info_output = Command::new("./target/debug/shimmy")
+    let gpu_info_output = Command::new(shimmy_debug_binary())
         .arg("gpu-info")
         .output()
         .expect("Failed to run shimmy gpu-info");
@@ -358,7 +375,7 @@ mod integration_tests {
         );
 
         // Test that the binary works
-        let version_result = Command::new("./target/debug/shimmy")
+        let version_result = Command::new(shimmy_debug_binary())
             .arg("--version")
             .output()
             .expect("Failed to run shimmy --version");
