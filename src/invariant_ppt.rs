@@ -237,6 +237,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[serial_test::serial]
     fn test_invariant_logging() {
         clear_invariant_log();
 
@@ -253,11 +254,13 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_property_test_success() {
         property_test("always_true", || true);
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_contract_test_success() {
         clear_invariant_log();
         assert_invariant(true, "Required contract", Some("test"));

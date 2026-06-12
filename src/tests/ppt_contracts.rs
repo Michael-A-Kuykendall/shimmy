@@ -37,6 +37,7 @@ mod contract_tests {
     use tokio;
 
     #[test]
+    #[serial_test::serial]
     fn test_model_loading_contracts() {
         clear_invariant_log();
 
@@ -52,6 +53,7 @@ mod contract_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_generation_contracts() {
         clear_invariant_log();
 
@@ -72,6 +74,7 @@ mod contract_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_api_response_contracts() {
         clear_invariant_log();
 
@@ -90,6 +93,7 @@ mod contract_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_backend_selection_contracts() {
         clear_invariant_log();
 
@@ -109,6 +113,7 @@ mod contract_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_discovery_contracts() {
         clear_invariant_log();
 
@@ -124,6 +129,7 @@ mod contract_tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn test_full_workflow_contracts() {
         clear_invariant_log();
 
@@ -196,6 +202,7 @@ mod property_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_generation_length_property() {
         // Property: Generation always produces non-trivial output for non-empty prompts
         let test_cases = vec![
@@ -288,6 +295,7 @@ mod property_tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_api_status_codes_property() {
         // Property: API responses always have valid HTTP status codes
         let test_cases = vec![
@@ -328,6 +336,7 @@ mod exploration_tests {
     use super::*;
 
     #[test]
+    #[serial_test::serial]
     fn explore_edge_cases() {
         // These are temporary exploration tests for development
 
