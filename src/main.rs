@@ -331,24 +331,17 @@ async fn main() -> anyhow::Result<()> {
                     std::process::exit(1);
                 });
 
-            // Print startup diagnostics before server starts
+            // Resolve the serving state (with model auto-discovery) BEFORE printing
+            // diagnostics, so the startup banner reports the models actually served —
+            // not the pre-discovery manual registry count. Previously the banner read
+            // `📦 Models: 0 available` on a fresh boot (the manual count) while
+            // `/v1/models` served the auto-discovered set; the count is now resolved
+            // once, here, and printed once, below.
             let use_airframe = airframe_engine_selected(cli.legacy);
-            print_startup_diagnostics(
-                env!("CARGO_PKG_VERSION"),
-                cli.gpu_backend.as_deref(),
-                cli.cpu_moe,
-                cli.n_cpu_moe,
-                state.registry.list().len(),
-                use_airframe,
-                &cli.kv_quant,
-            );
-            println!("🚀 Starting server on {}", addr);
-
-            // Auto-register discovered models if we only have the default
             let manual_count = state.registry.list().len();
-            if manual_count <= 1 && !airframe_engine_selected(cli.legacy) {
-                // Only the default phi3-lora entry and not using Airframe
-                // Create new engine with same configuration for auto-discovery state.
+            let serving_state: Arc<AppState> = if manual_count <= 1 && !use_airframe {
+                // Only the default phi3-lora entry and not using Airframe: build a fresh
+                // engine and auto-register discovered models.
                 let enhanced_engine: Box<dyn engine::InferenceEngine> = build_engine(
                     cli.gpu_backend.as_deref(),
                     cli.legacy,
@@ -358,30 +351,12 @@ async fn main() -> anyhow::Result<()> {
 
                 let mut enhanced_state = AppState::new(enhanced_engine, state.registry.clone());
                 enhanced_state.registry.auto_register_discovered();
-                let enhanced_state = Arc::new(enhanced_state);
+                Arc::new(enhanced_state)
+            } else {
+                state
+            };
 
-                let available_models = enhanced_state.registry.list_all_available();
-                if available_models.is_empty() {
-                    eprintln!("❌ No models available. Please:");
-                    eprintln!("   • Set SHIMMY_BASE_GGUF environment variable, or");
-                    eprintln!("   • Place .gguf files in ./models/ directory, or");
-                    eprintln!("   • Place .gguf files in ~/.cache/huggingface/hub/");
-                    std::process::exit(1);
-                }
-
-                // Show final model count and ready message
-                println!("📦 Models: {} available", available_models.len());
-                println!("✅ Ready to serve requests");
-                println!("   • POST /api/generate (streaming + non-streaming)");
-                println!("   • GET  /health (health check + metrics)");
-                println!("   • GET  /v1/models (OpenAI-compatible)");
-
-                info!(%addr, models=%available_models.len(), "shimmy serving with {} available models", available_models.len());
-                return server::run(addr, enhanced_state).await;
-            }
-
-            // Use existing state if manually configured
-            let available_models = state.registry.list_all_available();
+            let available_models = serving_state.registry.list_all_available();
             if available_models.is_empty() {
                 eprintln!("❌ No models available. Please:");
                 eprintln!("   • Set SHIMMY_BASE_GGUF environment variable, or");
@@ -390,15 +365,24 @@ async fn main() -> anyhow::Result<()> {
                 std::process::exit(1);
             }
 
-            // Show final model count and ready message
-            println!("📦 Models: {} available", available_models.len());
+            // Diagnostics now carry the true post-discovery model count.
+            print_startup_diagnostics(
+                env!("CARGO_PKG_VERSION"),
+                cli.gpu_backend.as_deref(),
+                cli.cpu_moe,
+                cli.n_cpu_moe,
+                available_models.len(),
+                use_airframe,
+                &cli.kv_quant,
+            );
+            println!("🚀 Starting server on {}", addr);
             println!("✅ Ready to serve requests");
             println!("   • POST /api/generate (streaming + non-streaming)");
             println!("   • GET  /health (health check + metrics)");
             println!("   • GET  /v1/models (OpenAI-compatible)");
 
             info!(%addr, models=%available_models.len(), "shimmy serving with {} available models", available_models.len());
-            server::run(addr, state).await?;
+            server::run(addr, serving_state).await?;
         }
         cli::Command::List { short } => {
             if short {
