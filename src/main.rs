@@ -295,11 +295,12 @@ async fn main() -> anyhow::Result<()> {
                 .to_string();
 
             // Register the direct model before creating AppState
+            let inferred_template = reg.infer_template(&model_name);
             reg.register(ModelEntry {
                 name: model_name.clone(),
                 base_path: path_buf.clone(),
                 lora_path: None,
-                template: None,
+                template: Some(inferred_template),
                 ctx_len: None,
                 n_threads: None,
             });

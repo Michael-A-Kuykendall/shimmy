@@ -80,8 +80,15 @@ impl Registry {
             || name_lower.contains("meta-llama-3")
         {
             "llama3".to_string()
-        } else {
+        } else if name_lower.contains("deepseek")
+            || name_lower.contains("qwen")
+            || name_lower.contains("mistral")
+            || name_lower.contains("phi")
+            || name_lower.contains("gemma")
+        {
             "chatml".to_string()
+        } else {
+            "chatml".to_string() // safe default for instruct models
         }
     }
 

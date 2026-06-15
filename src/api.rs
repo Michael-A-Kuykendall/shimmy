@@ -67,6 +67,7 @@ pub async fn generate(
         let fam = match spec.template.as_deref() {
             Some("chatml") => TemplateFamily::ChatML,
             Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
+            Some("tinyllama") => TemplateFamily::TinyLlama,
             _ => TemplateFamily::OpenChat,
         };
         let pairs = ms
@@ -75,7 +76,25 @@ pub async fn generate(
             .collect::<Vec<_>>();
         fam.render(req.system.as_deref(), &pairs, None)
     } else {
-        req.prompt.unwrap_or_default()
+        let raw = req.prompt.clone().unwrap_or_default();
+        // Wrap raw prompt in the model's chat template if one is configured.
+        // This ensures /api/generate (Ollama-style) gets the same formatting
+        // as /v1/chat/completions (OpenAI-style) — critical for instruct models.
+        match spec.template.as_deref() {
+            Some("chatml") => {
+                let fam = TemplateFamily::ChatML;
+                fam.render(None, &[("user".to_string(), raw)], None)
+            }
+            Some("llama3") | Some("llama-3") => {
+                let fam = TemplateFamily::Llama3;
+                fam.render(None, &[("user".to_string(), raw)], None)
+            }
+            Some("tinyllama") => {
+                let fam = TemplateFamily::TinyLlama;
+                fam.render(None, &[("user".to_string(), raw)], None)
+            }
+            _ => raw, // no template — pass through (e.g. completion models)
+        }
     };
 
     let mut opts = GenOptions::default();
@@ -93,6 +112,19 @@ pub async fn generate(
     }
     if let Some(s) = req.stream {
         opts.stream = s;
+    }
+    // Auto-set stop tokens from template family so EOS is handled correctly
+    // without the caller needing to specify them explicitly.
+    if opts.stop_tokens.is_empty() {
+        let fam = match spec.template.as_deref() {
+            Some("chatml") => Some(TemplateFamily::ChatML),
+            Some("llama3") | Some("llama-3") => Some(TemplateFamily::Llama3),
+            Some("tinyllama") => Some(TemplateFamily::TinyLlama),
+            _ => None,
+        };
+        if let Some(f) = fam {
+            opts.stop_tokens = f.stop_tokens();
+        }
     }
 
     if opts.stream {
@@ -195,6 +227,7 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
         let fam = match spec.template.as_deref() {
             Some("chatml") => TemplateFamily::ChatML,
             Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
+            Some("tinyllama") => TemplateFamily::TinyLlama,
             _ => TemplateFamily::OpenChat,
         };
         let pairs = ms
@@ -203,7 +236,19 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
             .collect::<Vec<_>>();
         fam.render(req.system.as_deref(), &pairs, None)
     } else {
-        req.prompt.clone().unwrap_or_default()
+        let raw = req.prompt.clone().unwrap_or_default();
+        match spec.template.as_deref() {
+            Some("chatml") => {
+                TemplateFamily::ChatML.render(None, &[("user".to_string(), raw)], None)
+            }
+            Some("llama3") | Some("llama-3") => {
+                TemplateFamily::Llama3.render(None, &[("user".to_string(), raw)], None)
+            }
+            Some("tinyllama") => {
+                TemplateFamily::TinyLlama.render(None, &[("user".to_string(), raw)], None)
+            }
+            _ => raw,
+        }
     };
 
     let mut opts = GenOptions::default();
