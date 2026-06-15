@@ -9,6 +9,9 @@ pub enum TemplateFamily {
     Llama3,
     OpenChat,
     TinyLlama,
+    /// DeepSeek Coder instruct format.
+    /// Source: https://huggingface.co/deepseek-ai/deepseek-coder-6.7b-instruct (MIT license)
+    DeepSeekCoder,
 }
 
 impl TemplateFamily {
@@ -87,6 +90,45 @@ impl TemplateFamily {
                 }
                 s
             }
+            TemplateFamily::DeepSeekCoder => {
+                // DeepSeek Coder instruct format (MIT license, from official model card).
+                // Source: https://huggingface.co/deepseek-ai/deepseek-coder-6.7b-instruct
+                //
+                // Official format (from tokenizer_config.json chat_template):
+                //   {BOS}{system}\n### Instruction:\n{user}\n### Response:\n
+                //   {assistant}<|EOT|>\n### Instruction:\n{user}\n### Response:
+                //
+                // NOTE: BOS token is injected by shimmytok (add_bos_token=true in tokenizer config).
+                // Do NOT add the BOS token text here — it causes a double-BOS which confuses the model.
+                //
+                // The default system prompt is from DeepSeek's model card.
+                const DEFAULT_SYSTEM: &str = "You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.";
+
+                let sys = system.unwrap_or(DEFAULT_SYSTEM);
+                let mut s = String::new();
+                s.push_str(sys);
+                s.push('\n');
+
+                let mut all_messages: Vec<(String, String)> = messages.to_vec();
+                if let Some(inp) = input {
+                    all_messages.push(("user".to_string(), inp.to_string()));
+                }
+
+                for (role, content) in &all_messages {
+                    match role.as_str() {
+                        "user" => {
+                            s.push_str(&format!("### Instruction:\n{}\n", content));
+                        }
+                        "assistant" => {
+                            s.push_str(&format!("### Response:\n{}<|EOT|>\n", content));
+                        }
+                        _ => {}
+                    }
+                }
+                // Always end with the generation prompt
+                s.push_str("### Response:\n");
+                s
+            }
         }
     }
 
@@ -97,6 +139,7 @@ impl TemplateFamily {
             TemplateFamily::Llama3 => vec!["<|eot_id|>".to_string(), "<|end_of_text|>".to_string()],
             TemplateFamily::OpenChat => vec![],
             TemplateFamily::TinyLlama => vec!["</s>".to_string()],
+            TemplateFamily::DeepSeekCoder => vec!["<|EOT|>".to_string()],
         }
     }
 }

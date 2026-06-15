@@ -86,7 +86,12 @@ impl Registry {
             || name_lower.contains("phi")
             || name_lower.contains("gemma")
         {
-            "chatml".to_string()
+            // DeepSeek Coder gets its own template; other DeepSeek variants use ChatML
+            if name_lower.contains("deepseek-coder") || name_lower.contains("deepseek_coder") {
+                "deepseek-coder".to_string()
+            } else {
+                "chatml".to_string()
+            }
         } else {
             "chatml".to_string() // safe default for instruct models
         }

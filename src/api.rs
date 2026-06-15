@@ -103,6 +103,7 @@ pub async fn generate(
                         Some("chatml") => TemplateFamily::ChatML,
                         Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
                         Some("tinyllama") => TemplateFamily::TinyLlama,
+                        Some("deepseek-coder") => TemplateFamily::DeepSeekCoder,
                         _ => TemplateFamily::OpenChat,
                     };
                     fam.render(req.system.as_deref(), &pairs, None)
@@ -112,6 +113,7 @@ pub async fn generate(
                 Some("chatml") => TemplateFamily::ChatML,
                 Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
                 Some("tinyllama") => TemplateFamily::TinyLlama,
+                        Some("deepseek-coder") => TemplateFamily::DeepSeekCoder,
                 _ => TemplateFamily::OpenChat,
             };
             fam.render(req.system.as_deref(), &pairs, None)
@@ -133,6 +135,9 @@ pub async fn generate(
                 }
                 Some("tinyllama") => {
                     TemplateFamily::TinyLlama.render(None, &[("user".to_string(), raw)], None)
+                }
+                Some("deepseek-coder") => {
+                    TemplateFamily::DeepSeekCoder.render(None, &[("user".to_string(), raw)], None)
                 }
                 _ => raw,
             }
@@ -162,6 +167,7 @@ pub async fn generate(
             Some("chatml") => Some(TemplateFamily::ChatML),
             Some("llama3") | Some("llama-3") => Some(TemplateFamily::Llama3),
             Some("tinyllama") => Some(TemplateFamily::TinyLlama),
+            Some("deepseek-coder") => Some(TemplateFamily::DeepSeekCoder),
             _ => None,
         };
         if let Some(f) = fam {
@@ -270,6 +276,7 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
             Some("chatml") => TemplateFamily::ChatML,
             Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
             Some("tinyllama") => TemplateFamily::TinyLlama,
+                        Some("deepseek-coder") => TemplateFamily::DeepSeekCoder,
             _ => TemplateFamily::OpenChat,
         };
         let pairs = ms
@@ -288,6 +295,9 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
             }
             Some("tinyllama") => {
                 TemplateFamily::TinyLlama.render(None, &[("user".to_string(), raw)], None)
+            }
+            Some("deepseek-coder") => {
+                TemplateFamily::DeepSeekCoder.render(None, &[("user".to_string(), raw)], None)
             }
             _ => raw,
         }
