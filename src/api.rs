@@ -12,6 +12,33 @@ use crate::invariant_ppt::shimmy_invariants;
 use crate::{engine::GenOptions, templates::TemplateFamily, AppState};
 use std::sync::Arc;
 
+/// Render a GGUF Jinja2 chat template.
+/// Falls back to None on render error (safe — caller will use TemplateFamily).
+fn render_gguf_template(template: &str, messages: &[(String, String)], system: Option<&str>) -> Option<String> {
+    use minijinja::{Environment, context};
+    let mut env = Environment::new();
+    env.add_template("chat", template).ok()?;
+    let tmpl = env.get_template("chat").ok()?;
+
+    // Build messages as Vec<serde_json::Value> — minijinja can serialize those
+    let mut msg_list: Vec<serde_json::Value> = Vec::new();
+    if let Some(sys) = system {
+        msg_list.push(serde_json::json!({"role": "system", "content": sys}));
+    }
+    for (role, content) in messages {
+        msg_list.push(serde_json::json!({"role": role, "content": content}));
+    }
+
+    let ctx = context! {
+        messages => msg_list,
+        add_generation_prompt => true,
+        bos_token => "<s>",
+        eos_token => "</s>",
+    };
+
+    tmpl.render(ctx).ok()
+}
+
 #[derive(Debug, Deserialize)]
 pub struct GenerateRequest {
     pub model: String,
@@ -64,36 +91,51 @@ pub async fn generate(
 
     // Construct prompt
     let prompt = if let Some(ms) = &req.messages {
-        let fam = match spec.template.as_deref() {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            Some("tinyllama") => TemplateFamily::TinyLlama,
-            _ => TemplateFamily::OpenChat,
-        };
-        let pairs = ms
-            .iter()
+        // Try GGUF Jinja template first (most accurate for the model)
+        let pairs: Vec<(String, String)> = ms.iter()
             .map(|m| (m.role.clone(), m.content.clone()))
-            .collect::<Vec<_>>();
-        fam.render(req.system.as_deref(), &pairs, None)
+            .collect();
+        if let Some(tmpl) = loaded.chat_template() {
+            render_gguf_template(tmpl, &pairs, req.system.as_deref())
+                .unwrap_or_else(|| {
+                    // Fallback to TemplateFamily if Jinja render fails
+                    let fam = match spec.template.as_deref() {
+                        Some("chatml") => TemplateFamily::ChatML,
+                        Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
+                        Some("tinyllama") => TemplateFamily::TinyLlama,
+                        _ => TemplateFamily::OpenChat,
+                    };
+                    fam.render(req.system.as_deref(), &pairs, None)
+                })
+        } else {
+            let fam = match spec.template.as_deref() {
+                Some("chatml") => TemplateFamily::ChatML,
+                Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
+                Some("tinyllama") => TemplateFamily::TinyLlama,
+                _ => TemplateFamily::OpenChat,
+            };
+            fam.render(req.system.as_deref(), &pairs, None)
+        }
     } else {
         let raw = req.prompt.clone().unwrap_or_default();
-        // Wrap raw prompt in the model's chat template if one is configured.
-        // This ensures /api/generate (Ollama-style) gets the same formatting
-        // as /v1/chat/completions (OpenAI-style) — critical for instruct models.
-        match spec.template.as_deref() {
-            Some("chatml") => {
-                let fam = TemplateFamily::ChatML;
-                fam.render(None, &[("user".to_string(), raw)], None)
+        // Try GGUF Jinja template for raw prompt (wrap as user message)
+        if let Some(tmpl) = loaded.chat_template() {
+            render_gguf_template(tmpl, &[("user".to_string(), raw.clone())], None)
+                .unwrap_or(raw)
+        } else {
+            // Fallback to hand-coded TemplateFamily
+            match spec.template.as_deref() {
+                Some("chatml") => {
+                    TemplateFamily::ChatML.render(None, &[("user".to_string(), raw)], None)
+                }
+                Some("llama3") | Some("llama-3") => {
+                    TemplateFamily::Llama3.render(None, &[("user".to_string(), raw)], None)
+                }
+                Some("tinyllama") => {
+                    TemplateFamily::TinyLlama.render(None, &[("user".to_string(), raw)], None)
+                }
+                _ => raw,
             }
-            Some("llama3") | Some("llama-3") => {
-                let fam = TemplateFamily::Llama3;
-                fam.render(None, &[("user".to_string(), raw)], None)
-            }
-            Some("tinyllama") => {
-                let fam = TemplateFamily::TinyLlama;
-                fam.render(None, &[("user".to_string(), raw)], None)
-            }
-            _ => raw, // no template — pass through (e.g. completion models)
         }
     };
 

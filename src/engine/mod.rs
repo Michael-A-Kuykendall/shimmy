@@ -54,6 +54,12 @@ pub trait LoadedModel: Send + Sync {
         opts: GenOptions,
         on_token: Option<Box<dyn FnMut(String) + Send>>,
     ) -> Result<String>;
+
+    /// Returns the Jinja2 chat template from the model's GGUF metadata, if present.
+    /// Callers can use this to format prompts correctly for instruct models.
+    fn chat_template(&self) -> Option<&str> {
+        None // default: no template known
+    }
 }
 
 pub mod adapter;

@@ -37,16 +37,23 @@ impl InferenceEngine for AirframeEngine {
                 .map_err(|e| anyhow::anyhow!("Airframe GPU load failed: {}", e))?;
             *guard = Some(rt);
         }
+        // Extract chat_template from the loaded runtime
+        let chat_template = guard
+            .as_ref()
+            .and_then(|rt| rt.chat_template())
+            .map(|s| s.to_string());
         drop(guard);
 
         Ok(Box::new(AirframeModel {
             runtime: self.runtime.clone(),
+            chat_template,
         }))
     }
 }
 
 struct AirframeModel {
     runtime: Arc<Mutex<Option<GpuRuntime>>>,
+    chat_template: Option<String>,
 }
 
 // Safety: GpuRuntime is behind Arc<Mutex> and only accessed from spawn_blocking
@@ -68,6 +75,10 @@ impl AirframeModel {
 
 #[async_trait]
 impl LoadedModel for AirframeModel {
+    fn chat_template(&self) -> Option<&str> {
+        self.chat_template.as_deref()
+    }
+
     async fn generate(
         &self,
         prompt: &str,
