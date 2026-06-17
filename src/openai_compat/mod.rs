@@ -484,6 +484,134 @@ pub async fn completions(
     (StatusCode::OK, Json(response)).into_response()
 }
 
+/// OpenAI-compatible POST /v1/embeddings.
+///
+/// Produces real text embeddings via a candle-transformers BERT
+/// sentence-transformer (mean-pooled + L2-normalized) when the `embeddings`
+/// feature is enabled. Lean builds (without the feature) return 501.
+pub async fn embeddings(
+    State(_state): State<Arc<AppState>>,
+    Json(req): Json<EmbeddingsRequest>,
+) -> impl IntoResponse {
+    use axum::http::StatusCode;
+
+    let inputs = req.input.into_vec();
+    if inputs.is_empty() || inputs.iter().all(|s| s.trim().is_empty()) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "error": {
+                    "message": "input must not be empty",
+                    "type": "invalid_request_error",
+                    "param": "input",
+                    "code": "invalid_input"
+                }
+            })),
+        )
+            .into_response();
+    }
+
+    #[cfg(feature = "embeddings")]
+    {
+        use crate::engine::embeddings::{default_model_id, get_or_init_embedder};
+
+        let model_id = default_model_id();
+        let embedder = match get_or_init_embedder(&model_id).await {
+            Ok(e) => e,
+            Err(e) => {
+                tracing::error!("Failed to load embedding model '{}': {:?}", model_id, e);
+                return (
+                    StatusCode::BAD_GATEWAY,
+                    Json(serde_json::json!({
+                        "error": {
+                            "message": format!("Failed to load embedding model: {e}"),
+                            "type": "server_error",
+                            "code": "embedding_model_load_failed"
+                        }
+                    })),
+                )
+                    .into_response();
+            }
+        };
+
+        // approximate token usage by whitespace word count over all inputs
+        let prompt_tokens: usize = inputs.iter().map(|s| s.split_whitespace().count()).sum();
+
+        let batch = inputs.clone();
+        let embeddings =
+            match tokio::task::spawn_blocking(move || embedder.embed_batch(&batch)).await {
+                Ok(Ok(v)) => v,
+                Ok(Err(e)) => {
+                    tracing::error!("Embedding generation failed: {:?}", e);
+                    return (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(serde_json::json!({
+                            "error": {
+                                "message": "Embedding generation failed",
+                                "type": "server_error",
+                                "code": "embedding_failed"
+                            }
+                        })),
+                    )
+                        .into_response();
+                }
+                Err(e) => {
+                    tracing::error!("Embedding task panicked: {:?}", e);
+                    return (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(serde_json::json!({
+                            "error": {
+                                "message": "Embedding task failed",
+                                "type": "server_error",
+                                "code": "embedding_task_failed"
+                            }
+                        })),
+                    )
+                        .into_response();
+                }
+            };
+
+        let data: Vec<EmbeddingData> = embeddings
+            .into_iter()
+            .enumerate()
+            .map(|(index, embedding)| EmbeddingData {
+                object: "embedding".to_string(),
+                embedding,
+                index,
+            })
+            .collect();
+
+        let response = EmbeddingsResponse {
+            object: "list".to_string(),
+            data,
+            model: req.model,
+            usage: Usage {
+                prompt_tokens,
+                completion_tokens: 0,
+                total_tokens: prompt_tokens,
+            },
+        };
+
+        Json(response).into_response()
+    }
+
+    #[cfg(not(feature = "embeddings"))]
+    {
+        let _ = inputs;
+        (
+            StatusCode::NOT_IMPLEMENTED,
+            Json(serde_json::json!({
+                "error": {
+                    "message": "embeddings feature not enabled; rebuild shimmy with --features embeddings",
+                    "type": "invalid_request_error",
+                    "code": "embeddings_disabled"
+                }
+            })),
+        )
+            .into_response()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

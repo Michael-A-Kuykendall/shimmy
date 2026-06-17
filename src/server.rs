@@ -121,6 +121,8 @@ async fn metrics_endpoint(State(state): State<Arc<AppState>>) -> Json<Value> {
             "/metrics",
             "/v1/chat/completions",
             "/v1/models",
+            "/v1/completions",
+            "/v1/embeddings",
             "/api/generate",
             "/api/models"
         ],
@@ -151,6 +153,7 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
         )
         .route("/v1/models", get(openai_compat::models))
         .route("/v1/completions", post(openai_compat::completions))
+        .route("/v1/embeddings", post(openai_compat::embeddings))
         // Ollama-compatible endpoints (used by AnythingLLM, SillyTavern, Zed, Open WebUI)
         .route("/api/tags", get(openai_compat::api_tags))
         // Anthropic Claude API compatibility

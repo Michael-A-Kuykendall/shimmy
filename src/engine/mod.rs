@@ -140,4 +140,6 @@ pub mod mlx;
 pub mod adapter;
 #[cfg(feature = "airframe")]
 pub mod airframe;
+#[cfg(feature = "embeddings")]
+pub mod embeddings;
 pub mod safetensors_native;

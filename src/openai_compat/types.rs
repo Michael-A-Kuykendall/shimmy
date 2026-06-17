@@ -198,6 +198,57 @@ pub struct Model {
     pub parent: Option<String>,
 }
 
+/// Input for POST /v1/embeddings. OpenAI accepts either a single string or an
+/// array of strings (token-id arrays are not supported by this backend).
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum EmbeddingsInput {
+    Single(String),
+    Multiple(Vec<String>),
+}
+
+impl EmbeddingsInput {
+    pub(super) fn into_vec(self) -> Vec<String> {
+        match self {
+            EmbeddingsInput::Single(s) => vec![s],
+            EmbeddingsInput::Multiple(v) => v,
+        }
+    }
+}
+
+/// Request body for POST /v1/embeddings.
+// `model`/`encoding_format` are unused in lean builds (the not(embeddings) path
+// returns 501 without reading them); keep the type always-compiled regardless.
+#[allow(dead_code)]
+#[derive(Debug, Deserialize)]
+pub struct EmbeddingsRequest {
+    pub model: String,
+    pub input: EmbeddingsInput,
+    #[serde(default)]
+    pub encoding_format: Option<String>,
+}
+
+/// One embedding entry in an embeddings response.
+// Constructed only in builds with the `embeddings` feature; always-compiled so
+// the handler signature stays stable.
+#[allow(dead_code)]
+#[derive(Debug, Serialize)]
+pub struct EmbeddingData {
+    pub object: String,
+    pub embedding: Vec<f32>,
+    pub index: usize,
+}
+
+/// Response body for POST /v1/embeddings (OpenAI shape).
+#[allow(dead_code)]
+#[derive(Debug, Serialize)]
+pub struct EmbeddingsResponse {
+    pub object: String,
+    pub data: Vec<EmbeddingData>,
+    pub model: String,
+    pub usage: Usage,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -243,5 +294,46 @@ mod tests {
         assert_eq!(v.len(), 2);
         assert!(v.contains(&"</s>".to_string()));
         assert!(v.contains(&"<|eot_id|>".to_string()));
+    }
+
+    #[test]
+    fn test_embeddings_input_single() {
+        let json = r#"{"model":"m","input":"hi"}"#;
+        let req: EmbeddingsRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.model, "m");
+        assert_eq!(req.input.into_vec(), vec!["hi"]);
+    }
+
+    #[test]
+    fn test_embeddings_input_multiple() {
+        let json = r#"{"model":"m","input":["a","b"]}"#;
+        let req: EmbeddingsRequest = serde_json::from_str(json).unwrap();
+        let v = req.input.into_vec();
+        assert_eq!(v, vec!["a".to_string(), "b".to_string()]);
+    }
+
+    #[test]
+    fn test_embeddings_response_shape() {
+        let resp = EmbeddingsResponse {
+            object: "list".to_string(),
+            data: vec![EmbeddingData {
+                object: "embedding".to_string(),
+                embedding: vec![0.1, 0.2, 0.3],
+                index: 0,
+            }],
+            model: "m".to_string(),
+            usage: Usage {
+                prompt_tokens: 3,
+                completion_tokens: 0,
+                total_tokens: 3,
+            },
+        };
+        let v: serde_json::Value = serde_json::to_value(&resp).unwrap();
+        assert_eq!(v["object"], "list");
+        assert_eq!(v["model"], "m");
+        assert_eq!(v["data"][0]["object"], "embedding");
+        assert_eq!(v["data"][0]["index"], 0);
+        assert_eq!(v["data"][0]["embedding"].as_array().unwrap().len(), 3);
+        assert_eq!(v["usage"]["total_tokens"], 3);
     }
 }
