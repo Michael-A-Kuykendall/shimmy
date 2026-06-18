@@ -554,9 +554,24 @@ async fn main() -> anyhow::Result<()> {
                 anyhow::bail!("no model {name}");
             };
             let loaded = state.engine.load(&spec).await?;
+            let rendered = match spec.template.as_deref() {
+                Some("chatml") => {
+                    templates::TemplateFamily::ChatML.render(None, &[("user".to_string(), prompt.clone())], None)
+                }
+                Some("llama3") | Some("llama-3") => {
+                    templates::TemplateFamily::Llama3.render(None, &[("user".to_string(), prompt.clone())], None)
+                }
+                Some("tinyllama") => {
+                    templates::TemplateFamily::TinyLlama.render(None, &[("user".to_string(), prompt.clone())], None)
+                }
+                Some("deepseek-coder") => {
+                    templates::TemplateFamily::DeepSeekCoder.render(None, &[("user".to_string(), prompt.clone())], None)
+                }
+                _ => prompt.clone(),
+            };
             let out = loaded
                 .generate(
-                    &prompt,
+                    &rendered,
                     engine::GenOptions {
                         max_tokens,
                         stream: false,
