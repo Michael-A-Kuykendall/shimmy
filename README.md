@@ -62,9 +62,11 @@ Shimmy is a **single-binary** that provides **100% OpenAI-compatible endpoints**
 
 **⚡ NEW in v2.1.0**: [TurboShimmy INT4 KV](#-turboshimmy-int4-kv) — ~7× less KV cache VRAM with one flag. Run Llama-3.2-3B on 4 GB GPUs.
 
-## 🔥 Airframe Engine
+## 🔥 Airframe Engine (v0.2.7)
 
-Starting in v2.0.0, Shimmy's default inference engine is **Airframe** — a pure-Rust WebGPU (WGSL) transformer runtime built from scratch.
+Starting in v2.0.0, Shimmy's default inference engine is **Airframe** — a pure-Rust WebGPU (WGSL) transformer runtime built from scratch. **v0.2.7** brings the Inference Saturation Fabric (ISF) refit and TDR transport integration to production.
+
+**See [airframe CHANGELOG](https://github.com/Michael-A-Kuykendall/airframe/blob/master/CHANGELOG.md) for full release notes.**
 
 **Why this matters:**
 - No C++ toolchain required — Rust only, top to bottom
@@ -135,7 +137,7 @@ SHIMMY_KV_QUANT=int4 ./shimmy serve
 
 > **Quality validation:** Needle-in-a-haystack benchmarks on Llama-3.2-3B show zero retrieval degradation vs F32 at ctx≤2048 across all tested depths (15%, 50%, 85%). Full benchmark data and setup guide: [TurboShimmy on the wiki](https://github.com/Michael-A-Kuykendall/shimmy/wiki/TurboShimmy).
 
-> **Windows stability:** Airframe v0.2.1 ships a `device.on_uncaptured_error` handler so GPU validation errors surface as clean HTTP 500 responses instead of crashes. Use `--prefill-chunk 8` to prevent Windows TDR resets during long prefills on older GPUs (GTX 10xx/16xx series).
+> **Windows stability:** Airframe v0.2.1 ships a `device.on_uncaptured_error` handler so GPU validation errors surface as clean HTTP 500 responses instead of crashes. Use `--prefill-chunk 8` to prevent Windows TDR resets during long prefills on older GPUs (GTX 10xx/16xx series). **v0.2.7** adds TDR transport with GPU timestamp pools for accurate dispatch timing, fixing TDR watchdog crashes during long prefill sequences.
 
 ## 🎯 Supported Models
 

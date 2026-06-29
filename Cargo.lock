@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "airframe"
-version = "0.2.2"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94bdcedf4dd96131a9bb8676d39f00d92ee313e7c4f42f38c364cd44c18f4128"
 dependencies = [
