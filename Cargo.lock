@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "airframe"
-version = "0.2.5"
+version = "0.2.7"
 dependencies = [
  "aho-corasick",
  "airframe-observe",
@@ -40,7 +40,7 @@ dependencies = [
 name = "airframe-observe"
 version = "0.1.0"
 dependencies = [
- "d0-engine",
+ "dzero",
  "serde",
  "serde_json",
 ]
@@ -638,10 +638,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "d0-engine"
-version = "0.1.0"
-
-[[package]]
 name = "data-encoding"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -712,6 +708,12 @@ checksum = "d4b8a88685455ed29a21542a33abd9cb6510b6b129abadabdcef0f4c55bc8f61"
 dependencies = [
  "litrs",
 ]
+
+[[package]]
+name = "dzero"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26cdc183d6771c6de5615045130ba15224ea065de4cadfdb072f2a3da7acc25f"
 
 [[package]]
 name = "either"
