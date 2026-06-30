@@ -4,314 +4,85 @@
 
 Shimmy uses an **automated regression testing system** to prevent previously fixed bugs from returning. Every user-reported bug that gets fixed MUST have a corresponding regression test.
 
-## Purpose
+## Test Structure (v2.2+)
 
-**Problem**: Users report bugs → We fix them → Time passes → Someone accidentally breaks the fix → User reports same bug again → Trust destroyed
-
-**Solution**: Automated regression tests that run on every PR and release, catching regressions before they reach users.
-
-## Directory Structure
+As of v2.2, the old per-issue-file structure under `tests/regression/` has been retired in favor of three consolidated, architecturally-organized test files:
 
 ```
-tests/regression/
-├── README.md (This file - regression test inventory)
-├── issue_012_custom_model_dirs.rs
-├── issue_013_qwen_template.rs
-├── issue_053_sse_duplicate_prefix.rs
-├── issue_063_version_mismatch.rs
-├── issue_064_template_packaging.rs
-├── issue_068_mlx_support.rs
-├── issue_072_gpu_backend_flag.rs
-├── issue_101_performance_fixes.rs
-├── issue_108_memory_allocation.rs
-└── issue_127_128_mlx_placeholder.rs
+tests/
+├── core.rs             # 28 tests — CLI, registry, templates, discovery,
+│                       #            safetensors, OpenAI/Ollama serde, versions,
+│                       #            multi-part content, SSE chunk format, error format
+├── handlers.rs         #  5 tests — HTTP server health, /v1/models,
+│                       #            /v1/chat/completions, /api/tags, concurrency
+└── compile_checks.rs   #  1 test  — include_str template file existence
 ```
 
-## Active Regression Tests
+### Historical Issue Coverage
 
-| Issue(s) | Test File | Description | Created |
-|----------|-----------|-------------|---------|
-| #12 | `issue_012_custom_model_dirs.rs` | Custom model directory environment variables not detected | ✅ |
-| #13 | `issue_013_qwen_template.rs` | Qwen models don't use correct ChatML templates in VSCode | ✅ |
-| #53 | `issue_053_sse_duplicate_prefix.rs` | SSE streaming responses contain duplicate 'data:' prefix | ✅ |
-| #63 | `issue_063_version_mismatch.rs` | Pre-built Windows exe reports wrong version | ✅ |
-| #64 | `issue_064_template_packaging.rs` | Template files missing from crates.io package | ✅ |
-| #68 | `issue_068_mlx_support.rs` | MLX Apple Silicon support broken | ✅ |
-| #72 | `issue_072_gpu_backend_flag.rs` | GPU backend flag parsed but not wired into model loading | ✅ |
-| #101 | `issue_101_performance_fixes.rs` | Threading optimization, streaming, OLLAMA_MODELS support | ✅ |
-| #108 | `issue_108_memory_allocation.rs` | Memory allocation CLI flags broken | ✅ |
-| #127, #128 | `issue_127_128_mlx_placeholder.rs` | MLX engine returns placeholder string instead of proper error | ✅ |
+Every user-reported issue that previously had a dedicated regression file is now covered in the consolidated suite:
 
-## Workflow: Adding a Regression Test
+| Issue | Title | New Test(s) | Location |
+|-------|-------|-------------|----------|
+| #12 | Custom model directories not detected | `test_custom_model_directory_env_vars`, `test_cli_model_dirs_option` | `core.rs:208-218`, `core.rs:56-63` |
+| #13 | Qwen / VSCode wrong template | `test_template_auto_detection`, `test_registry_infer_template` | `core.rs:557-579`, `core.rs:171-186` |
+| #53 | SSE duplicate `data:` prefix | `test_sse_streaming_chunk_format` | `core.rs:435-486` |
+| #63 | Windows exe wrong version | `test_version_is_sane` | `core.rs:123-132` |
+| #64 / #73 / #86 / #88 | Missing template files | `test_template_files_exist` | `compile_checks.rs:4-44` |
+| #65 | 404 error format | `test_error_response_json_shape`, `test_chat_completions_model_not_found` | `core.rs:366-381`, `handlers.rs:100-126` |
+| #112 | SafeTensors wrong engine | `test_safetensors_extension_detection` | `core.rs:256-280` |
+| #113 | OpenAI / Ollama frontend compat | `test_model_struct_completeness`, `test_models_response_serde`, `test_api_tags_response_structure`, and handler endpoint tests | `core.rs:347-363`, `core.rs:330-344`, `core.rs:388-433`, `handlers.rs:78-147` |
+| #191 | 422 multi-part content array | `test_multi_part_content_array_deserialization` | `core.rs:439-456` |
+
+### Retired Tests
+
+The following user-reported issues did **not** carry forward as dedicated tests because their old tests covered code paths that no longer exist or only tested process-spawning behavior. Each is still noted here for transparency:
+
+| Issue | Title | Reason for Retirement |
+|-------|-------|-----------------------|
+| #68 | MLX Apple Silicon support | MLX engine is an empty stub; no runtime behavior to lock in |
+| #72 | GPU backend flag | Test was a no-op compilation check; actual GPU wiring is tested by Airframe |
+| #80 | LLM-only filtering | Spawned real binary via `assert_cmd` — tested flag parsing, not core logic |
+| #87 | Apple GPU info detection | MLX engine is a stub |
+| #101 | High CPU / streaming perf | Spawned real binary — tested `--help`, not streaming behavior |
+| #106 | Windows server crash | Spawned real binary — tested `serve --help`, not crash handling |
+| #108 | Memory allocation flags | Spawned real binary |
+| #109 | Anthropic API format | Anthropic translation layer removed from codebase |
+| #111 | GPU metrics endpoint | No-op test (empty body) |
+| #114 | MLX distribution features | MLX engine is a stub |
+| #127 / #128 | MLX placeholder errors | MLX engine is a stub |
+
+## Running Tests
+
+```bash
+# Full suite (everything)
+cargo test --features airframe,huggingface
+
+# Core unit tests only
+cargo test --test core --features airframe,huggingface
+
+# HTTP handler tests only
+cargo test --test handlers --features airframe,huggingface
+
+# Template compilation check only
+cargo test --test compile_checks
+```
+
+## Adding a Regression Test for a New Issue
 
 **MANDATORY when fixing any user-reported bug:**
 
-### Step 1: Create Test File
-
-```bash
-# File naming: issue_<number(s)>_<short_description>.rs
-touch tests/regression/issue_XXX_bug_description.rs
-```
-
-### Step 2: Write Test That Reproduces Bug
+1. Identify which architectural area the bug belongs to (CLI, registry, templates, handlers, serde, etc.)
+2. Add the test to the appropriate file (`core.rs`, `handlers.rs`, or `compile_checks.rs`)
+3. Verify the test fails before the fix, passes after
+4. Add a cross-reference comment above the test in the format:
 
 ```rust
-/// Regression test for Issue #XXX: One-line bug description
-///
-/// GitHub: https://github.com/Michael-A-Kuykendall/shimmy/issues/XXX
-///
-/// **Bug**: Detailed description of what was broken
-/// **Fix**: What code change fixed it (file/line references)
-/// **This test**: How this test prevents regression
-
-#[cfg(test)]
-mod issue_XXX_tests {
-    use shimmy::*;  // Import relevant modules
-
-    #[test]
-    fn test_issue_XXX_exact_bug_scenario() {
-        // Set up exact conditions that triggered the bug
-        
-        // Perform the action that was broken
-        
-        // Assert the fix works (this should FAIL before fix, PASS after)
-        assert!(/* condition that proves bug is fixed */);
-        
-        println!("✅ Issue #XXX regression test: Bug prevented");
-    }
-
-    #[test]
-    fn test_issue_XXX_edge_cases() {
-        // Test boundary conditions and variations
-        
-        println!("✅ Issue #XXX edge cases: Verified");
-    }
-}
+// Regression: Issue #XXX — one-line description
 ```
 
-### Step 3: Verify Test Fails Before Fix
+## Policy
 
-```bash
-# This proves your test actually catches the bug
-cargo test --test regression/issue_XXX_bug_description --features <relevant>
-# Expected: test result: FAILED
-```
-
-### Step 4: Apply Your Fix
-
-Make changes to `src/` files that fix the bug.
-
-### Step 5: Verify Test Passes After Fix
-
-```bash
-# This proves your fix works
-cargo test --test regression/issue_XXX_bug_description --features <relevant>
-# Expected: test result: ok
-```
-
-### Step 6: Update Documentation
-
-Add row to the table in `tests/regression/README.md`:
-
-```markdown
-| #XXX | `issue_XXX_bug_description.rs` | Brief description of bug | ✅ |
-```
-
-### Step 7: Commit Test + Fix Together
-
-```bash
-git add tests/regression/issue_XXX_bug_description.rs
-git add src/file_you_fixed.rs
-git add tests/regression/README.md
-git commit -m "fix: Issue #XXX - Bug description
-
-- Fixed: Detailed explanation of what was broken
-- Added: Regression test to prevent recurrence
-- Test: tests/regression/issue_XXX_bug_description.rs
-
-Closes #XXX"
-```
-
-## Running Regression Tests
-
-### All Regression Tests (Automated)
-
-```bash
-# Discovers and runs ALL tests in tests/regression/ automatically
-bash scripts/run-regression-tests-auto.sh
-```
-
-Output shows pass/fail for each issue test with color coding.
-
-### Single Regression Test
-
-```bash
-# Run specific issue test
-cargo test --test regression/issue_072_gpu_backend_flag
-
-# With specific features
-cargo test --test regression/issue_127_128_mlx_placeholder --features mlx
-```
-
-### In CI/CD (Automatic)
-
-Regression tests run automatically on:
-- **Every Pull Request** (`.github/workflows/ci.yml` - `regression-tests` job)
-- **Every Release** (`.github/workflows/release.yml` - before deployment)
-- **Manual Trigger** (GitHub Actions UI)
-
-If ANY regression test fails → PR blocked, release blocked.
-
-## Test Requirements (Mandatory)
-
-Each regression test file MUST include:
-
-1. **File naming**: `issue_<num(s)>_<description>.rs`
-2. **Module doc comment** with:
-   - Issue number(s) and description
-   - GitHub issue link
-   - Bug/Fix/Test explanation
-3. **At least one test** reproducing exact bug scenario
-4. **Clear assertions** with helpful error messages
-5. **Feature flags** (if needed): `#[cfg(feature = "mlx")]`
-6. **Success messages**: `println!("✅ Issue #XXX: Verified")`
-
-## Auto-Discovery System
-
-**How it works:**
-
-1. `scripts/run-regression-tests-auto.sh` scans `tests/regression/` for `issue_*.rs` files
-2. Extracts issue number from filename
-3. Determines required features from filename keywords (mlx, gpu, etc.)
-4. Runs each test with appropriate features
-5. Collects results and reports pass/fail summary
-6. Exits non-zero if ANY test fails (blocks CI/CD)
-
-**Adding new tests is ZERO CONFIG:**
-- Just create `tests/regression/issue_NNN_description.rs`
-- Script auto-discovers and runs it
-- No manual registration needed
-
-## CI/CD Integration
-
-### GitHub Actions Workflow
-
-```yaml
-# .github/workflows/ci.yml
-jobs:
-  regression-tests:
-    name: Regression Tests (Zero Tolerance)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Run Automated Regression Tests
-        run: |
-          chmod +x ./scripts/run-regression-tests-auto.sh
-          ./scripts/run-regression-tests-auto.sh
-```
-
-### Enforcement
-
-- Regression tests run BEFORE main test suite
-- If regressions fail → Entire CI/CD fails
-- Pull requests cannot merge with failing regression tests
-- Releases cannot deploy with failing regression tests
-
-## Maintenance Guidelines
-
-### NEVER Delete Regression Tests
-
-Unless the original issue was invalid/duplicate, regression tests are **permanent**.
-
-### Update When APIs Change
-
-If internal APIs change and break regression tests:
-- **Fix the test** to use new APIs
-- **Maintain same verification logic**
-- **Never delete** to make CI pass
-
-### Review Quarterly
-
-Every 3 months, review regression tests for:
-- Obsolete tests (rare - usually keep them)
-- Tests that could be combined
-- Missing coverage for known issues
-
-## Example: Real Regression Test
-
-From `tests/regression/issue_072_gpu_backend_flag.rs`:
-
-```rust
-/// Regression test for Issue #72: GPU backend flag ignored
-///
-/// GitHub: https://github.com/Michael-A-Kuykendall/shimmy/issues/72
-///
-/// **Bug**: --gpu-backend flag was parsed but not actually wired into model loading
-/// **Fix**: Properly pass GPU backend selection through to llama.cpp initialization
-/// **This test**: Verifies GPU backend flag is respected in model loading path
-
-#[cfg(test)]
-mod issue_072_tests {
-    use shimmy::engine::ModelSpec;
-    use std::path::PathBuf;
-
-    #[test]
-    #[cfg(any(feature = "llama-opencl", feature = "llama-vulkan", feature = "llama-cuda"))]
-    fn test_gpu_backend_flag_wiring() {
-        let spec = ModelSpec {
-            name: "test-gpu-model".to_string(),
-            base_path: PathBuf::from("test.gguf"),
-            lora_path: None,
-            template: None,
-            ctx_len: 2048,
-            n_threads: Some(4),
-        };
-
-        // Verify model spec can be created with GPU features enabled
-        assert_eq!(spec.name, "test-gpu-model");
-        
-        println!("✅ Issue #72 regression test: GPU backend flag compilation verified");
-    }
-}
-```
-
-## Benefits
-
-1. **User Trust**: Bugs don't come back → users trust us
-2. **Developer Confidence**: Refactor safely knowing tests catch regressions
-3. **Automatic Enforcement**: CI/CD blocks bad code before it ships
-4. **Living Documentation**: Tests show exactly what bugs existed and how they were fixed
-5. **Zero Configuration**: Add test file → auto-discovered → auto-runs
-6. **Clear Reporting**: See exactly which issue regressed if test fails
-
-## Zero Tolerance Policy
-
-**If a regression test fails:**
-
-1. **STOP** - Do not merge PR, do not release
-2. **Investigate** - Why did previously fixed bug come back?
-3. **Fix** - Restore the original fix or update properly
-4. **Verify** - Ensure regression test passes again
-5. **Proceed** - Only then continue with PR/release
-
-**NEVER:**
-- Skip failing regression tests
-- Delete regression tests to make CI pass
-- Ignore regression failures as "flaky"
-- Merge with `--no-verify` to bypass checks
-
-## Questions?
-
-- **How do I name multi-issue tests?** Use underscores: `issue_127_128_description.rs`
-- **What if test needs specific features?** Auto-detected from filename (mlx, gpu) or specify manually
-- **Can I group related tests?** Each issue should have its own file for clarity
-- **What if fix affects multiple files?** One regression test per bug, regardless of fix complexity
-
-## Related Documentation
-
-- `.github/copilot-instructions.md` - RULE THREE: Regression test requirements
-- `scripts/run-regression-tests-auto.sh` - Auto-discovery runner script
-- `.github/workflows/ci.yml` - CI/CD integration
-- `LOCAL_GITHUB_ACTIONS_GUIDE.md` - ACT testing for platform-specific tests
+- **Every** user-reported bug fix requires a regression test
+- **Zero tolerance**: all tests must pass before merge or release
+- Tests run automatically on every PR and every release via `ci.yml` and `release.yml`

@@ -433,6 +433,74 @@ fn test_api_tags_response_structure() {
 }
 
 // ---------------------------------------------------------------------------
+// SSE streaming chunk serialization (Issue #53)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_sse_streaming_chunk_format() {
+    // Initial chunk (role announcement)
+    let initial = openai_compat::ChatCompletionChunk {
+        id: "chatcmpl-test".into(),
+        object: "chat.completion.chunk".into(),
+        created: 1234567890,
+        model: "test-model".into(),
+        choices: vec![openai_compat::ChunkChoice {
+            index: 0,
+            delta: openai_compat::Delta {
+                role: Some("assistant".into()),
+                content: None,
+            },
+            finish_reason: None,
+        }],
+    };
+    let j = serde_json::to_value(&initial).unwrap();
+    assert_eq!(j["object"], "chat.completion.chunk");
+    assert_eq!(j["choices"][0]["delta"]["role"], "assistant");
+    assert_eq!(j["choices"][0]["delta"]["content"], serde_json::Value::Null);
+
+    // Token chunk
+    let token = openai_compat::ChatCompletionChunk {
+        id: "chatcmpl-test".into(),
+        object: "chat.completion.chunk".into(),
+        created: 1234567890,
+        model: "test-model".into(),
+        choices: vec![openai_compat::ChunkChoice {
+            index: 0,
+            delta: openai_compat::Delta {
+                role: None,
+                content: Some("Hello".into()),
+            },
+            finish_reason: None,
+        }],
+    };
+    let j = serde_json::to_value(&token).unwrap();
+    assert_eq!(j["choices"][0]["delta"]["content"], "Hello");
+    assert_eq!(j["choices"][0]["delta"]["role"], serde_json::Value::Null);
+
+    // Final chunk (finish_reason)
+    let final_chunk = openai_compat::ChatCompletionChunk {
+        id: "chatcmpl-test".into(),
+        object: "chat.completion.chunk".into(),
+        created: 1234567890,
+        model: "test-model".into(),
+        choices: vec![openai_compat::ChunkChoice {
+            index: 0,
+            delta: openai_compat::Delta {
+                role: None,
+                content: None,
+            },
+            finish_reason: Some("stop".into()),
+        }],
+    };
+    let j = serde_json::to_value(&final_chunk).unwrap();
+    assert_eq!(j["choices"][0]["finish_reason"], "stop");
+
+    // Serialized JSON must not contain duplicate "data:" anywhere
+    let serialized = serde_json::to_string(&token).unwrap();
+    assert!(!serialized.contains("data:"), "JSON payload must not contain 'data:' prefix — that comes from the SSE transport layer");
+}
+
+// ---------------------------------------------------------------------------
 // Multi-part content array (Issue #191)
 // ---------------------------------------------------------------------------
 
