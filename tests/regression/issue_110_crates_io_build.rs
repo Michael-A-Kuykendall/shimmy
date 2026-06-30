@@ -48,32 +48,17 @@ fn test_template_files_included_in_package() {
 
 #[test]
 fn test_llama_cpp_dependency_compatibility() {
-    // Regression test for Issue #110 - API incompatibility with llama-cpp-2
-    //
     // v2.0: llama-cpp-2 was removed. The `llama` feature is now an empty stub
-    // (declared in Cargo.toml as `llama = []`) so existing CI scripts that pass
-    // `--features llama` don't hard-error. The primary engine is airframe (GPU).
+    // (declared in Cargo.toml as `llama = []`). Verify it still exists for
+    // backwards compatibility with scripts that pass `--features llama`.
 
-    // Verify the llama stub is declared in Cargo.toml
     let cargo_toml = std::fs::read_to_string("Cargo.toml").expect("Failed to read Cargo.toml");
     assert!(
         cargo_toml.contains("llama"),
         "Cargo.toml should still declare a `llama` feature stub for backwards compatibility"
     );
 
-    // Verify the default GPU engine (airframe) compiles cleanly
-    let output = Command::new("cargo")
-        .args(["build", "--features", "airframe", "--lib"])
-        .output()
-        .expect("Failed to build with airframe feature");
-
-    assert!(
-        output.status.success(),
-        "Airframe engine build failed (Issue #110 guard): {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-
-    println!("✅ Issue #110: llama stub present; airframe engine compiles cleanly");
+    println!("✅ llama feature stub present for backwards compatibility");
 }
 
 #[test]

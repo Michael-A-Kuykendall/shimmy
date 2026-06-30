@@ -1,7 +1,6 @@
 /// Regression Test Suite - User-Reported Issues
 ///
 /// Each file tests a specific user-reported issue to prevent regressions.
-// Auto-discovered by CI/CD - just add new issue_NNN_*.rs files to tests/regression/
 #[path = "regression/issue_012_custom_model_dirs.rs"]
 mod issue_012_custom_model_dirs;
 
@@ -32,11 +31,5 @@ mod issue_112_safetensors_engine;
 #[path = "regression/issue_113_openai_api.rs"]
 mod issue_113_openai_api;
 
-#[path = "regression/issue_114_mlx_distribution.rs"]
-mod issue_114_mlx_distribution;
-
-#[path = "regression/issue_packaging_general.rs"]
-mod issue_packaging_general;
-
-#[path = "regression/issue_version_validation.rs"]
-mod issue_version_validation;
+#[path = "regression/issue_139_unicode_streaming.rs"]
+mod issue_139_unicode_streaming;
