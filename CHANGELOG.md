@@ -5,25 +5,15 @@ All notable changes to Shimmy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.2.1] - 2026-06-30
 
 ### Fixed
-- **ISF (Inference Saturation Fabric) refit complete** — All outstanding architectural issues from airframe v0.2.x resolved:
-  - ISF (`generate_isf`) now the production inference path, replacing legacy imperative `generate()`
-  - TDR (Timeout Detection and Recovery) transport integrated with GPU timestamp pools for accurate dispatch timing
-  - Encoder pools operational for non-blocking GPU work submission
-  - Qwen3 `attention.scale` tensor mapped defensively (matches HF reference)
-
-- **DuckDB Made Optional** — Fixes critical build-time issues:
-  - DuckDB previously required for internal certification paths; now opt-in via feature flag
-  - Fixes build-time Out-of-Memory crashes on shimmy server when duckdb-sys is unavailable
-  - Fixes TDR watchdog crashes during long prefill sequences (Windows D3D12) — Windows GPU timeout exceeded
-
-### Added
-- **Inference Saturation Fabric** — New fabric-based inference loop with 7-rule policy enforcement and selector-first, single-pass execution. Byte-identical validation between ISF and imperative paths verified.
+- **CI regression test cleanup** — Removed stale llama-era, MLX, and release-gate tests (17+ files, ~4500 lines). All CI test targets updated to use `--features airframe,huggingface` defaults.
+- **Workflow consolidation** — Deleted 3 dead workflows (release-dry-run, test-release-binaries, version-validation). Release.yml rewritten from 373 to 66 lines as a clean matrix build.
+- **Quality gate fixes** — Binary size test now uses debug+strip instead of slow release build. Variable expansion bug in quality gate fixed. MLX test no longer asserts x86_64-apple-darwin platform.
 
 ### Changed
-- Airframe dependency updated to 0.2.7. See [airframe CHANGELOG](https://github.com/Michael-A-Kuykendall/airframe/blob/master/CHANGELOG.md) for full details.
+- Airframe dependency updated to 0.2.8.
 
 ---
 
