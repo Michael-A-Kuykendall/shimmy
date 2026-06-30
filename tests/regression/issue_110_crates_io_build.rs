@@ -87,20 +87,15 @@ fn test_crates_io_package_builds_successfully() {
         "Cargo.toml should declare publish = false (path dep blocks crates.io publish)"
     );
 
-    // Validate that the CI-safe feature set (no path dep) builds correctly
+    // Validate that the default feature set (airframe + huggingface on crates.io) builds
     let build_output = Command::new("cargo")
-        .args([
-            "build",
-            "--no-default-features",
-            "--features",
-            "huggingface",
-        ])
+        .args(["build"])
         .output()
         .expect("Failed to run cargo build");
 
     assert!(
         build_output.status.success(),
-        "CI-safe feature set build failed: {}",
+        "Default feature set build failed: {}",
         String::from_utf8_lossy(&build_output.stderr)
     );
 
@@ -111,15 +106,9 @@ fn test_crates_io_package_builds_successfully() {
 fn test_no_missing_include_str_files() {
     // Specific test for the include_str! template file issue from Issue #110
 
-    // Build with the exact CI-safe features (v2.0: llama removed, default is airframe)
+    // Build with default features (airframe + huggingface, both on crates.io)
     let output = Command::new("cargo")
-        .args([
-            "build",
-            "--release",
-            "--no-default-features",
-            "--features",
-            "huggingface", // v2.0 CI-safe set; llama removed in v2.0
-        ])
+        .args(["build", "--release"])
         .output()
         .expect("Failed to test include_str! files");
 
@@ -171,16 +160,9 @@ fn test_issue_110_user_experience_simulation() {
         String::from_utf8_lossy(&package_result.stderr)
     );
 
-    // Step 2: Verify all template files are accessible
-    // (simulates the include_str! calls during compilation)
+    // Step 2: Verify all template files are accessible (default features = airframe + huggingface)
     let build_result = Command::new("cargo")
-        .args([
-            "build",
-            "--quiet",
-            "--no-default-features",
-            "--features",
-            "huggingface", // v2.0: llama removed; huggingface is the CI-safe feature set
-        ])
+        .args(["build", "--quiet"])
         .output()
         .expect("Failed to simulate user build");
 

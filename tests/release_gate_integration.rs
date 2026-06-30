@@ -124,14 +124,9 @@ fn test_gate_3_template_packaging_protection() {
 
 #[test]
 fn test_gate_4_binary_size_constitutional_limit() {
-    // First ensure we have a binary to test (debug build for speed)
+    // First ensure we have a binary to test (release build = what users run)
     let build_output = Command::new("cargo")
-        .args([
-            "build",
-            "--no-default-features",
-            "--features",
-            "huggingface",
-        ])
+        .args(["build", "--release"])
         .output()
         .expect("Failed to build binary for size test");
 
@@ -140,16 +135,16 @@ fn test_gate_4_binary_size_constitutional_limit() {
         "Failed to build binary for size test"
     );
 
-    // Test constitutional 20MB limit (debug binary path)
+    // Test constitutional size limit (release binary = what users run)
     let binary_path = if cfg!(windows) {
-        "target/debug/shimmy.exe"
+        "target/release/shimmy.exe"
     } else {
-        "target/debug/shimmy"
+        "target/release/shimmy"
     };
 
     if let Ok(metadata) = std::fs::metadata(binary_path) {
         let size = metadata.len();
-        let max_size = 20 * 1024 * 1024; // 20MB constitutional limit
+        let max_size = 15 * 1024 * 1024; // 15MB constitutional limit
 
         assert!(
             size <= max_size,
