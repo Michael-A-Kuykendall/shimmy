@@ -46,7 +46,7 @@ echo ""
 echo "🧪 Phase 2: Regression Test Suite"
 echo "================================="
 echo "[DEBUG] Starting Phase 2 at $(date)" | tee -a debug-regression.log
-if cargo test --test regression_tests --features huggingface > regression-test-output.log 2>&1; then
+if cargo test --test core --test handlers --test compile_checks --features airframe,huggingface > regression-test-output.log 2>&1; then
     echo "[DEBUG] Phase 2 cargo test completed successfully" | tee -a debug-regression.log
     REGRESSION_TESTS=$(grep -c "test result: ok" regression-test-output.log || echo "0")
     log_result "Regression Tests" "PASS" "All regression tests passed"
@@ -74,32 +74,41 @@ fi
 echo "[DEBUG] Phase 3 completed at $(date)" | tee -a debug-regression.log
 
 echo ""
-echo "🔍 Phase 4: API Compatibility Tests"
-echo "==================================="
-echo "🔄 Testing model discovery functionality..."
-if cargo test --test regression_tests test_model_discovery_functionality --features huggingface > api-test-output.log 2>&1; then
-    log_result "Model Discovery API" "PASS" "Discovery API functional"
-    echo "✅ Model Discovery API: Functional"
+echo "🔍 Phase 4: Core & Handler Test Suite"
+echo "======================================"
+echo "🔄 Testing core module (CLI, registry, templates, serde, SSE, discovery)..."
+if cargo test --test core --features airframe,huggingface > api-test-output.log 2>&1; then
+    log_result "Core Tests" "PASS" "All core tests passed"
+    echo "✅ Core Tests: Passed"
 else
-    log_result "Model Discovery API" "FAIL" "Discovery API issues"
-    echo "❌ Model Discovery API: Issues (see api-test-output.log)"
+    log_result "Core Tests" "FAIL" "Some core tests failed"
+    echo "❌ Core Tests: Failed (see api-test-output.log)"
 fi
 
-echo "🔄 Testing OpenAI API compatibility..."
-if cargo test --test regression_tests test_openai_api_structures_serialization --features huggingface >> api-test-output.log 2>&1; then
-    log_result "OpenAI API Compatibility" "PASS" "API responses compatible"
-    echo "✅ OpenAI API: Compatible"
+echo "🔄 Testing handler endpoints (health, models, chat, tags, concurrency)..."
+if cargo test --test handlers --features airframe,huggingface >> api-test-output.log 2>&1; then
+    log_result "Handler Tests" "PASS" "All handler tests passed"
+    echo "✅ Handler Tests: Passed"
 else
-    log_result "OpenAI API Compatibility" "FAIL" "API compatibility issues"
-    echo "❌ OpenAI API: Issues (see api-test-output.log)"
+    log_result "Handler Tests" "FAIL" "Some handler tests failed"
+    echo "❌ Handler Tests: Failed (see api-test-output.log)"
 fi
 
 echo ""
 echo "🎯 Phase 5: Issue-Specific Regression Tests"
 echo "==========================================="
 
+echo "🔄 Testing template file compilation (Issues #64, #73, #86, #88)..."
+if cargo test --test compile_checks > issue-fix-output.log 2>&1; then
+    log_result "Template Compilation" "PASS" "All template files accessible"
+    echo "✅ Template Compilation: Passed"
+else
+    log_result "Template Compilation" "FAIL" "Template files missing or broken"
+    echo "❌ Template Compilation: Failed (see issue-fix-output.log)"
+fi
+
 echo "🔄 Testing Issue #13 fix (Qwen model template detection)..."
-if cargo test --test regression_tests test_qwen_model_template_detection --features huggingface > issue-fix-output.log 2>&1; then
+if cargo test --test core test_template_auto_detection --features airframe,huggingface >> issue-fix-output.log 2>&1; then
     log_result "Issue #13 Fix" "PASS" "Qwen models use correct templates"
     echo "✅ Issue #13 (Qwen VSCode): Fixed"
 else
@@ -108,7 +117,7 @@ else
 fi
 
 echo "🔄 Testing Issue #12 fix (Custom model directories)..."
-if cargo test --test regression_tests test_custom_model_directory_environment_variables --features huggingface >> issue-fix-output.log 2>&1; then
+if cargo test --test core test_custom_model_directory_env_vars --features airframe,huggingface >> issue-fix-output.log 2>&1; then
     log_result "Issue #12 Fix" "PASS" "Custom directories detected"
     echo "✅ Issue #12 (Custom dirs): Fixed"
 else
@@ -116,56 +125,56 @@ else
     echo "❌ Issue #12 (Custom dirs): Regression detected!"
 fi
 
-echo "🔄 Testing CLI compatibility (new --model-dirs option)..."
-if cargo test --test regression_tests test_cli_model_dirs_option_compatibility --features huggingface >> issue-fix-output.log 2>&1; then
-    log_result "CLI Compatibility" "PASS" "CLI options working"
-    echo "✅ CLI Options: Working"
+echo "🔄 Testing Issue #53 fix (SSE streaming format)..."
+if cargo test --test core test_sse_streaming_chunk_format --features airframe,huggingface >> issue-fix-output.log 2>&1; then
+    log_result "Issue #53 Fix" "PASS" "SSE streaming format correct"
+    echo "✅ Issue #53 (SSE format): Fixed"
 else
-    log_result "CLI Compatibility" "FAIL" "CLI parsing broken"
-    echo "❌ CLI Options: Broken!"
+    log_result "Issue #53 Fix" "FAIL" "SSE streaming format broken"
+    echo "❌ Issue #53 (SSE format): Regression detected!"
 fi
 
-echo "🔄 Testing Issue #72 fix (GPU backend flag ignored)..."
-if cargo test --no-default-features --features huggingface,llama-opencl,llama-vulkan gpu_backend >> issue-fix-output.log 2>&1; then
-    log_result "Issue #72 Fix" "PASS" "GPU backend flag properly wired to model loading"
-    echo "✅ Issue #72 (GPU backend): Fixed"
+echo "🔄 Testing Issue #65 fix (Error handling for missing models)..."
+if cargo test --test core test_error_response_json_shape --features airframe,huggingface >> issue-fix-output.log 2>&1; then
+    log_result "Issue #65 Fix" "PASS" "Error response format correct"
+    echo "✅ Issue #65 (404 error): Fixed"
 else
-    log_result "Issue #72 Fix" "FAIL" "GPU backend flag regression detected"
-    echo "❌ Issue #72 (GPU backend): Regression detected!"
+    log_result "Issue #65 Fix" "FAIL" "Error response format broken"
+    echo "❌ Issue #65 (404 error): Regression detected!"
 fi
 
-echo "🔄 Testing Issue #101 fix (Performance & compatibility improvements)..."
-if cargo test --test cli_integration_tests test_threading_optimization_performance --features huggingface >> issue-fix-output.log 2>&1; then
-    log_result "Issue #101 Threading" "PASS" "Smart threading optimization working"
-    echo "✅ Issue #101 (Threading): Fixed"
+echo "🔄 Testing Issue #112 fix (SafeTensors engine)..."
+if cargo test --test core test_safetensors_extension_detection --features airframe,huggingface >> issue-fix-output.log 2>&1; then
+    log_result "Issue #112 Fix" "PASS" "SafeTensors extension detection working"
+    echo "✅ Issue #112 (SafeTensors): Fixed"
 else
-    log_result "Issue #101 Threading" "FAIL" "Threading optimization regression"
-    echo "❌ Issue #101 (Threading): Regression detected!"
+    log_result "Issue #112 Fix" "FAIL" "SafeTensors detection broken"
+    echo "❌ Issue #112 (SafeTensors): Regression detected!"
 fi
 
-echo "🔄 Testing Issue #101 fix (Streaming output functionality)..."
-if cargo test --test cli_integration_tests test_streaming_functionality --features huggingface >> issue-fix-output.log 2>&1; then
-    log_result "Issue #101 Streaming" "PASS" "Streaming output working properly"
-    echo "✅ Issue #101 (Streaming): Fixed"
+echo "🔄 Testing Issue #113 fix (OpenAI API frontend compatibility)..."
+if cargo test --test core test_model_struct_completeness --features airframe,huggingface >> issue-fix-output.log 2>&1; then
+    log_result "Issue #113 Fix" "PASS" "OpenAI API structure complete"
+    echo "✅ Issue #113 (Frontend compat): Fixed"
 else
-    log_result "Issue #101 Streaming" "FAIL" "Streaming output regression"
-    echo "❌ Issue #101 (Streaming): Regression detected!"
+    log_result "Issue #113 Fix" "FAIL" "OpenAI API structure broken"
+    echo "❌ Issue #113 (Frontend compat): Regression detected!"
 fi
 
-echo "🔄 Testing Issue #101 fix (OLLAMA_MODELS environment variable)..."
-if cargo test --test cli_integration_tests test_ollama_models_environment_variable --features huggingface >> issue-fix-output.log 2>&1; then
-    log_result "Issue #101 OLLAMA_MODELS" "PASS" "OLLAMA_MODELS env var support working"
-    echo "✅ Issue #101 (OLLAMA_MODELS): Fixed"
+echo "🔄 Testing Issue #191 fix (Multi-part content arrays)..."
+if cargo test --test core test_multi_part_content_array_deserialization --features airframe,huggingface >> issue-fix-output.log 2>&1; then
+    log_result "Issue #191 Fix" "PASS" "Multi-part content deserialization working"
+    echo "✅ Issue #191 (422 fix): Fixed"
 else
-    log_result "Issue #101 OLLAMA_MODELS" "FAIL" "OLLAMA_MODELS support regression"
-    echo "❌ Issue #101 (OLLAMA_MODELS): Regression detected!"
+    log_result "Issue #191 Fix" "FAIL" "Multi-part content deserialization broken"
+    echo "❌ Issue #191 (422 fix): Regression detected!"
 fi
 
 echo ""
 echo "🔒 Phase 6: Security & Error Handling"
 echo "====================================="
 echo "🔄 Testing error handling robustness..."
-if cargo test --test regression_tests test_error_handling_robustness --features huggingface > security-output.log 2>&1; then
+if cargo test --test core test_registry_error_handling --features airframe,huggingface > security-output.log 2>&1; then
     log_result "Error Handling" "PASS" "Error handling robust"
     echo "✅ Error Handling: Robust"
 else
