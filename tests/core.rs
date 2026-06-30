@@ -497,7 +497,10 @@ fn test_sse_streaming_chunk_format() {
 
     // Serialized JSON must not contain duplicate "data:" anywhere
     let serialized = serde_json::to_string(&token).unwrap();
-    assert!(!serialized.contains("data:"), "JSON payload must not contain 'data:' prefix — that comes from the SSE transport layer");
+    assert!(
+        !serialized.contains("data:"),
+        "JSON payload must not contain 'data:' prefix — that comes from the SSE transport layer"
+    );
 }
 
 // ---------------------------------------------------------------------------
