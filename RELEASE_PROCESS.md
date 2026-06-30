@@ -16,7 +16,7 @@ This document describes the release process for Shimmy v2.0+ (Airframe GPU engin
 | 4/7 — Binary Size | `shimmy` binary stays under 20 MB constitutional limit |
 | 5/7 — Test Suite | `cargo test --lib --no-default-features --features huggingface` passes |
 | 5.1/7 — Airframe Compile | `cargo check --features airframe` — GPU engine integration compiles cleanly |
-| 5.5/7 — Issue Regression | Per-issue tests in `tests/regression_tests.rs` all pass |
+| 5.5/7 — Issue Regression | `cargo test --test core --test handlers --test compile_checks` all pass (see `docs/REGRESSION_TESTING.md` for issue-to-test mapping) |
 | 6/7 — Documentation | `cargo doc` builds without errors |
 | 7/7 — crates.io Dry-Run | `cargo publish --dry-run` validates the crates.io-safe feature set |
 
@@ -37,8 +37,8 @@ cargo test --no-default-features --features huggingface
 # Airframe compile check
 cargo check --features airframe
 
-# Issue regression tests
-cargo test --test regression_tests --no-default-features --features huggingface
+# Regression tests (consolidated suite)
+cargo test --test core --test handlers --test compile_checks --features airframe,huggingface
 ```
 
 ### 2. Dry-run on the test branch (exact CI environment)
@@ -84,8 +84,8 @@ git branch -d test-release-vX.Y.Z
 - The Airframe submodule at `airframe/` has a compilation error
 - `cargo check --features airframe` locally to see the error
 
-### Gate 5.5 (Issue Regression) fails
-- A specific issue regression test failed; the gate output names the test and issue number
+### Gate 5.5 (Regression Tests) fails
+- A specific regression test failed; check `docs/REGRESSION_TESTING.md` for the issue mapping
 - Fix the regression before releasing
 
 ### Gate 7 (crates.io Dry-Run) fails

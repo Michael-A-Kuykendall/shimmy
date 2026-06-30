@@ -1,6 +1,6 @@
-# Release Gates & Regression Tests — v2.0
+# Release Gates & Regression Tests — v2.2
 
-**Date:** May 20, 2026  
+**Date:** June 30, 2026  
 **Branch:** `main`  
 **Engine:** Airframe (wgpu/WebGPU — no CUDA, no llama.cpp)  
 **Status:** Active
@@ -20,37 +20,40 @@ Every gate must pass or the entire release stops.
 | 4/7 | Binary Size | Constitutional 20 MB limit on `shimmy` binary |
 | 5/7 | Test Suite | `cargo test --lib --no-default-features --features huggingface` |
 | 5.1/7 | Airframe Compile Check | `cargo check --features airframe` — integration builds without errors |
-| 5.5/7 | Issue Regression | Per-issue regression tests (see list below) |
+| 5.5/7 | Regression Tests | `cargo test --test core --test handlers --test compile_checks` |
 | 6/7 | Documentation | `cargo doc --no-deps --features huggingface` |
 | 7/7 | crates.io Dry-Run | `cargo publish --dry-run --features huggingface` validates crates.io package |
 
 ---
 
-## Regression Test Files
+## Regression Test Files (v2.2+)
 
 ### Active Test Files
-| File | Status |
-|------|--------|
-| `tests/regression_tests.rs` | ✅ Active — main issue regression suite |
-| `tests/release_gate_integration.rs` | ✅ Active — validates gate system itself |
-| `tests/template_compilation_regression_test.rs` | ✅ Active — template file inclusion |
-| `tests/compilation_regression_test.rs` | ✅ Active — compilation sanity |
-| `tests/apple_silicon_detection_test.rs` | ✅ Active — GPU detection (Issue #87) |
-| `tests/integration_tests.rs` | ✅ Active — API surface integration |
-| `tests/cli_integration_tests.rs` | ✅ Active — CLI surface |
-| `tests/gpu_backend_tests.rs` | ✅ Active — GPU backend selection |
+| File | Status | Tests |
+|------|--------|-------|
+| `tests/core.rs` | ✅ Active — CLI, registry, templates, serde, SSE, discovery | 28 |
+| `tests/handlers.rs` | ✅ Active — HTTP endpoints (health, models, chat, tags, concurrency) | 5 |
+| `tests/compile_checks.rs` | ✅ Active — template file inclusion via include_str! | 1 |
 
-### Gate 5.5 Issue Regression Tests (in `regression_tests.rs`)
-| Test | Issue |
-|------|-------|
-| `test_issue_111_gpu_metrics_endpoint` | #111 — GPU metrics endpoint |
-| `test_issue_112_safetensors_engine_selection` | #112 — SafeTensors engine selection |
-| `test_issue_113_openai_api_frontend_compatibility` | #113 — OAI `/v1/models` endpoint |
-| `test_issue_113_ollama_api_tags_response_structure` | #113 — Ollama `/api/tags` endpoint |
-| `test_issue_114_mlx_distribution_features` | #114 — MLX distribution feature flags |
-| `test_issue_191_multi_part_content_array_deserialization` | #191 — Multi-part content array (422 fix) |
-| `test_qwen_model_template_detection` | #13 — Qwen ChatML template |
-| `test_custom_model_directory_environment_variables` | #12 — Custom model directories |
+### Retired Test Files
+The following files were consumed into the consolidated suite above:
+
+| File | Absorbed By |
+|------|-------------|
+| `tests/regression_tests.rs` | `tests/core.rs` + `tests/handlers.rs` |
+| `tests/release_gate_integration.rs` | `cargo test --lib` (CI already passes) |
+| `tests/template_compilation_regression_test.rs` | `tests/compile_checks.rs` |
+| `tests/compilation_regression_test.rs` | `tests/compile_checks.rs` + `cargo check` |
+| `tests/apple_silicon_detection_test.rs` | — (MLX is a stub) |
+| `tests/integration_tests.rs` | `tests/handlers.rs` |
+| `tests/cli_integration_tests.rs` | `tests/core.rs` |
+| `tests/gpu_backend_tests.rs` | — (Airframe handles GPU) |
+| `tests/anthropic_api_integration_test.rs` | — (Anthropic layer removed) |
+| `tests/api_error_handling_test.rs` | `tests/core.rs` + `tests/handlers.rs` |
+| `tests/openai_api_real_tests.rs` | `tests/core.rs` + `tests/handlers.rs` |
+| `tests/safetensors_integration.rs` | `tests/core.rs` |
+| `tests/workflow_tests.rs` | — (dead_code module) |
+| `tests/regression/` (all 7 files) | `tests/core.rs` |
 
 ---
 
@@ -63,14 +66,11 @@ cargo test --lib --no-default-features --features huggingface -- --test-threads=
 # Gate 5.1 — Airframe compile check
 cargo check --features airframe
 
-# Gate 5.5 — Issue regression tests
-cargo test --test regression_tests --no-default-features --features huggingface
-
-# Gate validation system tests
-cargo test --test release_gate_integration
+# Gate 5.5 — Regression tests
+cargo test --test core --test handlers --test compile_checks --features airframe,huggingface
 
 # Full regression pass
-cargo test --no-default-features --features huggingface
+cargo test --features airframe,huggingface
 ```
 
 ---
@@ -113,7 +113,7 @@ cargo test --no-default-features --features huggingface
 
 ---
 
-## What's Gone (v2.0)
+## What's Gone (v2.0 → v2.2)
 
 | Removed | Why |
 |---------|-----|
@@ -122,4 +122,5 @@ cargo test --no-default-features --features huggingface
 | `--features llama` build path | No llama.cpp in this codebase |
 | MLX-specific release artifacts | Not part of v2.0 shipping target |
 | Binary size inflation from llama.cpp | Airframe is pure Rust; binary stays well under 20 MB |
-
+| ~2900 lines of tests in 19 files | Consolidated to ~660 lines across 3 files |
+| Per-issue-file regression structure | Replaced by architecturally-organized test files |
