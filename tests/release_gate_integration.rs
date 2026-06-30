@@ -5,9 +5,7 @@ use std::process::Command;
 /// Strip debug info from binary. Returns stripped size, or None if strip unavailable.
 fn stripped_binary_size(path: &str) -> Option<u64> {
     if Command::new("strip").arg("--version").output().is_ok() {
-        let _ = Command::new("strip")
-            .args(["--strip-debug", path])
-            .output();
+        let _ = Command::new("strip").args(["--strip-debug", path]).output();
         std::fs::metadata(path).ok().map(|m| m.len())
     } else {
         None
