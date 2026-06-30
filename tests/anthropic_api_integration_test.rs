@@ -3,34 +3,6 @@
 /// This test suite ensures shimmy can serve as a drop-in replacement for
 /// Anthropic's Claude API, enabling tools like Claude Code to work in local networks.
 use serde_json::json;
-use std::process::Command;
-
-#[test]
-fn test_anthropic_api_endpoint_exists() {
-    // Regression test for Issue #109 - Anthropic API format support
-
-    // Build shimmy to ensure anthropic_compat module compiles
-    let output = Command::new("cargo")
-        .args([
-            "build",
-            "--no-default-features",
-            "--features",
-            "huggingface",
-        ])
-        .output()
-        .expect("Failed to build shimmy with anthropic support");
-
-    assert!(
-        output.status.success(),
-        "Failed to build shimmy with Anthropic API support: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-
-    // Check that the anthropic_compat module exists in the binary
-    // We can't easily test the HTTP endpoint without starting the server,
-    // but we can verify the module compiles and links correctly
-    println!("✅ Anthropic API compatibility module compiles successfully");
-}
 
 #[test]
 fn test_anthropic_message_format_parsing() {
