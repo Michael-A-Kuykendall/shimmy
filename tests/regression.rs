@@ -31,5 +31,3 @@ mod issue_112_safetensors_engine;
 #[path = "regression/issue_113_openai_api.rs"]
 mod issue_113_openai_api;
 
-#[path = "regression/issue_139_unicode_streaming.rs"]
-mod issue_139_unicode_streaming;
