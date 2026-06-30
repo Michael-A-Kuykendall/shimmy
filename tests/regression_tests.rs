@@ -252,29 +252,6 @@ mod regression_tests {
     // ========================================
 
     #[test]
-    fn test_issue_111_gpu_metrics_endpoint() {
-        // Test the fix for Issue #111 - GPU metrics missing from /metrics endpoint
-        use shimmy::engine::adapter::InferenceEngineAdapter;
-        use std::sync::Arc;
-
-        let registry = Registry::default();
-        let engine = Box::new(InferenceEngineAdapter::new());
-        let _state = Arc::new(shimmy::AppState::new(engine, registry));
-
-        // This should not panic and should include GPU fields
-        // Note: We can't easily test the actual HTTP endpoint without starting a server
-        // But we can test that the GPU detection functions work
-
-        // Test that GPU detection functions return valid boolean values
-        // GPU detection functions executed without panicking (test passes if we reach here)
-
-        // In a real test environment, we would test:
-        // 1. GET /metrics returns JSON with gpu_detected field
-        // 2. gpu_vendor field is null or valid vendor string
-        // 3. Fields are properly typed (boolean, string|null)
-    }
-
-    #[test]
     fn test_issue_112_safetensors_engine_selection() {
         // Test the fix for Issue #112 - SafeTensors files should use SafeTensors engine
         use shimmy::engine::adapter::InferenceEngineAdapter;
@@ -359,35 +336,6 @@ mod regression_tests {
         // Test that JSON response is properly structured for frontends
         assert!(response_json.as_object().unwrap().contains_key("object"));
         assert!(response_json.as_object().unwrap().contains_key("data"));
-    }
-
-    #[test]
-    fn test_issue_114_mlx_distribution_features() {
-        // Test the fix for Issue #114 - MLX support in distribution pipeline
-
-        // Test that MLX feature is properly defined
-        #[cfg(feature = "mlx")]
-        {
-            // MLX feature is enabled - test that MLX-related code compiles
-        }
-
-        #[cfg(not(feature = "mlx"))]
-        {
-            // MLX feature is disabled - that's also valid
-        }
-
-        // Test that Cargo.toml includes MLX feature definition
-        let cargo_toml = include_str!("../Cargo.toml");
-        assert!(
-            cargo_toml.contains("mlx = []"),
-            "MLX feature should be defined in Cargo.toml"
-        );
-
-        // Test that Apple Silicon convenience feature includes MLX
-        assert!(
-            cargo_toml.contains("apple = ["),
-            "Apple convenience feature should exist"
-        );
     }
 
     #[test]

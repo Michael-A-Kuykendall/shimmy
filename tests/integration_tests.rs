@@ -37,14 +37,6 @@ async fn create_test_server() -> (String, tokio::task::JoinHandle<()>) {
 }
 
 #[tokio::test]
-#[ignore] // Requires actual models and Python environment
-async fn test_huggingface_engine_integration() {
-    // This test is disabled until HuggingFace engine is fully implemented
-    // For now we test the interface exists
-    println!("HuggingFace engine test skipped - feature under development");
-}
-
-#[tokio::test]
 async fn test_http_api_health_check() {
     let (base_url, server_handle) = create_test_server().await;
 
@@ -66,22 +58,6 @@ async fn test_http_api_health_check() {
 
     // Clean shutdown
     server_handle.abort();
-}
-
-#[tokio::test]
-#[ignore] // Requires models to be available
-async fn test_api_generate_endpoint() {
-    // This test is ignored because it would require actual models
-    // Instead, we test the API structure in unit tests
-    println!("API generate test skipped - requires actual models");
-}
-
-#[tokio::test]
-#[ignore] // Requires WebSocket support
-async fn test_websocket_api() {
-    // This test is ignored because it would require full server setup
-    // WebSocket functionality is tested in unit tests
-    println!("WebSocket test skipped - requires full server setup");
 }
 
 #[test]
