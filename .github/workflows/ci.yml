@@ -103,15 +103,17 @@ jobs:
     steps:
     - name: Summary
       run: |
+        LINT="${{ needs.lint.result }}"
+        TEST="${{ needs.test.result }}"
+        BUILD="${{ needs.build.result }}"
+        SECURITY="${{ needs.security.result }}"
         echo "Quality Gate Summary"
         echo "===================="
-        FAILED=0
-        for job in lint test build security; do
-          result="${{ needs[job].result }}"
-          echo "  $(echo $job | tr '[:lower:]' '[:upper:]' | head -c1)$(echo $job | cut -c2-) : $result"
-          [ "$result" != "success" ] && FAILED=$((FAILED+1))
-        done
-        [ "$FAILED" -eq 0 ] && echo "All checks PASSED" || exit 1
+        echo "  Lint : $LINT"
+        echo "  Test : $TEST"
+        echo "  Build : $BUILD"
+        echo "  Security : $SECURITY"
+        [ "$LINT" = "success" ] && [ "$TEST" = "success" ] && [ "$BUILD" = "success" ] && [ "$SECURITY" = "success" ] && echo "All checks PASSED" || exit 1
 
   publish:
     name: Publish to crates.io
