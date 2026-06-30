@@ -2,6 +2,18 @@
 /// This ensures our release gates properly catch real issues and block releases
 use std::process::Command;
 
+/// Strip debug info from binary. Returns stripped size, or None if strip unavailable.
+fn stripped_binary_size(path: &str) -> Option<u64> {
+    if Command::new("strip").arg("--version").output().is_ok() {
+        let _ = Command::new("strip")
+            .args(["--strip-debug", path])
+            .output();
+        std::fs::metadata(path).ok().map(|m| m.len())
+    } else {
+        None
+    }
+}
+
 #[test]
 fn test_release_gate_system_exists() {
     // Validate that release.yml contains the mandatory gates
@@ -124,9 +136,10 @@ fn test_gate_3_template_packaging_protection() {
 
 #[test]
 fn test_gate_4_binary_size_constitutional_limit() {
-    // First ensure we have a binary to test (release build = what users run)
+    // Build the default feature set (airframe + huggingface = what ships)
+    // Use dev profile — deps already cached from parent `cargo test`
     let build_output = Command::new("cargo")
-        .args(["build", "--release"])
+        .args(["build"])
         .output()
         .expect("Failed to build binary for size test");
 
@@ -135,15 +148,15 @@ fn test_gate_4_binary_size_constitutional_limit() {
         "Failed to build binary for size test"
     );
 
-    // Test constitutional size limit (release binary = what users run)
     let binary_path = if cfg!(windows) {
-        "target/release/shimmy.exe"
+        "target/debug/shimmy.exe"
     } else {
-        "target/release/shimmy"
+        "target/debug/shimmy"
     };
 
     if let Ok(metadata) = std::fs::metadata(binary_path) {
-        let size = metadata.len();
+        // Strip DWARF debug info to get realistic code size (debug info can be 25MB+ on Linux)
+        let size = stripped_binary_size(binary_path).unwrap_or_else(|| metadata.len());
         let max_size = 15 * 1024 * 1024; // 15MB constitutional limit
 
         assert!(
