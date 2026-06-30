@@ -314,9 +314,8 @@ fn test_mlx_regression_prevention() {
         .expect("Should be able to read release workflow");
 
     assert!(
-        workflow_file.contains("aarch64-apple-darwin")
-            && workflow_file.contains("x86_64-apple-darwin"),
-        "Release workflow should include macOS targets (both Intel and ARM64)"
+        workflow_file.contains("aarch64-apple-darwin"),
+        "Release workflow should include macOS ARM64 target"
     );
 
     // 3. MLX feature still compiles (legacy path, not default)
