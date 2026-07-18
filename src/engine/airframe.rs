@@ -95,7 +95,7 @@ impl LoadedModel for AirframeModel {
                 wrapper
             });
 
-            rt.generate(&prompt, &params, callback)
+            rt.generate(&prompt, &params, callback, None, None, None)
         })
         .await
         .map_err(|e| anyhow::anyhow!("Airframe task panicked: {}", e))?
