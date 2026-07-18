@@ -548,6 +548,11 @@ async fn main() -> anyhow::Result<()> {
             name,
             prompt,
             max_tokens,
+            grammar_mode,
+            fse_reject,
+            math_bypass,
+            trace_path,
+            session_id,
         } => {
             let Some(spec) = state.registry.to_spec(&name) else {
                 anyhow::bail!("no model {name}");
@@ -558,6 +563,11 @@ async fn main() -> anyhow::Result<()> {
                     &prompt,
                     engine::GenOptions {
                         max_tokens,
+                        grammar_mode,
+                        fse_reject_patterns: fse_reject,
+                        math_bypass,
+                        trace_path,
+                        session_id,
                         stream: false,
                         ..Default::default()
                     },

@@ -97,6 +97,21 @@ pub enum Command {
         prompt: String,
         #[arg(long, default_value_t = 64)]
         max_tokens: usize,
+        /// Grammar mode: "none" or "developer"
+        #[arg(long, default_value = "none")]
+        grammar_mode: String,
+        /// FSE reject patterns (comma-separated)
+        #[arg(long, default_value = "")]
+        fse_reject: String,
+        /// Enable math bypass detection
+        #[arg(long, default_value_t = false)]
+        math_bypass: bool,
+        /// Path for step-level trace output
+        #[arg(long, default_value = "")]
+        trace_path: String,
+        /// Session ID for rolling window
+        #[arg(long, default_value = "")]
+        session_id: String,
     },
     /// Show GPU backend information and capabilities
     GpuInfo,

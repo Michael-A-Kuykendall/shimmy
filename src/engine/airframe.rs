@@ -8,7 +8,6 @@ use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 use airframe::runtime::gpu::{GpuRuntime, SamplingParams};
 
 /// Airframe GPU inference engine — in-process, zero-HTTP.
-/// The GPU runtime is loaded once on first `load()` and reused for all subsequent requests.
 pub struct AirframeEngine {
     runtime: Arc<Mutex<Option<GpuRuntime>>>,
 }
@@ -49,7 +48,6 @@ struct AirframeModel {
     runtime: Arc<Mutex<Option<GpuRuntime>>>,
 }
 
-// Safety: GpuRuntime is behind Arc<Mutex> and only accessed from spawn_blocking
 unsafe impl Send for AirframeModel {}
 unsafe impl Sync for AirframeModel {}
 
@@ -78,15 +76,17 @@ impl LoadedModel for AirframeModel {
         let runtime = self.runtime.clone();
         let prompt = prompt.to_string();
 
-        // GPU compute is synchronous — run on the blocking threadpool
         let result = tokio::task::spawn_blocking(move || {
             let guard = runtime.blocking_lock();
             let rt = guard
                 .as_ref()
                 .expect("AirframeModel used before engine loaded");
-
-            // Reset KV cache for each generation (stateless per-request)
             rt.reset();
+
+            // Build hooks from opts
+            let control = build_control(&opts);
+            let modify_logits = build_modify_logits(&opts);
+            let trace_cb = build_trace(&opts);
 
             let callback: Option<Box<dyn FnMut(&str) + Send>> = on_token.map(|mut cb| {
                 let wrapper: Box<dyn FnMut(&str) + Send> = Box::new(move |piece: &str| {
@@ -95,7 +95,7 @@ impl LoadedModel for AirframeModel {
                 wrapper
             });
 
-            rt.generate(&prompt, &params, callback, None, None, None)
+            rt.generate(&prompt, &params, callback, control, modify_logits, trace_cb)
         })
         .await
         .map_err(|e| anyhow::anyhow!("Airframe task panicked: {}", e))?
@@ -103,6 +103,18 @@ impl LoadedModel for AirframeModel {
 
         Ok(result)
     }
+}
+
+fn build_control(opts: &GenOptions) -> Option<Box<dyn airframe::control::InferenceControl + Send + Sync>> {
+    airframe::runtime::gpu::fse_control_from_patterns(&opts.fse_reject_patterns)
+}
+
+fn build_modify_logits(opts: &GenOptions) -> Option<Box<dyn Fn(&mut [f32]) + Send + Sync>> {
+    airframe::runtime::gpu::modify_logits_from_grammar(&opts.grammar_mode)
+}
+
+fn build_trace(opts: &GenOptions) -> Option<Box<dyn FnMut(usize, &[f32], f64) + Send>> {
+    airframe::runtime::gpu::trace_callback(&opts.trace_path)
 }
 
 #[cfg(test)]
@@ -113,14 +125,11 @@ mod tests {
     #[test]
     fn test_bridge_params_maps_basic_fields() {
         let opts = GenOptions {
-            max_tokens: 128,
-            temperature: 0.5,
-            top_p: 0.85,
-            top_k: 40,
-            repeat_penalty: 1.2,
-            seed: Some(7),
-            stream: false,
+            max_tokens: 128, temperature: 0.5, top_p: 0.85, top_k: 40,
+            repeat_penalty: 1.2, seed: Some(7), stream: false,
             stop_tokens: Vec::new(),
+            grammar_mode: "none".to_string(), fse_reject_patterns: String::new(),
+            math_bypass: false, trace_path: String::new(), session_id: String::new(),
         };
         let p = AirframeModel::bridge_params(&opts);
         assert_eq!(p.max_tokens, 128);
@@ -135,6 +144,8 @@ mod tests {
     fn test_bridge_params_propagates_stop_tokens() {
         let opts = GenOptions {
             stop_tokens: vec!["<|eot_id|>".to_string(), "<|im_end|>".to_string()],
+            grammar_mode: "none".to_string(), fse_reject_patterns: String::new(),
+            math_bypass: false, trace_path: String::new(), session_id: String::new(),
             ..GenOptions::default()
         };
         let p = AirframeModel::bridge_params(&opts);
@@ -147,6 +158,8 @@ mod tests {
     fn test_bridge_params_seed_default_when_none() {
         let opts = GenOptions {
             seed: None,
+            grammar_mode: "none".to_string(), fse_reject_patterns: String::new(),
+            math_bypass: false, trace_path: String::new(), session_id: String::new(),
             ..GenOptions::default()
         };
         let p = AirframeModel::bridge_params(&opts);

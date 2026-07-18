@@ -14,6 +14,16 @@ pub struct GenOptions {
     pub stream: bool,
     #[serde(default)]
     pub stop_tokens: Vec<String>,
+    #[serde(default)]
+    pub grammar_mode: String,
+    #[serde(default)]
+    pub fse_reject_patterns: String,
+    #[serde(default)]
+    pub math_bypass: bool,
+    #[serde(default)]
+    pub trace_path: String,
+    #[serde(default)]
+    pub session_id: String,
 }
 
 impl Default for GenOptions {
@@ -27,6 +37,11 @@ impl Default for GenOptions {
             seed: None,
             stream: true,
             stop_tokens: Vec::new(),
+            grammar_mode: "none".to_string(),
+            fse_reject_patterns: String::new(),
+            math_bypass: false,
+            trace_path: String::new(),
+            session_id: String::new(),
         }
     }
 }
