@@ -5,6 +5,7 @@ use tokio::sync::Mutex;
 
 use super::{GenOptions, InferenceEngine, LoadedModel, ModelSpec};
 
+use airframe::control::{ControlDecision, InferenceControl, InferenceEvent};
 use airframe::runtime::gpu::{GpuRuntime, SamplingParams};
 
 /// Airframe GPU inference engine — in-process, zero-HTTP.
@@ -64,6 +65,27 @@ impl AirframeModel {
     }
 }
 
+/// Composite InferenceControl that advances grammar state post-sample,
+/// then delegates to an optional inner control (FSE).
+struct GrammarAdvancer {
+    grammar: Arc<std::sync::Mutex<schoolmarm::GrammarState>>,
+    prev_text_len: std::sync::Mutex<usize>,
+}
+
+impl InferenceControl for GrammarAdvancer {
+    fn intervene(&self, event: &InferenceEvent<'_>) -> ControlDecision {
+        let text = event.text;
+        let mut prev = self.prev_text_len.lock().unwrap();
+        if text.len() > *prev {
+            if let Ok(mut gs) = self.grammar.lock() {
+                gs.advance_token(&text[*prev..]);
+            }
+            *prev = text.len();
+        }
+        ControlDecision::Allow
+    }
+}
+
 #[async_trait]
 impl LoadedModel for AirframeModel {
     async fn generate(
@@ -83,10 +105,52 @@ impl LoadedModel for AirframeModel {
                 .expect("AirframeModel used before engine loaded");
             rt.reset();
 
-            // Build hooks from opts
-            let control = build_control(&opts);
-            let modify_logits = build_modify_logits(&opts);
-            let trace_cb = build_trace(&opts);
+            // Build shared grammar state for both modify_logits + composite control
+            let grammar_state = build_grammar_state(&opts, rt);
+            let modify_fn = grammar_state.as_ref().map(|gs| {
+                let gs_arc = gs.clone();
+                let vocab: Vec<String> = (0..rt.spec().n_vocab)
+                    .map(|i| rt.tokenizer().decode_single(i as u32, true).unwrap_or_default())
+                    .collect();
+                let eos = rt.tokenizer().eos_token();
+                let im_end = rt.tokenizer().encode("<|im_end|>", false).ok().and_then(|v| {
+                    if v.len() == 1 { Some(v[0]) } else { None }
+                });
+                Box::new(move |logits: &mut [f32]| {
+                    if let Ok(state) = gs_arc.lock() {
+                        apply_grammar_mask(logits, &state, &vocab, eos, im_end);
+                    }
+                }) as Box<dyn Fn(&mut [f32]) + Send + Sync>
+            });
+
+            // Build composite control: grammar advance + FSE
+            let fse_ctrl = airframe::runtime::gpu::fse_control_from_patterns(&opts.fse_reject_patterns);
+            let control: Option<Box<dyn InferenceControl + Send + Sync>> = if let Some(ga) = grammar_state {
+                let advancer = GrammarAdvancer {
+                    grammar: ga,
+                    prev_text_len: std::sync::Mutex::new(0),
+                };
+                if let Some(fse) = fse_ctrl {
+                    let fse_arc = std::sync::Arc::new(fse);
+                    struct Both {
+                        adv: GrammarAdvancer,
+                        fse: std::sync::Arc<Box<dyn InferenceControl + Send + Sync>>,
+                    }
+                    impl InferenceControl for Both {
+                        fn intervene(&self, event: &InferenceEvent<'_>) -> ControlDecision {
+                            self.adv.intervene(event);
+                            self.fse.intervene(event)
+                        }
+                    }
+                    Some(Box::new(Both { adv: advancer, fse: std::sync::Arc::new(fse) }) as Box<dyn InferenceControl + Send + Sync>)
+                } else {
+                    Some(Box::new(advancer) as Box<dyn InferenceControl + Send + Sync>)
+                }
+            } else {
+                fse_ctrl
+            };
+
+            let trace_cb = airframe::runtime::gpu::trace_callback(&opts.trace_path);
 
             let callback: Option<Box<dyn FnMut(&str) + Send>> = on_token.map(|mut cb| {
                 let wrapper: Box<dyn FnMut(&str) + Send> = Box::new(move |piece: &str| {
@@ -95,7 +159,7 @@ impl LoadedModel for AirframeModel {
                 wrapper
             });
 
-            rt.generate(&prompt, &params, callback, control, modify_logits, trace_cb)
+            rt.generate(&prompt, &params, callback, control, modify_fn, trace_cb)
         })
         .await
         .map_err(|e| anyhow::anyhow!("Airframe task panicked: {}", e))?
@@ -105,16 +169,46 @@ impl LoadedModel for AirframeModel {
     }
 }
 
-fn build_control(opts: &GenOptions) -> Option<Box<dyn airframe::control::InferenceControl + Send + Sync>> {
-    airframe::runtime::gpu::fse_control_from_patterns(&opts.fse_reject_patterns)
+fn build_grammar_state(opts: &GenOptions, rt: &GpuRuntime) -> Option<Arc<std::sync::Mutex<schoolmarm::GrammarState>>> {
+    if opts.grammar_mode != "developer" {
+        return None;
+    }
+    let grammar_text = r###"
+root ::= rust-file
+rust-file ::= "// BEGIN_RUST_FILE\n" rust-code "// END_RUST_FILE\n"
+rust-code ::= (!("// END_RUST_FILE" | "#include" | "```" | "#"))+
+"###;
+    let grammar = schoolmarm::Grammar::new(grammar_text).ok()?;
+    let gs = schoolmarm::GrammarState::new(grammar).ok()?;
+    Some(Arc::new(std::sync::Mutex::new(gs)))
 }
 
-fn build_modify_logits(opts: &GenOptions) -> Option<Box<dyn Fn(&mut [f32]) + Send + Sync>> {
-    airframe::runtime::gpu::modify_logits_from_grammar(&opts.grammar_mode)
-}
-
-fn build_trace(opts: &GenOptions) -> Option<Box<dyn FnMut(usize, &[f32], f64) + Send>> {
-    airframe::runtime::gpu::trace_callback(&opts.trace_path)
+fn apply_grammar_mask(
+    logits: &mut [f32],
+    grammar_state: &schoolmarm::GrammarState,
+    vocab_texts: &[String],
+    eos_token: u32,
+    im_end_token: Option<u32>,
+) {
+    let vocab_refs: Vec<&str> = vocab_texts.iter().map(|s| s.as_str()).collect();
+    let allowed = grammar_state.allowed_tokens(&vocab_refs);
+    for (idx, logit) in logits.iter_mut().enumerate() {
+        if idx >= allowed.len() || !allowed[idx] {
+            *logit = f32::NEG_INFINITY;
+        }
+    }
+    if grammar_state.is_accepting() {
+        let eos_idx = eos_token as usize;
+        if eos_idx < logits.len() {
+            logits[eos_idx] = 0.0;
+        }
+        if let Some(im_end) = im_end_token {
+            let im_end_idx = im_end as usize;
+            if im_end_idx < logits.len() {
+                logits[im_end_idx] = 0.0;
+            }
+        }
+    }
 }
 
 #[cfg(test)]
