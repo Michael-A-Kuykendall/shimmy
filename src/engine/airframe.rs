@@ -95,7 +95,11 @@ impl LoadedModel for AirframeModel {
                 wrapper
             });
 
-            rt.generate(&prompt, &params, callback)
+            if std::env::var("AIRFRAME_USE_ISF").as_deref() == Ok("1") {
+                rt.generate_isf(&prompt, &params, callback)
+            } else {
+                rt.generate(&prompt, &params, callback)
+            }
         })
         .await
         .map_err(|e| anyhow::anyhow!("Airframe task panicked: {}", e))?
