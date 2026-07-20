@@ -1,15 +1,14 @@
 # These amazing people make Shimmy possible 🙏
 
-## Infrastructure Partners ($500+/month)
-*Your logo could be here*
-
 ## Corporate Backers ($100+/month)
-*Your logo could be here*
+- **[ZephyrCloudIO](https://github.com/ZephyrCloudIO)**
 
 ## Bug Prioritizers ($25+/month)
+*Your name could be here — [sponsor](https://github.com/sponsors/Michael-A-Kuykendall)*
 
 ## Coffee Tier Heroes ($5+/month)
-*Your support could be here*
+- **[gqf2008](https://github.com/gqf2008)** (高庆丰)
+- **[alistairheath](https://github.com/alistairheath)**
 
 ---
 

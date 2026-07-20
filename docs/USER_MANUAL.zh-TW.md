@@ -6,7 +6,7 @@
 
 [📚 中文文件中心](zh-TW/README.md) · [简体中文](USER_MANUAL.zh-CN.md) · **繁體中文** · [English](../README.md)
 
-版本：v2.0.0 及以上 · 最後更新：2026 年 5 月
+版本：v2.3.0 及以上 · 最後更新：2026 年 7 月
 
 </div>
 
@@ -51,12 +51,17 @@ Shimmy 是一個**單一執行檔**的本地 AI 推論伺服器，提供與 Open
 | 🦀 **純 Rust 實作** | 單一可執行檔，無 Python 執行環境，無 C++ 相依套件 |
 | 🖥️ **跨平台 GPU 加速** | 透過 WebGPU（wgpu）支援 NVIDIA、AMD、Intel 及 Apple Silicon |
 
-### v2.0.0 新功能
+### v2.3.0 新功能
 
-- **Airframe 引擎**：全新純 Rust WGSL 推論引擎，完全取代 llama.cpp
-- **WebGPU 加速**：透過 wgpu 自動選擇最佳 GPU 適配器
-- **YaRN RoPE 縮放**：支援超長上下文視窗（最高 16384+ tokens）
-- **零工具鏈相依**：無需 CUDA 工具包、Vulkan SDK 或任何 C++ 編譯器
+- **獨立 GPU 自動優先選擇**：多 GPU 系統（如筆電）自動優先選擇獨立顯示卡而非內建顯示卡
+- **Grammar 控制鉤子**：支援結構化生成（schoolmarm+grammar 整合）
+- **PPT 不變性測試籠**：基於黃金 vault 的迴歸檢測，覆蓋 12 個模型的逐層 RMS/校驗和驗證
+- **batch_count 修復**：修復了 QKV 著色器中 batch_count=0 導致所有執行緒被終止的嚴重問題
+- **357 個庫測試全部通過**
+
+### 歷史版本
+
+**v2.0.0**: Airframe 引擎首發，純 Rust WGSL 推論引擎，完全取代 llama.cpp
 
 ---
 
@@ -177,7 +182,7 @@ cargo install shimmy
 ### 方式三：從原始碼建置（含 Airframe 引擎）
 
 ```bash
-git clone https://github.com/Michael-A-Kuykendall/shimmy --recurse-submodules
+git clone https://github.com/Michael-A-Kuykendall/shimmy
 cd shimmy
 cargo build --release --features airframe,huggingface
 
