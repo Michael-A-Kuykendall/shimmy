@@ -5,11 +5,12 @@
 ```
 shimmy-private/              ← THIS REPO — public-facing CLI/server product (private working copy)
 public remote: shimmy.git    ← https://github.com/Michael-A-Kuykendall/shimmy.git
-airframe = { version = "0.1" }  ← PUBLIC crates.io dep — no path dep, no cloning needed
+airframe = { version = "0.2" }  ← PUBLIC crates.io dep — Airframe is Shimmy's GPU engine library
 ```
 
-- **Shimmy is the product. Airframe is the public GPU engine** (crates.io: https://crates.io/crates/airframe).
-- Both are MIT-licensed. Both are public. No private dependencies.
+- **Shimmy is the product. Airframe is Shimmy's GPU engine library.**
+  All user-facing value ships through Shimmy. Airframe is a Rust library dependency
+  of Shimmy and has no binary, CLI, or server. Both are MIT-licensed and public.
 - `cargo build` (default features) compiles the full GPU engine — airframe is downloaded from crates.io.
 
 ## Repository Push Policy
