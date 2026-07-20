@@ -34,8 +34,8 @@ Shimmy is a zero-config, OpenAI-compatible inference server with a native WebGPU
   - No CUDA toolkit or Vulkan SDK required; wgpu handles adapter selection
 
 ## 🎯 Q2–Q3 2026 Milestones
-- [ ] **Stop tokens from GGUF metadata** — read `tokenizer.ggml.eos_token_id` natively
-- [ ] **Quantization in Airframe** — Q4_K_M and Q8_0 inference on the WebGPU pipeline
+- [x] **Stop tokens from GGUF metadata** — read `tokenizer.ggml.eos_token_id` natively
+- [x] **Quantization in Airframe** — Q4_K_M and Q8_0 inference on the WebGPU pipeline
 - [ ] **SafeTensors support** — ingest `.safetensors` model checkpoints directly
 - [ ] **Multi-model serving** — load balancing across multiple active models
 - [ ] **Enterprise Embeddings** — `/v1/embeddings` endpoint targeting RAG workloads

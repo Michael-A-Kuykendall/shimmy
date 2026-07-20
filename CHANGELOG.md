@@ -5,6 +5,29 @@ All notable changes to Shimmy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-07-20
+
+### Added
+- **Grammar control hooks** — schoolmarm+grammar module for structured generation
+- **PPT invariant cage (B1-B3)** — golden-vault-based regression detection. Contracts verify per-layer RMS/checksum against vault oracles for 12 populated models. Run with `cargo test --test test_invariants -- --test-threads=1`.
+- **Discrete GPU preference** — adapter selection now enumerates all GPUs and prefers `DiscreteGpu` over `IntegratedGpu` (commit `6ed0349`). Fixes multi-GPU laptops picking the Intel iGPU.
+
+### Fixed
+- **batch_count: 0 → batch_count: 1** in `server_inference.rs`. The QKV shader guard `if (global_id.y >= params.batch_count)` killed ALL threads when `batch_count=0` (since `0>=0` is true), producing no Q/K/V output. Root cause of the server-side gibberish regression (bisected to commit `43027d3`).
+- **Rust/WGSL struct layout mismatch** — per-field quant types (Q/QK/K/V) aligned between Rust `LayerParams` and WGSL shader structs.
+
+### Changed
+- Airframe dependency updated to 0.2.9.
+- Shimmy version bumped to 2.3.0.
+
+### Library API
+- `tokenizer_arc()` — shared tokenizer access
+- `eos_token()`, `im_end_token()` — token accessors
+- `fse_control_from_patterns()` — grammar pattern compiler
+- `trace_callback()` — capture hook for invariant probes
+
+---
+
 ## [2.2.1] - 2026-06-30
 
 ### Fixed
@@ -1027,9 +1050,12 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 ### Free Forever Commitment
 Shimmy is committed to being free forever with no asterisks, no "free for now" periods, and no pivot to paid services. The MIT license ensures this commitment is legally binding.
 
-[Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.0.0...HEAD
-[2.0.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.10.0...v2.0.0
-[1.10.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.9.0...v1.10.0
+[Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.2.1...v2.3.0
+[2.2.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.2.0...v2.2.1
+[2.2.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.0.0...v2.1.0
+[2.0.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.9.0...v2.0.0
 [1.9.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v1.7.4...v1.8.0
