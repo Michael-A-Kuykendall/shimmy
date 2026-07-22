@@ -145,6 +145,10 @@ fn dequant_q4_0(block: ptr<storage, BlockQ4_0>, idx: u32) -> f32 {
 | Q3_K_M | 3.3 GB | +2.1% | 顯存非常緊張時 |
 
 > **注意**：Shimmy 目前不支援 Q2_K、Q3_K 系列及 IQ（imatrix）格式。嘗試載入不支援的格式會在啟動時報錯。BF16 格式也暫不支援。
+>
+> **已支援 Q5_0**：自 v0.2.10 起新增 5 位元純量化（Q5_0）插槽，與 Q4_0/Q8_0 同屬非 K-quant 系列，由 fabric `TensorFact → DispatchFact` 規則自動分派。
+>
+> **已支援 Q5_0**：自 v0.2.10 起新增 5 位元純量化（Q5_0）插槽，與 Q4_0/Q8_0 同屬非 K-quant 系列，由 fabric `TensorFact → DispatchFact` 規則自動分派。
 
 ---
 
