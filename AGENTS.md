@@ -56,6 +56,13 @@ llama = []  llama-cuda = []  llama-vulkan = []  llama-opencl = []
 - Vision work is deferred. Keep on dedicated branches.
 - Launch scope is architecture/runtime path only.
 
+## Release Process
+
+Load the `release` skill (`.opencode/skills/release/SKILL.md`) before cutting a release.
+Releases are coordinated with Airframe via `scripts/release-coordinated.sh` in the
+workspace root. One command handles version bumps, commits, tags, crates.io publish,
+and GitHub Releases for both repos. Never bump versions or tag manually.
+
 ## What NOT To Do
 
 - Do NOT add an `airframe/` submodule inside this repo.
