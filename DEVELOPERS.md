@@ -35,10 +35,7 @@ Perfect for: Building specialized AI inference tools tailored to your needs
 git clone https://github.com/YOUR_USERNAME/shimmy.git
 cd shimmy
 
-# Review architectural principles
-cat memory/constitution.md
-
-# Plan your features with Spec-Kit methodology
+# Plan your features
 # See "Feature Development Workflow" below
 ```
 
@@ -76,7 +73,7 @@ Generate technical implementation plan from your specification.
 **Template**: Use [`templates/plan-template.md`](templates/plan-template.md)
 
 **Constitutional Check**: Ensure your plan complies with Shimmy's principles:
-- ✅ Maintains 5MB binary size limit
+- ✅ Maintains 20MB binary size limit
 - ✅ Preserves sub-2-second startup
 - ✅ No new Python dependencies
 - ✅ Maintains OpenAI API compatibility
@@ -104,7 +101,7 @@ Create actionable task list for implementation.
 Every feature must comply with Shimmy's architectural principles:
 
 ### **Immutable Constraints**
-- **5MB Binary Limit**: Core binary cannot exceed 5MB
+- **20MB Binary Limit**: Core binary cannot exceed 20MB
 - **Sub-2-Second Startup**: Performance must be maintained
 - **Zero Python Dependencies**: Pure Rust implementation only
 
@@ -117,10 +114,10 @@ Every feature must comply with Shimmy's architectural principles:
 ### **Quality Gates**
 Before any feature is merged:
 - [ ] Constitutional compliance verified
-- [ ] All tests pass: `cargo test --all-features`
+- [ ] All tests pass: `cargo test --features airframe,huggingface`
 - [ ] Integration tests pass
 - [ ] Startup time < 2 seconds
-- [ ] Binary size < 5MB
+- [ ] Binary size < 20MB
 
 ## 🔧 Integration Templates
 
@@ -249,7 +246,7 @@ cargo lambda build --release
 ## 🔗 Resources
 
 - **Integration Templates**: [`templates/integration_template.md`](templates/integration_template.md)
-- **Constitutional Principles**: [`memory/constitution.md`](memory/constitution.md)
+- **AGENTS.md**: Workspace root `AGENTS.md` documents all process rules
 - **Spec-Kit Templates**: [`.internal/spec-template.md`](.internal/spec-template.md)
 - **GitHub Issues**: [Report bugs or request features](https://github.com/Michael-A-Kuykendall/shimmy/issues)
 - **Discussions**: [Community Q&A](https://github.com/Michael-A-Kuykendall/shimmy/discussions)

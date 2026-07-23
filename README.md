@@ -35,7 +35,7 @@
 ## Table of Contents
 
 - [What Is Shimmy?](#drop-in-openai-api-replacement-for-local-llms)
-- [🔥 Airframe Engine (v2.0)](#-airframe-engine)
+- [🔥 Airframe Engine (v0.2.10)](#-airframe-engine)
 - [⚡ TurboShimmy INT4 KV (v2.1)](#-turboshimmy-int4-kv)
 - [🎯 Supported Models](#-supported-models)
 - [📦 Migrating from v1.x](#-migrating-from-v1x)
@@ -64,9 +64,9 @@ Shimmy is a **single-binary** that provides **100% OpenAI-compatible endpoints**
 
 **⚡ NEW in v2.3.0**: Adapter selection fix (prefers discrete GPU over integrated), grammar control hooks, 357 passing tests.
 
-## 🔥 Airframe Engine (v0.2.9)
+## 🔥 Airframe Engine (v0.2.10)
 
-Starting in v2.0.0, Shimmy's default inference engine is **Airframe** — a pure-Rust WebGPU (WGSL) transformer runtime built from scratch. **v0.2.9** brings the production batch_count fix, GPU adapter selection improvement, grammar hooks, and the PPT invariant cage.
+Starting in v2.0.0, Shimmy's default inference engine is **Airframe** — a pure-Rust WebGPU (WGSL) transformer runtime built from scratch. **v0.2.10** brings the GPU gibberish fix (dequant front-padding), f16→f32 dequant correction, Q5_0 quant slot, fabric dispatch rules, and golden-vault certification (10/10 models).
 
 **See [airframe CHANGELOG](https://github.com/Michael-A-Kuykendall/airframe/blob/master/CHANGELOG.md) for full release notes.**
 
@@ -512,7 +512,7 @@ I built Shimmy to retain privacy-first control on my AI development and keep thi
 | `SHIMMY_BIND_ADDRESS` | `0.0.0.0:8080` | Full bind address (overrides port) |
 | `SHIMMY_MAX_CTX` | *(from GGUF)* | Override context window; activates YaRN RoPE scaling when above model native |
 | `SHIMMY_MODEL_PATHS` | *(see Zero Config)* | Colon-separated extra model search paths |
-| `SHIMMY_ENGINE_BACKEND` | `airframe` | `airframe` (default) or `llama` (legacy path) |
+| `SHIMMY_ENGINE_BACKEND` | `airframe` | `airframe` (only engine; llama.cpp removed v2.0) |
 | `SHIMMY_ROPE_SCALE` | *(auto)* | Override computed YaRN scale factor |
 | `SHIMMY_KV_QUANT` | `f32` | KV cache quantization: `f32` (default) or `int4` ([TurboShimmy](#-turboshimmy-int4-kv)) |
 | `SHIMMY_PREFILL_CHUNK` | `64` | Tokens per prefill dispatch. Set to `8` on Windows if you see GPU TDR resets on long prompts |
@@ -545,7 +545,7 @@ shimmy gpu-info                           # Show selected WebGPU adapter
 
 - **🧠 MOE CPU Offloading**: Hybrid GPU/CPU processing for large models (70B+)
 - **🎯 Smart Model Filtering**: Automatically excludes non-language models (Stable Diffusion, Whisper, CLIP)
-- **🛡️ 6-Gate Release Validation**: Constitutional quality limits ensure reliability
+- **🛡️ Coordinated Release Process**: Airframe + Shimmy released in concert via `scripts/release-coordinated.sh`
 - **⚡ Smart Model Preloading**: Background loading with usage tracking for instant model switching
 - **💾 Response Caching**: LRU + TTL cache delivering 20-40% performance gains on repeat queries
 - **🚀 Integration Templates**: One-command deployment for Docker, Kubernetes, Railway, Fly.io, FastAPI, Express
@@ -674,12 +674,11 @@ Shimmy maintains high code quality through comprehensive testing:
 Run the complete test suite:
 
 ```bash
-# Using cargo aliases
-cargo test-quick           # Quick development tests
+# Full test suite (default features = GPU engine)
+cargo test --features airframe,huggingface
 
-# Using Makefile  
-make test                  # Full test suite
-make test-quick            # Quick development tests
+# Quick CPU-only tests (no GPU required)
+cargo test --lib --no-default-features --features huggingface -- --test-threads=1
 ```
 
 See our [testing approach](docs/ppt-invariant-testing.md) for technical details.

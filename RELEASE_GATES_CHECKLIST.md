@@ -14,7 +14,7 @@ Every gate must pass or the entire release stops.
 
 | Gate | Name | Covers |
 |------|------|--------|
-| 1/7 | Core Build | `cargo build --features airframe,huggingface` — GPU engine via submodule |
+| 1/7 | Core Build | `cargo build --features airframe,huggingface` — GPU engine via `[patch.crates-io]` |
 | ~~2~~| ~~CUDA Timeout~~ | **Removed v2.0** — Airframe uses wgpu; no CUDA dependency |
 | 3/7 | Template Packaging | Docker templates included in crates.io package (Issue #60 regression) |
 | 4/7 | Binary Size | Constitutional 20 MB limit on `shimmy` binary |
@@ -104,7 +104,7 @@ cargo test --features airframe,huggingface
 | Feature | Purpose | crates.io safe |
 |---------|---------|----------------|
 | `huggingface` | Model downloading, tokenizer — **default** | ✅ Yes |
-| `airframe` | Airframe GPU engine via submodule path dep | ❌ No (path dep) |
+| `airframe` | Airframe GPU engine via `[patch.crates-io]` | ❌ No (path dep) |
 | `full` | `huggingface + airframe` convenience alias | ❌ No |
 | `apple` | Apple Silicon convenience alias | platform-only |
 
