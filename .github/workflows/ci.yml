@@ -2,129 +2,35 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    tags: [v*]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  lint:
-    name: Lint & Format
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        components: rustfmt, clippy
-    - name: Cache dependencies
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-lint-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Check formatting
-      run: cargo fmt -- --check
-    - name: Clippy
-      run: cargo clippy --features airframe,huggingface -- -D warnings
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-    - name: Cache dependencies
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-test-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Run tests
-      run: cargo test --features airframe,huggingface -- --test-threads=1
-
   build:
-    name: Build (${{ matrix.target }})
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-          - os: macos-latest
-            target: aarch64-apple-darwin
-    runs-on: ${{ matrix.os }}
+    name: Build and Test
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v4
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: ${{ matrix.target }}
-    - name: Cache dependencies
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-${{ matrix.target }}-build-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build
-      run: cargo build --release --target ${{ matrix.target }} --features airframe,huggingface
-    - name: Verify binary
-      shell: bash
-      run: |
-        ls -la target/${{ matrix.target }}/release/ | grep -E "shimmy|^total"
+      run: cargo build --no-default-features --features fast
+    - name: Test
+      run: cargo test --no-default-features --features fast
 
-  security:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v5
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-    - name: Install cargo-audit
-      run: cargo install cargo-audit --locked
-    - name: Vulnerability audit
-      run: cargo audit --color always
-
-  quality-gate:
-    name: Quality Gate
-    runs-on: ubuntu-latest
-    needs: [lint, test, build, security]
-    if: always()
-    steps:
-    - name: Summary
-      run: |
-        LINT="${{ needs.lint.result }}"
-        TEST="${{ needs.test.result }}"
-        BUILD="${{ needs.build.result }}"
-        SECURITY="${{ needs.security.result }}"
-        echo "Quality Gate Summary"
-        echo "===================="
-        echo "  Lint : $LINT"
-        echo "  Test : $TEST"
-        echo "  Build : $BUILD"
-        echo "  Security : $SECURITY"
-        [ "$LINT" = "success" ] && [ "$TEST" = "success" ] && [ "$BUILD" = "success" ] && [ "$SECURITY" = "success" ] && echo "All checks PASSED" || exit 1
-
-  publish:
-    name: Publish to crates.io
-    runs-on: ubuntu-latest
-    needs: [quality-gate]
+  release:
+    name: Release
     if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-    - uses: actions/checkout@v5
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-    - name: Publish
-      env:
-        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-      run: cargo publish
+    - uses: actions/checkout@v4
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2

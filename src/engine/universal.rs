@@ -349,6 +349,7 @@ mod tests {
             seed: Some(42),
             stream: true,
             stop_tokens: Vec::new(),
+            ..Default::default()
         };
 
         let result = adapter.generate("Hello world", opts, None).await;
