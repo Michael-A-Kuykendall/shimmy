@@ -215,6 +215,7 @@ mod tests {
                 name,
                 prompt,
                 max_tokens,
+                ..
             } => {
                 assert_eq!(name, "model");
                 assert_eq!(prompt, "test");

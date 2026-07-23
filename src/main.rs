@@ -961,6 +961,7 @@ mod tests {
                 name,
                 prompt,
                 max_tokens,
+                ..
             } => {
                 assert_eq!(name, "test-model");
                 assert_eq!(prompt, "Hello");
