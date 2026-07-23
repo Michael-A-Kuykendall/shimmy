@@ -68,7 +68,7 @@ dirs = "5.0"
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # Airframe native GPU inference — public crate on crates.io
-airframe = { version = "0.2.9", optional = true, features = ["isf"] }
+airframe = { version = "0.2.11", optional = true, features = ["isf"] }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
