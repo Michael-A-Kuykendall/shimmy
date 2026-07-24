@@ -1,6 +1,6 @@
 [package]
 name = "shimmy"
-version = "2.3.2"
+version = "2.3.3"
 edition = "2021"
 license = "MIT"
 description = "Lightweight Ollama-compatible inference server with native SafeTensors support. No Python dependencies, cross-platform WebGPU acceleration via Airframe."
@@ -67,7 +67,7 @@ dirs = "5.0"
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # Airframe native GPU inference — public crate on crates.io
-airframe = { version = "0.2.11", optional = true, features = ["isf"] }
+airframe = { version = "0.2.12", optional = true, features = ["isf"] }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"
