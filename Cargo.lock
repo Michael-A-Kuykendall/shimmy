@@ -13,7 +13,9 @@ dependencies = [
 
 [[package]]
 name = "airframe"
-version = "0.2.11"
+version = "0.2.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b551eaf748505cd6690d04ec46c4ed1360ca2a74d795acb1db1e7045a38f795"
 dependencies = [
  "aho-corasick",
  "airframe-observe",
@@ -39,7 +41,9 @@ dependencies = [
 
 [[package]]
 name = "airframe-observe"
-version = "0.1.1"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78c75580a78cbb0eb65e8761a4a54433a36c19780540b41b3656d5b03b8056f6"
 dependencies = [
  "dzero",
  "serde",
@@ -676,9 +680,9 @@ checksum = "26cdc183d6771c6de5615045130ba15224ea065de4cadfdb072f2a3da7acc25f"
 
 [[package]]
 name = "either"
-version = "1.16.0"
+version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91622ff5e7162018101f2fea40d6ebf4a78bbe5a49736a2020649edf9693679e"
+checksum = "9e5e8f6c15a24b9a3ee5efec809ccd006d3b30e8b3bb63c39af737c7f87daa1d"
 
 [[package]]
 name = "equivalent"
@@ -1389,6 +1393,8 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 [[package]]
 name = "libfse"
 version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20ae97c006f0decc1514d5b6168f2a3506d80458fef022d75a3e9ed69d9b85e9"
 dependencies = [
  "aho-corasick",
 ]
@@ -2316,7 +2322,7 @@ dependencies = [
 
 [[package]]
 name = "shimmy"
-version = "2.3.2"
+version = "2.3.3"
 dependencies = [
  "airframe",
  "anyhow",
