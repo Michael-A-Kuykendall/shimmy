@@ -4,6 +4,21 @@ All notable changes to Shimmy will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Planned
+- **Grammar feature architecture** — organize, understand, and architect a proper grammar feature. The control-system architecture (FSE, grammar, trace) is being refined; the current hooks are the agile starting point to move forward from, not a finished feature.
+
+## [2.3.2]
+
+### Fixed
+- `cargo install shimmy` broken for all users: the `airframe-observe` sub-crate was republished as `0.1.1` (the crates.io `0.1.0` predated `CapturedLayer`/`quant_formula` used by airframe `0.2.10`/`0.2.11`).
+- shimmy called the removed `airframe::runtime::gpu::modify_logits_from_grammar`; call site updated to the published `airframe::grammar::grammar_hooks` API.
+
+### Changed
+- Added CI gate: `cargo check --features airframe,huggingface` from a fresh clone, so airframe-engine integration breaks are caught before release.
+
 ## [2.3.1]
 
 **Full Changelog**: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.3.0...v2.3.1

@@ -23,6 +23,16 @@ jobs:
     - name: Test
       run: cargo test --no-default-features --features fast
 
+  integration:
+    name: Integration (airframe engine)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    - name: Check airframe-engine integration
+      run: cargo check --features airframe,huggingface
+
   release:
     name: Release
     if: startsWith(github.ref, 'refs/tags/v')

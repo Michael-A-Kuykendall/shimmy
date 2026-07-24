@@ -85,7 +85,7 @@ impl LoadedModel for AirframeModel {
 
             // Build hooks from opts
             let control = build_control(&opts);
-            let modify_logits = build_modify_logits(&opts);
+            let modify_logits = build_modify_logits(rt, &opts);
             let trace_cb = build_trace(&opts);
 
             let callback: Option<Box<dyn FnMut(&str) + Send>> = on_token.map(|mut cb| {
@@ -105,12 +105,21 @@ impl LoadedModel for AirframeModel {
     }
 }
 
-fn build_control(opts: &GenOptions) -> Option<Box<dyn airframe::control::InferenceControl + Send + Sync>> {
+fn build_control(
+    opts: &GenOptions,
+) -> Option<Box<dyn airframe::control::InferenceControl + Send + Sync>> {
     airframe::runtime::gpu::fse_control_from_patterns(&opts.fse_reject_patterns)
 }
 
-fn build_modify_logits(opts: &GenOptions) -> Option<Box<dyn Fn(&mut [f32]) + Send + Sync>> {
-    airframe::runtime::gpu::modify_logits_from_grammar(&opts.grammar_mode)
+fn build_modify_logits(rt: &GpuRuntime, opts: &GenOptions) -> Option<Box<dyn Fn(&mut [f32]) + Send + Sync>> {
+    airframe::grammar::grammar_hooks(
+        &opts.grammar_mode,
+        rt.tokenizer_arc(),
+        rt.spec().n_vocab,
+        rt.eos_token(),
+        rt.im_end_token(),
+    )
+    .map(|(mask, _control)| mask)
 }
 
 fn build_trace(opts: &GenOptions) -> Option<Box<dyn FnMut(usize, &[f32], f64) + Send>> {
@@ -125,11 +134,19 @@ mod tests {
     #[test]
     fn test_bridge_params_maps_basic_fields() {
         let opts = GenOptions {
-            max_tokens: 128, temperature: 0.5, top_p: 0.85, top_k: 40,
-            repeat_penalty: 1.2, seed: Some(7), stream: false,
+            max_tokens: 128,
+            temperature: 0.5,
+            top_p: 0.85,
+            top_k: 40,
+            repeat_penalty: 1.2,
+            seed: Some(7),
+            stream: false,
             stop_tokens: Vec::new(),
-            grammar_mode: "none".to_string(), fse_reject_patterns: String::new(),
-            math_bypass: false, trace_path: String::new(), session_id: String::new(),
+            grammar_mode: "none".to_string(),
+            fse_reject_patterns: String::new(),
+            math_bypass: false,
+            trace_path: String::new(),
+            session_id: String::new(),
         };
         let p = AirframeModel::bridge_params(&opts);
         assert_eq!(p.max_tokens, 128);
@@ -144,8 +161,11 @@ mod tests {
     fn test_bridge_params_propagates_stop_tokens() {
         let opts = GenOptions {
             stop_tokens: vec!["<|eot_id|>".to_string(), "<|im_end|>".to_string()],
-            grammar_mode: "none".to_string(), fse_reject_patterns: String::new(),
-            math_bypass: false, trace_path: String::new(), session_id: String::new(),
+            grammar_mode: "none".to_string(),
+            fse_reject_patterns: String::new(),
+            math_bypass: false,
+            trace_path: String::new(),
+            session_id: String::new(),
             ..GenOptions::default()
         };
         let p = AirframeModel::bridge_params(&opts);
@@ -158,8 +178,11 @@ mod tests {
     fn test_bridge_params_seed_default_when_none() {
         let opts = GenOptions {
             seed: None,
-            grammar_mode: "none".to_string(), fse_reject_patterns: String::new(),
-            math_bypass: false, trace_path: String::new(), session_id: String::new(),
+            grammar_mode: "none".to_string(),
+            fse_reject_patterns: String::new(),
+            math_bypass: false,
+            trace_path: String::new(),
+            session_id: String::new(),
             ..GenOptions::default()
         };
         let p = AirframeModel::bridge_params(&opts);
