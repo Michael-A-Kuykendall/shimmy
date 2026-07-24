@@ -83,9 +83,23 @@ impl LoadedModel for AirframeModel {
                 .expect("AirframeModel used before engine loaded");
             rt.reset();
 
-            // Build hooks from opts
-            let control = build_control(&opts);
-            let modify_logits = build_modify_logits(&opts);
+            // Build hooks from opts. Grammar mask + control come from
+            // airframe::grammar::grammar_hooks and share one GrammarState
+            // (the mask reads it, the control advances it), so when a
+            // grammar mode is active its control takes precedence over the
+            // FSE reject-pattern control.
+            let fse_control = build_control(&opts);
+            let (modify_logits, grammar_control) = match airframe::grammar::grammar_hooks(
+                &opts.grammar_mode,
+                rt.tokenizer_arc(),
+                rt.spec().n_vocab,
+                rt.eos_token(),
+                rt.im_end_token(),
+            ) {
+                Some((mask, control)) => (Some(mask), Some(control)),
+                None => (None, None),
+            };
+            let control = grammar_control.or(fse_control);
             let trace_cb = build_trace(&opts);
 
             let callback: Option<Box<dyn FnMut(&str) + Send>> = on_token.map(|mut cb| {
@@ -107,10 +121,6 @@ impl LoadedModel for AirframeModel {
 
 fn build_control(opts: &GenOptions) -> Option<Box<dyn airframe::control::InferenceControl + Send + Sync>> {
     airframe::runtime::gpu::fse_control_from_patterns(&opts.fse_reject_patterns)
-}
-
-fn build_modify_logits(opts: &GenOptions) -> Option<Box<dyn Fn(&mut [f32]) + Send + Sync>> {
-    airframe::runtime::gpu::modify_logits_from_grammar(&opts.grammar_mode)
 }
 
 fn build_trace(opts: &GenOptions) -> Option<Box<dyn FnMut(usize, &[f32], f64) + Send>> {
