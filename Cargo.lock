@@ -14,8 +14,6 @@ dependencies = [
 [[package]]
 name = "airframe"
 version = "0.2.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b551eaf748505cd6690d04ec46c4ed1360ca2a74d795acb1db1e7045a38f795"
 dependencies = [
  "aho-corasick",
  "airframe-observe",
@@ -42,8 +40,6 @@ dependencies = [
 [[package]]
 name = "airframe-observe"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78c75580a78cbb0eb65e8761a4a54433a36c19780540b41b3656d5b03b8056f6"
 dependencies = [
  "dzero",
  "serde",
@@ -1393,8 +1389,6 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 [[package]]
 name = "libfse"
 version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20ae97c006f0decc1514d5b6168f2a3506d80458fef022d75a3e9ed69d9b85e9"
 dependencies = [
  "aho-corasick",
 ]
@@ -2368,9 +2362,9 @@ checksum = "7231fcf252b84a01d8a739d19ad92dbc185ec41af8844e7ad7e62fba5a26ebd7"
 
 [[package]]
 name = "shimmytok"
-version = "0.7.4"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30023f3b77871d9aa7ba035b45cb1b21c1ba05ce558c5a865b3479533e010298"
+checksum = "682d134c54b2229a1e46e6b1948958005c3320ee3e970760dcff2e04ef79157c"
 dependencies = [
  "fancy-regex",
  "rayon",

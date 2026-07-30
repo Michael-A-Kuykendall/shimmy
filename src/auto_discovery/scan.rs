@@ -282,13 +282,7 @@ impl ModelAutoDiscovery {
 
         let (model_type, parameter_count, quantization) = self.parse_filename(&filename);
 
-        // CRITICAL: All GGUF files must use Llama backend (PPT Invariant requirement)
-        // GGUF is the llama.cpp format, regardless of model family name
-        let backend_type = if path.extension().and_then(|s| s.to_str()) == Some("gguf") {
-            "Llama".to_string()
-        } else {
-            model_type
-        };
+        let backend_type = model_type;
 
         // Generate a clean model name
         let name = self.generate_model_name(&filename);
