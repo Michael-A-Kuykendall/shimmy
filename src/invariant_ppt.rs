@@ -221,14 +221,8 @@ pub mod shimmy_invariants {
             Some("backend_selection"),
         );
 
-        // GGUF files must use Llama backend
-        if file_path.to_lowercase().ends_with(".gguf") {
-            assert_invariant(
-                backend == "llama" || backend == "Llama",
-                "GGUF files must use Llama backend",
-                Some("backend_selection"),
-            );
-        }
+        // Backend selection is validated by the non-empty check above;
+        // airframe's BindlessModel auto-detects architecture from GGUF metadata.
     }
 }
 
