@@ -152,7 +152,7 @@ fn dequant_q4_0(block: ptr<storage, BlockQ4_0>, idx: u32) -> f32 {
 
 > **注意**：Shimmy 目前不支持 Q2_K、Q3_K 系列及 IQ（imatrix）格式。尝试加载不支持的格式会在启动时报错。BF16 格式也暂不支持。
 >
-> **已支持 Q5_0**：自 v0.2.10 起新增 5 位元纯量化（Q5_0）插槽，与 Q4_0/Q8_0 同属非 K-quant 系列，由 fabric `TensorFact → DispatchFact` 规则自动分派。
+> **已支持 Q5_0**：5 位纯量化（Q5_0）插槽，与 Q4_0/Q8_0 同属非 K-quant 系列，由 fabric `TensorFact → DispatchFact` 规则自动分派。
 
 ---
 

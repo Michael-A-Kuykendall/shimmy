@@ -5,10 +5,38 @@ All notable changes to Shimmy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.4.0] — 2026-07-31 — Certification & Model Expansion Release
+
+### 🏆 Certified — 11 Families · 25 Model/Quant Combinations
+
+Shimmy now ships with a **full mathematical certification pipeline** that proves every model produces numerically correct GPU output. No other local LLM runner does this.
+
+**The 5-gate certification pipeline:**
+1. **Dequant gate** — `quant_verify` proves the GPU dequant shader matches the GGUF spec formula, element-by-element, for every quantization type
+2. **Structural peel gate** — `stack_dump_gpu` captures per-layer output and compares against a spec-derived plan (layer counts, dims, rope config). Zero NaN, zero missing stages
+3. **Numerical gate** — dual-peel self-consistency: two independent GPU runs compared layer-by-layer, max delta ≤ 1e-2
+4. **Decode≡Prefill gate** — `decode_gate` proves decode output matches prefill output for the same tokens (catches silent bugs that only show up during token-by-token generation)
+5. **Logits gate** — final output logits compared against a golden-vault CPU reference, element-by-element
+
+**One command** runs the full pipeline: `scripts\certify_math.bat <family-id> <gguf> "multi-token prompt"`. Exit code 0 = certified. Full write-up: [docs/CERTIFICATION.md](docs/CERTIFICATION.md).
+
+### Highlights
+- **25 model-quant combos certified** across **11 model families** with full 5-gate verification
+- **Qwen3 decode collapse fixed** — removed hardcoded Llama-only backend invariant; Qwen3 now generates coherent output
+- **Gemma4 support** — E4B and 12B-coder architecture recognition and verification
+- **Certification pipeline** — plan-vs-peel structural audit, quant_verify dequant gate, dual-peel numerical gate, decode≡prefill gate, logits gate
+- **CPU reference stack removed** — 15K lines deleted, 6.5K added
+
+### Fixed
+- **Qwen3 decode collapse fixed** (commit `43c370a`) — removed the hardcoded "GGUF files must use the Llama backend" invariant in `invariant_ppt.rs` and the `scan.rs` backend override that forced every GGUF to `backend_type = "Llama"`. Qwen3 was routed through the wrong backend and decode collapsed to gibberish. Airframe `BindlessModel` now auto-detects the architecture from GGUF metadata, so Qwen3 generates coherent output.
 
 ### Planned
 - **Grammar feature architecture** — organize, understand, and architect a proper grammar feature. The control-system architecture (FSE, grammar, trace) is being refined; the current hooks are the agile starting point to move forward from, not a finished feature.
+
+## [2.3.3] — 2026-07-24
+
+### Changed
+- Airframe dependency updated to 0.2.12 (G1 control wiring + G2 observability: control/mask/trace hooked into `generate_isf`, `FinalLogits`/`LayerOutput` emission).
 
 ## [2.3.2]
 

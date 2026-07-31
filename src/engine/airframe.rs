@@ -111,7 +111,10 @@ fn build_control(
     airframe::runtime::gpu::fse_control_from_patterns(&opts.fse_reject_patterns)
 }
 
-fn build_modify_logits(rt: &GpuRuntime, opts: &GenOptions) -> Option<Box<dyn Fn(&mut [f32]) + Send + Sync>> {
+fn build_modify_logits(
+    rt: &GpuRuntime,
+    opts: &GenOptions,
+) -> Option<Box<dyn Fn(&mut [f32]) + Send + Sync>> {
     airframe::grammar::grammar_hooks(
         &opts.grammar_mode,
         rt.tokenizer_arc(),

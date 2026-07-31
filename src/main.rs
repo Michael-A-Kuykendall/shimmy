@@ -90,9 +90,9 @@ fn validate_runtime_version() {
 /// Print startup diagnostics for serve command
 fn print_startup_diagnostics(
     version: &str,
-    #[cfg_attr(not(feature = "llama"), allow(unused_variables))] gpu_backend: Option<&str>,
-    #[cfg_attr(not(feature = "llama"), allow(unused_variables))] cpu_moe: bool,
-    #[cfg_attr(not(feature = "llama"), allow(unused_variables))] n_cpu_moe: Option<usize>,
+    gpu_backend: Option<&str>,
+    cpu_moe: bool,
+    n_cpu_moe: Option<usize>,
     model_count: usize,
     airframe_selected: bool,
     kv_quant: &str,
@@ -104,49 +104,6 @@ fn print_startup_diagnostics(
             println!("⚡ Backend: Airframe (GPU) + TurboShimmy INT4 KV — ~60% less VRAM");
         } else {
             println!("🔧 Backend: Airframe (GPU)");
-        }
-    } else {
-        // GPU backend info
-        #[cfg(feature = "llama")]
-        {
-            let backend_display = match gpu_backend {
-                Some("cpu") => "CPU only".to_string(),
-                Some("cuda") => "CUDA (GPU acceleration)".to_string(),
-                Some("vulkan") => "Vulkan (GPU acceleration)".to_string(),
-                Some("opencl") => "OpenCL (GPU acceleration)".to_string(),
-                Some("auto") | None => {
-                    // Auto-detect logic mirrors what LlamaEngine does
-                    if cfg!(feature = "llama-cuda") {
-                        "CUDA (auto-detected)".to_string()
-                    } else if cfg!(feature = "llama-vulkan") {
-                        "Vulkan (auto-detected)".to_string()
-                    } else if cfg!(feature = "llama-opencl") {
-                        "OpenCL (auto-detected)".to_string()
-                    } else {
-                        "CPU (no GPU acceleration)".to_string()
-                    }
-                }
-                Some(other) => format!("{} (custom)", other),
-            };
-            println!("🔧 Backend: {}", backend_display);
-        }
-
-        #[cfg(not(feature = "llama"))]
-        {
-            println!("🔧 Backend: Stub mode (no llama feature)");
-        }
-    }
-
-    // MoE configuration - NOW WORKING (Issue #108 fix)
-    #[cfg(feature = "llama")]
-    if cpu_moe || n_cpu_moe.is_some() {
-        if let Some(n) = n_cpu_moe {
-            println!(
-                "🧠 MoE: CPU offload first {} layers (saves VRAM for large MoE models)",
-                n
-            );
-        } else if cpu_moe {
-            println!("🧠 MoE: CPU offload ALL expert tensors (saves ~80-85% VRAM)");
         }
     }
 
@@ -167,11 +124,8 @@ fn airframe_engine_selected(legacy: bool) -> bool {
     if !cfg!(feature = "airframe") {
         return false;
     }
-    // Default to Airframe. Only opt out via --legacy flag or SHIMMY_ENGINE_BACKEND=llama
-    std::env::var("SHIMMY_ENGINE_BACKEND")
-        .or_else(|_| std::env::var("SHIMMY_EXPERIMENTAL_BACKEND"))
-        .map(|value| !value.eq_ignore_ascii_case("llama"))
-        .unwrap_or(true)
+    // Default to Airframe. Only opt out via --legacy flag.
+    true
 }
 
 /// Construct the inference engine based on CLI flags and compiled feature set.
@@ -199,16 +153,6 @@ fn build_engine(
         }
     }
 
-    #[cfg(feature = "llama")]
-    {
-        let mut adapter = engine::adapter::InferenceEngineAdapter::new_with_backend(gpu_backend);
-        if cpu_moe || n_cpu_moe.is_some() {
-            adapter = adapter.with_moe_config(cpu_moe, n_cpu_moe);
-        }
-        return Box::new(adapter);
-    }
-
-    #[cfg(not(feature = "llama"))]
     Box::new(engine::adapter::InferenceEngineAdapter::new_with_backend(
         gpu_backend,
     ))
@@ -230,10 +174,6 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .with_ansi(use_ansi)
         .init();
-
-    // Platform capability notice
-    #[cfg(all(target_arch = "aarch64", target_os = "macos", not(feature = "llama")))]
-    info!("llama.cpp temporarily disabled on macOS ARM64 due to upstream i8mm build incompatibility; using SafeTensors backend");
 
     let cli = cli::Cli::parse();
 
@@ -597,19 +537,6 @@ async fn main() -> anyhow::Result<()> {
                 println!(
                     "   For GPU acceleration, download a release binary from GitHub Releases."
                 );
-            }
-
-            // Legacy llama.cpp backend info (--legacy flag)
-            #[cfg(feature = "llama")]
-            {
-                println!();
-                println!("🔧 Legacy llama.cpp backend: ✅ Available (use --legacy or SHIMMY_ENGINE_BACKEND=llama)");
-            }
-
-            #[cfg(not(feature = "llama"))]
-            {
-                println!();
-                println!("🔧 Legacy llama.cpp backend: Disabled");
             }
 
             println!();
@@ -1807,7 +1734,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "llama")]
     fn test_print_startup_diagnostics_with_moe() {
         // Test diagnostics with MoE configuration
         print_startup_diagnostics("1.6.0", Some("cuda"), true, None, 2, false, "f32");

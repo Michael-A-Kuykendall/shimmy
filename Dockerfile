@@ -16,7 +16,7 @@ COPY benches/ ./benches/
 COPY templates/ ./templates/
 
 # Build the application
-RUN cargo build --release --features huggingface
+RUN cargo build --release --features airframe,huggingface
 
 # Runtime stage
 FROM debian:bookworm-slim

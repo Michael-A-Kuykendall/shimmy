@@ -12,8 +12,6 @@ use super::{UniversalEngine, UniversalModel, UniversalModelSpec};
 pub struct InferenceEngineAdapter {
     #[cfg(feature = "huggingface")]
     huggingface_engine: super::huggingface::HuggingFaceEngine,
-    #[cfg(feature = "llama")]
-    llama_engine: super::llama::LlamaEngine,
     #[cfg(feature = "mlx")]
     mlx_engine: super::mlx::MLXEngine,
     safetensors_engine: super::safetensors_native::SafeTensorsEngine,
@@ -31,8 +29,6 @@ impl InferenceEngineAdapter {
         Self {
             #[cfg(feature = "huggingface")]
             huggingface_engine: super::huggingface::HuggingFaceEngine::new(),
-            #[cfg(feature = "llama")]
-            llama_engine: super::llama::LlamaEngine::new(),
             #[cfg(feature = "mlx")]
             mlx_engine: super::mlx::MLXEngine::new(),
             safetensors_engine: super::safetensors_native::SafeTensorsEngine::new(),
@@ -44,19 +40,10 @@ impl InferenceEngineAdapter {
         Self {
             #[cfg(feature = "huggingface")]
             huggingface_engine: super::huggingface::HuggingFaceEngine::new(),
-            #[cfg(feature = "llama")]
-            llama_engine: super::llama::LlamaEngine::new_with_backend(_gpu_backend),
             #[cfg(feature = "mlx")]
             mlx_engine: super::mlx::MLXEngine::new(),
             safetensors_engine: super::safetensors_native::SafeTensorsEngine::new(),
         }
-    }
-
-    /// Set MoE CPU offloading configuration for llama engine
-    #[cfg(feature = "llama")]
-    pub fn with_moe_config(mut self, cpu_moe_all: bool, n_cpu_moe: Option<usize>) -> Self {
-        self.llama_engine = self.llama_engine.with_moe_config(cpu_moe_all, n_cpu_moe);
-        self
     }
 
     /// Auto-detect best backend for model
@@ -72,21 +59,14 @@ impl InferenceEngineAdapter {
                     return BackendChoice::SafeTensors;
                 }
                 "gguf" => {
-                    #[cfg(feature = "llama")]
-                    {
-                        return BackendChoice::Llama;
-                    }
-                    #[cfg(not(feature = "llama"))]
-                    {
-                        // llama.cpp was removed in v2.0. GGUF requires the Airframe GPU engine
-                        // (shimmy_server_gpu) or a build compiled with the GPU backend.
-                        return BackendChoice::Unsupported(
-                            "GGUF models require the Airframe GPU engine. \
-                             Use shimmy_server_gpu or build with --features airframe. \
-                             See https://github.com/Michael-A-Kuykendall/shimmy for setup."
-                                .to_string(),
-                        );
-                    }
+                    // GGUF models require the Airframe GPU engine (shimmy_server_gpu)
+                    // or a build compiled with the GPU backend.
+                    return BackendChoice::Unsupported(
+                        "GGUF models require the Airframe GPU engine. \
+                         Use shimmy_server_gpu or build with --features airframe. \
+                         See https://github.com/Michael-A-Kuykendall/shimmy for setup."
+                            .to_string(),
+                    );
                 }
                 #[cfg(feature = "mlx")]
                 "npz" | "mlx" => {
@@ -136,24 +116,17 @@ impl InferenceEngineAdapter {
         // Check for Ollama blob files (GGUF files without extension)
         if path_str.contains("ollama") && path_str.contains("blobs") && path_str.contains("sha256-")
         {
-            #[cfg(feature = "llama")]
+            #[cfg(feature = "huggingface")]
             {
-                return BackendChoice::Llama;
+                return BackendChoice::HuggingFace;
             }
-            #[cfg(not(feature = "llama"))]
+            #[cfg(not(feature = "huggingface"))]
             {
-                #[cfg(feature = "huggingface")]
-                {
-                    return BackendChoice::HuggingFace;
-                }
-                #[cfg(not(feature = "huggingface"))]
-                {
-                    return BackendChoice::Unsupported(
-                        "Ollama blob models require the Airframe GPU engine or HuggingFace backend. \
-                         Use shimmy_server_gpu or build with --features airframe."
-                            .to_string(),
-                    );
-                }
+                return BackendChoice::Unsupported(
+                    "Ollama blob models require the Airframe GPU engine or HuggingFace backend. \
+                     Use shimmy_server_gpu or build with --features airframe."
+                        .to_string(),
+                );
             }
         }
 
@@ -165,24 +138,17 @@ impl InferenceEngineAdapter {
             || spec.name.contains("gemma")
             || spec.name.contains("mistral")
         {
-            #[cfg(feature = "llama")]
+            #[cfg(feature = "huggingface")]
             {
-                return BackendChoice::Llama;
+                return BackendChoice::HuggingFace;
             }
-            #[cfg(not(feature = "llama"))]
+            #[cfg(not(feature = "huggingface"))]
             {
-                #[cfg(feature = "huggingface")]
-                {
-                    return BackendChoice::HuggingFace;
-                }
-                #[cfg(not(feature = "huggingface"))]
-                {
-                    return BackendChoice::Unsupported(
-                        "GGUF-named models require the Airframe GPU engine or HuggingFace backend. \
-                         Use shimmy_server_gpu or build with --features airframe."
-                            .to_string(),
-                    );
-                }
+                return BackendChoice::Unsupported(
+                    "GGUF-named models require the Airframe GPU engine or HuggingFace backend. \
+                     Use shimmy_server_gpu or build with --features airframe."
+                        .to_string(),
+                );
             }
         }
 
@@ -193,25 +159,16 @@ impl InferenceEngineAdapter {
         }
         #[cfg(not(feature = "huggingface"))]
         {
-            #[cfg(feature = "llama")]
-            {
-                BackendChoice::Llama
-            }
-            #[cfg(not(feature = "llama"))]
-            {
-                BackendChoice::Unsupported(
-                    "No inference backend enabled. Build with --features airframe or --features huggingface."
-                        .to_string(),
-                )
-            }
+            BackendChoice::Unsupported(
+                "No inference backend enabled. Build with --features airframe or --features huggingface."
+                    .to_string(),
+            )
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 enum BackendChoice {
-    #[cfg(feature = "llama")]
-    Llama,
     #[cfg(feature = "huggingface")]
     HuggingFace,
     #[cfg(feature = "mlx")]
@@ -239,8 +196,6 @@ impl InferenceEngine for InferenceEngineAdapter {
                 // Use MLX engine for Apple Silicon Metal GPU acceleration
                 self.mlx_engine.load(spec).await
             }
-            #[cfg(feature = "llama")]
-            BackendChoice::Llama => self.llama_engine.load(spec).await,
             #[cfg(feature = "huggingface")]
             BackendChoice::HuggingFace => {
                 // Convert to UniversalModelSpec for huggingface backend (for HF model IDs)
@@ -324,24 +279,14 @@ mod tests {
         let adapter = InferenceEngineAdapter::new();
 
         // Test local files still work
-        #[cfg(feature = "llama")]
-        {
-            let gguf_spec = create_test_spec("local", "model.gguf");
-            let backend = adapter.select_backend(&gguf_spec);
-            assert_eq!(backend, BackendChoice::Llama);
-        }
-
         let safetensors_spec = create_test_spec("local", "model.safetensors");
-        let backend2 = adapter.select_backend(&safetensors_spec);
-        assert_eq!(backend2, BackendChoice::SafeTensors);
+        let backend = adapter.select_backend(&safetensors_spec);
+        assert_eq!(backend, BackendChoice::SafeTensors);
 
         // Test Windows paths (should not be treated as HF model IDs)
-        #[cfg(feature = "llama")]
-        {
-            let windows_spec = create_test_spec("local", "C:\\path\\to\\model.gguf");
-            let backend3 = adapter.select_backend(&windows_spec);
-            assert_eq!(backend3, BackendChoice::Llama);
-        }
+        let windows_spec = create_test_spec("local", "C:\\path\\to\\model.safetensors");
+        let backend2 = adapter.select_backend(&windows_spec);
+        assert_eq!(backend2, BackendChoice::SafeTensors);
     }
 
     #[test]
@@ -377,18 +322,11 @@ mod tests {
         let backend = adapter.select_backend(&safetensors_spec);
         assert_eq!(backend, BackendChoice::SafeTensors);
 
-        #[cfg(feature = "llama")]
-        {
-            let gguf_spec = create_test_spec("mistral-model", "path/to/mistral.gguf");
-            let backend2 = adapter.select_backend(&gguf_spec);
-            assert_eq!(backend2, BackendChoice::Llama);
-        }
-
         #[cfg(feature = "mlx")]
         {
             let mlx_spec = create_test_spec("qwen-model", "path/to/qwen.mlx");
-            let backend3 = adapter.select_backend(&mlx_spec);
-            assert_eq!(backend3, BackendChoice::MLX);
+            let backend2 = adapter.select_backend(&mlx_spec);
+            assert_eq!(backend2, BackendChoice::MLX);
         }
     }
 }
