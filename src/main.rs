@@ -90,9 +90,9 @@ fn validate_runtime_version() {
 /// Print startup diagnostics for serve command
 fn print_startup_diagnostics(
     version: &str,
-    gpu_backend: Option<&str>,
-    cpu_moe: bool,
-    n_cpu_moe: Option<usize>,
+    _gpu_backend: Option<&str>,
+    _cpu_moe: bool,
+    _n_cpu_moe: Option<usize>,
     model_count: usize,
     airframe_selected: bool,
     kv_quant: &str,
