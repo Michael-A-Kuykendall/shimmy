@@ -21,7 +21,7 @@ Shimmy 是一個以純 **Rust** 撰寫的本地 AI 推論伺服器，相容 **Op
 
 ---
 
-## � 支持 Shimmy 的發展
+## 💝 支持 Shimmy 的發展
 
 🚀 **如果 Shimmy 對您有幫助，歡迎[贊助支持](https://github.com/sponsors/Michael-A-Kuykendall)——所有贊助款項 100% 用於保持專案永久免費。**
 
@@ -34,7 +34,7 @@ Shimmy 是一個以純 **Rust** 撰寫的本地 AI 推論伺服器，相容 **Op
 
 ---
 
-## �📚 文件索引
+## 📚 文件索引
 
 ### 入門指南
 
@@ -68,8 +68,16 @@ Shimmy 是一個以純 **Rust** 撰寫的本地 AI 推論伺服器，相容 **Op
 
 | 文件 | 說明 |
 |------|------|
+| [支援模型與認證清單](../SUPPORTED_MODELS.md) | 11 個模型家族、25 種量化組合，通過 5 門 GPU 數學驗證管線（英文） |
 | [模型擴展協議](../MODEL_EXPANSION.md) | 如何為新模型架構新增支援（英文） |
 | [跨平台編譯](../CROSS_COMPILATION.md) | 為 ARM、Linux、Windows 交叉編譯（英文） |
+
+### 常見問題
+
+| 文件 | 說明 |
+|------|------|
+| [FAQ](../FAQ.md) | 常見問題解答（英文） |
+| [認證流程](../CERTIFICATION.md) | 我們如何數學證明每個模型正確（英文） |
 
 ---
 
@@ -119,7 +127,7 @@ Shimmy 載入 **GGUF 格式**模型，支援以下量化類型：
 | Q4_K_M | 4.5 位元 | ★★★★☆ | ✅ 首選 |
 | Q4_0 | 4 位元 | ★★★☆☆ | ✅ 相容性最佳 |
 | Q8_0 | 8 位元 | ★★★★★ | ✅ 最高品質 |
-| Q5_0 | 5 位元 | ★★★★☆ | ✅ 新增支援（v0.2.10） |
+| Q5_0 | 5 位元 | ★★★★☆ | ✅ 已支援 |
 | Q5_K_M | 5.5 位元 | ★★★★☆ | ✅ 品質/大小平衡 |
 
 詳見[量化格式詳解](QUANTIZATION.md)。
@@ -135,7 +143,7 @@ Shimmy 是純 Rust 實作，無 Python 執行環境，無 C++ 相依，啟動時
 日常使用首選 `Q4_K_M`——在檔案大小和推論品質之間取得了最好的平衡。若追求最高品質且顯存充足，選 `Q8_0`。詳見[量化格式詳解](QUANTIZATION.md)。
 
 **如何在 4 GB 顯示記憶體的顯示卡上執行 3B 模型？**
-啟用 TurboShimmy：`SHIMMY_KV_QUANT=int4 ./shimmy serve`。這將 KV 顯示記憶體減少約 7 倍，使 Llama-3.2-3B 能在 2.5 GB 總顯示記憶體下執行。詳見[上方 TurboShimmy 節](#turboshimmy-int4-kv--v210-)。
+啟用 TurboShimmy：`SHIMMY_KV_QUANT=int4 ./shimmy serve`。這將 KV 顯示記憶體減少約 7 倍，使 Llama-3.2-3B 能在 2.5 GB 總顯示記憶體下執行。詳見 [turboshimmy.md](../turboshimmy.md)。
 
 **上下文長度不夠怎麼辦？**
 設定 `SHIMMY_MAX_CTX=8192`（或更高）即可，Airframe 會自動套用 YaRN RoPE 縮放。注意超出模型原生上下文 2 倍以上時品質會有所下降。詳見[擴展上下文視窗](EXTENDED_CONTEXT.md)。

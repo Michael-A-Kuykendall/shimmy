@@ -5,15 +5,7 @@ use crate::invariant_ppt::shimmy_invariants::*;
 use crate::invariant_ppt::*;
 
 // PPT tests require actual model loading, which needs a compiled backend
-#[cfg(all(
-    test,
-    any(
-        feature = "llama",
-        feature = "llama-cuda",
-        feature = "llama-vulkan",
-        feature = "llama-opencl"
-    )
-))]
+#[cfg(all(test, any(feature = "airframe", feature = "huggingface")))]
 mod contract_tests {
     use super::*;
     use tokio;
@@ -76,7 +68,7 @@ mod contract_tests {
         clear_invariant_log();
 
         // Simulate backend selection with invariants
-        assert_backend_selection_valid("model.gguf", "llama");
+        assert_backend_selection_valid("model.gguf", "airframe");
         assert_backend_selection_valid("model.safetensors", "huggingface");
 
         // Contract test: verify backend selection invariants were checked
@@ -115,7 +107,7 @@ mod contract_tests {
         assert_discovery_valid(3);
 
         // 2. Backend selection
-        assert_backend_selection_valid("phi3.gguf", "llama");
+        assert_backend_selection_valid("phi3.gguf", "airframe");
 
         // 3. Model loading
         assert_model_loaded("phi3", true);
@@ -143,15 +135,7 @@ mod contract_tests {
     }
 }
 
-#[cfg(all(
-    test,
-    any(
-        feature = "llama",
-        feature = "llama-cuda",
-        feature = "llama-vulkan",
-        feature = "llama-opencl"
-    )
-))]
+#[cfg(all(test, any(feature = "airframe", feature = "huggingface")))]
 mod property_tests {
     use super::*;
 
@@ -227,9 +211,9 @@ mod property_tests {
     fn test_backend_routing_property() {
         // Property: File extensions always map to correct backends
         let test_cases = vec![
-            ("model.gguf", "llama"),
-            ("model.GGUF", "llama"),
-            ("large-model.gguf", "llama"),
+            ("model.gguf", "airframe"),
+            ("model.GGUF", "airframe"),
+            ("large-model.gguf", "airframe"),
             ("model.safetensors", "huggingface"),
         ];
 
@@ -297,15 +281,7 @@ mod property_tests {
     }
 }
 
-#[cfg(all(
-    test,
-    any(
-        feature = "llama",
-        feature = "llama-cuda",
-        feature = "llama-vulkan",
-        feature = "llama-opencl"
-    )
-))]
+#[cfg(all(test, any(feature = "airframe", feature = "huggingface")))]
 mod exploration_tests {
     use super::*;
 

@@ -32,10 +32,6 @@ full = ["airframe", "huggingface", "mlx"] # Full compilation - includes all back
 gpu = ["airframe", "huggingface"] # GPU-optimized build via Airframe
 apple = ["airframe", "huggingface"] # Apple Silicon - Airframe via Metal + HuggingFace
 coverage = ["huggingface"] # Coverage testing - no path deps, fast compile
-llama = [] # Deprecated: llama.cpp removed in v2.0. Empty feature retained to silence cfg guards pending cleanup.
-llama-cuda = [] # Deprecated: llama.cpp CUDA backend removed in v2.0.
-llama-vulkan = [] # Deprecated: llama.cpp Vulkan backend removed in v2.0.
-llama-opencl = [] # Deprecated: llama.cpp OpenCL backend removed in v2.0.
 
 [dependencies]
 anyhow = "1"
