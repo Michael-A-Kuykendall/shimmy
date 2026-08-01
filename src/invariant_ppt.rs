@@ -4,9 +4,11 @@
 use std::cell::RefCell;
 use std::collections::HashSet;
 
+// HashSet::new is not const, so the INVARIANT_LOG thread_local can't be
+// const-constructed (the Vec one can, so it is).
 thread_local! {
     static INVARIANT_LOG: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
-    static FAILED_INVARIANTS: RefCell<Vec<String>> = RefCell::new(Vec::new());
+    static FAILED_INVARIANTS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Core invariant assertion - logs and enforces semantic contracts
