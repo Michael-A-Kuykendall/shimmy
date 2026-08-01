@@ -244,4 +244,66 @@ mod tests {
         assert!(v.contains(&"</s>".to_string()));
         assert!(v.contains(&"<|eot_id|>".to_string()));
     }
+
+    #[test]
+    fn test_message_content_text_roundtrip() {
+        let msg = OAIMessage {
+            role: "user".to_string(),
+            content: MessageContent::Text("hello".to_string()),
+        };
+        assert_eq!(msg.content_text(), "hello");
+        assert_eq!(msg.into_chat_message().content, "hello");
+    }
+
+    #[test]
+    fn test_message_content_parts_joined_with_newline() {
+        let content = MessageContent::Parts(vec![
+            ContentPart {
+                part_type: "text".to_string(),
+                text: Some("part1".to_string()),
+            },
+            ContentPart {
+                part_type: "text".to_string(),
+                text: Some("part2".to_string()),
+            },
+        ]);
+        assert_eq!(content.as_text(), "part1\npart2");
+        assert_eq!(content.into_text(), "part1\npart2");
+    }
+
+    #[test]
+    fn test_message_content_parts_skips_none_text() {
+        let content = MessageContent::Parts(vec![
+            ContentPart {
+                part_type: "image_url".to_string(),
+                text: None,
+            },
+            ContentPart {
+                part_type: "text".to_string(),
+                text: Some("only".to_string()),
+            },
+        ]);
+        assert_eq!(content.as_text(), "only");
+    }
+
+    #[test]
+    fn test_message_content_parts_empty_joins_empty() {
+        let content = MessageContent::Parts(vec![]);
+        assert_eq!(content.as_text(), "");
+        assert_eq!(content.into_text(), "");
+    }
+
+    #[test]
+    fn test_message_content_deserializes_string_and_parts() {
+        // String form
+        let json = r#"{"role":"user","content":"hi"}"#;
+        let msg: OAIMessage = serde_json::from_str(json).unwrap();
+        assert_eq!(msg.content_text(), "hi");
+
+        // Parts array form (OpenAI multi-modal shape)
+        let json =
+            r#"{"role":"user","content":[{"type":"text","text":"a"},{"type":"text","text":"b"}]}"#;
+        let msg: OAIMessage = serde_json::from_str(json).unwrap();
+        assert_eq!(msg.content_text(), "a\nb");
+    }
 }

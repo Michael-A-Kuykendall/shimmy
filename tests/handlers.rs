@@ -1,5 +1,5 @@
 use axum::{extract::State, routing::get, Json, Router};
-use shimmy::openai_compat::{self, ChatCompletionRequest, MessageContent, OAIMessage};
+use shimmy::openai_compat::{self, ChatCompletionRequest};
 use shimmy::{engine::adapter::InferenceEngineAdapter, model_registry::Registry, AppState};
 use std::sync::Arc;
 use tokio::net::TcpListener;

@@ -96,6 +96,12 @@ impl InferenceEngine for MLXEngine {
             ));
         }
 
+        if !Self::check_mlx_python_available() {
+            return Err(anyhow!(
+                "MLX Python packages are not installed. Run `pip install mlx` to enable the MLX engine."
+            ));
+        }
+
         if !Self::is_mlx_compatible(spec) {
             return Err(anyhow!(
                 "Model {} is not compatible with MLX engine",
@@ -161,7 +167,7 @@ impl MLXModel {
 
         let response = format!(
             "MLX generated response for prompt: '{}...' (max_tokens: {})",
-            &prompt.chars().take(50).collect::<String>(),
+            prompt.chars().take(50).collect::<String>(),
             options.max_tokens
         );
 

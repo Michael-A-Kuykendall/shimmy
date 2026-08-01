@@ -111,10 +111,15 @@ fn build_control(
     airframe::runtime::gpu::fse_control_from_patterns(&opts.fse_reject_patterns)
 }
 
+/// Pre-sample logits mask hook type shared by grammar and FSE control paths.
+type LogitsMask = Box<dyn Fn(&mut [f32]) + Send + Sync>;
+/// Post-sample trace callback type (step, logits, elapsed).
+type TraceHook = Box<dyn FnMut(usize, &[f32], f64) + Send>;
+
 fn build_modify_logits(
     rt: &GpuRuntime,
     opts: &GenOptions,
-) -> Option<Box<dyn Fn(&mut [f32]) + Send + Sync>> {
+) -> Option<LogitsMask> {
     airframe::grammar::grammar_hooks(
         &opts.grammar_mode,
         rt.tokenizer_arc(),
@@ -125,7 +130,7 @@ fn build_modify_logits(
     .map(|(mask, _control)| mask)
 }
 
-fn build_trace(opts: &GenOptions) -> Option<Box<dyn FnMut(usize, &[f32], f64) + Send>> {
+fn build_trace(opts: &GenOptions) -> Option<TraceHook> {
     airframe::runtime::gpu::trace_callback(&opts.trace_path)
 }
 

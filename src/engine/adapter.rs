@@ -98,7 +98,7 @@ impl InferenceEngineAdapter {
         #[cfg(feature = "mlx")]
         {
             // Check if we're on Apple Silicon and model is MLX-compatible
-            if cfg!(target_os = "macos") && std::env::consts::ARCH == "aarch64" {
+            if super::mlx::MLXEngine::is_hardware_supported() {
                 let model_name = spec.name.to_lowercase();
                 if model_name.contains("llama")
                     || model_name.contains("mistral")

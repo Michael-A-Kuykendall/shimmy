@@ -24,3 +24,16 @@ pub async fn diag_handler() -> Json<Diag> {
         mem_total_mb,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn diag_handler_returns_valid_fields() {
+        let Json(diag) = diag_handler().await;
+        assert!(!diag.os.is_empty(), "os must be populated");
+        assert!(diag.cores >= 1, "cores must be >= 1 on this machine");
+        assert!(diag.mem_total_mb > 0, "total memory must be non-zero");
+    }
+}

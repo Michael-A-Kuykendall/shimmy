@@ -689,6 +689,42 @@ mod tests {
     }
 
     #[test]
+    fn test_simple_tokenizer_encode_empty_string() {
+        let tokenizer = SafeTensorsModel::create_simple_char_tokenizer().unwrap();
+        // Encode of empty string yields only the BOS token.
+        let tokens = tokenizer.encode("");
+        assert_eq!(tokens, vec![tokenizer.bos_token]);
+    }
+
+    #[test]
+    fn test_simple_tokenizer_decode_empty_tokens() {
+        let tokenizer = SafeTensorsModel::create_simple_char_tokenizer().unwrap();
+        // Decode of empty token vec yields an empty string (no BOS/EOS specials).
+        let decoded = tokenizer.decode(&[]);
+        assert_eq!(decoded, "");
+    }
+
+    #[test]
+    fn test_simple_tokenizer_encode_unknown_char_falls_back() {
+        let tokenizer = SafeTensorsModel::create_simple_char_tokenizer().unwrap();
+        // Characters not in the vocab should not panic; encode must still return tokens.
+        let tokens = tokenizer.encode("hello\u{1F600}");
+        assert!(!tokens.is_empty());
+    }
+
+    #[test]
+    fn test_is_safetensors_model_mixed_case_and_no_ext() {
+        // Mixed-case extension is not recognized by extension match.
+        assert!(!SafeTensorsEngine::is_safetensors_model(Path::new(
+            "model.SAFETENSORS"
+        )));
+        // No extension, non-existent file -> false.
+        assert!(!SafeTensorsEngine::is_safetensors_model(Path::new(
+            "no_extension_here"
+        )));
+    }
+
+    #[test]
     fn test_simple_tokenizer_encode_decode() {
         let tokenizer = SafeTensorsModel::create_simple_char_tokenizer().unwrap();
 
