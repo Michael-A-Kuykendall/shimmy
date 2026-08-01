@@ -142,3 +142,7 @@ docs/shimmy-workspace.code-workspace
 libs/headers/
 libs/windows-x86_64/llama.lib
 libs/vision/
+
+# Tarpaulin coverage report
+tarpaulin-report.html
+
