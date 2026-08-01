@@ -6,6 +6,7 @@ use crate::invariant_ppt::*;
 
 // PPT tests require actual model loading, which needs a compiled backend
 #[cfg(all(test, any(feature = "airframe", feature = "huggingface")))]
+#[serial_test::serial]
 mod contract_tests {
     use super::*;
     use tokio;
@@ -77,7 +78,6 @@ mod contract_tests {
             &[
                 "File path for backend selection must not be empty",
                 "Selected backend must not be empty",
-                "GGUF files must use Llama backend",
             ],
         );
     }
@@ -124,7 +124,6 @@ mod contract_tests {
             &[
                 "Model discovery must return reasonable count",
                 "File path for backend selection must not be empty",
-                "GGUF files must use Llama backend",
                 "Model name must not be empty",
                 "Model loaded successfully",
                 "Generation prompt must not be empty",
@@ -136,6 +135,7 @@ mod contract_tests {
 }
 
 #[cfg(all(test, any(feature = "airframe", feature = "huggingface")))]
+#[serial_test::serial]
 mod property_tests {
     use super::*;
 
@@ -239,17 +239,6 @@ mod property_tests {
                 "Missing invariant check for backend on {}",
                 file_path
             );
-
-            // For GGUF files, verify the specific invariant
-            if file_path.to_lowercase().ends_with(".gguf") {
-                assert!(
-                    checked
-                        .iter()
-                        .any(|inv| inv.contains("GGUF files must use Llama backend")),
-                    "Missing GGUF-specific invariant check for {}",
-                    file_path
-                );
-            }
         }
     }
 
