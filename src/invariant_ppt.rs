@@ -1,12 +1,12 @@
 // PPT + Invariant Testing System for Shimmy
 // Provides semantic integrity and regression protection
 
+use std::cell::RefCell;
 use std::collections::HashSet;
-use std::sync::Mutex;
 
-lazy_static::lazy_static! {
-    static ref INVARIANT_LOG: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
-    static ref FAILED_INVARIANTS: Mutex<Vec<String>> = Mutex::new(Vec::new());
+thread_local! {
+    static INVARIANT_LOG: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
+    static FAILED_INVARIANTS: RefCell<Vec<String>> = RefCell::new(Vec::new());
 }
 
 /// Core invariant assertion - logs and enforces semantic contracts
@@ -17,15 +17,15 @@ pub fn assert_invariant(condition: bool, message: &str, context: Option<&str>) {
     };
 
     // Always log that this invariant was checked
-    if let Ok(mut log) = INVARIANT_LOG.lock() {
-        log.insert(full_message.clone());
-    }
+    INVARIANT_LOG.with(|log| {
+        log.borrow_mut().insert(full_message.clone());
+    });
 
     // Enforce the invariant
     if !condition {
-        if let Ok(mut failed) = FAILED_INVARIANTS.lock() {
-            failed.push(full_message.clone());
-        }
+        FAILED_INVARIANTS.with(|failed| {
+            failed.borrow_mut().push(full_message.clone());
+        });
         panic!("INVARIANT VIOLATION: {}", full_message);
     }
 }
@@ -56,10 +56,7 @@ where
 pub fn contract_test(name: &str, required_invariants: &[&str]) {
     println!("📋 Running contract test: {}", name);
 
-    let log = match INVARIANT_LOG.lock() {
-        Ok(log) => log,
-        Err(poisoned) => poisoned.into_inner(),
-    };
+    let log = INVARIANT_LOG.with(|log| log.borrow().clone());
     let mut missing_invariants = Vec::new();
 
     for required in required_invariants {
@@ -100,40 +97,21 @@ where
 /// Clear the invariant log (for test isolation)
 #[cfg(test)]
 pub fn clear_invariant_log() {
-    // Handle poisoned mutexes by force-clearing the data
-    match INVARIANT_LOG.lock() {
-        Ok(mut log) => log.clear(),
-        Err(poisoned) => {
-            let mut log = poisoned.into_inner();
-            log.clear();
-        }
-    }
-    match FAILED_INVARIANTS.lock() {
-        Ok(mut failed) => failed.clear(),
-        Err(poisoned) => {
-            let mut failed = poisoned.into_inner();
-            failed.clear();
-        }
-    }
+    INVARIANT_LOG.with(|log| log.borrow_mut().clear());
+    FAILED_INVARIANTS.with(|failed| failed.borrow_mut().clear());
 }
 
 /// Get all invariants that have been checked
 #[cfg(test)]
 pub fn checked_invariants() -> Vec<String> {
-    match INVARIANT_LOG.lock() {
-        Ok(log) => log.iter().cloned().collect(),
-        Err(poisoned) => poisoned.into_inner().iter().cloned().collect(),
-    }
+    INVARIANT_LOG.with(|log| log.borrow().iter().cloned().collect())
 }
 
 /// Get all failed invariants
 #[cfg(test)]
 #[allow(dead_code)] // test-only helper; dead in non-test builds but retained for assertion introspection
 pub fn failed_invariants() -> Vec<String> {
-    match FAILED_INVARIANTS.lock() {
-        Ok(failed) => failed.clone(),
-        Err(poisoned) => poisoned.into_inner().clone(),
-    }
+    FAILED_INVARIANTS.with(|failed| failed.borrow().clone())
 }
 
 /// Shimmy-specific invariant helpers
