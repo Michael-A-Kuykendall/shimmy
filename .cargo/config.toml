@@ -1,3 +1,0 @@
-[patch.crates-io]
-airframe = { path = "../airframe" }
-
