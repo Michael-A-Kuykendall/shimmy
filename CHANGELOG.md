@@ -5,6 +5,29 @@ All notable changes to Shimmy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] — 2026-08-01 — Hotfix: Test coverage, clippy warnings, CI fixes
+
+### Fixed
+- **Clippy warnings resolved** — 14 warnings across the codebase, fixed properly (no `#[allow]`):
+  - `invariant_ppt.rs`: thread-local log with `const` initializer
+  - `engine/mlx.rs`: removed redundant `&` in format arg
+  - `engine/airframe.rs`: type aliases for complex closure types
+  - `tests/handlers.rs`: removed unused imports
+  - `openai_compat/mod.rs`: `map_or` simplified to `is_some_and`
+  - MLX `is_hardware_supported()` and `check_mlx_python_available()` wired into adapter and load path
+- **PPT contract test isolation** — invariant log made thread-local (`RefCell` instead of `Mutex`), eliminating race conditions in parallel test execution
+- **Removed stale Llama backend invariant** — "GGUF files must use Llama backend" invariant removed from PPT contract tests (backend auto-detection replaced it)
+
+### Test Coverage
+- **New tests added** — `diag.rs` (1), `test_utils.rs` (3), `openai_compat/types.rs` (6), `safetensors_native.rs` (4)
+- **Edge case coverage** — `MessageContent::Parts` empty/none, `SimpleTokenizer` encode/decode empty/unknown, `is_safetensors_model` mixed-case/no-ext, `ToolRegistry` lookup/execute, calculator tool expression parsing
+- Overall lib coverage: 52.66% → 53.66%
+
+### Chores
+- Updated shimmytok to 0.8.2 (UINT16/INT8/UINT8/INT16 metadata support)
+- Updated airframe to 0.2.13 from crates.io (removed local path patch)
+- ISF (Inference Saturation Fabric) is now the default feature in airframe
+
 ## [2.4.0] — 2026-07-31 — Certification & Model Expansion Release
 
 ### 🏆 Certified — 11 Families · 25 Model/Quant Combinations
