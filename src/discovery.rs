@@ -386,6 +386,12 @@ mod tests {
     use std::fs;
     use tempfile::TempDir;
 
+    // Serialize env-mutating tests against other env-mutating tests in the
+    // crate (e.g. main.rs::test_environment_cleanup) via the shared lock.
+    fn env_guard() -> std::sync::MutexGuard<'static, ()> {
+        crate::test_utils::acquire_env()
+    }
+
     #[test]
     fn test_model_discovery_new() {
         let discovery = ModelDiscovery::new();
@@ -405,6 +411,7 @@ mod tests {
     #[test]
     fn test_from_env_with_shimmy_base_gguf() {
         // Set environment variable
+        let _guard = env_guard();
         env::set_var("SHIMMY_BASE_GGUF", "/models/test.gguf");
 
         let discovery = ModelDiscovery::from_env();
@@ -423,6 +430,7 @@ mod tests {
     #[test]
     fn test_from_env_with_home_directories() {
         // Temporarily set HOME/USERPROFILE
+        let _guard = env_guard();
         let original_home = env::var("HOME").or_else(|_| env::var("USERPROFILE"));
         env::set_var("HOME", "/test/home");
 
@@ -720,6 +728,7 @@ mod tests {
     #[test]
     fn test_environment_variable_edge_cases() {
         // Test from_env when SHIMMY_BASE_GGUF has no parent
+        let _guard = env_guard();
         env::set_var("SHIMMY_BASE_GGUF", "model.gguf"); // No directory separator
 
         let discovery = ModelDiscovery::from_env();
@@ -734,6 +743,7 @@ mod tests {
     #[test]
     fn test_from_env_no_environment_variables() {
         // Clear all relevant environment variables
+        let _guard = env_guard();
         env::remove_var("SHIMMY_BASE_GGUF");
         env::remove_var("SHIMMY_MODEL_PATHS");
         env::remove_var("OLLAMA_MODELS");

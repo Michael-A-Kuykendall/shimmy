@@ -1,6 +1,19 @@
 // Test utilities for shimmy
 use anyhow::Result;
 use std::path::Path;
+use std::sync::{Mutex, MutexGuard};
+
+/// Global lock serializing tests that mutate process-global environment
+/// variables. `env::set_var`/`env::remove_var` are process-global, so parallel
+/// tests mutating the same variables race and intermittently fail. Hold this
+/// lock around any environment mutation in a test.
+static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+/// Acquire the environment-mutation lock. Returns a guard held for the
+/// duration of the env-mutating section of a test.
+pub fn acquire_env() -> MutexGuard<'static, ()> {
+    ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner())
+}
 
 /// Create a test SafeTensors file with given data
 pub fn create_test_safetensors(path: &str, data: &[u8]) -> Result<()> {

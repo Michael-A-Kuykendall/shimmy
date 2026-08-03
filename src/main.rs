@@ -602,6 +602,7 @@ mod tests {
     #[tokio::test]
     async fn test_main_initialization_paths() {
         // Test initialization paths in main() - lines 25-44
+        let _guard = shimmy::test_utils::acquire_env();
         env::remove_var("SHIMMY_BASE_GGUF");
         env::remove_var("SHIMMY_LORA_GGUF");
 
@@ -633,6 +634,7 @@ mod tests {
     #[tokio::test]
     async fn test_environment_variable_handling() {
         // Test environment variable handling (lines 35-36)
+        let _guard = shimmy::test_utils::acquire_env();
         // First clean up any existing vars to ensure clean state
         env::remove_var("SHIMMY_BASE_GGUF");
         env::remove_var("SHIMMY_LORA_GGUF");
@@ -946,6 +948,7 @@ mod tests {
     #[test]
     fn test_model_registration_with_env_vars() {
         // Test model registration with environment variables (lines 33-40)
+        let _guard = shimmy::test_utils::acquire_env();
         env::set_var("SHIMMY_BASE_GGUF", "/test/base.gguf");
         env::set_var("SHIMMY_LORA_GGUF", "/test/lora.safetensors");
 
@@ -1029,6 +1032,7 @@ mod tests {
     #[tokio::test]
     async fn test_serve_command_execution_simulation() {
         // Simulate serve command execution (lines 47-84)
+        let _guard = shimmy::test_utils::acquire_env();
         env::set_var("SHIMMY_BASE_GGUF", "./test.gguf");
 
         // Simulate main() initialization (lines 25-44)
@@ -1612,7 +1616,9 @@ mod tests {
 
     #[test]
     fn test_environment_cleanup() {
-        // Test proper environment variable cleanup after tests
+        // Test proper environment variable cleanup after tests.
+        // env mutation is process-global; serialize against other env tests.
+        let _env_guard = shimmy::test_utils::acquire_env();
         let test_vars = vec!["SHIMMY_BASE_GGUF", "SHIMMY_LORA_GGUF"];
 
         // Save original values
