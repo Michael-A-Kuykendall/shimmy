@@ -63,6 +63,12 @@ Releases are coordinated with Airframe via `scripts/release-coordinated.sh` in t
 workspace root. One command handles version bumps, commits, tags, crates.io publish,
 and GitHub Releases for both repos. Never bump versions or tag manually.
 
+## Branch model
+
+- **Single live branch: `main`.** No `master` branch exists on any remote.
+- All work merges into `main` locally; push main + tag to `origin` (public) and
+  `private` (working copy). No cloud PRs, no cloud merges.
+
 ## What NOT To Do
 
 - Do NOT add an `airframe/` submodule inside this repo.
