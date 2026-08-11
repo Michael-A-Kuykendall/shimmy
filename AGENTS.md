@@ -19,7 +19,7 @@ airframe = { version = "0.2" }  ← PUBLIC crates.io dep — Airframe is Shimmy'
   - `origin` → `https://github.com/Michael-A-Kuykendall/shimmy-private.git` (private working copy)
   - `public` → `https://github.com/Michael-A-Kuykendall/shimmy.git` (public GitHub repo users see)
 - In the submodule context (`shimmy_integration/` inside airframe workspace): push with `git push private <branch>`.
-- In the standalone context (`C:/Users/micha/repos/shimmy-private`): push with `git push origin <branch>` (private) or `git push public <branch>` (public).
+- In the standalone context (this repo — `/home/michael/repos/airframe-workspace/shimmy` after the 2026-08-11 Windows→Linux migration; the old `C:/Users/micha/repos/shimmy-private` standalone copy was deleted): push with `git push origin <branch>` (private) or `git push public <branch>` (public).
 - Do not push unless explicitly requested by the user.
 - To publish to the public shimmy repo, push to the `public` remote.
 
