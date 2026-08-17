@@ -193,7 +193,7 @@ See [docs/ppt-invariant-testing.md](docs/ppt-invariant-testing.md) for technical
 
 ### Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Michael-A-Kuykendall/shimmy&type=Timeline)](https://www.star-history.com/#Michael-A-Kuykendall/shimmy&Timeline)
+[![Star History Chart](https://star-history.dera.page/svg?repos=Michael-A-Kuykendall/shimmy&type=Timeline)](https://star-history.dera.page/#Michael-A-Kuykendall/shimmy&Timeline)
 
 ### 🚀 Momentum Snapshot
 
