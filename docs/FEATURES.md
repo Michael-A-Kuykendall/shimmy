@@ -10,10 +10,6 @@
 - `/metrics` endpoint for monitoring
 - Enhanced error messages
 
-## RustChain Integration
-- Compatible as RustChain LLM provider
-- See `docs/rustchain-provider.md` for configuration
-
 ## CLI Commands
 - `serve` - Start HTTP server with all features
 - `list` - Show discovered models

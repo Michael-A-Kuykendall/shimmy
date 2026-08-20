@@ -2,39 +2,6 @@
 
 This guide shows how to integrate Shimmy with various tools and platforms.
 
-## RustChain Integration
-
-Shimmy works seamlessly with RustChain for AI agent mission execution.
-
-### Setup
-
-1. Start Shimmy server:
-```bash
-export SHIMMY_BASE_GGUF=/path/to/model.gguf
-shimmy serve --bind 127.0.0.1:11435
-```
-
-2. Configure RustChain to use Shimmy:
-```toml
-# rustchain.toml
-[llm]
-provider = "shimmy"
-base_url = "http://localhost:11435"
-model = "default"
-```
-
-3. Create RustChain missions that use LLM steps:
-```yaml
-version: "1.0"
-name: "code_analysis"
-steps:
-  - id: "analyze"
-    step_type: "llm"
-    parameters:
-      prompt: "Analyze this code: {{code_input}}"
-      max_tokens: 500
-```
-
 ## Punch Discovery Integration
 
 Use Shimmy with punch-discovery for enhanced code analysis.

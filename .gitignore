@@ -78,7 +78,6 @@ models/
 # Development artifacts and testing files
 punch_analysis.json
 ollama_test_result.txt
-rustchain.exe
 coverage_run.log
 *.ps1
 SHOWCASE-SUMMARY.md
