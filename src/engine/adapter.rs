@@ -102,25 +102,10 @@ mod tests {
     }
 
     #[test]
-<<<<<<< HEAD
-    fn test_local_file_detection() {
-        let adapter = InferenceEngineAdapter::new();
-
-        // Test local files still work
-        let safetensors_spec = create_test_spec("local", "model.safetensors");
-        let backend = adapter.select_backend(&safetensors_spec);
-        assert_eq!(backend, BackendChoice::SafeTensors);
-
-        // Test Windows paths (should not be treated as HF model IDs)
-        let windows_spec = create_test_spec("local", "C:\\path\\to\\model.safetensors");
-        let backend2 = adapter.select_backend(&windows_spec);
-        assert_eq!(backend2, BackendChoice::SafeTensors);
-=======
     #[cfg(feature = "airframe")]
     fn test_gguf_routes_to_airframe() {
         let a = InferenceEngineAdapter::new();
         assert_eq!(a.select_backend(&spec("m", "model.gguf")), BackendChoice::Airframe);
->>>>>>> 1b661ad (fix: strip legacy engine code, clean feature flags for v2.2 release)
     }
 
     #[test]
@@ -130,33 +115,5 @@ mod tests {
             a.select_backend(&spec("m", "/models/org/pytorch_model.safetensors")),
             BackendChoice::SafeTensors
         );
-<<<<<<< HEAD
-        let backend2 = adapter.select_backend(&safetensors_complex);
-        assert_eq!(backend2, BackendChoice::SafeTensors);
-
-        // Windows paths with safetensors
-        let safetensors_windows =
-            create_test_spec("model", "C:\\models\\org\\model\\model.safetensors");
-        let backend3 = adapter.select_backend(&safetensors_windows);
-        assert_eq!(backend3, BackendChoice::SafeTensors);
-    }
-
-    #[test]
-    fn test_file_extension_priority() {
-        let adapter = InferenceEngineAdapter::new();
-
-        // File extensions should take priority over everything else
-        let safetensors_spec = create_test_spec("llama-model", "path/to/llama.safetensors");
-        let backend = adapter.select_backend(&safetensors_spec);
-        assert_eq!(backend, BackendChoice::SafeTensors);
-
-        #[cfg(feature = "mlx")]
-        {
-            let mlx_spec = create_test_spec("qwen-model", "path/to/qwen.mlx");
-            let backend2 = adapter.select_backend(&mlx_spec);
-            assert_eq!(backend2, BackendChoice::MLX);
-        }
-=======
->>>>>>> 1b661ad (fix: strip legacy engine code, clean feature flags for v2.2 release)
     }
 }
