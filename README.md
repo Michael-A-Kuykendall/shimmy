@@ -76,6 +76,7 @@ Under the hood it runs on **Airframe**, a pure-Rust WebGPU (WGSL) transformer en
 | **Ministral** | [Ministral-3-14B-Reasoning](https://huggingface.co/bartowski/Ministral-3-14B-Reasoning-GGUF) | Q4_K_M |
 | **StarCoder2** | [StarCoder2-3B](https://huggingface.co/second-state/StarCoder2-3B-GGUF) | Q4_K_M |
 
+**SafeTensors format** (`.safetensors`) is supported for model loading via `safetensors_native`. Full Airframe-native inference for SafeTensors remains roadmap work; see [docs/v2-roadmap.md](docs/v2-roadmap.md).
 
 
 
