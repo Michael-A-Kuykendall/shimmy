@@ -30,6 +30,10 @@ airframe = { version = "0.2" }  ← PUBLIC crates.io dep — Airframe is Shimmy'
 `cargo test` must finish with 0 failures before any task is considered done.
 There is no such thing as a "pre-existing" failure. Fix it before moving on.
 
+**ALWAYS use `--release` for `cargo clippy` and `cargo build`.** Debug-profile builds
+produce ~18GB of artifacts in `target/debug/` that waste disk space. Never run bare
+`cargo clippy` or `cargo build` without `--release`.
+
 ## Architecture (v2.0)
 
 - **Engine**: wgpu/WebGPU WGSL pipeline via Airframe (crates.io: `airframe = "0.1"`). Replaces llama.cpp entirely.
