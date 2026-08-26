@@ -60,7 +60,7 @@ The final output logits must be correct. This is the last line of defense.
 
 ### Predictive Property-Based Testing (PPT)
 
-Our testing follows the [PPT Invariant Guide](https://github.com/Michael-A-Kuykendall/airframe/blob/master/docs/ppt-invariant-testing.md) (also in `~/Downloads/ppt_invariant_guide.md`). The system uses three layers:
+Our testing follows the [PPT Invariant Guide](https://github.com/Michael-A-Kuykendall/airframe/blob/main/docs/ppt-invariant-testing.md) (also in `~/Downloads/ppt_invariant_guide.md`). The system uses three layers:
 
 | Layer | Description | Enforced With |
 |---|---|---|
