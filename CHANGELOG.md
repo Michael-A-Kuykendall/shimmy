@@ -5,6 +5,48 @@ All notable changes to Shimmy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] — 2026-08-26 — Certification Consolidation + Engine Cleanup + v2.2 Promotion
+
+### 🏆 Certified — 12 Families · 26 Model/Quant Combinations
+
+Shimmy's certification pipeline has been **consolidated from the old 5-gate + CHAT regime into a clean 3-box regimen** (MATH + INFERENCE + DETERMINISM), matching the airframe 0.4.0 release. The regression-causing chat box is gone, replaced with deterministic inference verification.
+
+**The 3-box certification regimen:**
+1. **MATH** — GPU dequant audit, structural peel, plan-vs-peel reds, numerical self-consistency
+2. **INFERENCE** — 5-prompt battery (factual / creative / arithmetic / kv_cache / dev_question) on real GPU
+3. **DETERMINISM** — two identical runs must produce identical text
+
+**26 certified model/quant combinations across 12 families** — up from 25 in v2.4.0. New: llama-3.1-8b, qwen2-7b, gemma-2-2b (plus re-certification of all prior models under the new regimen).
+
+### Highlights
+
+- **v2.2 release cleanup promoted to main** — Legacy engine code stripped (huggingface.rs, mlx.rs, universal.rs, rustchain_compat.rs removed — ~1,600 lines deleted). Feature flags cleaned. Shimmy is now a pure Airframe product.
+- **CI simplified** — Removed huggingface/mlx/llama references from CI/CD. Faster, cleaner builds.
+- **Certification alignment** — Shimmy's cert documentation, README, and supported-models tables now align with airframe's 3-box regimen and 26-model count.
+
+### Removals
+
+- **`engine/huggingface.rs`** (428 lines) — removed
+- **`engine/mlx.rs`** (323 lines) — removed
+- **`engine/universal.rs`** (573 lines) — removed
+- **`src/rustchain_compat.rs`** (306 lines) — removed
+- **`docs/rustchain-provider.md`** (40 lines) — removed
+- All RustChain provider references scrubbed from docs, .gitignore, lib.rs
+
+### Documentation
+
+- **v2-roadmap.md** added (131 lines) — current roadmap and release planning
+- Chinese user manuals updated
+- Safetensors release status clarified
+
+### Infrastructure
+
+- **Beads issue tracking initialized** — `.beads/` Dolt-backed board for durable task tracking
+- **Cargo.lock refreshed** for path-sourced airframe patch
+
+### Commits
+18 commits since v2.5.0 — see git log `v2.5.0..HEAD` for full list.
+
 ## [2.4.1] — 2026-08-01 — Hotfix: Test coverage, clippy warnings, CI fixes
 
 ### Fixed

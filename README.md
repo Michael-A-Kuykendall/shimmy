@@ -36,7 +36,7 @@
 
 Shimmy is a **single-binary** that provides **100% OpenAI-compatible endpoints** for GGUF models. Point your existing AI tools to Shimmy and they just work — locally, privately, and free.
 
-Under the hood it runs on **Airframe**, a pure-Rust WebGPU (WGSL) transformer engine built from scratch. No C++ toolchain, no backend flags, no compilation required. Version history lives in the [CHANGELOG](CHANGELOG.md); see the [Airframe CHANGELOG](https://github.com/Michael-A-Kuykendall/airframe/blob/master/CHANGELOG.md) for engine release notes.
+Under the hood it runs on [**Airframe**](https://github.com/Michael-A-Kuykendall/airframe) (v0.4.0), a pure-Rust WebGPU (WGSL) transformer engine built from scratch. No C++ toolchain, no backend flags, no compilation required. 26 models certified. Version history lives in the [CHANGELOG](CHANGELOG.md); see the [Airframe CHANGELOG](https://github.com/Michael-A-Kuykendall/airframe/blob/main/CHANGELOG.md) for engine release notes.
 
 **Why this matters:**
 - No C++ toolchain required — Rust only, top to bottom
@@ -49,12 +49,13 @@ Under the hood it runs on **Airframe**, a pure-Rust WebGPU (WGSL) transformer en
 
 ## 🎯 Supported Models
 
-**11 model families · 25 certified model/quant combinations** — every model below passes Shimmy's 5-gate GPU math verification pipeline (dequant, structural peel, numerical, decode≡prefill, logits) against the certification ledger. GGUF files load as-is; no recompilation, no hardcoded per-model constants.
+**12 model families · 26 certified model/quant combinations** — every model below passes Shimmy's 3-box certification regimen (MATH + INFERENCE + DETERMINISM) against the certification ledger. GGUF files load as-is; no recompilation, no hardcoded per-model constants.
 
 | Family | Model | Quants |
 |---|---|---|
 | **Llama** | [Llama-3.2-1B-Instruct](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF) | Q4_K_M · Q6_K |
 |  | [Llama-3.2-3B-Instruct](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF) | Q4_K_M |
+|  | [Llama-3.1-8B-Instruct](https://huggingface.co/bartowski/Llama-3.1-8B-Instruct-GGUF) | Q4_K_M |
 |  | [TinyLlama-1.1B-Chat](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF) | Q4_0 · Q5_K_M · Q6_K |
 | **Qwen3** | [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B-GGUF) | Q4_K_M |
 |  | [Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B-GGUF) | Q4_K_M |
@@ -69,7 +70,7 @@ Under the hood it runs on **Airframe**, a pure-Rust WebGPU (WGSL) transformer en
 |  | [Phi-3-mini-4k-Instruct](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) | Q4_0 |
 | **Phi-2** | [Phi-2](https://huggingface.co/TheBloke/phi-2-GGUF) | Q4_K_M |
 | **Gemma-2** | [Gemma-2-2B-it](https://huggingface.co/bartowski/gemma-2-2b-it-GGUF) | Q4_K_M |
-|  | [Gemma-2-9B-it](https://huggingface.co/bartowski/gemma-2-9b-it-GGUF) | Q4_K_M |
+|  | [Gemma-2-9B-it](https://huggingface.co/bartowski/gemma-2-9b-it-GGUF) | Q4_K_M (engine: supported, cert: see [v2-roadmap](docs/v2-roadmap.md)) |
 | **Gemma-4** | [Gemma-4-12B-coder](https://huggingface.co/google/gemma-4-12B-coder-GGUF) | Q4_K_M |
 |  | [Gemma-4-E4B](https://huggingface.co/google/gemma-4-E4B-it-GGUF) | Q4_K_M |
 | **DeepSeek-R1** | [DeepSeek-R1-0528-Qwen3-8B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-8B-GGUF) | Q4_K_M |
@@ -85,9 +86,9 @@ Under the hood it runs on **Airframe**, a pure-Rust WebGPU (WGSL) transformer en
 - **⚡ [TurboShimmy INT4 KV Cache](docs/turboshimmy.md)** — ~7× less KV VRAM with one flag (`--kv-quant int4`). Run Llama-3.2-3B on 4 GB GPUs.
 - **🚀 [OpenAI SDK Compatibility](docs/INTEGRATION.md)** — drop-in replacement; VSCode Copilot, Cursor, Continue.dev, any OpenAI SDK.
 - **🔧 [Extended Context](docs/EXTENDED_CONTEXT.md)** — YaRN RoPE scaling via `SHIMMY_MAX_CTX`.
-- **📦 [Migrating from v1.x](docs/MIGRATION_v2.md)** — the llama.cpp backend was removed in v2.0; see the migration guide.
+- **📦 [Migrating from v1.x](docs/MIGRATION_v2.md)** — llama.cpp, MLX, HuggingFace, and RustChain backends were all removed in v2.0+; see the migration guide. Shimmy is now a pure Airframe product.
 - **🧠 MOE support** — Mixture-of-Experts CPU offloading is on the [Airframe roadmap](docs/AIRFRAME_MOE_ROADMAP.md).
-- **🏆 Certification** — Every model passes a 5-gate mathematical verification pipeline. See [docs/CERTIFICATION.md](docs/CERTIFICATION.md) for how it works.
+- **🏆 Certification** — Every model passes a 3-box certification regimen (MATH + INFERENCE + DETERMINISM). See [docs/CERTIFICATION.md](docs/CERTIFICATION.md) for how it works.
 
 ---
 

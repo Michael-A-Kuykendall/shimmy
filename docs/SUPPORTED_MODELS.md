@@ -6,19 +6,20 @@ window is read directly from the GGUF.
 
 ## Certified Models
 
-The following model configurations have passed the full **5-gate certification**
-pipeline (dequant + structural peel + numerical + decode≡prefill + logits),
-validated on the RTX 3060 reference GPU. Certification records live in the
-workspace ledger (`cert/math_ledger.duckdb`) and per-model packages under
-`cert/packages/`. The README's **Supported Models** table is generated from this
-same data, so the two stay in lockstep.
+The following model configurations have passed the full **3-box certification
+regimen** (MATH + INFERENCE + DETERMINISM), validated on the RTX 3060 reference
+GPU. Certification records live in the workspace ledger
+(`cert/math_ledger.duckdb`) and per-model packages under `cert/packages/`. The
+README's **Supported Models** table is generated from this same data, so the two
+stay in lockstep.
 
-**11 model families · 25 certified model/quant combinations** — every model below passes Shimmy's 5-gate GPU math verification pipeline (dequant, structural peel, numerical, decode≡prefill, logits) against the certification ledger. GGUF files load as-is; no recompilation, no hardcoded per-model constants.
+**12 model families · 26 certified model/quant combinations** — every model below passes Shimmy's 3-box certification regimen (MATH + INFERENCE + DETERMINISM) against the certification ledger. GGUF files load as-is; no recompilation, no hardcoded per-model constants.
 
 | Family | Model | Quants |
 |---|---|---|
 | **Llama** | [Llama-3.2-1B-Instruct](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF) | Q4_K_M · Q6_K |
 |  | [Llama-3.2-3B-Instruct](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF) | Q4_K_M |
+|  | [Llama-3.1-8B-Instruct](https://huggingface.co/bartowski/Llama-3.1-8B-Instruct-GGUF) | Q4_K_M |
 |  | [TinyLlama-1.1B-Chat](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF) | Q4_0 · Q5_K_M · Q6_K |
 | **Qwen3** | [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B-GGUF) | Q4_K_M |
 |  | [Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B-GGUF) | Q4_K_M |
@@ -33,7 +34,7 @@ same data, so the two stay in lockstep.
 |  | [Phi-3-mini-4k-Instruct](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) | Q4_0 |
 | **Phi-2** | [Phi-2](https://huggingface.co/TheBloke/phi-2-GGUF) | Q4_K_M |
 | **Gemma-2** | [Gemma-2-2B-it](https://huggingface.co/bartowski/gemma-2-2b-it-GGUF) | Q4_K_M |
-|  | [Gemma-2-9B-it](https://huggingface.co/bartowski/gemma-2-9b-it-GGUF) | Q4_K_M |
+|  | [Gemma-2-9B-it](https://huggingface.co/bartowski/gemma-2-9b-it-GGUF) | Q4_K_M (supported; cert pending [tensor-scatter fix](https://github.com/Michael-A-Kuykendall/airframe/blob/main/CHANGELOG.md#040--2026-08-26---certification-consolidation--26-models--metadata-driven-architecture)) |
 | **Gemma-4** | [Gemma-4-12B-coder](https://huggingface.co/google/gemma-4-12B-coder-GGUF) | Q4_K_M |
 |  | [Gemma-4-E4B](https://huggingface.co/google/gemma-4-E4B-it-GGUF) | Q4_K_M |
 | **DeepSeek-R1** | [DeepSeek-R1-0528-Qwen3-8B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-8B-GGUF) | Q4_K_M |
