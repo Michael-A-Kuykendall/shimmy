@@ -6,6 +6,7 @@
   ### 🔒 The 5MB alternative to Ollama — 100% Rust, zero dependencies 🚀
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![CI](https://github.com/Michael-A-Kuykendall/shimmy/actions/workflows/ci.yml/badge.svg)](https://github.com/Michael-A-Kuykendall/shimmy/actions/workflows/ci.yml)
   [![Crates.io](https://img.shields.io/crates/v/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Downloads](https://img.shields.io/crates/d/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
@@ -185,3 +186,7 @@ Shimmy is infrastructure: it should be invisible. Reliability through comprehens
 ---
 
 **Maintainer**: Michael A. Kuykendall · **Mission**: Making local model inference simple and reliable
+
+---
+
+<sup>Trans rights are human rights. Shimmy is built by and for everyone — discrimination has no place in our community or our code.</sup>
