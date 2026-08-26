@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/shimmy-logo.png" alt="Shimmy Logo" width="300" height="auto" />
+  <img src="https://raw.githubusercontent.com/Michael-A-Kuykendall/shimmy/main/assets/shimmy-logo.png" alt="Shimmy Logo" width="300" height="auto" />
 
   # Shimmy — Local Inference, OpenAI-Compatible
 
@@ -110,11 +110,13 @@ Full install, model acquisition, GPU, VRAM sizing, platform-specific builds: **[
 <details>
 <summary>Complete documentation index</summary>
 
-**Models & Performance:** [turboshimmy.md](docs/turboshimmy.md) · [EXTENDED_CONTEXT.md](docs/EXTENDED_CONTEXT.md) · [PERFORMANCE.md](docs/PERFORMANCE.md) · [MODEL_EXPANSION.md](docs/MODEL_EXPANSION.md)
-**API & Integration:** [API.md](docs/API.md) · [INTEGRATION.md](docs/INTEGRATION.md) · [EXAMPLES.md](docs/EXAMPLES.md) · [CROSS_COMPILATION.md](docs/CROSS_COMPILATION.md)
-**Engine:** [ARCHITECTURE.md](docs/ARCHITECTURE.md) · [GPU_PIPELINE.md](docs/GPU_PIPELINE.md) · [QUANTIZATION.md](docs/QUANTIZATION.md) · [CHAT_TEMPLATES.md](docs/CHAT_TEMPLATES.md)
-**Certification:** [CERTIFICATION.md](docs/CERTIFICATION.md) · [METHODOLOGY.md](docs/METHODOLOGY.md) · [REGRESSION_TESTING.md](docs/REGRESSION_TESTING.md) · [ppt-invariant-testing.md](docs/ppt-invariant-testing.md) · [METRICS.md](docs/METRICS.md)
-**FAQ:** [FAQ.md](docs/FAQ.md) · [FEATURES.md](docs/FEATURES.md) · [MIGRATION_v2.md](docs/MIGRATION_v2.md) · [WINDOWS_GPU_BUILD_GUIDE.md](docs/WINDOWS_GPU_BUILD_GUIDE.md)
+| Section | Documents |
+|---|---|
+| **Models & Performance** | [TurboShimmy](docs/turboshimmy.md) — INT4 KV cache compression · [Extended Context](docs/EXTENDED_CONTEXT.md) — YaRN RoPE scaling, VRAM math · [Performance](docs/PERFORMANCE.md) — Tuning and token/sec · [Model Expansion](docs/MODEL_EXPANSION.md) — Onboarding protocol |
+| **API & Integration** | [API Reference](docs/API.md) · [Integration Guides](docs/INTEGRATION.md) · [Examples](docs/EXAMPLES.md) · [Cross-Compilation](docs/CROSS_COMPILATION.md) |
+| **Engine** | [Architecture](docs/ARCHITECTURE.md) · [GPU Pipeline](docs/GPU_PIPELINE.md) · [Quantization](docs/QUANTIZATION.md) · [Chat Templates](docs/CHAT_TEMPLATES.md) |
+| **Certification** | [Certification](docs/CERTIFICATION.md) · [Methodology](docs/METHODOLOGY.md) · [Regression Testing](docs/REGRESSION_TESTING.md) · [PPT Testing](docs/ppt-invariant-testing.md) · [Metrics](docs/METRICS.md) |
+| **FAQ** | [FAQ](docs/FAQ.md) · [Features](docs/FEATURES.md) · [Migration](docs/MIGRATION_v2.md) · [Windows GPU](docs/WINDOWS_GPU_BUILD_GUIDE.md) |
 
 </details>
 
@@ -168,7 +170,7 @@ Shimmy is independently maintained. Sponsorship funds certification, compatibili
 - **$100/month**: Corporate backer 🏢 — Logo placement + release recognition
 - **$500/month**: Infrastructure partner 🚀 — Office hours + roadmap consultation
 
-**Current sponsors:** [ZephyrCloudIO](https://github.com/ZephyrCloudIO) · [alistairheath](https://github.com/alistairheath)
+**Current sponsors:** [ZephyrCloudIO](https://github.com/ZephyrCloudIO) · [gqf2008](https://github.com/gqf2008) · [alistairheath](https://github.com/alistairheath)
 
 [**🎯 Become a Sponsor**](https://github.com/sponsors/Michael-A-Kuykendall) · [Invoicing](mailto:michaelallenkuykendall@gmail.com)
 
