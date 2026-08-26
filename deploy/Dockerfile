@@ -21,8 +21,8 @@ COPY templates ./templates
 # Copy source code
 COPY src ./src
 
-# Build release binary with full GPU support (airframe + huggingface)
-RUN cargo build --release --features airframe,huggingface
+# Build release binary with full GPU support (airframe engine)
+RUN cargo build --release --features airframe
 
 # Runtime image
 FROM debian:bookworm-slim
@@ -46,11 +46,11 @@ RUN mkdir -p /app/models && chown shimmy:shimmy /app/models
 USER shimmy
 
 # Expose port
-EXPOSE 11434
+EXPOSE 11435
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:11434/health || exit 1
+    CMD curl -f http://localhost:11435/health || exit 1
 
 # Default command
-CMD ["shimmy", "serve", "--bind", "0.0.0.0:11434"]
+CMD ["shimmy", "serve", "--bind", "0.0.0.0:11435"]
