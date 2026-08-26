@@ -150,3 +150,6 @@ tarpaulin-report.html
 .dolt/
 .beads-credential-key
 .beads/proxieddb/
+AGENTS.md
+.codex/
+.claude/
