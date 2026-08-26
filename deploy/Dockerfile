@@ -24,8 +24,8 @@ COPY src ./src
 # Build release binary with full GPU support (airframe engine)
 RUN cargo build --release --features airframe
 
-# Runtime image
-FROM debian:bookworm-slim
+# Runtime image — trixie for glibc 2.39+ (matches rust:slim builder)
+FROM debian:trixie-slim
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
