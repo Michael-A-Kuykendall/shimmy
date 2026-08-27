@@ -6,16 +6,22 @@
   ### 🔒 The 5MB alternative to Ollama — 100% Rust, zero dependencies 🚀
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Security](https://img.shields.io/badge/Security-Audited-green)](https://github.com/Michael-A-Kuykendall/shimmy/security)
   [![CI](https://github.com/Michael-A-Kuykendall/shimmy/actions/workflows/ci.yml/badge.svg)](https://github.com/Michael-A-Kuykendall/shimmy/actions/workflows/ci.yml)
   [![Crates.io](https://img.shields.io/crates/v/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Downloads](https://img.shields.io/crates/d/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)](https://rustup.rs/)
   [![GitHub Stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=social)](https://github.com/Michael-A-Kuykendall/shimmy/stargazers)
+  [![💝 Sponsor this project](https://img.shields.io/badge/💝_Sponsor_this_project-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/Michael-A-Kuykendall)
+  [![Trans rights](https://pride-badges.pony.workers.dev/static/v1?label=trans%20rights&stripeWidth=6&stripeColors=5BCEFA,F5A9B8,FFFFFF,F5A9B8,5BCEFA)](https://translifeline.org/)
+  [![LGBTQ+ friendly](https://pride-badges.pony.workers.dev/static/v1?label=lgbtq%2B%20friendly&stripeWidth=6&stripeColors=E40303,FF8C00,FFED00,008026,24408E,732982)](https://www.thetrevorproject.org/)
 
   **Languages:** [简体中文](docs/zh-CN/README.md) · [繁體中文](docs/zh-TW/README.md)
 </div>
 
 Shimmy is independently maintained and free forever. [Sponsorship](https://github.com/sponsors/Michael-A-Kuykendall) funds certification, compatibility work, and releases.
+
+**Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
 
 ---
 
@@ -75,6 +81,7 @@ Shimmy is a **single-binary** OpenAI-compatible inference server for GGUF models
 - **🔧 [Extended Context](docs/EXTENDED_CONTEXT.md)** — YaRN RoPE scaling via `SHIMMY_MAX_CTX`.
 - **📦 [Migrating from v1.x](docs/MIGRATION_v2.md)** — llama.cpp, MLX, HuggingFace, and RustChain backends removed in v2.0+. Shimmy is now a pure Airframe product.
 - **🏆 Certification** — Every model passes a 3-box certification regimen (MATH + INFERENCE + DETERMINISM). See [docs/CERTIFICATION.md](docs/CERTIFICATION.md).
+- **🧠 MOE support** — Mixture-of-Experts CPU offloading is on the Airframe roadmap.
 
 ---
 
@@ -145,9 +152,21 @@ See [docs/ppt-invariant-testing.md](docs/ppt-invariant-testing.md) for technical
 - **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
 - **📖 Security**: [Security Policy](https://github.com/Michael-A-Kuykendall/shimmy/security)
 
+### Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Michael-A-Kuykendall/shimmy&type=Timeline)](https://www.star-history.com/#Michael-A-Kuykendall/shimmy&Timeline)
+
+### 🚀 Momentum Snapshot
+
+🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**
+⏱ **<1s startup**
+🦀 **100% Rust, no Python**
+
 ### 📰 As Featured On
 
-🔥 [**Hacker News**](https://news.ycombinator.com/item?id=45130322) · [**IPE Newsletter**](https://ipenewsletter.substack.com/p/the-strange-new-side-hustles-of-openai)
+🔥 [**Hacker News**](https://news.ycombinator.com/item?id=45130322) · [**Front Page Again**](https://news.ycombinator.com/item?id=45199898) · [**IPE Newsletter**](https://ipenewsletter.substack.com/p/the-strange-new-side-hustles-of-openai)
+
+**Companies**: Need invoicing? Email [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
 
 ---
 
@@ -181,6 +200,8 @@ Shimmy is independently maintained. Sponsorship funds certification, compatibili
 
 MIT License — see [LICENSE](LICENSE). **Shimmy will be free forever.**
 
+**Promise**: This will never become a paid product.
+
 Shimmy is infrastructure: it should be invisible. Reliability through comprehensive validation and property-based testing.
 
 ---
@@ -189,4 +210,12 @@ Shimmy is infrastructure: it should be invisible. Reliability through comprehens
 
 ---
 
-<sup>Trans rights are human rights. Shimmy is built by and for everyone — discrimination has no place in our community or our code.</sup>
+## Support
+
+This project is a safe space. Trans rights are human rights.
+
+If you or someone you love needs support:
+
+- [The Trevor Project](https://www.thetrevorproject.org/) — 24/7 for LGBTQ+ young people. Call 1-866-488-7386 or text START to 678-678
+- [Trans Lifeline](https://translifeline.org/) — peer support run by and for trans people. US: 877-565-8860
+- [988 Suicide & Crisis Lifeline](https://988lifeline.org/) — call or text 988
