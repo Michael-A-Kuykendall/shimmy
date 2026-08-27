@@ -10,7 +10,7 @@ Pick your platform — all binaries use automatic WebGPU (wgpu) GPU detection:
 
 ```bash
 # Windows x64
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
+curl.exe -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
 
 # Linux x86_64
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64 -o shimmy && chmod +x shimmy
@@ -27,6 +27,17 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 
 GPU detection is automatic — on first launch Airframe selects the best adapter
 (discrete GPU preferred over integrated, integrated over CPU fallback).
+
+> **Windows / PowerShell:** the command above uses `curl.exe` (the real curl that
+> ships with Windows 10+). In PowerShell, bare `curl` is an alias for
+> `Invoke-WebRequest`, which has no `-L` flag and will fail with
+> *"A parameter cannot be found that matches parameter name 'L'."* — always call
+> `curl.exe` explicitly.
+>
+> **Available binaries:** the current release matrix publishes `shimmy-linux-x86_64`,
+> `shimmy-windows-x86_64.exe`, and `shimmy-macos-arm64`. If a listed binary for your
+> platform is not present on the latest release, run `shimmy --version` to confirm,
+> then file an issue.
 
 ### Build from Source / `cargo install`
 

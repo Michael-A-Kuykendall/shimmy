@@ -41,6 +41,8 @@ jobs:
     name: Create Release
     needs: [build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v5
     - name: Download all artifacts
@@ -52,7 +54,14 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         mkdir -p dist
-        find release-files -type f -exec cp {} dist/ \;
+        # Preserve the documented artifact name (upload-artifact dir name == final name).
+        # Copying by basename alone collides (linux + mac are both "shimmy").
+        for d in release-files/*/; do
+          [ -d "$d" ] || continue
+          for f in "$d"*; do
+            [ -f "$f" ] && cp "$f" "dist/$(basename "$d")"
+          done
+        done
         if gh release view ${{ github.ref_name }} > /dev/null 2>&1; then
           gh release upload ${{ github.ref_name }} dist/* --clobber
         else
