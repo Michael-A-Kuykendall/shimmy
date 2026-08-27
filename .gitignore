@@ -153,3 +153,9 @@ tarpaulin-report.html
 AGENTS.md
 .codex/
 .claude/
+
+# Local dev tooling / AI settings / database / non-public items (never commit)
+.opencode/
+.agents/
+.beads/
+.skip-ci-tests
