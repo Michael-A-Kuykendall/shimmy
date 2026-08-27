@@ -152,10 +152,6 @@ See [docs/ppt-invariant-testing.md](docs/ppt-invariant-testing.md) for technical
 - **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
 - **📖 Security**: [Security Policy](https://github.com/Michael-A-Kuykendall/shimmy/security)
 
-### Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Michael-A-Kuykendall/shimmy&type=Timeline)](https://www.star-history.com/#Michael-A-Kuykendall/shimmy&Timeline)
-
 ### 🚀 Momentum Snapshot
 
 🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**
