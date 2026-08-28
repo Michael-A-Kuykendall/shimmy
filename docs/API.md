@@ -10,6 +10,10 @@ All endpoints serve the same inference engine. See
 [docs/OPENAI_COMPAT.md](OPENAI_COMPAT.md) for the exact OpenAI parameter
 compatibility matrix.
 
+Interactive documentation is available from a running server at
+`GET /docs`; the machine-readable contract is `GET /openapi.json`.
+See [OpenAPI and Swagger UI](OPENAPI.md) for usage and implementation details.
+
 ## OpenAI-Compatible Endpoints
 
 ### `GET /v1/models`
@@ -117,6 +121,9 @@ Receive token frames:
 {"token": " world"}
 {"done": true}
 ```
+
+The WebSocket upgrade is documented in the OpenAPI contract as `GET
+/ws/generate`, but its token frames are not REST JSON responses.
 
 ## CLI
 

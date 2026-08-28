@@ -12,6 +12,7 @@ mod invariant_ppt;
 mod model_registry;
 mod observability;
 mod openai_compat;
+mod openapi;
 mod port_manager;
 mod prompt_render;
 mod server;

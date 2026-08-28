@@ -121,7 +121,7 @@ Full install, model acquisition, GPU, VRAM sizing, platform-specific builds: **[
 | Section | Documents |
 |---|---|
 | **Models & Performance** | [TurboShimmy](docs/turboshimmy.md) — INT4 KV cache compression · [Extended Context](docs/EXTENDED_CONTEXT.md) — YaRN RoPE scaling, VRAM math · [Performance](docs/PERFORMANCE.md) — Tuning and token/sec · [Model Expansion](docs/MODEL_EXPANSION.md) — Onboarding protocol |
-| **API & Integration** | [API Reference](docs/API.md) · [Integration Guides](docs/INTEGRATION.md) · [Examples](docs/EXAMPLES.md) · [Cross-Compilation](docs/CROSS_COMPILATION.md) |
+| **API & Integration** | [API Reference](docs/API.md) · [OpenAPI / Swagger UI](docs/OPENAPI.md) · [Integration Guides](docs/INTEGRATION.md) · [Examples](docs/EXAMPLES.md) · [Cross-Compilation](docs/CROSS_COMPILATION.md) |
 | **Engine** | [Architecture](docs/ARCHITECTURE.md) · [GPU Pipeline](docs/GPU_PIPELINE.md) · [Quantization](docs/QUANTIZATION.md) · [Chat Templates](docs/CHAT_TEMPLATES.md) |
 | **Certification** | [Certification](docs/CERTIFICATION.md) · [Methodology](docs/METHODOLOGY.md) · [Regression Testing](docs/REGRESSION_TESTING.md) · [PPT Testing](docs/ppt-invariant-testing.md) · [Metrics](docs/METRICS.md) |
 | **FAQ** | [FAQ](docs/FAQ.md) · [Features](docs/FEATURES.md) · [Migration](docs/MIGRATION_v2.md) · [Windows GPU](docs/WINDOWS_GPU_BUILD_GUIDE.md) |

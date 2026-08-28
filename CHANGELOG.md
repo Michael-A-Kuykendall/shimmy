@@ -10,6 +10,16 @@ compatibility fixes, dependency updates, release infrastructure, and other
 backward-compatible improvements; a feature does not automatically require a
 minor-version increment.
 
+## [Unreleased]
+
+### Added
+
+- **OpenAPI and Swagger UI documentation.** Running servers now expose the
+  complete HTTP API contract at `GET /openapi.json` and an interactive Swagger
+  UI at `GET /docs`, including OpenAI-compatible, native, Ollama-compatible,
+  Anthropic-compatible, diagnostics, and WebSocket routes. See
+  [docs/OPENAPI.md](docs/OPENAPI.md). Closes [#153](https://github.com/Michael-A-Kuykendall/shimmy/issues/153).
+
 ## [2.6.1] — 2026-08-28 — Airframe 0.4.1 and Unified Chat Templating
 
 ### Highlights

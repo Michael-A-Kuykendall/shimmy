@@ -132,6 +132,8 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
     #[allow(unused_mut)]
     let mut app = Router::new()
         .route("/health", get(health_check))
+        .route("/docs", get(crate::openapi::docs))
+        .route("/openapi.json", get(crate::openapi::openapi_json))
         .route("/metrics", get(metrics_endpoint))
         .route("/diag", get(diag_handler))
         .route("/api/generate", post(api::generate))

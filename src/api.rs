@@ -941,8 +941,6 @@ mod tests {
     #[test]
     fn test_prompt_construction_logic() {
         // Test prompt construction logic from generate handler (lines 34-45)
-        use crate::templates::TemplateFamily;
-
         // Test with messages (lines 35-42)
         let messages = Some(vec![ChatMessage {
             role: "user".to_string(),
