@@ -776,35 +776,21 @@ mod tests {
 
     #[test]
     fn test_template_family_selection_in_generate() {
-        // Test template selection logic (lines 36-40)
+        // Test family selection via the single prompt_render path.
         use crate::templates::TemplateFamily;
 
-        // Test ChatML
-        let template = Some("chatml");
-        let fam = match template {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
-        assert!(matches!(fam, TemplateFamily::ChatML));
-
-        // Test Llama3 variants
-        let template = Some("llama-3");
-        let fam = match template {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
-        assert!(matches!(fam, TemplateFamily::Llama3));
-
-        // Test default
-        let template = Some("unknown");
-        let fam = match template {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
-        assert!(matches!(fam, TemplateFamily::OpenChat));
+        assert!(matches!(
+            crate::prompt_render::family_from_spec(Some("chatml"), "test-model"),
+            TemplateFamily::ChatML
+        ));
+        assert!(matches!(
+            crate::prompt_render::family_from_spec(Some("llama-3"), "test-model"),
+            TemplateFamily::Llama3
+        ));
+        assert!(matches!(
+            crate::prompt_render::family_from_spec(Some("unknown"), "test-model"),
+            TemplateFamily::OpenChat
+        ));
     }
 
     #[test]
