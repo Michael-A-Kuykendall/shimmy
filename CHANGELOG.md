@@ -5,7 +5,12 @@ All notable changes to Shimmy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.7.0] — 2026-08-27 — Unified Chat Templating
+Shimmy uses maintainer-selected version increments. Patch releases may include
+compatibility fixes, dependency updates, release infrastructure, and other
+backward-compatible improvements; a feature does not automatically require a
+minor-version increment.
+
+## [2.6.1] — 2026-08-28 — Airframe 0.4.1 and Unified Chat Templating
 
 ### Highlights
 
@@ -29,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Docs
 
 - New `docs/CHAT_TEMPLATING.md` — the canonical architecture reference.
+
+### Release
+
+- Updated the Airframe dependency to `0.4.1`.
+- Published Linux x86_64, Windows x86_64, and macOS arm64 binaries.
+- Corrected release artifact permissions and names so platform downloads are
+  attached to the GitHub release.
 
 
 ## [2.6.0] — 2026-08-26 — Certification Consolidation + Engine Cleanup + v2.2 Promotion
@@ -72,6 +84,22 @@ Shimmy's certification pipeline has been **consolidated from the old 5-gate + CH
 
 ### Commits
 18 commits since v2.5.0 — see git log `v2.5.0..HEAD` for full list.
+
+## [2.5.0] — 2026-08-06 — Airframe 0.3.0 Patch Release
+
+### Changed
+
+- Updated the Airframe dependency to `0.3.0`.
+- Refreshed `Cargo.lock` for the published Airframe dependency.
+- Kept the coordinated release workflow and public/private repository process
+  documentation aligned with the current workspace layout.
+
+## [2.4.2] — 2026-08-03 — Airframe 0.2.14 Patch Release
+
+### Changed
+
+- Updated the Airframe dependency to `0.2.14`.
+- Refreshed `Cargo.lock` for the published Airframe dependency.
 
 ## [2.4.1] — 2026-08-01 — Hotfix: Test coverage, clippy warnings, CI fixes
 
@@ -1188,7 +1216,13 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 ### Free Forever Commitment
 Shimmy is committed to being free forever with no asterisks, no "free for now" periods, and no pivot to paid services. The MIT license ensures this commitment is legally binding.
 
-[Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.6.1...HEAD
+[2.6.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.6.0...v2.6.1
+[2.6.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.5.0...v2.6.0
+[2.5.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.4.2...v2.5.0
+[2.4.2]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.4.0...v2.4.2
+[2.4.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.4.0...v2.4.1
+[2.4.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.3.3...v2.4.0
 [2.3.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.2.1...v2.3.0
 [2.2.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.1.0...v2.2.0

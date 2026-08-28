@@ -49,6 +49,20 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: release-files
+    - name: Validate and extract release notes
+      env:
+        VERSION: ${{ github.ref_name }}
+      run: |
+        version="${VERSION#v}"
+        awk -v version="$version" '
+          found && /^## \[/ && index($0, "## [" version "]") != 1 { exit }
+          index($0, "## [" version "]") == 1 { found=1 }
+          found { print }
+        ' CHANGELOG.md > release-notes.md
+        test -s release-notes.md || {
+          echo "No non-empty CHANGELOG.md section found for ${VERSION}" >&2
+          exit 1
+        }
     - name: Create release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -63,13 +77,10 @@ jobs:
           done
         done
         if gh release view ${{ github.ref_name }} > /dev/null 2>&1; then
+          gh release edit ${{ github.ref_name }} --notes-file release-notes.md
           gh release upload ${{ github.ref_name }} dist/* --clobber
         else
           gh release create ${{ github.ref_name }} dist/* \
             --title "Shimmy ${{ github.ref_name }}" \
-            --generate-notes
+            --notes-file release-notes.md
         fi
-    - name: Publish to crates.io
-      env:
-        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-      run: cargo publish || true

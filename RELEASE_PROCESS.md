@@ -6,7 +6,7 @@ either repo.
 
 ## The tool
 
-`scripts/release-coordinated.sh` in the `airframe-workspace` handles everything:
+`scripts/deploy.sh` in the `airframe-workspace` handles everything:
 bumping Cargo.toml, `cargo publish` (airframe), git commit + tag, `gh release
 create`, and workspace allowance management (`.cargo/config.toml` patch,
 `Cargo.lock` resolution against crates.io, remote push policy).
@@ -14,10 +14,10 @@ create`, and workspace allowance management (`.cargo/config.toml` patch,
 **Usage:**
 ```bash
 # Preview
-./scripts/release-coordinated.sh --airframe-version 0.2.11 --shimmy-version 2.3.1 --dry-run
+./scripts/deploy.sh --airframe-version 0.4.1 --shimmy-version 2.6.1 --dry-run
 
 # Execute
-./scripts/release-coordinated.sh --airframe-version 0.2.11 --shimmy-version 2.3.1
+./scripts/deploy.sh --airframe-version 0.4.1 --shimmy-version 2.6.1
 ```
 
 ## Prerequisites
@@ -36,13 +36,18 @@ create`, and workspace allowance management (`.cargo/config.toml` patch,
 5. Save shimmy `.cargo/config.toml` patch, delete it
 6. Bump shimmy's airframe dep, `cargo update -p airframe` (against crates.io)
 7. Restore patch, commit `Cargo.toml` + `Cargo.lock`, tag, push
-8. `gh release create` for shimmy
+8. `gh release create` for shimmy, using the matching `CHANGELOG.md` section
 
 ## After the script runs
 
 - Confirm crates.io: `cargo search airframe`
 - Confirm GitHub Releases on both repos
-- Update `CHANGELOG.md` in both repos (not automated yet)
+- Add the release section to `CHANGELOG.md` before running the deploy.
+- Use the exact requested version, including patch releases. Do not infer a
+  minor-version bump from the size of a change.
+- The deploy must pass that section as the GitHub release body. A tag page is
+  not populated from `CHANGELOG.md` automatically.
+- Confirm the release page shows the notes and all platform assets.
 
 ## CI
 
