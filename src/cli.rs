@@ -112,6 +112,9 @@ pub enum Command {
         /// Session ID for rolling window
         #[arg(long, default_value = "")]
         session_id: String,
+        /// Force raw completion (bypass chat template)
+        #[arg(long, default_value_t = false)]
+        raw: bool,
     },
     /// Show GPU backend information and capabilities
     GpuInfo,

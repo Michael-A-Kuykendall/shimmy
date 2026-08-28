@@ -16,6 +16,7 @@ pub mod model_registry;
 pub mod observability;
 pub mod openai_compat;
 pub mod port_manager;
+pub mod prompt_render;
 pub mod safetensors_adapter;
 pub mod server;
 pub mod templates;

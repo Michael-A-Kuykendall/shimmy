@@ -493,6 +493,7 @@ async fn main() -> anyhow::Result<()> {
             math_bypass,
             trace_path,
             session_id,
+            raw,
         } => {
             let Some(spec) = state.registry.to_spec(&name) else {
                 anyhow::bail!("no model {name}");
@@ -508,6 +509,7 @@ async fn main() -> anyhow::Result<()> {
                         math_bypass,
                         trace_path,
                         session_id,
+                        raw_prompt: raw,
                         stream: false,
                         ..Default::default()
                     },

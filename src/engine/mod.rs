@@ -24,6 +24,9 @@ pub struct GenOptions {
     pub trace_path: String,
     #[serde(default)]
     pub session_id: String,
+    /// Force raw completion (bypass chat template). Serde default false.
+    #[serde(default)]
+    pub raw_prompt: bool,
 }
 
 impl Default for GenOptions {
@@ -42,6 +45,7 @@ impl Default for GenOptions {
             math_bypass: false,
             trace_path: String::new(),
             session_id: String::new(),
+            raw_prompt: false,
         }
     }
 }
