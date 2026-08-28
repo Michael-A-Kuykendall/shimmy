@@ -95,7 +95,35 @@ impl LoadedModel for AirframeModel {
                 wrapper
             });
 
-            rt.generate(&prompt, &params, callback, control, modify_logits, trace_cb)
+            // Apply the model's chat template (Jinja-first) so instruct models are
+            // NOT fed a raw prompt (the cert-path fix). The engine's `generate`
+            // receives a bare completion prompt; wrap it with the GGUF template
+            // unless --raw (opts.raw_prompt) or the model has no template (base).
+            let model_name = rt.spec().model_name.clone();
+            let gguf_tpl = rt.chat_template().map(|s| s.to_string());
+            let mut extras = crate::prompt_render::JinjaExtras::for_model(&model_name);
+            // Resolve real bos/eos strings from the tokenizer for template vars.
+            let tok = rt.tokenizer_arc();
+            extras.bos_token = tok.token_to_piece(tok.bos_token()).ok();
+            extras.eos_token = tok.token_to_piece(tok.eos_token()).ok();
+            let fam = crate::prompt_render::family_from_spec(None, &model_name);
+            let rendered = crate::prompt_render::render_completion_prompt_with_extras(
+                &prompt,
+                gguf_tpl.as_deref(),
+                fam,
+                opts.raw_prompt,
+                &extras,
+            );
+            let final_prompt = rendered.text;
+
+            rt.generate(
+                &final_prompt,
+                &params,
+                callback,
+                control,
+                modify_logits,
+                trace_cb,
+            )
         })
         .await
         .map_err(|e| anyhow::anyhow!("Airframe task panicked: {}", e))?
@@ -152,6 +180,7 @@ mod tests {
             math_bypass: false,
             trace_path: String::new(),
             session_id: String::new(),
+            raw_prompt: false,
         };
         let p = AirframeModel::bridge_params(&opts);
         assert_eq!(p.max_tokens, 128);
@@ -171,6 +200,7 @@ mod tests {
             math_bypass: false,
             trace_path: String::new(),
             session_id: String::new(),
+            raw_prompt: false,
             ..GenOptions::default()
         };
         let p = AirframeModel::bridge_params(&opts);
@@ -188,6 +218,7 @@ mod tests {
             math_bypass: false,
             trace_path: String::new(),
             session_id: String::new(),
+            raw_prompt: false,
             ..GenOptions::default()
         };
         let p = AirframeModel::bridge_params(&opts);
