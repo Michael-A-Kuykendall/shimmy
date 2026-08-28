@@ -136,23 +136,9 @@ pub async fn chat_completions(
         }
     };
 
-    // Construct prompt from messages
-    let fam = match spec.template.as_deref() {
-        Some("chatml") => crate::templates::TemplateFamily::ChatML,
-        Some("llama3") | Some("llama-3") => crate::templates::TemplateFamily::Llama3,
-        _ => {
-            // Auto-detect template based on model name
-            if req.model.to_lowercase().contains("qwen")
-                || req.model.to_lowercase().contains("chatglm")
-            {
-                crate::templates::TemplateFamily::ChatML
-            } else if req.model.to_lowercase().contains("llama") {
-                crate::templates::TemplateFamily::Llama3
-            } else {
-                crate::templates::TemplateFamily::OpenChat
-            }
-        }
-    };
+    // Construct prompt via the single renderer (Jinja-first with the model's
+    // real GGUF chat_template; family fallback; raw for completion).
+    let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &req.model);
     let pairs = req
         .messages
         .iter()
@@ -179,7 +165,15 @@ pub async fn chat_completions(
         pairs.clone()
     };
 
-    let prompt = fam.render(None, &history, last_user_message);
+    let prompt = crate::prompt_render::render_chat_prompt_with_extras(
+        spec.chat_template.as_deref(),
+        fam,
+        None,
+        &history,
+        last_user_message,
+        &crate::prompt_render::JinjaExtras::for_model(&req.model),
+    )
+    .text;
 
     // Set generation options
     let mut opts = crate::engine::GenOptions::default();
@@ -435,7 +429,15 @@ pub async fn completions(
     }
     opts.stream = false;
 
-    let prompt = req.prompt.clone();
+    let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &req.model);
+    let prompt = crate::prompt_render::render_completion_prompt_with_extras(
+        &req.prompt,
+        spec.chat_template.as_deref(),
+        fam,
+        false,
+        &crate::prompt_render::JinjaExtras::for_model(&req.model),
+    )
+    .text;
     let model_id = req.model.clone();
     let prompt_tokens = prompt.split_whitespace().count();
 
@@ -690,6 +692,7 @@ mod tests {
             base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("chatml".to_string()),
+            chat_template: None,
             ctx_len: 2048,
             n_threads: None,
         };
@@ -707,6 +710,7 @@ mod tests {
             base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("llama3".to_string()),
+            chat_template: None,
             ctx_len: 2048,
             n_threads: None,
         };
@@ -724,6 +728,7 @@ mod tests {
             base_path: "./test.safetensors".into(),
             lora_path: None,
             template: Some("unknown".to_string()),
+            chat_template: None,
             ctx_len: 2048,
             n_threads: None,
         };

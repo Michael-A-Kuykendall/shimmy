@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
 use crate::invariant_ppt::shimmy_invariants;
-use crate::{engine::GenOptions, templates::TemplateFamily, AppState};
+use crate::{engine::GenOptions, AppState};
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -28,6 +28,9 @@ pub struct GenerateRequest {
     pub max_tokens: Option<usize>,
     #[serde(default)]
     pub stream: Option<bool>,
+    /// Force raw completion (bypass chat template).
+    #[serde(default)]
+    pub raw_prompt: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -62,20 +65,33 @@ pub async fn generate(
         }
     };
 
-    // Construct prompt
+    // Construct prompt via the single renderer (Jinja-first using the model's
+    // real GGUF chat_template; family fallback; raw for completion).
     let prompt = if let Some(ms) = &req.messages {
-        let fam = match spec.template.as_deref() {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
+        let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &spec.name);
         let pairs = ms
             .iter()
             .map(|m| (m.role.clone(), m.content.clone()))
             .collect::<Vec<_>>();
-        fam.render(req.system.as_deref(), &pairs, None)
+        crate::prompt_render::render_chat_prompt_with_extras(
+            spec.chat_template.as_deref(),
+            fam,
+            req.system.as_deref(),
+            &pairs,
+            None,
+            &crate::prompt_render::JinjaExtras::for_model(&spec.name),
+        )
+        .text
     } else {
-        req.prompt.unwrap_or_default()
+        let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &spec.name);
+        let raw = crate::prompt_render::render_completion_prompt_with_extras(
+            req.prompt.as_deref().unwrap_or_default(),
+            spec.chat_template.as_deref(),
+            fam,
+            req.raw_prompt.unwrap_or(false),
+            &crate::prompt_render::JinjaExtras::for_model(&spec.name),
+        );
+        raw.text
     };
 
     let mut opts = GenOptions::default();
@@ -190,18 +206,22 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
         return;
     };
 
-    // Build prompt (reuse logic)
+    // Build prompt (reuse single renderer)
     let prompt = if let Some(ms) = &req.messages {
-        let fam = match spec.template.as_deref() {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
+        let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &spec.name);
         let pairs = ms
             .iter()
             .map(|m| (m.role.clone(), m.content.clone()))
             .collect::<Vec<_>>();
-        fam.render(req.system.as_deref(), &pairs, None)
+        crate::prompt_render::render_chat_prompt_with_extras(
+            spec.chat_template.as_deref(),
+            fam,
+            req.system.as_deref(),
+            &pairs,
+            None,
+            &crate::prompt_render::JinjaExtras::for_model(&spec.name),
+        )
+        .text
     } else {
         req.prompt.clone().unwrap_or_default()
     };
@@ -491,6 +511,7 @@ mod tests {
             top_p: None,
             top_k: None,
             stream: Some(false),
+            raw_prompt: None,
         };
 
         // Exercise handler code path (will fail gracefully due to no model)
@@ -537,6 +558,7 @@ mod tests {
             top_p: Some(0.9),
             top_k: Some(40),
             stream: Some(false),
+            raw_prompt: None,
         };
 
         assert_eq!(req.model, "test");
@@ -699,6 +721,7 @@ mod tests {
             top_p: Some(0.9),
             top_k: Some(40),
             stream: Some(true), // Enable streaming (line 54)
+            raw_prompt: None,
         };
 
         // Exercise streaming path (lines 54-64)
@@ -743,6 +766,7 @@ mod tests {
             top_p: None,
             top_k: None,
             stream: Some(false),
+            raw_prompt: None,
         };
 
         // Exercise messages path with system prompt (lines 35-42)
@@ -1036,6 +1060,7 @@ mod tests {
             top_p: Some(0.9),
             top_k: Some(40),
             stream: Some(false),
+            raw_prompt: None,
         };
 
         let debug_str = format!("{:?}", req);

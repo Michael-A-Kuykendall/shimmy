@@ -363,6 +363,7 @@ mod tests {
             base_path: PathBuf::from(base_file),
             lora_path: lora_file.map(PathBuf::from),
             template: None,
+            chat_template: None,
             ctx_len: 2048,
             n_threads: None,
         }
@@ -408,6 +409,7 @@ mod tests {
             base_path: PathBuf::from("test.gguf"),
             lora_path: None,
             template: None,
+            chat_template: None,
             ctx_len: 2048,
             n_threads: None,
         };
@@ -462,6 +464,7 @@ mod tests {
             base_path: PathBuf::from("test.gguf"),
             lora_path: None,
             template: None,
+            chat_template: None,
             ctx_len: 2048,
             n_threads: None,
         };

@@ -13,6 +13,7 @@ mod model_registry;
 mod observability;
 mod openai_compat;
 mod port_manager;
+mod prompt_render;
 mod server;
 mod templates;
 mod util {
@@ -1340,6 +1341,7 @@ mod tests {
             base_path: "./test.gguf".into(),
             lora_path: None,
             template: None,
+            chat_template: None,
             ctx_len: 1024,
             n_threads: None,
         };

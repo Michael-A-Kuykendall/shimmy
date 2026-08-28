@@ -13,6 +13,24 @@ pub fn shimmy_ctx_len() -> usize {
         .unwrap_or(2048)
 }
 
+/// Read the GGUF `tokenizer.chat_template` (real Jinja) from a model file, using
+/// airframe's metadata parser. Returns None for non-GGUF/absent. This is the
+/// source of the REAL chat template that prompt_render's Jinja-first path uses.
+#[cfg(feature = "airframe")]
+pub fn read_chat_template(path: &std::path::Path) -> Option<String> {
+    use std::io::BufReader;
+    let f = std::fs::File::open(path).ok()?;
+    let mut r = BufReader::new(f);
+    let meta = airframe::backend::bindless::metadata::BindlessMetadata::new(&mut r);
+    meta.to_model_spec().chat_template
+}
+
+/// Airframe-independent fallback (no-op) for non-airframe builds.
+#[cfg(not(feature = "airframe"))]
+pub fn read_chat_template(_path: &std::path::Path) -> Option<String> {
+    None
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelEntry {
     pub name: String,
@@ -113,6 +131,7 @@ impl Registry {
                 base_path: e.base_path.clone(),
                 lora_path: e.lora_path.clone(),
                 template: e.template.clone(),
+                chat_template: read_chat_template(&e.base_path),
                 ctx_len: e.ctx_len.unwrap_or_else(shimmy_ctx_len),
                 n_threads: e.n_threads,
             });
@@ -125,6 +144,7 @@ impl Registry {
                 base_path: discovered.path.clone(),
                 lora_path: discovered.lora_path.clone(),
                 template: Some(self.infer_template(&discovered.name)),
+                chat_template: read_chat_template(&discovered.path),
                 ctx_len: shimmy_ctx_len(),
                 n_threads: None,
             });

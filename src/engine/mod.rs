@@ -56,6 +56,9 @@ pub struct ModelSpec {
     pub base_path: PathBuf,
     pub lora_path: Option<PathBuf>,
     pub template: Option<String>,
+    /// The real GGUF `tokenizer.chat_template` (Jinja) for this model, if any.
+    /// Populated at registry-load from the GGUF header (see model_registry).
+    pub chat_template: Option<String>,
     pub ctx_len: usize,
     pub n_threads: Option<i32>,
 }

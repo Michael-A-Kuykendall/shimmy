@@ -454,6 +454,7 @@ mod tests {
             base_path: PathBuf::from("test.gguf"),
             lora_path: None,
             template: None,
+            chat_template: None,
             ctx_len: 2048,
             n_threads: Some(4),
         };
@@ -475,6 +476,7 @@ mod tests {
             base_path: PathBuf::from("cache-test.gguf"),
             lora_path: None,
             template: None,
+            chat_template: None,
             ctx_len: 2048,
             n_threads: Some(4),
         };
@@ -511,6 +513,7 @@ mod tests {
             base_path: PathBuf::from("usage-test.gguf"),
             lora_path: None,
             template: None,
+            chat_template: None,
             ctx_len: 2048,
             n_threads: Some(4),
         };
@@ -546,6 +549,7 @@ mod tests {
                 base_path: PathBuf::from(format!("model-{}.gguf", i)),
                 lora_path: None,
                 template: None,
+                chat_template: None,
                 ctx_len: 2048,
                 n_threads: Some(4),
             };
@@ -580,6 +584,7 @@ mod tests {
                 base_path: PathBuf::from(format!("candidate-{}.gguf", i)),
                 lora_path: None,
                 template: None,
+                chat_template: None,
                 ctx_len: 2048,
                 n_threads: Some(4),
             };
@@ -616,6 +621,7 @@ mod tests {
             base_path: PathBuf::from("clear-test.gguf"),
             lora_path: None,
             template: None,
+            chat_template: None,
             ctx_len: 2048,
             n_threads: Some(4),
         };
@@ -643,6 +649,7 @@ mod tests {
             base_path: PathBuf::from("concurrent-test.gguf"),
             lora_path: None,
             template: None,
+            chat_template: None,
             ctx_len: 2048,
             n_threads: Some(4),
         };

@@ -259,6 +259,7 @@ fn test_safetensors_extension_detection() {
         base_path: PathBuf::from("model.safetensors"),
         lora_path: None,
         template: None,
+        chat_template: None,
         ctx_len: 2048,
         n_threads: None,
     };
@@ -269,6 +270,7 @@ fn test_safetensors_extension_detection() {
         base_path: PathBuf::from("/path/to/huggingface/org/model/pytorch_model.safetensors"),
         lora_path: None,
         template: None,
+        chat_template: None,
         ctx_len: 2048,
         n_threads: None,
     };

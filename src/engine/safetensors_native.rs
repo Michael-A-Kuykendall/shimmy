@@ -670,6 +670,7 @@ mod tests {
             base_path: PathBuf::from("nonexistent.safetensors"),
             lora_path: None,
             template: Some("chatml".to_string()),
+            chat_template: None,
             ctx_len: 2048,
             n_threads: None,
         };

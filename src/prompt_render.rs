@@ -22,6 +22,9 @@ pub enum RenderSource {
 #[derive(Debug, Clone)]
 pub struct RenderedPrompt {
     pub text: String,
+    // RenderSource is part of the public substrate API (used by gguf_routing +
+    // observability in later beads); allowed as dead in the bin build for now.
+    #[allow(dead_code)]
     pub source: RenderSource,
 }
 
@@ -47,6 +50,7 @@ impl JinjaExtras {
 
 /// How the renderer should choose a source (the single decision point).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)] // public substrate API consumed by oqu.2/routing + later beads
 pub enum RenderMode {
     /// Auto: GGUF Jinja when present, else Raw for base models, else family fallback.
     Auto,

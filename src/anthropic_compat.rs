@@ -154,24 +154,33 @@ pub async fn messages(
         options.top_k = k;
     }
 
-    // Prepare the prompt using the same logic as OpenAI compatibility
+    // Prepare the prompt using the single renderer (Jinja-first with the model's
+    // real GGUF chat_template; family fallback; raw). Anthropic's Human:/Assistant:
+    // manual assembly is replaced so instruct models get their OWN template.
     let (system_prompt, conversation_pairs) =
         extract_system_and_pairs(&internal_messages, system_message);
 
-    let mut prompt = String::new();
+    let mut pairs: Vec<(String, String)> = Vec::new();
     if let Some(system) = system_prompt {
-        prompt.push_str(&format!("System: {}\n\n", system));
+        pairs.push(("system".to_string(), system));
     }
-
-    // Add conversation pairs
     for (user_msg, assistant_msg) in conversation_pairs {
-        prompt.push_str(&format!("Human: {}\n", user_msg));
+        pairs.push(("user".to_string(), user_msg.to_string()));
         if let Some(assistant) = assistant_msg {
-            prompt.push_str(&format!("Assistant: {}\n", assistant));
-        } else {
-            prompt.push_str("Assistant: ");
+            pairs.push(("assistant".to_string(), assistant.to_string()));
         }
     }
+
+    let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &req.model);
+    let prompt = crate::prompt_render::render_chat_prompt_with_extras(
+        spec.chat_template.as_deref(),
+        fam,
+        None,
+        &pairs,
+        None,
+        &crate::prompt_render::JinjaExtras::for_model(&req.model),
+    )
+    .text;
 
     // Load the model and generate response
     let Ok(loaded_model) = state.engine.load(&spec).await else {
