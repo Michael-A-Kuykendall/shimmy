@@ -683,62 +683,27 @@ mod tests {
 
     #[test]
     fn test_template_family_selection() {
-        // Test template selection logic (lines 115-119)
+        // Test family selection via the single prompt_render path.
         use crate::templates::TemplateFamily;
 
-        // Test ChatML template selection
-        let spec_chatml = crate::engine::ModelSpec {
-            name: "test-chatml".to_string(),
-            base_path: "./test.safetensors".into(),
-            lora_path: None,
-            template: Some("chatml".to_string()),
-            chat_template: None,
-            ctx_len: 2048,
-            n_threads: None,
-        };
-
-        let fam = match spec_chatml.template.as_deref() {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
-        assert!(matches!(fam, TemplateFamily::ChatML));
-
-        // Test Llama3 template selection
-        let spec_llama3 = crate::engine::ModelSpec {
-            name: "test-llama3".to_string(),
-            base_path: "./test.safetensors".into(),
-            lora_path: None,
-            template: Some("llama3".to_string()),
-            chat_template: None,
-            ctx_len: 2048,
-            n_threads: None,
-        };
-
-        let fam = match spec_llama3.template.as_deref() {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
-        assert!(matches!(fam, TemplateFamily::Llama3));
-
-        // Test default template selection
-        let spec_default = crate::engine::ModelSpec {
-            name: "test-default".to_string(),
-            base_path: "./test.safetensors".into(),
-            lora_path: None,
-            template: Some("unknown".to_string()),
-            chat_template: None,
-            ctx_len: 2048,
-            n_threads: None,
-        };
-
-        let fam = match spec_default.template.as_deref() {
-            Some("chatml") => TemplateFamily::ChatML,
-            Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-            _ => TemplateFamily::OpenChat,
-        };
-        assert!(matches!(fam, TemplateFamily::OpenChat));
+        assert!(matches!(
+            crate::prompt_render::family_from_spec(Some("chatml"), "test-chatml"),
+            TemplateFamily::ChatML
+        ));
+        assert!(matches!(
+            crate::prompt_render::family_from_spec(Some("llama3"), "test-llama3"),
+            TemplateFamily::Llama3
+        ));
+        // Unknown registry template -> name heuristic (default -> OpenChat).
+        assert!(matches!(
+            crate::prompt_render::family_from_spec(Some("unknown"), "some-model"),
+            TemplateFamily::OpenChat
+        ));
+        // Gemma name heuristic.
+        assert!(matches!(
+            crate::prompt_render::family_from_spec(None, "gemma-2-2b-it"),
+            TemplateFamily::Gemma
+        ));
     }
 
     #[test]

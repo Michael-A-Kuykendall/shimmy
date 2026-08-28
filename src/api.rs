@@ -967,16 +967,20 @@ mod tests {
         let template = Some("chatml");
 
         if let Some(ms) = &messages {
-            let fam = match template {
-                Some("chatml") => TemplateFamily::ChatML,
-                Some("llama3") | Some("llama-3") => TemplateFamily::Llama3,
-                _ => TemplateFamily::OpenChat,
-            };
+            let fam = crate::prompt_render::family_from_spec(template, "test-model");
             let pairs = ms
                 .iter()
                 .map(|m| (m.role.clone(), m.content.clone()))
                 .collect::<Vec<_>>();
-            let _prompt = fam.render(system, &pairs, None);
+            let _prompt = crate::prompt_render::render_chat_prompt_with_extras(
+                None,
+                fam,
+                system,
+                &pairs,
+                None,
+                &crate::prompt_render::JinjaExtras::for_model("test-model"),
+            )
+            .text;
             assert_eq!(pairs.len(), 1);
             assert_eq!(pairs[0].0, "user");
         }
