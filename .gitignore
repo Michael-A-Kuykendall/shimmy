@@ -159,3 +159,4 @@ AGENTS.md
 .agents/
 .beads/
 .skip-ci-tests
+.cargo/
