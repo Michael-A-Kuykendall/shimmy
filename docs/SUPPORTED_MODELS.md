@@ -13,7 +13,12 @@ GPU. Certification records live in the workspace ledger
 README's **Supported Models** table is generated from this same data, so the two
 stay in lockstep.
 
-**12 model families · 26 certified model/quant combinations** — every model below passes Shimmy's 3-box certification regimen (MATH + INFERENCE + DETERMINISM) against the certification ledger. GGUF files load as-is; no recompilation, no hardcoded per-model constants.
+**12 model families** — every model below is verified to load and generate through Shimmy's certified engine path. Certification is **ledger-backed** (`cert/ledger.duckdb` + per-model packages under `cert/packages/`); the table is regenerated from that ledger via `scripts/cert/generate_models_table.py` so it can't drift from what actually passed. GGUF files load as-is; no recompilation, no hardcoded per-model constants.
+
+> **Chat templating (v2.7):** all models now render through a single `prompt_render`
+> path that uses each model's real GGUF `chat_template` (Jinja), with a family
+> fallback and `--raw` escape for base models. See [CHAT_TEMPLATING.md](CHAT_TEMPLATING.md).
+> Routing is validated offline per-model by `tests/gguf_routing.rs` (no GPU).
 
 | Family | Model | Quants |
 |---|---|---|

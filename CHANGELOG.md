@@ -5,6 +5,32 @@ All notable changes to Shimmy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] — 2026-08-27 — Unified Chat Templating
+
+### Highlights
+
+- **Single chat-templating renderer.** All paths (HTTP `/api/generate`, OpenAI
+  `/v1/chat/completions` + `/v1/completions`, Anthropic `/v1/messages`, and the
+  CLI `generate`) now render prompts through one `prompt_render` module that uses
+  each model's **real GGUF `chat_template`** (Jinja via shimmyjinja), with a
+  family fallback (ChatML/Llama3/Gemma) and a `--raw` escape for base/completion
+  models. Previously instruct models were fed raw prompts or a coarse
+  ChatML/Llama3/OpenChat heuristic — the root cause of garbled output on
+  Qwen3/Gemma/etc.
+- **Real GGUF template sourced at load.** `ModelSpec.chat_template` is populated
+  from the GGUF header (airframe metadata), so Jinja-first rendering is automatic.
+- **shimmyjinja extended** for real templates: slice-with-step (`messages[::-1]`,
+  used by Qwen3 thinking) + Gemma family fallback.
+- **Offline routing gate.** `tests/gguf_routing.rs` validates template routing for
+  every model in the models dir (no GPU, ~14s) — the cheap per-model "screen test".
+- **Legacy server retired.** `shimmy_server_gpu` (a dead standalone GPU server with
+  its own template renderer) removed — 1,847 lines deleted. See `CHAT_TEMPLATING.md`.
+
+### Docs
+
+- New `docs/CHAT_TEMPLATING.md` — the canonical architecture reference.
+
+
 ## [2.6.0] — 2026-08-26 — Certification Consolidation + Engine Cleanup + v2.2 Promotion
 
 ### 🏆 Certified — 12 Families · 26 Model/Quant Combinations

@@ -32,6 +32,10 @@ Shimmy is a zero-config, OpenAI-compatible inference server with a native WebGPU
 - ✅ **Airframe engine** — pure-Rust WGSL GPU inference, shipped in v2.0.0
   - Deterministic GPU output, GGUF-native spec, YaRN RoPE extended context
   - No CUDA toolkit or Vulkan SDK required; wgpu handles adapter selection
+- ✅ **Unified chat templating (v2.7)** — single `prompt_render` path using each
+  model's real GGUF `chat_template` (Jinja) across all serve + CLI paths, with
+  `--raw` escape for base models; offline per-model routing gate
+  (`tests/gguf_routing.rs`)
 
 ## 🎯 Q2–Q3 2026 Milestones
 - [x] **Stop tokens from GGUF metadata** — read `tokenizer.ggml.eos_token_id` natively
