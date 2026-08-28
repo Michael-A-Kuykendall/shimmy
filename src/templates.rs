@@ -8,6 +8,8 @@ pub enum TemplateFamily {
     ChatML,
     Llama3,
     OpenChat,
+    /// Gemma `<start_of_turn>` format (assistant role rendered as `model`).
+    Gemma,
 }
 
 impl TemplateFamily {
@@ -65,6 +67,27 @@ impl TemplateFamily {
                 }
                 s
             }
+            TemplateFamily::Gemma => {
+                let mut s = String::new();
+                // Gemma templates use <start_of_turn>...<end_of_turn> and render the
+                // assistant role as `model`. A leading bos is optional (many GGUFs
+                // have no bos_token); the turn structure is the contract.
+                if let Some(sys) = system {
+                    s.push_str(&format!("<start_of_turn>user\n{}<end_of_turn>\n", sys));
+                }
+                for (role, content) in messages {
+                    let turn_role = if role == "assistant" { "model" } else { role };
+                    s.push_str(&format!(
+                        "<start_of_turn>{}\n{}<end_of_turn>\n",
+                        turn_role, content
+                    ));
+                }
+                if let Some(inp) = input {
+                    s.push_str(&format!("<start_of_turn>user\n{}<end_of_turn>\n", inp));
+                }
+                s.push_str("<start_of_turn>model\n");
+                s
+            }
         }
     }
 
@@ -74,6 +97,7 @@ impl TemplateFamily {
             TemplateFamily::ChatML => vec!["<|im_end|>".to_string(), "<|im_start|>".to_string()],
             TemplateFamily::Llama3 => vec!["<|eot_id|>".to_string(), "<|end_of_text|>".to_string()],
             TemplateFamily::OpenChat => vec![],
+            TemplateFamily::Gemma => vec!["<end_of_turn>".to_string()],
         }
     }
 }

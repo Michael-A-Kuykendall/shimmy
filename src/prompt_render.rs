@@ -337,12 +337,15 @@ pub fn family_from_spec(template: Option<&str>, model_name: &str) -> TemplateFam
         Some(ref t) if t == "chatml" => TemplateFamily::ChatML,
         Some(ref t) if t == "llama3" || t == "llama-3" => TemplateFamily::Llama3,
         Some(ref t) if t == "openchat" => TemplateFamily::OpenChat,
+        Some(ref t) if t == "gemma" => TemplateFamily::Gemma,
         _ => {
             let n = model_name.to_lowercase();
             if n.contains("llama-3") || n.contains("llama3") || n.contains("meta-llama-3") {
                 TemplateFamily::Llama3
             } else if n.contains("qwen") || n.contains("chatglm") || n.contains("phi") {
                 TemplateFamily::ChatML
+            } else if n.contains("gemma") {
+                TemplateFamily::Gemma
             } else {
                 TemplateFamily::OpenChat
             }
@@ -512,5 +515,48 @@ mod tests {
         let r = render_completion_prompt("Hello", None, TemplateFamily::ChatML, false);
         assert_eq!(r.source, RenderSource::FamilyFallback);
         assert!(r.text.contains("<|im_start|>user"));
+    }
+
+    // ── Gemma family fallback ───────────────────────────────────────────────
+
+    #[test]
+    fn gemma_family_renders_start_of_turn() {
+        // Gemma model with no GGUF template (or template render failure) -> Gemma family wrap.
+        let msgs = vec![("user".into(), "Hi".into())];
+        let r = render_chat_prompt(None, TemplateFamily::Gemma, None, &msgs, None);
+        assert_eq!(r.source, RenderSource::FamilyFallback);
+        assert!(
+            r.text.contains("<start_of_turn>user\nHi<end_of_turn>"),
+            "gemma user turn; got: {}",
+            r.text
+        );
+        assert!(
+            r.text.contains("<start_of_turn>model\n"),
+            "gemma gen prompt; got: {}",
+            r.text
+        );
+    }
+
+    #[test]
+    fn gemma_assistant_rendered_as_model() {
+        let msgs = vec![
+            ("user".into(), "Hi".into()),
+            ("assistant".into(), "Hello".into()),
+        ];
+        let r = render_chat_prompt(None, TemplateFamily::Gemma, None, &msgs, None);
+        assert!(
+            r.text.contains("<start_of_turn>model\nHello<end_of_turn>"),
+            "assistant role must render as model; got: {}",
+            r.text
+        );
+    }
+
+    #[test]
+    fn decide_gemma_no_template_is_family_not_raw() {
+        // Gemma is an instruct family; with no GGUF template it should fall back
+        // to the Gemma family wrap, NOT raw (and NOT OpenChat).
+        let src = decide(None, None, "gemma-2-2b-it", RenderMode::Auto);
+        assert_eq!(src, RenderSource::FamilyFallback);
+        assert_eq!(family_from_spec(None, "gemma-4-e4b"), TemplateFamily::Gemma);
     }
 }
