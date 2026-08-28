@@ -10,7 +10,7 @@ compatibility fixes, dependency updates, release infrastructure, and other
 backward-compatible improvements; a feature does not automatically require a
 minor-version increment.
 
-## [Unreleased]
+## [2.6.2] — 2026-08-28 — OpenAPI and Swagger Documentation
 
 ### Added
 
