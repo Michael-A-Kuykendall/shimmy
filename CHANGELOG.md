@@ -166,9 +166,21 @@ Shimmy now ships with a **full mathematical certification pipeline** that proves
 ### Changed
 - Added CI gate: `cargo check --features airframe,huggingface` from a fresh clone, so airframe-engine integration breaks are caught before release.
 
-## [2.3.1]
+## [2.3.1] - 2026-07-23 — Airframe 0.2.11 and OSS Release Cleanup
 
-**Full Changelog**: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.3.0...v2.3.1
+### Changed
+
+- Updated the Airframe dependency to `0.2.11`.
+- Simplified CI to the public Airframe-native build and test path.
+- Updated the English and Chinese documentation to match the public product
+  boundary: Shimmy is the product and Airframe is its GPU engine library.
+- Added the Q5_0 quantization support note to the model documentation.
+
+### Removed
+
+- Removed the local Airframe path patch from the public release branch.
+- Removed obsolete release-process and private-infrastructure instructions
+  from the public repository.
 
 
 ## [2.3.0] - 2026-07-20
@@ -223,6 +235,21 @@ Shimmy now ships with a **full mathematical certification pipeline** that proves
 
 ---
 
+## [2.1.1] - 2026-06-11 — Airframe 0.2.3 Hotfix
+
+### Fixed
+
+- Updated Airframe to `0.2.3`, including the GPU temporary-buffer sizing fix.
+- Removed stale backend and feature assumptions from the release test suite.
+
+### Changed
+
+- Simplified CI and release validation around the Airframe-native runtime.
+- Removed obsolete llama.cpp, HuggingFace, and MLX runtime paths from the
+  public release line.
+
+---
+
 ## [2.1.0] - 2026-06-02
 
 ### Added
@@ -242,6 +269,25 @@ Shimmy now ships with a **full mathematical certification pipeline** that proves
 
 ### Changed
 - Airframe dependency updated to 0.2.1.
+
+---
+
+## [2.0.1] - 2026-05-26 — Airframe Default Runtime
+
+### Added
+
+- Enabled the real Airframe GPU engine as the default runtime.
+- Added Docker publishing support and expanded release packaging for the
+  Airframe-based binary.
+
+### Changed
+
+- Switched the public Airframe dependency to crates.io (`0.1`).
+- Updated Docker and model-feature documentation for the Airframe runtime.
+
+### Removed
+
+- Removed the private Airframe path dependency from the public release setup.
 
 ---
 
