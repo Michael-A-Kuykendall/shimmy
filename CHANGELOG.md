@@ -10,6 +10,19 @@ compatibility fixes, dependency updates, release infrastructure, and other
 backward-compatible improvements; a feature does not automatically require a
 minor-version increment.
 
+## [2.6.3] — 2026-08-28 — Intel Arc Binding-Limit Fix
+
+### Fixed
+
+- **Integrated GPU model loading.** Shimmy now uses Airframe `0.4.2`, which
+  sizes bindless model chunks from the adapter's actual storage-buffer binding
+  limit instead of rejecting integrated GPUs with a limit below the default
+  2 GB chunk size. This resolves [#214](https://github.com/Michael-A-Kuykendall/shimmy/issues/214).
+
+### Changed
+
+- Updated the Airframe dependency to `0.4.2`.
+
 ## [2.6.2] — 2026-08-28 — OpenAPI and Swagger Documentation
 
 ### Added
