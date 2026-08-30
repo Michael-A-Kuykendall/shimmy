@@ -7,7 +7,6 @@
 *Your name could be here — [sponsor](https://github.com/sponsors/Michael-A-Kuykendall)*
 
 ## Coffee Tier Heroes ($5+/month)
-- **[gqf2008](https://github.com/gqf2008)** (高庆丰)
 - **[alistairheath](https://github.com/alistairheath)**
 
 ---
