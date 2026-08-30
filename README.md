@@ -186,7 +186,7 @@ Shimmy is independently maintained. Sponsorship funds certification, compatibili
 - **$100/month**: Corporate backer 🏢 — Logo placement + release recognition
 - **$500/month**: Infrastructure partner 🚀 — Office hours + roadmap consultation
 
-**Current sponsors:** [ZephyrCloudIO](https://github.com/ZephyrCloudIO) · [gqf2008](https://github.com/gqf2008) · [alistairheath](https://github.com/alistairheath)
+**Current sponsors:** [ZephyrCloudIO](https://github.com/ZephyrCloudIO) · [alistairheath](https://github.com/alistairheath)
 
 [**🎯 Become a Sponsor**](https://github.com/sponsors/Michael-A-Kuykendall) · [Invoicing](mailto:michaelallenkuykendall@gmail.com)
 
