@@ -34,10 +34,10 @@ GPU detection is automatic — on first launch Airframe selects the best adapter
 > *"A parameter cannot be found that matches parameter name 'L'."* — always call
 > `curl.exe` explicitly.
 >
-> **Available binaries:** the current release matrix publishes `shimmy-linux-x86_64`,
-> `shimmy-windows-x86_64.exe`, and `shimmy-macos-arm64`. If a listed binary for your
-> platform is not present on the latest release, run `shimmy --version` to confirm,
-> then file an issue.
+> **Available binaries:** the release workflow builds `shimmy-linux-x86_64`,
+> `shimmy-windows-x86_64.exe`, and `shimmy-macos-arm64`. If a platform asset is
+> missing from a release, install from crates.io with `cargo install shimmy` or
+> build from source using the instructions below.
 
 ### Build from Source / `cargo install`
 

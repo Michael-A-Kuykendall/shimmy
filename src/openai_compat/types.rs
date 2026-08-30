@@ -34,6 +34,13 @@ impl MessageContent {
                 .join("\n"),
         }
     }
+
+    pub fn has_unsupported_media(&self) -> bool {
+        match self {
+            MessageContent::Text(_) => false,
+            MessageContent::Parts(parts) => parts.iter().any(|part| part.part_type != "text"),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -284,6 +291,7 @@ mod tests {
             },
         ]);
         assert_eq!(content.as_text(), "only");
+        assert!(content.has_unsupported_media());
     }
 
     #[test]

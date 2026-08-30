@@ -95,6 +95,24 @@ pub async fn chat_completions(
         )
             .into_response();
     }
+    if req
+        .messages
+        .iter()
+        .any(|message| message.content.has_unsupported_media())
+    {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "error": {
+                    "message": "multimodal content is not supported by this build",
+                    "type": "invalid_request_error",
+                    "param": "messages",
+                    "code": "unsupported_media"
+                }
+            })),
+        )
+            .into_response();
+    }
     if let Some(max_tok) = req.max_tokens {
         if max_tok == 0 || max_tok > 131_072 {
             return (

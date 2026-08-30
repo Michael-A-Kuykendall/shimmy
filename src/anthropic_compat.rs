@@ -119,11 +119,34 @@ impl From<AnthropicMessage> for ChatMessage {
     }
 }
 
+fn contains_unsupported_media(messages: &[AnthropicMessage]) -> bool {
+    messages.iter().any(|message| {
+        matches!(
+            &message.content,
+            AnthropicContent::Blocks(blocks)
+                if blocks.iter().any(|block| block.content_type != "text")
+        )
+    })
+}
+
 /// Anthropic Messages API endpoint: POST /v1/messages
 pub async fn messages(
     State(state): State<Arc<AppState>>,
     Json(req): Json<AnthropicMessageRequest>,
 ) -> impl IntoResponse {
+    if contains_unsupported_media(&req.messages) {
+        return (
+            axum::http::StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "error": {
+                    "type": "invalid_request_error",
+                    "message": "multimodal content is not supported by this build"
+                }
+            })),
+        )
+            .into_response();
+    }
+
     // Convert Anthropic format to our internal format
     let internal_messages: Vec<ChatMessage> =
         req.messages.into_iter().map(|msg| msg.into()).collect();
@@ -307,6 +330,24 @@ mod tests {
 
         let chat_msg: ChatMessage = anthropic_msg.into();
         assert_eq!(chat_msg.content, "Hello\nWorld");
+    }
+
+    #[test]
+    fn test_unsupported_media_is_detected() {
+        let messages = vec![AnthropicMessage {
+            role: "user".to_string(),
+            content: AnthropicContent::Blocks(vec![ContentBlock {
+                content_type: "image".to_string(),
+                text: None,
+                source: Some(ImageSource {
+                    source_type: "base64".to_string(),
+                    media_type: "image/png".to_string(),
+                    data: "dGVzdA==".to_string(),
+                }),
+            }]),
+        }];
+
+        assert!(contains_unsupported_media(&messages));
     }
 
     #[test]
