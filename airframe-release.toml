@@ -1,0 +1,5 @@
+# Release-time dependency contract. The deploy script updates this file when
+# it cuts a Shimmy release; the SHA makes the Airframe tag unambiguous.
+version = "0.4.3"
+tag = "v0.4.3"
+sha = "76b599afc2ef45c0cd9f90c6b09433efbb0e8f5a"

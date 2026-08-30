@@ -13,9 +13,9 @@ dependencies = [
 
 [[package]]
 name = "airframe"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7df26b6e53d0be94d165297b7babee3257aa97778a415ab71ee62abf38c6c204"
+checksum = "367009a4e99c909e074abe20f908f1193166baf3abc59e1c0f95a9b7eb55f6c1"
 dependencies = [
  "aho-corasick",
  "airframe-observe",
@@ -2323,7 +2323,7 @@ dependencies = [
 
 [[package]]
 name = "shimmy"
-version = "2.6.3"
+version = "2.6.4"
 dependencies = [
  "airframe",
  "anyhow",
