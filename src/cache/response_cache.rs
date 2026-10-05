@@ -197,6 +197,12 @@ impl ResponseCache {
         let mut cache = self.cache.write().await;
         let mut stats = self.stats.write().await;
 
+        // Replacing an entry must release its previous contribution to the
+        // size accounting before capacity checks and insertion.
+        if let Some(previous) = cache.remove(&key) {
+            stats.total_size_bytes -= previous.size_bytes;
+        }
+
         // Check if we need to evict entries
         while cache.len() >= self.config.max_entries
             || stats.total_size_bytes + entry_size > self.config.max_size_mb * 1024 * 1024
@@ -262,10 +268,11 @@ impl ResponseCache {
         let mut cache = self.cache.write().await;
         let mut stats = self.stats.write().await;
 
+        let cleared_entries = cache.len() as u64;
         cache.clear();
         stats.entries = 0;
         stats.total_size_bytes = 0;
-        stats.evictions += stats.entries as u64;
+        stats.evictions += cleared_entries;
 
         info!("Cache cleared");
     }
@@ -399,6 +406,59 @@ mod tests {
         assert!(cache.get(&create_test_key("1", "model")).await.is_some());
         assert!(cache.get(&create_test_key("2", "model")).await.is_none());
         assert!(cache.get(&create_test_key("3", "model")).await.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_cache_overwrite_updates_size_accounting() {
+        let cache = ResponseCache::with_config(ResponseCacheConfig {
+            max_entries: 1,
+            ..Default::default()
+        });
+        let key = create_test_key("overwrite", "model");
+        let replacement = "a longer replacement response".to_string();
+
+        cache
+            .put(
+                key.clone(),
+                "short response".to_string(),
+                Duration::from_millis(10),
+            )
+            .await;
+        cache
+            .put(key, replacement.clone(), Duration::from_millis(10))
+            .await;
+
+        let stats = cache.stats.read().await;
+        assert_eq!(stats.entries, 1);
+        assert_eq!(stats.evictions, 0);
+        assert_eq!(stats.total_size_bytes, replacement.len());
+    }
+
+    #[tokio::test]
+    async fn test_cache_clear_counts_evictions() {
+        let cache = ResponseCache::new();
+
+        cache
+            .put(
+                create_test_key("clear 1", "model"),
+                "response 1".to_string(),
+                Duration::from_millis(10),
+            )
+            .await;
+        cache
+            .put(
+                create_test_key("clear 2", "model"),
+                "response 2".to_string(),
+                Duration::from_millis(10),
+            )
+            .await;
+
+        cache.clear().await;
+
+        let stats = cache.stats().await;
+        assert_eq!(stats.entries, 0);
+        assert_eq!(stats.total_size_bytes, 0);
+        assert_eq!(stats.evictions, 2);
     }
 
     #[test]
