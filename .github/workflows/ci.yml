@@ -12,8 +12,15 @@ env:
 
 jobs:
   build:
-    name: Build and Test
-    runs-on: ubuntu-latest
+    name: Build and Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04-arm, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
     - uses: actions/checkout@v4
     - name: Install Rust
@@ -24,8 +31,15 @@ jobs:
       run: cargo test --release --locked --no-default-features --features fast
 
   integration:
-    name: Integration (airframe engine)
-    runs-on: ubuntu-latest
+    name: Integration (airframe engine) (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04-arm, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
     - uses: actions/checkout@v4
     - name: Install Rust
@@ -50,14 +64,3 @@ jobs:
     - name: Verify binary exists in image
       run: docker run --rm shimmy:ci-test shimmy --version
 
-  release:
-    name: Release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-    - uses: actions/checkout@v4
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
