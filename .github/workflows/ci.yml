@@ -28,7 +28,7 @@ jobs:
     - name: Build
       run: cargo build --release --locked --no-default-features --features fast
     - name: Test
-      run: cargo test --release --locked --no-default-features --features fast
+      run: cargo test --release --locked --no-default-features --features fast -- --test-threads=1
 
   integration:
     name: Integration (airframe engine) (${{ matrix.os }})
@@ -49,7 +49,7 @@ jobs:
     - name: Clippy (including default-feature tests)
       run: cargo clippy --release --locked --all-targets -- -D warnings
     - name: Test default Airframe integration (no model or GPU needed)
-      run: cargo test --release --locked
+      run: cargo test --release --locked -- --test-threads=1
 
   docker-build:
     name: Docker Build Validation
