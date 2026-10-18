@@ -19,9 +19,9 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
     - name: Build
-      run: cargo build --no-default-features --features fast
+      run: cargo build --release --locked --no-default-features --features fast
     - name: Test
-      run: cargo test --no-default-features --features fast
+      run: cargo test --release --locked --no-default-features --features fast
 
   integration:
     name: Integration (airframe engine)
@@ -30,8 +30,12 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-    - name: Check airframe-engine integration
-      run: cargo check --features airframe
+    - name: Format
+      run: cargo fmt --all -- --check
+    - name: Clippy (including default-feature tests)
+      run: cargo clippy --release --locked --all-targets -- -D warnings
+    - name: Test default Airframe integration (no model or GPU needed)
+      run: cargo test --release --locked
 
   docker-build:
     name: Docker Build Validation

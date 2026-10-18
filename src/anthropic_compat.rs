@@ -163,6 +163,7 @@ pub async fn messages(
     // Build generation options using default values and override with request params
     let mut options = crate::engine::GenOptions {
         max_tokens: req.max_tokens,
+        raw_prompt: true, // The prompt is rendered below; do not wrap it again.
         stream: req.stream.unwrap_or(false),
         ..Default::default()
     };

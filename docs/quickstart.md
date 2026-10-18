@@ -18,11 +18,6 @@ curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/
 # macOS ARM64 (Apple Silicon)
 curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
 
-# macOS Intel
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-intel -o shimmy && chmod +x shimmy
-
-# Linux ARM64
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-aarch64 -o shimmy && chmod +x shimmy
 ```
 
 GPU detection is automatic — on first launch Airframe selects the best adapter
@@ -42,7 +37,7 @@ GPU detection is automatic — on first launch Airframe selects the best adapter
 ### Build from Source / `cargo install`
 
 ```bash
-# Install from crates.io (huggingface engine)
+# Install from crates.io (Airframe GPU engine)
 cargo install shimmy
 
 # Build the full GPU build from source
@@ -62,15 +57,17 @@ Place any `.gguf` file in one of these locations:
 - Or just drop it in the HuggingFace / Ollama / LM Studio caches — Shimmy auto-discovers
 
 ```bash
-# Example: pull a small certified model
-huggingface-cli download TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
-  --include "tinyllama-1.1b-chat-v1.0.Q4_0.gguf" --local-dir ./models/
+# Download TinyLlama Q4_0 (about 609 MiB); no Python tooling required.
+mkdir -p ~/models
+curl -fL --retry 3 -C - \
+  -o ~/models/tinyllama-1.1b-chat-v1.0.Q4_0.gguf \
+  https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_0.gguf
 ```
 
 ## 3. Start Shimmy
 
 ```bash
-./shimmy serve
+./shimmy serve --model-path ~/models/tinyllama-1.1b-chat-v1.0.Q4_0.gguf --bind 127.0.0.1:11435
 ```
 
 That's it! Shimmy is now running on `http://localhost:11435` (auto-allocates a
@@ -107,24 +104,43 @@ placeholder API key.
 ./shimmy list
 
 # Test generation
-./shimmy generate --name your-model --prompt "Hello!" --max-tokens 10
+./shimmy --model-dirs ~/models list --short
+# Use the exact discovered name from list --short (normalized to lowercase).
+./shimmy --model-dirs ~/models generate tinyllama-1.1b-chat-v1.0.q4-0 --prompt "What is the capital of France?" --max-tokens 32
 
 # Or use curl
 curl -X POST http://localhost:11435/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "your-model",
+    "model": "tinyllama-1.1b-chat-v1.0.Q4_0",
     "messages": [{"role": "user", "content": "Hello!"}],
     "max_tokens": 10
   }'
 ```
 
+### Repeatable model-backed smoke test
+
+From a source checkout, after `cargo build --release --locked`:
+
+```bash
+python3 scripts/smoke_text.py --binary target/release/shimmy \
+  --model ~/models/tinyllama-1.1b-chat-v1.0.Q4_0.gguf \
+  --log /tmp/shimmy-smoke-server.log
+```
+
+This optional development script starts an isolated server, checks model discovery,
+JSON chat, SSE chat, text completions, native generation and structured errors,
+then stops the server. It checks the response content and exits nonzero on failure.
+
 ## GPU Acceleration
 
 - No backend flags — WebGPU (wgpu) is selected automatically: D3D12 on Windows,
   Vulkan on Linux, Metal on macOS.
-- `shimmy gpu-info` shows the selected adapter.
-- `shimmy serve --gpu-backend cpu` forces CPU mode (slow, but works everywhere).
+- `shimmy gpu-info` shows whether Airframe was compiled in; the actual selected
+  adapter is logged when a model loads.
+- GGUF inference requires the Airframe engine and a compatible GPU driver.
+  A build without default features is useful for CPU-only protocol tests; it
+  does not provide a GGUF CPU inference backend.
 
 ## Extended Context
 

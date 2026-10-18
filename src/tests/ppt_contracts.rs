@@ -5,10 +5,8 @@
 #[cfg(all(test, feature = "airframe"))]
 #[serial_test::serial]
 mod contract_tests {
-    use super::*;
     use crate::invariant_ppt::shimmy_invariants::*;
     use crate::invariant_ppt::*;
-    use tokio;
 
     #[test]
     fn test_model_loading_contracts() {
@@ -136,7 +134,8 @@ mod contract_tests {
 #[cfg(all(test, feature = "airframe"))]
 #[serial_test::serial]
 mod property_tests {
-    use super::*;
+    use crate::invariant_ppt::shimmy_invariants::*;
+    use crate::invariant_ppt::*;
 
     #[test]
     #[serial_test::serial]
@@ -271,7 +270,8 @@ mod property_tests {
 
 #[cfg(all(test, feature = "airframe"))]
 mod exploration_tests {
-    use super::*;
+    use crate::invariant_ppt::shimmy_invariants::*;
+    use crate::invariant_ppt::*;
 
     #[test]
     fn explore_edge_cases() {

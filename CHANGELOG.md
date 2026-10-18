@@ -10,6 +10,29 @@ compatibility fixes, dependency updates, release infrastructure, and other
 backward-compatible improvements; a feature does not automatically require a
 minor-version increment.
 
+## [Unreleased]
+
+### Fixed
+
+- Render HTTP chat and completion prompts once before Airframe generation,
+  preserving ordered conversation turns and explicit raw prompts.
+- Return a JSON chat completion when the OpenAI `stream` field is omitted.
+- Add weight-free protocol regressions for prompt routing and streaming.
+- Restore default-feature invariant-test imports and exercise those tests in CI.
+- Restore the missing v2.6.4 release notes required by binary publication.
+
+### Changed
+
+- Resolve `shimmytok` 0.8.4 in the release lockfile.
+- Correct quickstart commands and add `scripts/smoke_text.py` for model-backed
+  endpoint verification.
+
+## [2.6.4] — 2026-08-30 — Airframe 0.4.3
+
+### Changed
+
+- Updated the Airframe dependency to `0.4.3`.
+
 ## [2.6.3] — 2026-08-28 — Intel Arc Binding-Limit Fix
 
 ### Fixed

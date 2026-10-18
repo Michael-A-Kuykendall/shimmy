@@ -94,7 +94,11 @@ pub async fn generate(
         raw.text
     };
 
-    let mut opts = GenOptions::default();
+    let mut opts = GenOptions {
+        // The protocol layer has already rendered the model's chat template.
+        raw_prompt: true,
+        ..Default::default()
+    };
     if let Some(t) = req.temperature {
         opts.temperature = t;
     }

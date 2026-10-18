@@ -163,38 +163,22 @@ pub async fn chat_completions(
         .map(|m| (m.role.clone(), m.content_text()))
         .collect::<Vec<_>>();
 
-    // For chat completions, we need to trigger assistant response
-    // Extract the last user message to use as input parameter
-    let last_user_text: Option<String> = req
-        .messages
-        .iter()
-        .rfind(|m| m.role == "user")
-        .map(|m| m.content_text());
-    let last_user_message = last_user_text.as_deref();
-
-    // Build conversation history without the last user message
-    let history: Vec<_> = if last_user_message.is_some() {
-        req.messages
-            .iter()
-            .take(req.messages.len().saturating_sub(1))
-            .map(|m| (m.role.clone(), m.content_text()))
-            .collect()
-    } else {
-        pairs.clone()
-    };
-
     let prompt = crate::prompt_render::render_chat_prompt_with_extras(
         spec.chat_template.as_deref(),
         fam,
         None,
-        &history,
-        last_user_message,
+        &pairs,
+        None,
         &crate::prompt_render::JinjaExtras::for_model(&req.model),
     )
     .text;
 
     // Set generation options
-    let mut opts = crate::engine::GenOptions::default();
+    let mut opts = crate::engine::GenOptions {
+        raw_prompt: true, // The conversation is already rendered above.
+        stream: req.stream.unwrap_or(false),
+        ..Default::default()
+    };
     if let Some(t) = req.temperature {
         opts.temperature = t;
     }
@@ -435,7 +419,10 @@ pub async fn completions(
         }
     };
 
-    let mut opts = crate::engine::GenOptions::default();
+    let mut opts = crate::engine::GenOptions {
+        raw_prompt: true, // This handler renders the prompt before generation.
+        ..Default::default()
+    };
     if let Some(t) = req.temperature {
         opts.temperature = t;
     }

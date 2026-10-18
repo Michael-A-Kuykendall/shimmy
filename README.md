@@ -136,10 +136,10 @@ Shimmy maintains high code quality through comprehensive testing:
 
 ```bash
 # Full test suite (default features = GPU engine)
-cargo test --features airframe,huggingface
+cargo test --release --locked
 
 # Quick CPU-only tests (no GPU required)
-cargo test --lib --no-default-features --features huggingface -- --test-threads=1
+cargo test --release --locked --no-default-features --features fast
 ```
 
 See [docs/ppt-invariant-testing.md](docs/ppt-invariant-testing.md) for technical details.
