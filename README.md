@@ -29,7 +29,7 @@ Shimmy is independently maintained and free forever. [Sponsorship](https://githu
 
 Shimmy is a **single-binary** OpenAI-compatible inference server for GGUF models. Point your existing AI tools at Shimmy and they just work — locally, privately, and free.
 
-**Shimmy is the server. Airframe is the engine.** Under the hood, Shimmy runs on [**Airframe**](https://github.com/Michael-A-Kuykendall/airframe) (v0.4.0), a pure-Rust WebGPU (WGSL) transformer engine. No C++ toolchain, no Python runtime, no backend flags. 26 models certified across 12 families. Version history: [CHANGELOG](CHANGELOG.md) · [Airframe CHANGELOG](https://github.com/Michael-A-Kuykendall/airframe/blob/main/CHANGELOG.md).
+**Shimmy is the server. Airframe is the engine.** Under the hood, Shimmy runs on [**Airframe**](https://github.com/Michael-A-Kuykendall/airframe) (v0.4.4), a pure-Rust WebGPU (WGSL) transformer engine. No C++ toolchain, no Python runtime, no backend flags. 26 models certified across 12 families. Version history: [CHANGELOG](CHANGELOG.md) · [Airframe CHANGELOG](https://github.com/Michael-A-Kuykendall/airframe/blob/main/CHANGELOG.md).
 
 **Why this matters:**
 - No Python runtime or C++ toolchain — Rust only, top to bottom
