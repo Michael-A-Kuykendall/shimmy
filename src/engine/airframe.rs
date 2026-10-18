@@ -72,6 +72,18 @@ impl LoadedModel for AirframeModel {
         opts: GenOptions,
         on_token: Option<Box<dyn FnMut(String) + Send>>,
     ) -> Result<String> {
+        Ok(self
+            .generate_with_metadata(prompt, opts, on_token)
+            .await?
+            .text)
+    }
+
+    async fn generate_with_metadata(
+        &self,
+        prompt: &str,
+        opts: GenOptions,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<crate::engine::GenerationOutput> {
         let params = Self::bridge_params(&opts);
         let runtime = self.runtime.clone();
         let prompt = prompt.to_string();
@@ -116,7 +128,7 @@ impl LoadedModel for AirframeModel {
             );
             let final_prompt = rendered.text;
 
-            rt.generate(
+            rt.generate_with_metadata(
                 &final_prompt,
                 &params,
                 callback,
@@ -129,7 +141,21 @@ impl LoadedModel for AirframeModel {
         .map_err(|e| anyhow::anyhow!("Airframe task panicked: {}", e))?
         .map_err(|e| anyhow::anyhow!("Airframe generation failed: {}", e))?;
 
-        Ok(result)
+        Ok(crate::engine::GenerationOutput {
+            text: result.text,
+            usage: Some(crate::engine::TokenUsage {
+                prompt_tokens: result.prompt_tokens,
+                completion_tokens: result.completion_tokens,
+                total_tokens: result.prompt_tokens + result.completion_tokens,
+            }),
+            finish_reason: Some(
+                match result.finish_reason {
+                    airframe::runtime::generation::FinishReason::Stop => "stop",
+                    airframe::runtime::generation::FinishReason::Length => "length",
+                }
+                .into(),
+            ),
+        })
     }
 }
 

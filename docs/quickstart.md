@@ -10,13 +10,13 @@ Pick your platform — all binaries use automatic WebGPU (wgpu) GPU detection:
 
 ```bash
 # Windows x64
-curl.exe -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
+curl.exe -fL --retry 3 https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-windows-x86_64.exe -o shimmy.exe
 
 # Linux x86_64
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64 -o shimmy && chmod +x shimmy
+curl -fL --retry 3 https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64 -o shimmy && chmod +x shimmy
 
 # macOS ARM64 (Apple Silicon)
-curl -L https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
+curl -fL --retry 3 https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
 
 ```
 
@@ -38,12 +38,12 @@ GPU detection is automatic — on first launch Airframe selects the best adapter
 
 ```bash
 # Install from crates.io (Airframe GPU engine)
-cargo install shimmy
+cargo install shimmy --locked
 
 # Build the full GPU build from source
 git clone https://github.com/Michael-A-Kuykendall/shimmy
 cd shimmy
-cargo build --release
+cargo build --release --locked
 ```
 
 The Airframe GPU engine is a public crate on [crates.io](https://crates.io/crates/airframe)
@@ -71,7 +71,43 @@ curl -fL --retry 3 -C - \
 ```
 
 That's it! Shimmy is now running on `http://localhost:11435` (auto-allocates a
-port if that one is taken).
+port if that one is taken). Use the address printed at startup.
+
+## Network access and API keys
+
+Local use on `127.0.0.1` or `::1` works without configuration. To listen on a
+LAN/container address, set a strong key first; Shimmy refuses a non-loopback bind
+without one.
+
+```bash
+export SHIMMY_API_KEY="$(openssl rand -hex 32)"
+./shimmy serve --bind 0.0.0.0:11435 --model-path ~/models/tinyllama-1.1b-chat-v1.0.Q4_0.gguf
+curl -f -H "Authorization: Bearer $SHIMMY_API_KEY" http://127.0.0.1:11435/v1/models
+```
+
+When a key is configured, all inference, model-management, diagnostic and
+WebSocket routes require it. `GET /health` stays available for health probes.
+OpenAI clients use that key instead of a placeholder; Anthropic clients may use
+the `x-api-key` header. WebSocket clients must be able to send an authorization
+header. Use TLS at your reverse proxy for remote access.
+
+Browser access is disabled by default. Set `SHIMMY_ALLOWED_ORIGINS` to a
+comma-separated list of exact browser origins, for example
+`http://localhost:3000,https://chat.example.com`. Wildcards are rejected.
+Allowed browser origins still need the configured API key.
+
+For Docker Compose, export `SHIMMY_API_KEY` before
+`docker compose -f templates/docker/docker-compose.yml up --build`.
+The example publishes its host port on loopback. For Kubernetes, create the
+credential before applying the manifests:
+
+```bash
+kubectl create secret generic shimmy-api --from-literal=api-key="$SHIMMY_API_KEY"
+kubectl apply -f templates/kubernetes/
+```
+
+The Kubernetes example uses a ClusterIP service. Add an authenticated TLS ingress
+deliberately if external access is needed.
 
 ## 4. Connect Your Tools
 
@@ -95,7 +131,8 @@ port if that one is taken).
 **Cursor**: set custom endpoint to `http://localhost:11435`
 
 **Any OpenAI SDK**: point `baseURL` at `http://127.0.0.1:11435/v1`, use any
-placeholder API key.
+placeholder API key for unauthenticated loopback use, or the configured
+`SHIMMY_API_KEY` when authentication is enabled.
 
 ## 5. Test It
 

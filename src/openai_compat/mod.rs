@@ -210,6 +210,7 @@ pub async fn chat_completions(
     }
     opts.stop_tokens = stop_tokens;
 
+    let include_usage = req.stream_options.as_ref().is_some_and(|o| o.include_usage);
     if opts.stream {
         // Handle streaming response with proper OpenAI format
         use axum::response::sse::{Event, Sse};
@@ -255,8 +256,8 @@ pub async fn chat_completions(
             }));
 
             // Generate and stream tokens
-            let _ = loaded
-                .generate(
+            let result = loaded
+                .generate_with_metadata(
                     &prompt_clone,
                     opts_clone,
                     Some(Box::new(move |tok| {
@@ -282,6 +283,17 @@ pub async fn chat_completions(
                 )
                 .await;
 
+            let result = match result {
+                Ok(output) => output,
+                Err(error) => {
+                    tracing::error!("Streaming generation failed: {error}");
+                    let _ = tx.send(serde_json::json!({"error": {
+                        "message": "Generation failed", "type": "server_error", "code": "generation_failed"
+                    }}).to_string());
+                    let _ = tx.send("[DONE]".into());
+                    return;
+                }
+            };
             // Send final chunk
             let final_chunk = ChatCompletionChunk {
                 id: id_for_final,
@@ -294,13 +306,22 @@ pub async fn chat_completions(
                         role: None,
                         content: None,
                     },
-                    finish_reason: Some("stop".to_string()),
+                    finish_reason: result.finish_reason.clone(),
                 }],
             };
             let _ = tx.send(serde_json::to_string(&final_chunk).unwrap_or_else(|e| {
                 tracing::error!("Failed to serialize final chunk: {}", e);
                 "{}".to_string()
             }));
+            if include_usage {
+                let _ = tx.send(
+                    serde_json::json!({
+                        "id": id, "object": "chat.completion.chunk", "created": timestamp,
+                        "model": model_clone, "choices": [], "usage": result.usage
+                    })
+                    .to_string(),
+                );
+            }
             let _ = tx.send("[DONE]".to_string());
         });
 
@@ -309,8 +330,9 @@ pub async fn chat_completions(
         Sse::new(stream).into_response()
     } else {
         // Handle non-streaming response
-        match loaded.generate(&prompt, opts, None).await {
-            Ok(content) => {
+        match loaded.generate_with_metadata(&prompt, opts, None).await {
+            Ok(result) => {
+                let content = result.text;
                 tracing::debug!(
                     "Generated response for model '{}': {} chars",
                     req.model,
@@ -330,13 +352,13 @@ pub async fn chat_completions(
                             role: "assistant".to_string(),
                             content,
                         },
-                        finish_reason: Some("stop".to_string()),
+                        finish_reason: result.finish_reason,
                     }],
-                    usage: Usage {
-                        prompt_tokens: 0, // Token counting not needed for local inference
-                        completion_tokens: 0,
-                        total_tokens: 0,
-                    },
+                    usage: result.usage.map(|usage| Usage {
+                        prompt_tokens: usage.prompt_tokens,
+                        completion_tokens: usage.completion_tokens,
+                        total_tokens: usage.total_tokens,
+                    }),
                 };
                 Json(response).into_response()
             }
@@ -444,9 +466,8 @@ pub async fn completions(
     )
     .text;
     let model_id = req.model.clone();
-    let prompt_tokens = prompt.split_whitespace().count();
 
-    let text = match loaded.generate(&prompt, opts, None).await {
+    let result = match loaded.generate_with_metadata(&prompt, opts, None).await {
         Ok(t) => t,
         Err(e) => {
             tracing::error!("Generation error: {:?}", e);
@@ -464,7 +485,6 @@ pub async fn completions(
         }
     };
 
-    let completion_tokens = text.split_whitespace().count();
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -476,16 +496,12 @@ pub async fn completions(
         "created": timestamp,
         "model": model_id,
         "choices": [{
-            "text": text,
+            "text": result.text,
             "index": 0,
             "logprobs": null,
-            "finish_reason": "stop"
+            "finish_reason": result.finish_reason
         }],
-        "usage": {
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens,
-            "total_tokens": prompt_tokens + completion_tokens
-        }
+        "usage": result.usage
     });
 
     (StatusCode::OK, Json(response)).into_response()
@@ -516,6 +532,7 @@ mod tests {
             stop: None,
             frequency_penalty: None,
             presence_penalty: None,
+            stream_options: None,
         };
 
         // Exercise handler code path (will gracefully fail due to no model)
@@ -549,11 +566,11 @@ mod tests {
                 },
                 finish_reason: Some("stop".to_string()),
             }],
-            usage: Usage {
+            usage: Some(Usage {
                 prompt_tokens: 10,
                 completion_tokens: 5,
                 total_tokens: 15,
-            },
+            }),
         };
 
         assert_eq!(response.id, "test-id");
@@ -595,6 +612,7 @@ mod tests {
             stop: None,
             frequency_penalty: None,
             presence_penalty: None,
+            stream_options: None,
         };
 
         let _response = chat_completions(State(state), Json(request)).await;
@@ -635,6 +653,7 @@ mod tests {
             stop: None,
             frequency_penalty: None,
             presence_penalty: None,
+            stream_options: None,
         };
 
         // Exercise streaming path (lines 132-213)
@@ -679,6 +698,7 @@ mod tests {
             stop: None,
             frequency_penalty: None,
             presence_penalty: None,
+            stream_options: None,
         };
 
         // Exercise non-streaming path (lines 214-244)
@@ -1011,6 +1031,7 @@ mod tests {
             stop: None,
             frequency_penalty: None,
             presence_penalty: None,
+            stream_options: None,
         };
 
         // Skip actual model loading in tests - models don't exist
@@ -1030,6 +1051,7 @@ mod tests {
             stop: None,
             frequency_penalty: None,
             presence_penalty: None,
+            stream_options: None,
         };
 
         // Skip actual model loading in tests - models don't exist
@@ -1093,6 +1115,7 @@ mod tests {
             stop: None,
             frequency_penalty: None,
             presence_penalty: None,
+            stream_options: None,
         };
 
         let _response = chat_completions(State(state), Json(invalid_request)).await;
@@ -1120,11 +1143,11 @@ mod tests {
                 },
                 finish_reason: Some("stop".to_string()),
             }],
-            usage: Usage {
+            usage: Some(Usage {
                 prompt_tokens: 10,
                 completion_tokens: 5,
                 total_tokens: 15,
-            },
+            }),
         };
 
         // Serialize to JSON to verify structure

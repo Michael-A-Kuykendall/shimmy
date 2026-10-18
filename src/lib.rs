@@ -19,6 +19,7 @@ pub mod openapi;
 pub mod port_manager;
 pub mod prompt_render;
 pub mod safetensors_adapter;
+pub mod security;
 pub mod server;
 pub mod templates;
 pub mod tools;

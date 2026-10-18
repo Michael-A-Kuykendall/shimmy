@@ -1,39 +1,21 @@
-# Multi-stage build for minimal final image
-FROM rust:1.85 as builder
-
-WORKDIR /app
-
-# Copy source code
+# Build from the repository root: docker build -f templates/docker/Dockerfile .
+FROM rust:slim-bookworm AS builder
+WORKDIR /build
 COPY . .
+RUN cargo build --release --locked --bin shimmy
 
-# Build with release optimizations
-RUN cargo build --release --features llama
-
-# Final stage - use distroless for security and minimal size
-FROM gcr.io/distroless/cc-debian12:nonroot
-
-# Copy the binary from builder stage
-COPY --from=builder /app/target/release/shimmy /usr/local/bin/shimmy
-
-# Use non-root user for security
-USER nonroot
-
-# Expose default port
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl libvulkan1 mesa-vulkan-drivers \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -g 1001 shimmy && useradd -m -u 1001 -g shimmy shimmy \
+    && mkdir -p /app/models /app/cache && chown -R shimmy:shimmy /app
+COPY --from=builder /build/target/release/shimmy /usr/local/bin/shimmy
+USER shimmy
+WORKDIR /app
 EXPOSE 11435
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD ["/usr/local/bin/shimmy", "list"] || exit 1
-
-# Default command
-ENTRYPOINT ["/usr/local/bin/shimmy"]
-CMD ["serve", "--bind", "0.0.0.0:11435"]
-
-# Metadata
-LABEL org.opencontainers.image.title="Shimmy"
-LABEL org.opencontainers.image.description="The 5MB alternative to Ollama - local AI inference server"
-LABEL org.opencontainers.image.vendor="Michael A. Kuykendall"
-LABEL org.opencontainers.image.source="https://github.com/Michael-A-Kuykendall/shimmy"
-LABEL org.opencontainers.image.url="https://github.com/Michael-A-Kuykendall/shimmy"
-LABEL org.opencontainers.image.documentation="https://github.com/Michael-A-Kuykendall/shimmy/tree/main/docs"
-LABEL org.opencontainers.image.licenses="MIT"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -fsS http://localhost:11435/health || exit 1
+ENV SHIMMY_MODEL_PATHS=/app/models
+ENV RUST_LOG=info
+# A non-loopback bind refuses startup without SHIMMY_API_KEY.
+CMD ["shimmy", "serve", "--bind", "0.0.0.0:11435"]

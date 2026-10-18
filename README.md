@@ -87,8 +87,13 @@ Shimmy is a **single-binary** OpenAI-compatible inference server for GGUF models
 
 ## Quick Start
 
+Local loopback access needs no key. Network binds require `SHIMMY_API_KEY`;
+browser clients must also be listed in `SHIMMY_ALLOWED_ORIGINS`.
+See the [network-access instructions](docs/quickstart.md#network-access-and-api-keys).
+
+
 ```bash
-cargo install shimmy
+cargo install shimmy --locked
 shimmy serve --model-path /absolute/path/to/model.gguf --bind 127.0.0.1:11435
 ```
 

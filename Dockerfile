@@ -1,48 +1,21 @@
-FROM rust:1.85-slim as builder
+# Build from the repository root: docker build -f templates/docker/Dockerfile .
+FROM rust:slim-bookworm AS builder
+WORKDIR /build
+COPY . .
+RUN cargo build --release --locked --bin shimmy
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libssl-dev \
-    build-essential \
-    libclang-dev \
-    cmake \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-COPY Cargo.toml Cargo.lock ./
-COPY src/ ./src/
-COPY benches/ ./benches/
-COPY templates/ ./templates/
-
-# Build the application
-RUN cargo build --release --features airframe,huggingface
-
-# Runtime stage
 FROM debian:bookworm-slim
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    libssl3 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create app directory
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl libvulkan1 mesa-vulkan-drivers \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -g 1001 shimmy && useradd -m -u 1001 -g shimmy shimmy \
+    && mkdir -p /app/models /app/cache && chown -R shimmy:shimmy /app
+COPY --from=builder /build/target/release/shimmy /usr/local/bin/shimmy
+USER shimmy
 WORKDIR /app
-
-# Copy the binary
-COPY --from=builder /app/target/release/shimmy /usr/local/bin/shimmy
-
-# Create models directory
-RUN mkdir -p /app/models
-
-# Expose port
-EXPOSE 11434
-
-# Set default environment
-ENV SHIMMY_PORT=11434
-ENV SHIMMY_HOST=0.0.0.0
-ENV SHIMMY_BASE_GGUF=/app/models
-
-# Run shimmy
-CMD ["shimmy", "serve"]
+EXPOSE 11435
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -fsS http://localhost:11435/health || exit 1
+ENV SHIMMY_MODEL_PATHS=/app/models
+ENV RUST_LOG=info
+# A non-loopback bind refuses startup without SHIMMY_API_KEY.
+CMD ["shimmy", "serve", "--bind", "0.0.0.0:11435"]

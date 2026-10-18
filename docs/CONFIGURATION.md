@@ -2,6 +2,19 @@
 
 This guide covers all configuration options for Shimmy.
 
+## HTTP access policy
+
+- `SHIMMY_API_KEY`: at least 16 printable ASCII characters, without spaces.
+  Required for any non-loopback bind. When set, clients authenticate using
+  `Authorization: Bearer <key>` or Anthropic's `x-api-key` header.
+- `SHIMMY_ALLOWED_ORIGINS`: comma-separated exact HTTP(S) browser origins.
+  Empty by default; wildcards and URL paths are rejected. Origin permission
+  does not bypass authentication.
+- `GET /health` remains available to health probes. Other API, diagnostics,
+  model-management and WebSocket routes require credentials when configured.
+- Use a TLS reverse proxy for remote traffic. See the
+  [deployment examples](quickstart.md#network-access-and-api-keys).
+
 ## Environment Variables
 
 ### Required

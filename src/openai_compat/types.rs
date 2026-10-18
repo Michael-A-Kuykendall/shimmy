@@ -73,11 +73,19 @@ impl OAIMessage {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct StreamOptions {
+    #[serde(default)]
+    pub include_usage: bool,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct ChatCompletionRequest {
     pub model: String,
     pub messages: Vec<OAIMessage>,
     #[serde(default)]
     pub stream: Option<bool>,
+    #[serde(default)]
+    pub stream_options: Option<StreamOptions>,
     #[serde(default)]
     pub temperature: Option<f32>,
     #[serde(default)]
@@ -135,7 +143,7 @@ pub struct ChatCompletionResponse {
     pub created: u64,
     pub model: String,
     pub choices: Vec<Choice>,
-    pub usage: Usage,
+    pub usage: Option<Usage>,
 }
 
 #[derive(Debug, Serialize)]

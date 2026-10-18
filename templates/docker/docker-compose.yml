@@ -3,14 +3,14 @@ version: '3.8'
 services:
   shimmy:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: templates/docker/Dockerfile
     image: shimmy:latest
     container_name: shimmy-ai
     restart: unless-stopped
 
     ports:
-      - "11435:11435"
+      - "127.0.0.1:11435:11435"
 
     volumes:
       # Mount models directory
@@ -21,13 +21,14 @@ services:
       - huggingface_cache:/home/shimmy/.cache/huggingface
 
     environment:
+      - SHIMMY_API_KEY=${SHIMMY_API_KEY:?Set SHIMMY_API_KEY to a random API credential first}
       - SHIMMY_HOST=0.0.0.0
       - SHIMMY_PORT=11435
       - RUST_LOG=info
       - SHIMMY_MODEL_PATHS=/app/models
 
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:11435/v1/models"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:11435/health"]
       interval: 30s
       timeout: 10s
       retries: 3
