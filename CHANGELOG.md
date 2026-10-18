@@ -20,6 +20,8 @@ minor-version increment.
 - Add weight-free protocol regressions for prompt routing and streaming.
 - Restore default-feature invariant-test imports and exercise those tests in CI.
 - Restore the missing v2.6.4 release notes required by binary publication.
+- Correct response-cache byte accounting on overwrite and eviction accounting
+  on clear (community PR #219).
 
 ### Changed
 
