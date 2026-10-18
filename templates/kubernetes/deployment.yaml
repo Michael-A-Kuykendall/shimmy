@@ -25,6 +25,11 @@ spec:
           protocol: TCP
 
         env:
+        - name: SHIMMY_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: shimmy-api
+              key: api-key
         - name: SHIMMY_HOST
           value: "0.0.0.0"
         - name: SHIMMY_PORT
@@ -51,7 +56,7 @@ spec:
 
         livenessProbe:
           httpGet:
-            path: /v1/models
+            path: /health
             port: 11435
           initialDelaySeconds: 30
           periodSeconds: 10
@@ -60,7 +65,7 @@ spec:
 
         readinessProbe:
           httpGet:
-            path: /v1/models
+            path: /health
             port: 11435
           initialDelaySeconds: 15
           periodSeconds: 5
@@ -69,7 +74,7 @@ spec:
 
         startupProbe:
           httpGet:
-            path: /v1/models
+            path: /health
             port: 11435
           initialDelaySeconds: 10
           periodSeconds: 10

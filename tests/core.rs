@@ -315,11 +315,11 @@ fn test_chat_completion_response_serde() {
             },
             finish_reason: Some("stop".into()),
         }],
-        usage: Usage {
+        usage: Some(Usage {
             prompt_tokens: 5,
             completion_tokens: 2,
             total_tokens: 7,
-        },
+        }),
     };
     let j = serde_json::to_value(&resp).unwrap();
     assert_eq!(j["id"], "chatcmpl-test");
@@ -553,6 +553,7 @@ fn test_system_message_handling() {
         stop: None,
         frequency_penalty: None,
         presence_penalty: None,
+        stream_options: None,
     };
     assert_eq!(req.messages.len(), 2);
     assert_eq!(req.messages[0].role, "system");
@@ -576,6 +577,7 @@ fn test_streaming_request_processing() {
         stop: None,
         frequency_penalty: None,
         presence_penalty: None,
+        stream_options: None,
     };
     assert_eq!(req.stream, Some(true));
     assert_eq!(req.temperature, Some(0.3));
@@ -596,6 +598,7 @@ fn test_generation_options_parsing() {
         stop: None,
         frequency_penalty: None,
         presence_penalty: None,
+        stream_options: None,
     };
     assert_eq!(req.stream, Some(true));
     assert_eq!(req.temperature, Some(0.8));
@@ -615,6 +618,7 @@ fn test_generation_options_parsing() {
         stop: None,
         frequency_penalty: None,
         presence_penalty: None,
+        stream_options: None,
     };
     assert!(minimal.stream.is_none());
     assert!(minimal.temperature.is_none());

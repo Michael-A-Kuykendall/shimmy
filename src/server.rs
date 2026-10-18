@@ -1,40 +1,12 @@
 use crate::{anthropic_compat, api, openai_compat, util::diag::diag_handler, AppState};
-use axum::extract::Request;
 use axum::{
     extract::State,
-    http::{HeaderValue, Method},
-    middleware::{self, Next},
-    response::Response,
+    middleware,
     routing::{get, post},
     Json, Router,
 };
 use serde_json::{json, Value};
 use std::{net::SocketAddr, sync::Arc};
-
-/// CORS middleware for better client compatibility
-async fn cors_layer(req: Request, next: Next) -> Response {
-    let method = req.method().clone();
-    let mut response = next.run(req).await;
-
-    let headers = response.headers_mut();
-    headers.insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
-    headers.insert(
-        "Access-Control-Allow-Methods",
-        HeaderValue::from_static("GET, POST, OPTIONS"),
-    );
-    headers.insert(
-        "Access-Control-Allow-Headers",
-        HeaderValue::from_static("Content-Type, Authorization"),
-    );
-    headers.insert("Access-Control-Max-Age", HeaderValue::from_static("86400"));
-
-    // Handle preflight OPTIONS requests
-    if method == Method::OPTIONS {
-        *response.status_mut() = axum::http::StatusCode::OK;
-    }
-
-    response
-}
 
 /// Enhanced health check endpoint for production use
 async fn health_check(State(state): State<Arc<AppState>>) -> Json<Value> {
@@ -127,8 +99,7 @@ async fn metrics_endpoint(State(state): State<Arc<AppState>>) -> Json<Value> {
     }))
 }
 
-pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
-    let listener = tokio::net::TcpListener::bind(addr).await?;
+pub fn router(state: Arc<AppState>, security: crate::security::ApiSecurity) -> Router {
     #[allow(unused_mut)]
     let mut app = Router::new()
         .route("/health", get(health_check))
@@ -157,8 +128,18 @@ pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
         // Anthropic Claude API compatibility
         .route("/v1/messages", post(anthropic_compat::messages));
 
-    let app = app.layer(middleware::from_fn(cors_layer)).with_state(state);
-    axum::serve(listener, app).await?;
+    app.layer(middleware::from_fn_with_state(
+        Arc::new(security),
+        crate::security::protect,
+    ))
+    .with_state(state)
+}
+
+pub async fn run(addr: SocketAddr, state: Arc<AppState>) -> anyhow::Result<()> {
+    let security = crate::security::ApiSecurity::from_env()?;
+    security.validate_bind(addr)?;
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, router(state, security)).await?;
     Ok(())
 }
 

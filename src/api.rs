@@ -44,6 +44,14 @@ pub struct GenerateResponse {
     pub response: String,
 }
 
+#[derive(Serialize)]
+struct GenerateWithMetadata {
+    #[serde(flatten)]
+    output: GenerateResponse,
+    usage: Option<crate::engine::TokenUsage>,
+    finish_reason: Option<String>,
+}
+
 pub async fn generate(
     State(state): State<Arc<AppState>>,
     Json(req): Json<GenerateRequest>,
@@ -147,13 +155,20 @@ pub async fn generate(
             .map(|s| Ok::<Event, std::convert::Infallible>(Event::default().data(s)));
         Sse::new(stream).into_response()
     } else {
-        match loaded.generate(&prompt, opts, None).await {
+        match loaded.generate_with_metadata(&prompt, opts, None).await {
             Ok(full) => {
                 tracing::debug!(
                     "Generation completed successfully for model '{}'",
                     req.model
                 );
-                Json(GenerateResponse { response: full }).into_response()
+                Json(GenerateWithMetadata {
+                    output: GenerateResponse {
+                        response: full.text,
+                    },
+                    usage: full.usage,
+                    finish_reason: full.finish_reason,
+                })
+                .into_response()
             }
             Err(e) => {
                 tracing::error!(

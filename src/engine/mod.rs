@@ -68,6 +68,20 @@ pub trait InferenceEngine: Send + Sync {
     async fn load(&self, spec: &ModelSpec) -> Result<Box<dyn LoadedModel>>;
 }
 
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct TokenUsage {
+    pub prompt_tokens: usize,
+    pub completion_tokens: usize,
+    pub total_tokens: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct GenerationOutput {
+    pub text: String,
+    pub usage: Option<TokenUsage>,
+    pub finish_reason: Option<String>,
+}
+
 #[async_trait]
 pub trait LoadedModel: Send + Sync {
     async fn generate(
@@ -76,6 +90,20 @@ pub trait LoadedModel: Send + Sync {
         opts: GenOptions,
         on_token: Option<Box<dyn FnMut(String) + Send>>,
     ) -> Result<String>;
+
+    /// Backends that cannot supply exact accounting leave metadata unavailable.
+    async fn generate_with_metadata(
+        &self,
+        prompt: &str,
+        opts: GenOptions,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<GenerationOutput> {
+        Ok(GenerationOutput {
+            text: self.generate(prompt, opts, on_token).await?,
+            usage: None,
+            finish_reason: None,
+        })
+    }
 }
 
 pub mod adapter;

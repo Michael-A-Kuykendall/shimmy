@@ -12,8 +12,14 @@ minor-version increment.
 
 ## [Unreleased]
 
+## [2.6.5] — 2026-10-18 — Airframe 0.4.4
+
 ### Fixed
 
+- Return exact prompt/completion token counts and truthful `stop`/`length`
+  reasons in OpenAI/native JSON responses and OpenAI streaming responses.
+- Support `stream_options.include_usage`; report streaming generation failures
+  as errors instead of successful completion.
 - Render HTTP chat and completion prompts once before Airframe generation,
   preserving ordered conversation turns and explicit raw prompts.
 - Return a JSON chat completion when the OpenAI `stream` field is omitted.
@@ -21,10 +27,21 @@ minor-version increment.
 - Restore default-feature invariant-test imports and exercise those tests in CI.
 - Restore the missing v2.6.4 release notes required by binary publication.
 - Correct response-cache byte accounting on overwrite and eviction accounting
-  on clear (community PR #219).
+  on clear (#217). Thanks to @aiqubits for the diagnosis and fix proposal (#219).
+
+### Security
+
+- Require `SHIMMY_API_KEY` for non-loopback HTTP binds and protect inference,
+  management, diagnostics and WebSocket routes when a key is configured.
+- Replace wildcard CORS with explicit `SHIMMY_ALLOWED_ORIGINS`.
+- Require deployment credentials, keep Compose host ports on loopback, and
+  use a Kubernetes ClusterIP service with Secret-backed authentication (#221).
 
 ### Changed
 
+- Use Airframe 0.4.4 and `airframe-observe` 0.1.3.
+- Validate release binaries on each build runner and publish SHA256 checksums.
+- Refresh Docker images for the current Airframe build and Vulkan runtime.
 - Resolve `shimmytok` 0.8.4 in the release lockfile.
 - Correct quickstart commands and add `scripts/smoke_text.py` for model-backed
   endpoint verification.

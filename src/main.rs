@@ -15,6 +15,7 @@ mod openai_compat;
 mod openapi;
 mod port_manager;
 mod prompt_render;
+mod security;
 mod server;
 mod templates;
 mod util {
