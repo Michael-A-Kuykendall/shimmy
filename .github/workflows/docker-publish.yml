@@ -4,54 +4,84 @@ on:
   workflow_dispatch:
     inputs:
       source_ref:
-        description: "Git ref to build from (e.g. main or v2.0.0)"
+        description: "Verified release tag (e.g. v2.6.5)"
         required: true
-        default: "main"
       image_tag:
-        description: "Docker image tag to publish (e.g. v2.0.0)"
+        description: "Matching versioned image tag"
         required: true
-        default: "v2.0.0"
       push_latest:
-        description: "Also push :latest"
+        description: "Also publish latest after both architectures pass"
         required: true
         default: true
         type: boolean
 
 permissions:
   contents: read
+  actions: read
   packages: write
 
 jobs:
-  docker-publish:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
+  build:
+    if: github.repository == 'Michael-A-Kuykendall/shimmy'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            arch: amd64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    env:
+      TAG: ${{ inputs.image_tag }}
+      SOURCE_REF: ${{ inputs.source_ref }}
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout selected ref
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.source_ref }}
-
-      - name: Build and push image
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Require matching tested release
+        shell: bash
         run: |
           set -euo pipefail
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$SOURCE_REF" = "$TAG"
+          python3 -c 'import os,tomllib; assert tomllib.load(open("Cargo.toml","rb"))["package"]["version"] == os.environ["TAG"][1:]'
+          SHA=$(git rev-parse HEAD)
+          COUNT=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow release.yml --commit "$SHA" --limit 30 --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')
+          test "$COUNT" -gt 0
+      - name: Build and smoke native image
+        shell: bash
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          REPO_LC="${GITHUB_REPOSITORY,,}"
+          docker build -f deploy/Dockerfile -t "ghcr.io/$REPO_LC:$TAG-$ARCH" .
+          docker run --rm "ghcr.io/$REPO_LC:$TAG-$ARCH" shimmy --version
+          docker run --rm "ghcr.io/$REPO_LC:$TAG-$ARCH" shimmy --help > /dev/null
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push "ghcr.io/$REPO_LC:$TAG-$ARCH"
 
-          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          TAG="${{ inputs.image_tag }}"
-
-          echo "Publishing ghcr.io/$REPO_LC:$TAG"
-          if [ "${{ inputs.push_latest }}" = "true" ]; then
-            echo "Also publishing ghcr.io/$REPO_LC:latest"
-          fi
-
-          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-          docker build -f deploy/Dockerfile -t "ghcr.io/$REPO_LC:$TAG" .
-
-          docker push "ghcr.io/$REPO_LC:$TAG"
-
-          if [ "${{ inputs.push_latest }}" = "true" ]; then
-            docker tag "ghcr.io/$REPO_LC:$TAG" "ghcr.io/$REPO_LC:latest"
-            docker push "ghcr.io/$REPO_LC:latest"
+  manifest:
+    needs: [build]
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.image_tag }}
+      PUSH_LATEST: ${{ inputs.push_latest }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - name: Publish multi-platform manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO_LC="${GITHUB_REPOSITORY,,}"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker buildx imagetools create --tag "ghcr.io/$REPO_LC:$TAG" \
+            "ghcr.io/$REPO_LC:$TAG-amd64" "ghcr.io/$REPO_LC:$TAG-arm64"
+          docker buildx imagetools inspect "ghcr.io/$REPO_LC:$TAG"
+          if [ "$PUSH_LATEST" = "true" ]; then
+            docker buildx imagetools create --tag "ghcr.io/$REPO_LC:latest" \
+              "ghcr.io/$REPO_LC:$TAG-amd64" "ghcr.io/$REPO_LC:$TAG-arm64"
           fi
