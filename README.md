@@ -3,7 +3,7 @@
 
   # Shimmy — Local Inference, OpenAI-Compatible
 
-  ### 🔒 The 5MB alternative to Ollama — 100% Rust, zero dependencies 🚀
+  ### 🔒 Local GPU inference — one binary, 100% Rust 🚀
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Security](https://img.shields.io/badge/Security-Audited-green)](https://github.com/Michael-A-Kuykendall/shimmy/security)
