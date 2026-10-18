@@ -33,6 +33,20 @@ CLAUDE.md
 ehthumbs.db
 Thumbs.db
 
+# Machine-local development state and agent instructions
+.beads/
+.beads.gate.lock
+.openstate/
+.agents/
+.opencode/
+AGENTS.md
+AGENTS.override.md
+BEADS-SETUP.md
+STABILIZATION.md
+WORKSPACE-AUDIT.md
+RELEASE-PLAN.md
+.github/instructions/
+
 # Internal development documents (NEVER commit)
 docs-internal/
 docs/internal/
