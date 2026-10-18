@@ -38,7 +38,8 @@ minor-version increment.
 ### Changed
 
 - Use Airframe 0.4.4 and `airframe-observe` 0.1.3.
-- Validate release binaries on each build runner and publish SHA256 checksums.
+- Test on native Linux x86-64/ARM64, Windows x86-64 and macOS ARM64 runners.
+- Add Linux ARM64 release binaries and publish SHA256 checksums for all assets.
 - Refresh Docker images for the current Airframe build and Vulkan runtime.
 - Resolve `shimmytok` 0.8.4 in the release lockfile.
 - Correct quickstart commands and add `scripts/smoke_text.py` for model-backed
