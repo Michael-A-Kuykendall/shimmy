@@ -98,7 +98,10 @@ Allowed browser origins still need the configured API key.
 
 For Docker Compose, export `SHIMMY_API_KEY` before
 `docker compose -f templates/docker/docker-compose.yml up --build`.
-The example publishes its host port on loopback. For Kubernetes, create the
+The example publishes its host port on loopback and mounts
+`templates/docker/models/` at `/app/models`; place your GGUF files there first.
+With `docker run`, bind-mount your existing model directory at `/app/models`.
+For Kubernetes, create the
 credential before applying the manifests:
 
 ```bash
