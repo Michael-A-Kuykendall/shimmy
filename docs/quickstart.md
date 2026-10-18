@@ -15,6 +15,9 @@ curl.exe -fL --retry 3 https://github.com/Michael-A-Kuykendall/shimmy/releases/l
 # Linux x86_64
 curl -fL --retry 3 https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-x86_64 -o shimmy && chmod +x shimmy
 
+# Linux ARM64
+curl -fL --retry 3 https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-linux-arm64 -o shimmy && chmod +x shimmy
+
 # macOS ARM64 (Apple Silicon)
 curl -fL --retry 3 https://github.com/Michael-A-Kuykendall/shimmy/releases/latest/download/shimmy-macos-arm64 -o shimmy && chmod +x shimmy
 
@@ -30,8 +33,9 @@ GPU detection is automatic — on first launch Airframe selects the best adapter
 > `curl.exe` explicitly.
 >
 > **Available binaries:** the release workflow builds `shimmy-linux-x86_64`,
-> `shimmy-windows-x86_64.exe`, and `shimmy-macos-arm64`. If a platform asset is
-> missing from a release, install from crates.io with `cargo install shimmy` or
+> `shimmy-linux-arm64`, `shimmy-windows-x86_64.exe`, and `shimmy-macos-arm64`.
+> Each release includes `SHA256SUMS` to verify the downloaded binary. If an asset is
+> missing from a release, install from crates.io with `cargo install shimmy --locked` or
 > build from source using the instructions below.
 
 ### Build from Source / `cargo install`
