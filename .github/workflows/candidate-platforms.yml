@@ -1,0 +1,69 @@
+name: Candidate platform gates
+on:
+  push:
+    branches: [release/2.6.5]
+    paths: [.github/workflows/candidate-platforms.yml]
+  workflow_dispatch:
+concurrency:
+  group: candidate-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  platforms:
+    if: github.repository == 'Michael-A-Kuykendall/shimmy'
+    name: Test ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04-arm, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_BUILD_JOBS: "4"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 69c76b9f99fb7693a43b40756c086a4c8e888477
+          path: shimmy
+      - uses: actions/checkout@v4
+        with:
+          repository: Michael-A-Kuykendall/airframe
+          ref: 2c792638e459ec1de8542b9b5e6201d82af87aff
+          path: airframe
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            airframe
+            shimmy
+      - name: Airframe format
+        working-directory: airframe
+        run: cargo fmt --all -- --check
+      - name: Airframe libraries and accounting contracts
+        working-directory: airframe
+        run: |
+          cargo test --workspace --lib -- --test-threads=1 --skip backend::bindless::kv_cache::tests --skip backend::bindless::pipeline_shift::tests --skip backend::bindless::test_int4_parity::int4_parity_tests --skip backend::bindless::tests::tests_inner --skip backend::bindless::tests_gpu_math::tests
+          cargo test -p airframe-observe --test generation_accounting -- --test-threads=1
+          cargo test -p airframe --test test_contracts -- --test-threads=1
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Shimmy with exact candidate engine
+        working-directory: shimmy
+        run: |
+          cargo fmt --all -- --check
+          cargo test --config 'patch.crates-io.airframe.path="../airframe"' -- --test-threads=1
+          cargo test --no-default-features --features fast --config 'patch.crates-io.airframe.path="../airframe"' -- --test-threads=1
+          cargo clippy --all-targets --config 'patch.crates-io.airframe.path="../airframe"' -- -D warnings
+          cargo build --release --bin shimmy --config 'patch.crates-io.airframe.path="../airframe"'
+      - name: Verify native binary
+        working-directory: shimmy
+        run: |
+          ./target/release/shimmy --version
+          ./target/release/shimmy --help
