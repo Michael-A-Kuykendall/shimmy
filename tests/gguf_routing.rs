@@ -19,6 +19,7 @@
 use std::path::PathBuf;
 
 use airframe::backend::bindless::metadata::BindlessMetadata;
+use airframe::core::spec::GgufValue;
 use shimmy::prompt_render::{decide, RenderMode, RenderSource};
 
 fn models_dir() -> Option<PathBuf> {
@@ -78,6 +79,13 @@ fn gguf_routing_every_model_correct_source() {
         };
         let mut r = std::io::BufReader::new(f);
         let meta = BindlessMetadata::new(&mut r);
+        if matches!(
+            meta.gguf_metadata.get("general.architecture"),
+            Some(GgufValue::String(architecture)) if architecture == "clip"
+        ) {
+            eprintln!("  skip {name}: CLIP vision component has no text prompt route");
+            continue;
+        }
         let spec = meta.to_model_spec();
         let gguf_tpl = spec.chat_template.as_deref();
 
