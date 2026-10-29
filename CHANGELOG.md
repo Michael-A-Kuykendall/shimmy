@@ -12,6 +12,13 @@ minor-version increment.
 
 ## [Unreleased]
 
+### Fixed
+
+- Derive response-cache occupancy from stored entries so replacement and expiry
+  cannot leave stale byte counts; count cleared entries as evictions.
+- Reject responses larger than the configured cache capacity without evicting
+  valid entries.
+
 ## [2.6.5] — 2026-10-18 — Airframe 0.4.4
 
 ### Fixed
