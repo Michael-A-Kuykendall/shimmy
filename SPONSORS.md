@@ -1,22 +1,7 @@
-# These amazing people make Shimmy possible 🙏
+# Sponsors
 
-## Corporate Backers ($100+/month)
-*Your logo could be here*
+This project is independently maintained. Sponsorship helps keep it free and moving forward.
 
-## Bug Prioritizers ($25+/month)
-*Your name could be here — [sponsor](https://github.com/sponsors/Michael-A-Kuykendall)*
+[Become a sponsor on GitHub](https://github.com/sponsors/Michael-A-Kuykendall)
 
-## Coffee Tier Heroes ($5+/month)
-- **[alistairheath](https://github.com/alistairheath)**
-
----
-
-**Want to support Shimmy?** [Become a sponsor](https://github.com/sponsors/Michael-A-Kuykendall)
-
-Shimmy is free forever, but your sponsorship helps me:
-- Fix bugs faster
-- Add new features
-- Maintain compatibility with new models
-- Keep the project alive and thriving
-
-Every dollar matters. Every sponsor gets my eternal gratitude. 🚀
+Thank you to everyone who supports the work.
