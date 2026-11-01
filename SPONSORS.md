@@ -1,7 +1,7 @@
 # These amazing people make Shimmy possible 🙏
 
 ## Corporate Backers ($100+/month)
-- **[ZephyrCloudIO](https://github.com/ZephyrCloudIO)**
+*Your logo could be here*
 
 ## Bug Prioritizers ($25+/month)
 *Your name could be here — [sponsor](https://github.com/sponsors/Michael-A-Kuykendall)*
