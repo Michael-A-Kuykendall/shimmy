@@ -182,17 +182,18 @@ _Measured on RTX 3060, Shimmy v2.6.0, TinyLlama-1.1B. Your results vary by hardw
 
 ---
 
-## Sponsor Shimmy
+## Support
 
-Shimmy is independently maintained. Sponsorship funds certification, compatibility work, and releases.
+This project is independently maintained and free forever. Sponsorship helps fund ongoing development, certification, compatibility work, and releases.
 
-- **$5/month**: Coffee tier ☕ — Sponsor badge + name in [SPONSORS.md](SPONSORS.md)
-- **$25/month**: Supporter 🐛 — Priority support + name in [SPONSORS.md](SPONSORS.md)
-- **$100/month**: Corporate backer 🏢 — Logo placement + release recognition
-- **$500/month**: Infrastructure partner 🚀 — Office hours + roadmap consultation
+[Sponsor on GitHub](https://github.com/sponsors/Michael-A-Kuykendall) · [Buy Me a Coffee](https://www.buymeacoffee.com/michaelakuykendall)
 
+Any amount is appreciated. Suggested tiers:
 
-[**🎯 Become a Sponsor**](https://github.com/sponsors/Michael-A-Kuykendall) · [Invoicing](mailto:michaelallenkuykendall@gmail.com)
+- **$5/month** — Thanks
+- **$15/month** — Supporter
+- **$50/month** — Backer
+- **Custom** — [Email for invoicing](mailto:michaelallenkuykendall@gmail.com)
 
 ---
 
