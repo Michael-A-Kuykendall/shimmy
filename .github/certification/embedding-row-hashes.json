@@ -1,0 +1,141 @@
+{
+  "model_sha256": "72c5c3cb38fa32d5256e2fe30d03e7a64c6c79e668ad84057e3bd66e250b24fb",
+  "f32_model_sha256": "d16eda02baa8a735b482a7aad0c6fb8d7473178e52fd9b3686289200638ac10b",
+  "width": 2048,
+  "max_abs": 0.00002,
+  "source_evidence_sha256": "aecf722e6d9d905c6c11347e7e6f4b029efdf0af76fdd601b5365f7c06c3a5b3",
+  "rows": [
+    {
+      "token_id": 11,
+      "f32_sha256": "8e48d73e497457505589702f9026c9132a935a733a9cfd2709aed9a9da192e20"
+    },
+    {
+      "token_id": 13,
+      "f32_sha256": "9ab6ed11eab7620f88ef5a75ea5e400510c6386d89a980b408e3e8f7ca058703"
+    },
+    {
+      "token_id": 15,
+      "f32_sha256": "5d12f81670e89a47d754e9aef67a1cbbea450b928db0e779ea973cbaaef25665"
+    },
+    {
+      "token_id": 16,
+      "f32_sha256": "28231c5a3578d5f96591d1008eb38271d46eaff0cfb3f1f12ad99f0b8765c356"
+    },
+    {
+      "token_id": 198,
+      "f32_sha256": "f6ae1625ba5b4b39efd3b2bf0762bb10da56c93fdce2baca3a67eee46ce5a654"
+    },
+    {
+      "token_id": 220,
+      "f32_sha256": "7735f5ecb27d4bb67ead5a6875594d5f023d2760e9e329929fadc4aed1e671ab"
+    },
+    {
+      "token_id": 264,
+      "f32_sha256": "4f65b33860f89f1dbe9c04f200da9e7f118a415f05bc1dc351b3cb5f1d72c0ab"
+    },
+    {
+      "token_id": 271,
+      "f32_sha256": "95fe0f822adb8ac75272da5fc1f561527978a8cfe8432dd33d96c4507da4789d"
+    },
+    {
+      "token_id": 279,
+      "f32_sha256": "61570406f57b7214a049798b696bf156c79cc935edb638bf40a93679ea0cfd5b"
+    },
+    {
+      "token_id": 311,
+      "f32_sha256": "faf493164f8e2e8d2be4c5d2943a6db9bfa84546188a5e188032f35eab774088"
+    },
+    {
+      "token_id": 504,
+      "f32_sha256": "ca828126e118a876877d957a510a70abf9969983463e8683e31a0eaf549ca595"
+    },
+    {
+      "token_id": 525,
+      "f32_sha256": "087f6061c5045b578ac95f72dbdcdfe7b41084a0b0987c0b463aced36cf6475c"
+    },
+    {
+      "token_id": 553,
+      "f32_sha256": "e0c8374391d4f9f5d029bc9496dddae44bbd71b9cf429178ff58e1f6c6f7d340"
+    },
+    {
+      "token_id": 608,
+      "f32_sha256": "9201cc5e7f6d83beecdc4976dbeb57db1b0c87cba8bdea7bdcd7e1a36470e24d"
+    },
+    {
+      "token_id": 715,
+      "f32_sha256": "b4eec4e4cab188a7ba15cb0447556ff6a4396670e8690f3d615d0b18a342bcfa"
+    },
+    {
+      "token_id": 852,
+      "f32_sha256": "8c5017aa8c5ab535a40cb9b94bb393722013cde17f282e5151264928edf0ed48"
+    },
+    {
+      "token_id": 872,
+      "f32_sha256": "93782c81a9af068b052d8a70da3f49c563b7e86ac9f1aa9d15bca10c0510b947"
+    },
+    {
+      "token_id": 2152,
+      "f32_sha256": "d577335f20fc660f8bd3ccbf87b108a082c4b765f97d8808e29c48e7dc864f92"
+    },
+    {
+      "token_id": 2610,
+      "f32_sha256": "0e66ed39a0a3f4c2994f69963ca3e07f5780f32b8dded596a6f00a2e73a28d85"
+    },
+    {
+      "token_id": 8948,
+      "f32_sha256": "b2e061269535d6e282ff2ff76268ad11c4ce4326aa4e701a3dbb6cf96cce370a"
+    },
+    {
+      "token_id": 10950,
+      "f32_sha256": "8073d155ed87515b51d18af59dc2aae2c28cdb04956e1c4b88a565423807244d"
+    },
+    {
+      "token_id": 14990,
+      "f32_sha256": "cb245a4ba147c2a6b09abd622455b206da371d17d01d24bae70d4057bec0e8d7"
+    },
+    {
+      "token_id": 17847,
+      "f32_sha256": "f38d8cd06fca111e258d0ca708456958ea46990825978b7e2538c65666e935bc"
+    },
+    {
+      "token_id": 18663,
+      "f32_sha256": "74e51c077e5a36e2a3b0f7e9237632971ba3f380014e1ee39e460d53a729e772"
+    },
+    {
+      "token_id": 23811,
+      "f32_sha256": "ef3ef4820b99b842c25bd90fbb11ea9ed8fd933adf7dd5901a183a360eb2ca3a"
+    },
+    {
+      "token_id": 25780,
+      "f32_sha256": "3073420ef7d050f996ea562eabee2c967e09bce5176ac0a17d2dda1498708bd1"
+    },
+    {
+      "token_id": 26865,
+      "f32_sha256": "d004c005b106e4753061b2dccb0ca49674c6f3c55288c1ed16171fe7a60d5c1c"
+    },
+    {
+      "token_id": 76602,
+      "f32_sha256": "a1824d1827e383f7ca80805344bcd8a253fd465da157cd87c0037fb7ee64accd"
+    },
+    {
+      "token_id": 77091,
+      "f32_sha256": "b9d56dab5c59003e15ad6ba8cfeb7eef11d301cee0beb76782e9a3a82690aba0"
+    },
+    {
+      "token_id": 151644,
+      "f32_sha256": "202211183d261ac77a1a36e11d893c8aaab0d8d09b3d1289e5b160cc0400a22d"
+    },
+    {
+      "token_id": 151645,
+      "f32_sha256": "4ecf17a1ba3cae81f1b312f168b60533b484e0d0764f10d812fb2434554bb726"
+    },
+    {
+      "token_id": 151667,
+      "f32_sha256": "5d2fda713a48686b19a9e7442762f9443372b46ee145cad2d010d7c686bcd062"
+    },
+    {
+      "token_id": 151668,
+      "f32_sha256": "3ca65714c002bc764e437b029431bb204e4bb4049858e8276e22cda9079386f0"
+    }
+  ]
+}

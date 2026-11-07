@@ -1,0 +1,50 @@
+name: Bounded Apple Metal Operator and State
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: apple-metal-certification
+  cancel-in-progress: false
+jobs:
+  metal:
+    if: github.repository == 'Michael-A-Kuykendall/shimmy'
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v5
+      - name: Local rejection controls on native host
+        run: |
+          test "$(uname -m)" = arm64
+          python3 .github/certification/bounded.py --self-test
+      - name: Compile exact published-engine probes
+        timeout-minutes: 20
+        run: |
+          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --bin embedding --bin state --bin metal
+          mkdir -p cert-work/bounded
+          shasum -a 256 .github/certification/probes/target/release/{embedding,state,metal} > cert-work/bounded/probe-SHA256SUMS
+          cp .github/certification/probes/Cargo.lock cert-work/bounded/probe-Cargo.lock
+          rustc --version --verbose > cert-work/bounded/rustc.txt
+      - name: Actual Metal compute and hardware
+        run: python3 .github/certification/bounded.py --stage prepare
+      - name: Original 33 consumed embedding operands
+        timeout-minutes: 12
+        continue-on-error: true
+        run: python3 .github/certification/bounded.py --stage embedding
+      - name: Existing reset cancellation concurrent and error recovery contract
+        timeout-minutes: 12
+        if: always()
+        continue-on-error: true
+        run: python3 .github/certification/bounded.py --stage state
+      - name: Assert all bounded evidence
+        if: always()
+        run: python3 .github/certification/bounded.py --stage verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: apple-metal-bounded
+          path: cert-work/bounded/
+          if-no-files-found: error
+          retention-days: 1

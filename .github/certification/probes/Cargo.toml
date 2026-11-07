@@ -8,6 +8,8 @@ publish = false
 
 [dependencies]
 airframe = "=0.4.5"
+airframe-observe = "=0.1.4"
+sha2 = "=0.10.9"
 shimmytok = "=0.8.5"
 shimmyjinja = "=0.5.0"
 serde_json = "=1.0.151"

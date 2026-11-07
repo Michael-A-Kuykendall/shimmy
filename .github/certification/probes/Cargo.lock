@@ -1187,8 +1187,10 @@ name = "shimmy-metal-certification"
 version = "0.0.0"
 dependencies = [
  "airframe",
+ "airframe-observe",
  "pollster 0.3.0",
  "serde_json",
+ "sha2",
  "shimmyjinja",
  "shimmytok",
  "tokio",
