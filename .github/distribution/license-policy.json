@@ -1,0 +1,227 @@
+{
+  "source_sha": "21c7d28381352e1cafc55e84ba941b48d2b12d3e",
+  "allowed_license_ids": [
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "CDLA-Permissive-2.0",
+    "ISC",
+    "MIT",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Zlib"
+  ],
+  "exceptions": {
+    "block@0.1.6": {
+      "manifest_sha256": "24df2f33b48c9e756a4f864f882c1ab07a159b6c2b790f45af2e8162499b6719",
+      "reason": "Published manifest supplies the SPDX license declaration but no original full license file. Include the canonical declared license text and separately identify the upstream omission, source archive and author attribution; do not invent an original copyright notice or a new license grant.",
+      "files": [],
+      "canonical_only": true
+    },
+    "gl_generator@0.14.0": {
+      "manifest_sha256": "f586015aa2816b3c34d89f5e6a6539172efcd7f3ed055a0fab433ea83e2a0f0f",
+      "reason": "Published package omits repository-level licensing files; include exact files from its VCS revision or release tag.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/brendanzab/gl-rs/ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "path": "LICENSE"
+        }
+      ],
+      "canonical_only": false
+    },
+    "gpu-alloc@0.6.2": {
+      "manifest_sha256": "94ce474d1051e0dcd688277d28f1e6803e667645b8998c016d6e30055d1ea2f5",
+      "reason": "Published package omits repository-level licensing files; include exact files from its VCS revision or release tag.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-alloc/61020bdcb4eb04fca6bbf748aeb9570e859236e0/COPYING",
+          "sha256": "12121dfa588677007848ab922a45a1e3248868f6ff063598fceb3141d7897314",
+          "path": "COPYING"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-alloc/61020bdcb4eb04fca6bbf748aeb9570e859236e0/license/MIT",
+          "sha256": "f774bf68151714985324d90adbd59e8f271b7ba518608d871b6ba16464692879",
+          "path": "license/MIT"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-alloc/61020bdcb4eb04fca6bbf748aeb9570e859236e0/license/APACHE",
+          "sha256": "58317934bf818c379e4215fad7e8dfb6812edff32c9557b8b039343f69711e08",
+          "path": "license/APACHE"
+        }
+      ],
+      "canonical_only": false
+    },
+    "gpu-alloc-types@0.3.1": {
+      "manifest_sha256": "34a3c36524ab156db79ebcf76a878995365eca34c7975c3316ab528a1eeb60b7",
+      "reason": "Published package omits repository-level licensing files; include exact files from its VCS revision or release tag.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-alloc/7ddd1fe576fcfc503347eb97e476a47581479f22/COPYING",
+          "sha256": "12121dfa588677007848ab922a45a1e3248868f6ff063598fceb3141d7897314",
+          "path": "COPYING"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-alloc/7ddd1fe576fcfc503347eb97e476a47581479f22/license/MIT",
+          "sha256": "f774bf68151714985324d90adbd59e8f271b7ba518608d871b6ba16464692879",
+          "path": "license/MIT"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-alloc/7ddd1fe576fcfc503347eb97e476a47581479f22/license/APACHE",
+          "sha256": "58317934bf818c379e4215fad7e8dfb6812edff32c9557b8b039343f69711e08",
+          "path": "license/APACHE"
+        }
+      ],
+      "canonical_only": false
+    },
+    "gpu-descriptor@0.3.2": {
+      "manifest_sha256": "8c72608cd345f059df314860960da46978779233cedc3553db34c98a4e9fac88",
+      "reason": "Published package omits repository-level licensing files; include exact files from its VCS revision or release tag.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-descriptor/bb28b4e55b742e0ea3e7a0968e7ee6287ba0e06a/COPYING",
+          "sha256": "f72143f7e9d9fb8bd336b139fa22f825a299591c29f2f7338c5566347b137613",
+          "path": "COPYING"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-descriptor/bb28b4e55b742e0ea3e7a0968e7ee6287ba0e06a/license/MIT",
+          "sha256": "5226e27d5fbc683db56c52853cdb9d15b69abadb525a60f95c862c2dbd77cdc8",
+          "path": "license/MIT"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-descriptor/bb28b4e55b742e0ea3e7a0968e7ee6287ba0e06a/license/APACHE",
+          "sha256": "6bec8c944a6d4251be50ac86bb4ca360bcce5aea472505dee2800e160bf1cdbf",
+          "path": "license/APACHE"
+        }
+      ],
+      "canonical_only": false
+    },
+    "gpu-descriptor-types@0.2.0": {
+      "manifest_sha256": "54164c8c1352852cce6f2330030365868815deb9bd717b8d493071790cd72d7b",
+      "reason": "Published package omits repository-level licensing files; include exact files from its VCS revision or release tag.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-descriptor/9f2fb9546591322e7b77ee1e79385e01effd85e4/COPYING",
+          "sha256": "f72143f7e9d9fb8bd336b139fa22f825a299591c29f2f7338c5566347b137613",
+          "path": "COPYING"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-descriptor/9f2fb9546591322e7b77ee1e79385e01effd85e4/license/MIT",
+          "sha256": "5226e27d5fbc683db56c52853cdb9d15b69abadb525a60f95c862c2dbd77cdc8",
+          "path": "license/MIT"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/zakarumych/gpu-descriptor/9f2fb9546591322e7b77ee1e79385e01effd85e4/license/APACHE",
+          "sha256": "6bec8c944a6d4251be50ac86bb4ca360bcce5aea472505dee2800e160bf1cdbf",
+          "path": "license/APACHE"
+        }
+      ],
+      "canonical_only": false
+    },
+    "hexf-parse@0.2.1": {
+      "manifest_sha256": "dd7274968556f3f3309df5615d94437ec4e4823777cc440f91177b2170cbe2a7",
+      "reason": "Published manifest supplies the SPDX license declaration but no original full license file. Include the canonical declared license text and separately identify the upstream omission, source archive and author attribution; do not invent an original copyright notice or a new license grant.",
+      "files": [],
+      "canonical_only": true
+    },
+    "khronos_api@3.1.0": {
+      "manifest_sha256": "490cb629224597d30ed4f13789d4cfd0d94ffd84ac95472fa308e724245a54af",
+      "reason": "Published package omits repository-level licensing files; include exact files from its VCS revision or release tag.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/brendanzab/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "path": "LICENSE"
+        }
+      ],
+      "canonical_only": false
+    },
+    "malloc_buf@0.0.6": {
+      "manifest_sha256": "d87624d9d117489bd49dbaeb70077a0721e00ac2a76eb371faec818a92da5661",
+      "reason": "Published manifest supplies the SPDX license declaration but no original full license file. Include the canonical declared license text and separately identify the upstream omission, source archive and author attribution; do not invent an original copyright notice or a new license grant.",
+      "files": [],
+      "canonical_only": true
+    },
+    "profiling@1.0.18": {
+      "manifest_sha256": "00c84a390cdb283f2fea80bb6ccbfef8af8cd2005e79309057af1b5030d3e6a5",
+      "reason": "Published package omits repository-level licensing files; include exact files from its VCS revision or release tag.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+          "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551",
+          "path": "LICENSE-APACHE"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+          "sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333",
+          "path": "LICENSE-MIT"
+        }
+      ],
+      "canonical_only": false
+    },
+    "shimmyjinja@0.5.0": {
+      "manifest_sha256": "329d6845ba64acfc9bea3ea9e8f8a61f96bc55a8c9ed3421bd72857890fd0fc8",
+      "reason": "Published manifest supplies the SPDX license declaration but no original full license file. Include the canonical declared license text and separately identify the upstream omission, source archive and author attribution; do not invent an original copyright notice or a new license grant.",
+      "files": [],
+      "canonical_only": true
+    },
+    "spirv@0.3.0+sdk-1.3.268.0": {
+      "manifest_sha256": "29fbbbc568f51d6ab5154843bdd673427f083c459db8c6d366ec8f2078c39431",
+      "reason": "Published package omits repository-level licensing files; include exact files from its VCS revision or release tag.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/gfx-rs/rspirv/e91a5debc10c395b36db7721dfff6326d697a1e2/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "path": "LICENSE"
+        }
+      ],
+      "canonical_only": false
+    }
+  },
+  "libfse": {
+    "original_archive_sha256": "2f82e271748f6b7919c5fbe4f4cd72532bc48ab82c04250298035939b6f13e06",
+    "files": [
+      {
+        "path": "LICENSE",
+        "url": "https://raw.githubusercontent.com/Michael-A-Kuykendall/airframe/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      {
+        "path": "LICENSE-GRANT-0.1.4.md",
+        "url": "https://raw.githubusercontent.com/Michael-A-Kuykendall/airframe/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md",
+        "sha256": "f6d6b4df28b08d1dcfe3d1b3d3d30339c7d8cfd6edbc14b6fe5c1f6818eb531f"
+      },
+      {
+        "path": "NOTICE",
+        "url": "https://raw.githubusercontent.com/Michael-A-Kuykendall/airframe/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/NOTICE",
+        "sha256": "4a36d3e94d5e3678d3b933a0061800a4424d0567b1ea6c3721d6f57dd625bafd"
+      }
+    ]
+  },
+  "observe_notice": {
+    "url": "https://raw.githubusercontent.com/Michael-A-Kuykendall/airframe/366c8aa429116cf305e04c9dde182a842040b4b1/crates/airframe_observe/README.md",
+    "path": "README-NOTICES.md",
+    "sha256": "85a90168ea6932a32666a9e95cfb6383612ee26338fa3d4f7303cc541d6cadf4"
+  },
+  "cargo_about": {
+    "version": "0.9.3",
+    "downloads": {
+      "x86_64-unknown-linux-gnu": {
+        "asset": "cargo-about-0.9.3-x86_64-unknown-linux-musl.tar.gz",
+        "sha256": "3ad1e94ea1e63d69d1961f4fb15ccbbe9575d906111f96d2cb4dce6df48f71b4"
+      },
+      "aarch64-unknown-linux-gnu": {
+        "asset": "cargo-about-0.9.3-aarch64-unknown-linux-musl.tar.gz",
+        "sha256": "eb4d9ff6ebd2518152a8308729431a04b3836e71d2bd5ead7aea69f91a71162e"
+      },
+      "x86_64-pc-windows-msvc": {
+        "asset": "cargo-about-0.9.3-x86_64-pc-windows-msvc.tar.gz",
+        "sha256": "9e2942533ef1c592c4a70bdb384cae1550a3f5fc9ae40379b6662e3d2f16fe02"
+      },
+      "aarch64-apple-darwin": {
+        "asset": "cargo-about-0.9.3-aarch64-apple-darwin.tar.gz",
+        "sha256": "45520df8680978a6e7c4023ace0e3f311c73efc208cd68e5a7f4ed4822fa0349"
+      }
+    }
+  }
+}
