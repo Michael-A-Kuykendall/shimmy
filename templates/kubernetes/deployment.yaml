@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: shimmy
-        image: ghcr.io/michael-a-kuykendall/shimmy:v2.6.5
+        image: ghcr.io/michael-a-kuykendall/shimmy:v2.6.6
         ports:
         - containerPort: 11435
           name: http

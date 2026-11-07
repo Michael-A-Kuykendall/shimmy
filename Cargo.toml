@@ -1,9 +1,10 @@
 [package]
 name = "shimmy"
-version = "2.6.5"
+version = "2.6.6"
 edition = "2021"
-license = "MIT"
-description = "Lightweight Ollama-compatible inference server with native SafeTensors support. No Python dependencies, cross-platform WebGPU acceleration via Airframe."
+license = "Apache-2.0"
+autobins = false
+description = "Local dense GGUF inference server with selected OpenAI-compatible APIs via Airframe; model and platform certification is fixture-specific."
 homepage = "https://github.com/Michael-A-Kuykendall/shimmy"
 repository = "https://github.com/Michael-A-Kuykendall/shimmy"
 readme = "README.md"
@@ -12,16 +13,27 @@ categories = ["command-line-utilities", "web-programming::http-server"]
 authors = ["Michael A. Kuykendall <michaelallenkuykendall@gmail.com>"]
 include = [
     "src/**/*",
+    "!src/bin/**",
     "templates/**/*",
+    "*.md",
+    "docs/**/*.md",
+    "deploy/README.md",
+    "packaging/docker/README.md",
+    "specs/**/*.md",
     "Cargo.toml",
     "Cargo.lock",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE",
     "build.rs"
 ]
 
+[[bin]]
+name = "shimmy"
+path = "src/main.rs"
+
 [features]
-default = ["airframe"]  # Airframe WebGPU engine; use --no-default-features for CPU-only
+default = ["airframe"]  # Airframe engine; no-default-features fast is a non-inference build
 airframe = ["dep:airframe"]  # Airframe native GPU engine
 # CI-safe build — no GPU hardware required
 fast = []
@@ -54,6 +66,7 @@ sys-info = "0.9"
 sysinfo = "0.30"
 tempfile = "3"
 thiserror = "1"
+sha2 = "0.10"
 subtle = "2.6"
 tokio = { version = "1", features = ["macros","rt-multi-thread","signal","process","fs"] }
 tokio-stream = "0.1"
@@ -64,7 +77,7 @@ dirs = "5.0"
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
 
 # Airframe native GPU inference — public crate on crates.io
-airframe = { version = "0.4.4", optional = true, features = ["isf"] }
+airframe = { version = "0.4.5", optional = true, features = ["isf"] }
 
 [dev-dependencies]
 tokio-tungstenite = "0.20"

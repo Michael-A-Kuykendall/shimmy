@@ -1,5 +1,7 @@
 # Shimmy v2.x Roadmap
 
+> **HISTORICAL DESIGN RECORD — not current release guidance.** Retained statements, commands, planned capabilities and numerical/performance claims below are not verified 2.6.6 support. Use the [current contract](SUPPORTED_MODELS.md) instead. No publication, deployment or platform certification is authorized by this record.
+
 **Last Updated:** 2026-08-26  
 **Branch:** `main`  
 **Current version:** 2.5.0 (publishing toward 2.6.0)
@@ -126,4 +128,4 @@ Users on the historical llama.cpp path: check out `archive/llama-cpp-era-v1.9.0`
 | `cargo test` | Run full test suite |
 | `cargo build --release` | Optimized release binary |
 
-See [CHANGELOG.md](CHANGELOG.md) for full version history.
+See [CHANGELOG.md](../CHANGELOG.md) for full version history.

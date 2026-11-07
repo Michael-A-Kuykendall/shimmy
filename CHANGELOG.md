@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.6.6] — 2026-11-06
+
+- Exclude development housekeeping files and internal tracker references from crate archives; preserve runtime behavior and existing license rights.
+
+### Documentation and compatibility errata
+
+- Present versioned installation commands as consumer instructions while retaining the explicit crates-only distribution and platform support limits.
+
+- Correct the documented registry context default (2048, capped at model-native context) and acknowledge native transitive dependency build requirements; no capacity behavior or dependency changes.
+
+- Package the reviewed public guides and license/security/release documentation so crate README/template links resolve outside a Git checkout.
+
+- Correct current install, security, model, context, API, deployment and troubleshooting guidance against actual source; all release changes are recorded here.
+- Limit claims to exact dense FP32-reference fixtures, F32 KV and reference kernels. Exclude unsupported executors, INT4/experimental modes and unexecuted native GPU/Metal platforms; retain open WSL stability risks.
+- Correct compiled help/startup text that advertised unimplemented backend/MoE behavior, INT4 savings and driver-timeout fixes; flag names/defaults/parsers/control flow and inference computation remain unchanged.
+- Make crate-only distribution explicit: no automatic new binary assets, Docker images, Homebrew, Scoop or npm packages. Require exact-artifact human approval for every public operation.
+- Clarify chat-only SSE, authentication/origin requirements, placeholder model-management routes and local metrics versus unused remote telemetry code.
+- Remove stale/broken guide links, legacy feature commands and universal performance/support promises. Preserve component license/patent/attribution boundaries.
+- Response-cache occupancy derives from stored entries; replacement/expiry cannot leave stale byte counts; clears count as evictions. Oversized responses reject without evicting valid entries.
+
+
+- Pin Tokio 1.53.3; default and fast graphs pass active-advisory checks. Retain inactive findings explicitly.
+- Align license metadata with the existing Apache-2.0 LICENSE. Airframe and libfse have separate terms; libfse commercial, embedding and derivative use still requires separate permission.
+
+
+- Coordinate Airframe 0.4.5 with the exact certified dense inference source and supporting packages.
+- Preserve prepared-prompt token IDs, typed admission errors, reset/warm-up error propagation, request isolation, JSON/SSE usage, stop and finish behavior.
+- Include approved rustls 0.23.46, rustls-webpki 0.103.16 and webpki-roots 1.0.10 dependency remediation.
+- Inactive lockfile vulnerabilities and informational warnings remain explicitly reported; this is not complete security clearance.
+- Existing authentication and safe bind defaults remain. Metal/M4 and unresolved WSL device stability are not certified. Public publication, binaries and Docker promotion require separate human approval.
+
+
 All notable changes to Shimmy will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -12,12 +44,7 @@ minor-version increment.
 
 ## [Unreleased]
 
-### Fixed
-
-- Derive response-cache occupancy from stored entries so replacement and expiry
-  cannot leave stale byte counts; count cleared entries as evictions.
-- Reject responses larger than the configured cache capacity without evicting
-  valid entries.
+Historical entries below preserve earlier release descriptions; they do not define the current 2.6.6 distribution or certification contract.
 
 ## [2.6.5] — 2026-10-18 — Airframe 0.4.4
 
@@ -150,7 +177,6 @@ Shimmy's certification pipeline has been **consolidated from the old 5-gate + CH
 
 ### Infrastructure
 
-- **Beads issue tracking initialized** — `.beads/` Dolt-backed board for durable task tracking
 - **Cargo.lock refreshed** for path-sourced airframe patch
 
 ### Commits

@@ -4,15 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       source_ref:
-        description: "Verified release tag (e.g. v2.6.5)"
+        description: "Verified release tag (e.g. v2.6.6)"
         required: true
       image_tag:
         description: "Matching versioned image tag"
         required: true
+      publish_images:
+        description: Publish images only after separate human authorization
+        required: true
+        default: false
+        type: boolean
       push_latest:
         description: "Also publish latest after both architectures pass"
         required: true
-        default: true
+        default: false
         type: boolean
 
 permissions:
@@ -63,10 +68,19 @@ jobs:
           docker build -f deploy/Dockerfile -t "ghcr.io/$REPO_LC:$TAG-$ARCH" .
           docker run --rm "ghcr.io/$REPO_LC:$TAG-$ARCH" shimmy --version
           docker run --rm "ghcr.io/$REPO_LC:$TAG-$ARCH" shimmy --help > /dev/null
+      - name: Publish approved native image
+        if: inputs.publish_images
+        shell: bash
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          REPO_LC="${GITHUB_REPOSITORY,,}"
           printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           docker push "ghcr.io/$REPO_LC:$TAG-$ARCH"
 
   manifest:
+    if: inputs.publish_images
     needs: [build]
     runs-on: ubuntu-latest
     env:

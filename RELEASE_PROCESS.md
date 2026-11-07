@@ -1,58 +1,46 @@
-# Shimmy Release Process
+# Coordinated release process — Shimmy 2.6.6
 
-This workspace uses a **coordinated release script** to bump, publish, tag, and
-release both Shimmy and Airframe in concert. You do not manually tag or push
-either repo.
+Publication is a **human approval** decision on exact source, package bytes,
+checksums, metadata and support claims. This document does not authorize it.
 
-## The tool
+## Required candidate
 
-`scripts/deploy.sh` in the `airframe-workspace` handles everything:
-bumping Cargo.toml, `cargo publish` (airframe), git commit + tag, `gh release
-create`, and workspace allowance management (`.cargo/config.toml` patch,
-`Cargo.lock` resolution against crates.io, remote push policy).
+Prepare shimmytok 0.8.5, libfse 0.1.4, airframe-observe 0.1.4, Airframe 0.4.5 and
+Shimmy 2.6.6 in dependency order. The private authorization packet identifies
+exact public parents, clean source commits, tags, .crate archives/checksums,
+registry request bodies, dependency/security/license results and rollback limits.
 
-**Usage:**
-```bash
-# Preview
-./scripts/deploy.sh --airframe-version 0.4.1 --shimmy-version 2.6.1 --dry-run
+Documentation changes invalidate old source/archive hashes. Repackage and
+reverify the exact new bytes. Preserve old evidence as history; do not pretend
+it describes byte-identical new artifacts.
 
-# Execute
-./scripts/deploy.sh --airframe-version 0.4.1 --shimmy-version 2.6.1
-```
+## Before any public operation
 
-## Prerequisites
+1. Pass local source, docs, license, packaging, clean-consumer, dependency
+   security and applicable CLI/server gates against the exact candidate.
+2. Verify live registry version availability, tag absence and public ancestry.
+3. Obtain an explicit human YES for the concrete authorization packet.
+4. Execute only the approved source and per-crate registry operations, verifying
+   each actual registry checksum/consumer before publishing downstream crates.
 
-- `gh` authenticated with `repo` + `workflow` scopes
-- `cargo` with crates.io credentials (`~/.cargo/credentials.toml`)
-- Both repos as siblings in the workspace (`airframe/`, `shimmy/`)
-- `CARGO_REGISTRY_TOKEN` secret set in both GitHub repos
+Public source updates, tags, crates.io uploads, hosted Actions, GitHub releases
+and container/image publication are separate actions. No script, green CI run,
+private backup or version bump implicitly authorizes them.
+Use the exact approved commands and immutable archives recorded in the packet,
+not an obsolete coordinated script or a fresh unreviewed repack.
 
-## What the script does
+## Distribution scope and rollback
 
-1. Bump airframe `Cargo.toml`, commit, tag, push
-2. `cargo publish -p airframe-observe` (tolerates already-published)
-3. `cargo publish -p airframe`
-4. `gh release create` for airframe
-5. Save shimmy `.cargo/config.toml` patch, delete it
-6. Bump shimmy's airframe dep, `cargo update -p airframe` (against crates.io)
-7. Restore patch, commit `Cargo.toml` + `Cargo.lock`, tag, push
-8. `gh release create` for shimmy, using the matching `CHANGELOG.md` section
+A crates.io-only release does not create new GitHub binary assets, Docker images,
+Homebrew, Scoop or npm packages. Do not imply otherwise in release notes.
+Hosted tag workflows can create additional artifacts: inspect their triggers
+before any approved source/tag push, and do not silently activate them.
 
-## After the script runs
+Registry publication is effectively immutable. An occupied version with
+different bytes is a stop condition. Yanking can discourage resolution but
+does not delete or replace published bytes. Incident response must identify
+affected versions, revoke exposed credentials if needed, publish a separately
+reviewed correction and communicate scope honestly; do not move release tags.
 
-- Confirm crates.io: `cargo search airframe`
-- Confirm GitHub Releases on both repos
-- Add the release section to `CHANGELOG.md` before running the deploy.
-- Use the exact requested version, including patch releases. Do not infer a
-  minor-version bump from the size of a change.
-- The deploy must pass that section as the GitHub release body. A tag page is
-  not populated from `CHANGELOG.md` automatically.
-- Confirm the release page shows the notes and all platform assets.
-
-## CI
-
-Shimmy uses a minimal CI (`.github/workflows/ci.yml`):
-- **Build + Test** on push/PR to `main` (no GPU needed, uses `--features fast`)
-- **Release** on `v*` tag (creates GitHub Release automatically)
-
-See `AGENTS.md` in the workspace root for the full release protocol.
+See [release gates](RELEASE_GATES_CHECKLIST.md), [security](SECURITY.md)
+and [CHANGELOG](CHANGELOG.md).

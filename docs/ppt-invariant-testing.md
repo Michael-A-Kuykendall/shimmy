@@ -1,4 +1,6 @@
 # Predictive Property-Based Testing (PPT) + Invariant System
+
+> **HISTORICAL DESIGN RECORD — not current release guidance.** Retained statements, commands, planned capabilities and numerical/performance claims below are not verified 2.6.6 support. Use the [current contract](CERTIFICATION.md) instead. No publication, deployment or platform certification is authorized by this record.
 ## A Production-Ready Framework for High-Visibility Development
 
 **Authors**: Michael A. Kuykendall
@@ -375,7 +377,7 @@ The **Shimmy** implementation demonstrates that this approach scales to real-wor
 - **Live Implementation**: [Shimmy AI Engine](https://github.com/Michael-A-Kuykendall/shimmy)
 - **Framework Code**: [`src/invariant_ppt.rs`](../src/invariant_ppt.rs)
 - **Example Tests**: [`src/tests/ppt_contracts.rs`](../src/tests/ppt_contracts.rs)
-- **CI/CD Integration**: [`.github/workflows/showcase-testing.yml`](../.github/workflows/showcase-testing.yml)
+- **Historical CI/CD integration**: the old showcase workflow is retired; use the [current release gates](../RELEASE_GATES_CHECKLIST.md).
 
 ---
 

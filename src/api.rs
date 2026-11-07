@@ -69,37 +69,73 @@ pub async fn generate(
                 req.model,
                 e
             );
-            return axum::http::StatusCode::BAD_GATEWAY.into_response();
+            return crate::inference_error::response(&e);
         }
     };
 
-    // Construct prompt via the single renderer (Jinja-first using the model's
-    // real GGUF chat_template; family fallback; raw for completion).
-    let prompt = if let Some(ms) = &req.messages {
-        let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &spec.name);
+    let extras =
+        match crate::prompt_render::extras_for_loaded_model(&spec.name, loaded.as_ref()).await {
+            Ok(extras) => extras,
+            Err(error) => {
+                tracing::error!("Model special tokens unavailable: {error}");
+                return crate::inference_error::response(&error);
+            }
+        };
+
+    let owned_template = match loaded.chat_template().await {
+        Ok(t) => t,
+        Err(e) => return crate::inference_error::response(&e),
+    };
+    let template = if loaded.strict_prompt_contract() {
+        owned_template.as_deref()
+    } else {
+        spec.chat_template.as_deref()
+    };
+    let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &spec.name);
+    let rendered = if let Some(ms) = &req.messages {
         let pairs = ms
             .iter()
             .map(|m| (m.role.clone(), m.content.clone()))
             .collect::<Vec<_>>();
-        crate::prompt_render::render_chat_prompt_with_extras(
-            spec.chat_template.as_deref(),
-            fam,
-            req.system.as_deref(),
-            &pairs,
-            None,
-            &crate::prompt_render::JinjaExtras::for_model(&spec.name),
-        )
-        .text
-    } else {
-        let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &spec.name);
-        let raw = crate::prompt_render::render_completion_prompt_with_extras(
+        if loaded.strict_prompt_contract() {
+            match crate::prompt_render::render_chat_prompt_strict(
+                template,
+                req.system.as_deref(),
+                &pairs,
+                None,
+                &extras,
+            ) {
+                Ok(p) => p,
+                Err(e) => return crate::inference_error::response(&e.into()),
+            }
+        } else {
+            crate::prompt_render::render_chat_prompt_with_extras(
+                template,
+                fam,
+                req.system.as_deref(),
+                &pairs,
+                None,
+                &extras,
+            )
+        }
+    } else if loaded.strict_prompt_contract() {
+        match crate::prompt_render::render_completion_prompt_strict(
             req.prompt.as_deref().unwrap_or_default(),
-            spec.chat_template.as_deref(),
+            template,
+            req.raw_prompt.unwrap_or(false),
+            &extras,
+        ) {
+            Ok(p) => p,
+            Err(e) => return crate::inference_error::response(&e.into()),
+        }
+    } else {
+        crate::prompt_render::render_completion_prompt_with_extras(
+            req.prompt.as_deref().unwrap_or_default(),
+            template,
             fam,
             req.raw_prompt.unwrap_or(false),
-            &crate::prompt_render::JinjaExtras::for_model(&spec.name),
-        );
-        raw.text
+            &extras,
+        )
     };
 
     let mut opts = GenOptions {
@@ -123,31 +159,49 @@ pub async fn generate(
         opts.stream = s;
     }
 
+    let prepared = match loaded
+        .prepare_prompt(&rendered.text, rendered.source, template, &opts.stop_tokens)
+        .await
+    {
+        Ok(p) => p,
+        Err(e) => return crate::inference_error::response(&e),
+    };
     if opts.stream {
         // SSE streaming
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<String>();
         let mut opts_clone = opts.clone();
         opts_clone.stream = false; // internal generation collects tokens while we push per token
-        let prompt_clone = prompt.clone();
+        let prompt_clone = prepared.clone();
         let model_name = req.model.clone();
         tokio::spawn(async move {
+            let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let watcher_cancel = cancelled.clone();
+            let watcher_tx = tx.clone();
+            let watcher = tokio::spawn(async move {
+                watcher_tx.closed().await;
+                watcher_cancel.store(true, std::sync::atomic::Ordering::Release);
+            });
+
             let tx_tokens = tx.clone();
-            if let Err(error) = loaded
-                .generate(
-                    &prompt_clone,
+            let result = loaded
+                .generate_prepared(
+                    prompt_clone,
                     opts_clone,
+                    Some(cancelled),
                     Some(Box::new(move |tok| {
                         let _ = tx_tokens.send(tok);
                     })),
                 )
-                .await
-            {
+                .await;
+            watcher.abort();
+            let _ = watcher.await;
+            if let Err(error) = result {
                 tracing::error!(
                     "Streaming generation failed for model '{}': {}",
                     model_name,
                     error
                 );
-                let _ = tx.send(format!("[ERROR] {}", error));
+                let _ = tx.send(crate::inference_error::body(&error).to_string());
             }
             let _ = tx.send("[DONE]".into());
         });
@@ -155,7 +209,7 @@ pub async fn generate(
             .map(|s| Ok::<Event, std::convert::Infallible>(Event::default().data(s)));
         Sse::new(stream).into_response()
     } else {
-        match loaded.generate_with_metadata(&prompt, opts, None).await {
+        match loaded.generate_prepared(prepared, opts, None, None).await {
             Ok(full) => {
                 tracing::debug!(
                     "Generation completed successfully for model '{}'",
@@ -176,7 +230,7 @@ pub async fn generate(
                     req.model,
                     e
                 );
-                axum::http::StatusCode::BAD_GATEWAY.into_response()
+                crate::inference_error::response(&e)
             }
         }
     }
@@ -225,6 +279,20 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
         return;
     };
 
+    let extras =
+        match crate::prompt_render::extras_for_loaded_model(&spec.name, loaded.as_ref()).await {
+            Ok(extras) => extras,
+            Err(error) => {
+                tracing::error!("Model special tokens unavailable: {error}");
+                let _ = socket
+                    .send(WsMessage::Text(
+                        "{\"error\":\"model special tokens unavailable\"}".into(),
+                    ))
+                    .await;
+                return;
+            }
+        };
+
     // Build prompt (reuse single renderer)
     let prompt = if let Some(ms) = &req.messages {
         let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &spec.name);
@@ -238,14 +306,17 @@ async fn handle_ws_generate(state: Arc<AppState>, mut socket: WebSocket) {
             req.system.as_deref(),
             &pairs,
             None,
-            &crate::prompt_render::JinjaExtras::for_model(&spec.name),
+            &extras,
         )
         .text
     } else {
         req.prompt.clone().unwrap_or_default()
     };
 
-    let mut opts = GenOptions::default();
+    let mut opts = GenOptions {
+        raw_prompt: req.messages.is_some() || req.raw_prompt.unwrap_or(false),
+        ..GenOptions::default()
+    };
     if let Some(t) = req.temperature {
         opts.temperature = t;
     }

@@ -131,7 +131,57 @@ pub fn render_chat_prompt(
     )
 }
 
+/// Preserve backend-owned special tokens when a protocol renders the prompt.
+pub async fn extras_for_loaded_model(
+    model_name: &str,
+    loaded: &dyn crate::engine::LoadedModel,
+) -> anyhow::Result<JinjaExtras> {
+    let mut extras = JinjaExtras::for_model(model_name);
+    if let Some((bos, eos)) = loaded.special_tokens().await? {
+        extras.bos_token = Some(bos);
+        extras.eos_token = Some(eos);
+    }
+    if let Some(policy) = loaded.thinking_policy().await? {
+        extras.enable_thinking = Some(policy);
+    }
+    Ok(extras)
+}
 /// Same as [`render_chat_prompt`] with BOS/EOS and thinking-policy knobs.
+pub fn render_chat_prompt_strict(
+    template: Option<&str>,
+    system: Option<&str>,
+    messages: &[(String, String)],
+    user_input: Option<&str>,
+    extras: &JinjaExtras,
+) -> Result<RenderedPrompt, crate::prepared_prompt::PromptError> {
+    let template = template.ok_or(crate::prepared_prompt::PromptError::MissingTemplate)?;
+    let text = render_via_jinja(template, system, messages, user_input, extras)
+        .map_err(crate::prepared_prompt::PromptError::Template)?;
+    if text.is_empty() {
+        return Err(crate::prepared_prompt::PromptError::Template(
+            "rendered prompt is empty".into(),
+        ));
+    }
+    Ok(RenderedPrompt {
+        text,
+        source: RenderSource::GgufJinja,
+    })
+}
+pub fn render_completion_prompt_strict(
+    prompt: &str,
+    template: Option<&str>,
+    raw: bool,
+    extras: &JinjaExtras,
+) -> Result<RenderedPrompt, crate::prepared_prompt::PromptError> {
+    if raw || template.is_none() {
+        return Ok(RenderedPrompt {
+            text: prompt.into(),
+            source: RenderSource::Raw,
+        });
+    }
+    render_chat_prompt_strict(template, None, &[], Some(prompt), extras)
+}
+
 pub fn render_chat_prompt_with_extras(
     gguf_chat_template: Option<&str>,
     family: TemplateFamily,

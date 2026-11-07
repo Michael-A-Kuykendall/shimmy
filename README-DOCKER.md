@@ -1,137 +1,73 @@
-# 🐳 Docker Deployment
+# Docker — Shimmy 2.6.6
 
-Easy deployment with Docker Compose - just mount your models directory and go!
+**Distribution boundary:** this coordinated release prepares crates.io packages.
+It does not publish a 2.6.6 Docker/GHCR image or certify container GPU execution.
+Do not assume a latest image, old Compose file or historical deployment template
+contains the reviewed source.
 
-## Quick Start
+## Optional local image after source/package publication
 
-1. **Create your models directory:**
+The tracked Dockerfiles build Rust source and expose **11435**; health probes
+use curl against /health. A local source build needs the exact approved source
+and its real registry dependencies to be available. Image builds, device
+passthrough and native GPU/container stability are **NOT_RUN** in this release.
+
 ```bash
-mkdir models
+docker build -t shimmy-local:2.6.6 .
+export SHIMMY_API_KEY="$(openssl rand -hex 32)"
+docker run --rm --name shimmy-local \
+  -p 127.0.0.1:11435:11435 \
+  -e SHIMMY_API_KEY \
+  -v /absolute/path/to/models:/models:ro \
+  shimmy-local:2.6.6 \
+  shimmy --ctx 512 --kv-quant f32 serve --bind 0.0.0.0:11435 --model-path /models/model.gguf
 ```
 
-2. **Download some models:**
+Replace both paths with a directory and exact verified fixture. Configure device
+access separately for the actual vendor/runtime; the command above does not
+promise successful GPU inference. Loading is lazy, so /health alone proves
+neither model residency nor numerical correctness.
+
 ```bash
-# Example: Download a small model
-curl -L "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf" -o models/phi-3-mini.gguf
+curl -f http://127.0.0.1:11435/health
+curl -f -H "Authorization: Bearer $SHIMMY_API_KEY" http://127.0.0.1:11435/v1/models
 ```
 
-3. **Start Shimmy:**
-```bash
-docker-compose up -d
-```
+Use a returned ID for the [chat request](docs/quickstart.md).
+The container's non-loopback listener requires a key even when the host mapping
+is loopback. Protect remote access with TLS. Never put real credentials in an
+image, repository or Compose file.
 
-4. **Test the API:**
-```bash
-curl http://localhost:11434/v1/models
-```
+## Current Compose example
 
-## Configuration
+This example is a local scaffold, not an executed GPU certification:
 
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SHIMMY_PORT` | `11434` | Server port |
-| `SHIMMY_HOST` | `0.0.0.0` | Listen address |
-| `SHIMMY_BASE_GGUF` | `/app/models` | Models directory |
-
-### Volumes
-
-- `./models:/app/models` - Mount your local models directory
-- `shimmy-cache:/root/.cache` - Persistent cache for downloads
-
-### GPU Support
-
-For NVIDIA GPU support, ensure you have:
-- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed
-- Docker Compose v2.3+ with GPU support
-
-GPU access is automatically configured in the provided `docker-compose.yml`.
-
-## Usage Examples
-
-### Basic Usage
-```bash
-# Start server
-docker-compose up -d
-
-# Check logs
-docker-compose logs -f shimmy
-
-# Stop server
-docker-compose down
-```
-
-### Custom Configuration
 ```yaml
-# docker-compose.override.yml
 services:
   shimmy:
+    image: shimmy-local:2.6.6
     ports:
-      - "8080:11434"  # Use port 8080 instead
+      - "127.0.0.1:11435:11435"
     environment:
-      - SHIMMY_PORT=11434
-      - SHIMMY_LOG_LEVEL=debug
+      SHIMMY_API_KEY: "${SHIMMY_API_KEY:?set a private key first}"
+    volumes:
+      - "/absolute/path/to/models:/models:ro"
+    command: ["shimmy", "--ctx", "512", "--kv-quant", "f32", "serve", "--bind", "0.0.0.0:11435", "--model-path", "/models/model.gguf"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:11435/health"]
 ```
 
-### Multiple Models
-```bash
-# Your models directory structure
-models/
-├── phi-3-mini.gguf
-├── llama-2-7b.gguf
-└── mistral-7b.gguf
-```
+Validate your saved Compose file using docker compose config before starting it.
+Do not substitute an assumed published image.
 
-Shimmy will automatically discover and serve all `.gguf` models in the mounted directory.
+## Historical deployment files
 
-## API Endpoints
+The root/deploy Compose and cloud/template configurations are legacy scaffolds,
+**not current deployment instructions**: some retain obsolete ports, environment
+keys, images or health tools. Do not deploy them unchanged. The current safe
+manual example is above. Generated init templates have not gained deployment
+certification in this release; see [deployment scope](deploy/README.md).
 
-Once running, Shimmy provides OpenAI-compatible endpoints:
-
-- `GET /v1/models` - List available models
-- `POST /v1/chat/completions` - Chat completions
-- `POST /v1/completions` - Text completions
-- `GET /health` - Health check
-
-## Troubleshooting
-
-### Container won't start
-```bash
-# Check logs
-docker-compose logs shimmy
-
-# Check if port is available
-netstat -tulpn | grep 11434
-```
-
-### Models not loading
-```bash
-# Verify models directory is mounted
-docker-compose exec shimmy ls -la /app/models
-
-# Check file permissions
-ls -la models/
-```
-
-### GPU not detected
-```bash
-# Check NVIDIA runtime
-docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
-
-# Verify Docker Compose GPU config
-docker-compose config
-```
-
-## Building from Source
-
-To build your own image:
-
-```bash
-# Build the image
-docker build -t shimmy:local .
-
-# Use local image in docker-compose.yml
-# Replace: image: ghcr.io/michael-a-kuykendall/shimmy:latest
-# With:    image: shimmy:local
-```
+Docker does not emulate Metal/M4 or certify native Windows/macOS GPU behavior.
+See [supported fixtures](docs/SUPPORTED_MODELS.md), [security](SECURITY.md)
+and [configuration](docs/CONFIGURATION.md).

@@ -3,10 +3,10 @@
 
   # Shimmy — Local Inference, OpenAI-Compatible
 
-  ### 🔒 Local GPU inference — one binary, 100% Rust 🚀
+  ### 🔒 Local GPU inference — Rust/WGSL application 🚀
 
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![Security](https://img.shields.io/badge/Security-Audited-green)](https://github.com/Michael-A-Kuykendall/shimmy/security)
+  [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+  [![Security](https://img.shields.io/badge/Security-profile--reviewed-blue)](https://github.com/Michael-A-Kuykendall/shimmy/security)
   [![CI](https://github.com/Michael-A-Kuykendall/shimmy/actions/workflows/ci.yml/badge.svg)](https://github.com/Michael-A-Kuykendall/shimmy/actions/workflows/ci.yml)
   [![Crates.io](https://img.shields.io/crates/v/shimmy.svg)](https://crates.io/crates/shimmy)
   [![Downloads](https://img.shields.io/crates/d/shimmy.svg)](https://crates.io/crates/shimmy)
@@ -16,175 +16,90 @@
   [![Trans rights](https://pride-badges.pony.workers.dev/static/v1?label=trans%20rights&stripeWidth=6&stripeColors=5BCEFA,F5A9B8,FFFFFF,F5A9B8,5BCEFA)](https://translifeline.org/)
   [![LGBTQ+ friendly](https://pride-badges.pony.workers.dev/static/v1?label=lgbtq%2B%20friendly&stripeWidth=6&stripeColors=E40303,FF8C00,FFED00,008026,24408E,732982)](https://www.thetrevorproject.org/)
 
-  **Languages:** [简体中文](docs/zh-CN/README.md) · [繁體中文](docs/zh-TW/README.md)
 </div>
 
-Shimmy is independently maintained and free forever. [Sponsorship](https://github.com/sponsors/Michael-A-Kuykendall) funds certification, compatibility work, and releases.
+## Shimmy 2.6.6
 
-**Shimmy will be free forever.** No asterisks. No "free for now." No pivot to paid.
+Shimmy is a local inference server and CLI; **Airframe 0.4.5 is its engine**.
+This is a coordinated dense-text correctness, dependency-security and
+documentation release, not a new architecture or performance release.
+See [CHANGELOG](CHANGELOG.md).
 
----
+**Default dependency licensing:** Shimmy → Airframe → libfse. The default
+build includes libfse 0.1.4 under the FSE Noncommercial Evaluation License.
+Commercial use or embedding of that distribution requires separate permission
+for libfse, as do derivative works under its terms. Shimmy's Apache-2.0 license
+does not waive those restrictions; the complete default distribution is not
+unrestricted Apache-2.0 open source. See [libfse licensing](https://github.com/Michael-A-Kuykendall/airframe/blob/main/crates/libfse/LICENSE).
 
-## What Is Shimmy?
+## Install and run
 
-Shimmy is a **single-binary** OpenAI-compatible inference server for GGUF models. Point your existing AI tools at Shimmy and they just work — locally, privately, and free.
-
-**Shimmy is the server. Airframe is the engine.** Under the hood, Shimmy runs on [**Airframe**](https://github.com/Michael-A-Kuykendall/airframe) (v0.4.4), a pure-Rust WebGPU (WGSL) transformer engine. No C++ toolchain, no Python runtime, no backend flags. 26 models certified across 12 families. Version history: [CHANGELOG](CHANGELOG.md) · [Airframe CHANGELOG](https://github.com/Michael-A-Kuykendall/airframe/blob/main/CHANGELOG.md).
-
-**Why this matters:**
-- No Python runtime or C++ toolchain — Rust only, top to bottom
-- F32 accumulation precision with deterministic output (same model + seed + params → same output)
-- WGSL compute shaders via WebGPU — NVIDIA, AMD, Intel, integrated GPUs, Apple Silicon
-- Model spec auto-derived from GGUF metadata — no hardcoded per-model constants
-- YaRN RoPE scaling for extended context via `SHIMMY_MAX_CTX` (see [Extended Context](docs/EXTENDED_CONTEXT.md))
-
----
-
-## 🎯 Supported Models
-
-**12 model families · 26 certified model/quant combinations** — every model below passes Shimmy's 3-box certification regimen (MATH + INFERENCE + DETERMINISM) against the certification ledger. Certification applies to the named model/quant combination; architecture recognition does not automatically mean certification. GGUF files load as-is; no recompilation, no hardcoded per-model constants.
-
-| Family | Model | Quants |
-|---|---|---|
-| **Llama** | [Llama-3.2-1B-Instruct](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF) | Q4_K_M · Q6_K |
-|  | [Llama-3.2-3B-Instruct](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF) | Q4_K_M |
-|  | [Llama-3.1-8B-Instruct](https://huggingface.co/bartowski/Llama-3.1-8B-Instruct-GGUF) | Q4_K_M |
-|  | [TinyLlama-1.1B-Chat](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF) | Q4_0 · Q5_K_M · Q6_K |
-| **Qwen3** | [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B-GGUF) | Q4_K_M |
-|  | [Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B-GGUF) | Q4_K_M |
-|  | [Qwen3-4B](https://huggingface.co/Qwen/Qwen3-4B-GGUF) | Q4_K_M |
-|  | [Qwen3-4B-Thinking](https://huggingface.co/Qwen/Qwen3-4B-Thinking-GGUF) | Q4_K_M |
-|  | [Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B-GGUF) | Q4_K_M |
-| **Qwen2** | [Qwen2-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF) | Q4_K_M |
-|  | [Qwen2-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF) | Q4_K_M |
-|  | [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct-GGUF) | Q4_K_M |
-| **Qwen3.5** | [Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B-GGUF) | Q4_K_M |
-| **Phi-3** | [Phi-3.5-mini-Instruct](https://huggingface.co/microsoft/Phi-3.5-mini-instruct-gguf) | Q4_K_M |
-|  | [Phi-3-mini-4k-Instruct](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) | Q4_0 |
-| **Phi-2** | [Phi-2](https://huggingface.co/TheBloke/phi-2-GGUF) | Q4_K_M |
-| **Gemma-2** | [Gemma-2-2B-it](https://huggingface.co/bartowski/gemma-2-2b-it-GGUF) | Q4_K_M |
-|  | [Gemma-2-9B-it](https://huggingface.co/bartowski/gemma-2-9b-it-GGUF) | Q4_K_M (supported; cert: see [v2-roadmap](docs/v2-roadmap.md)) |
-| **Gemma-4** | [Gemma-4-12B-coder](https://huggingface.co/google/gemma-4-12B-coder-GGUF) | Q4_K_M |
-|  | [Gemma-4-E4B](https://huggingface.co/google/gemma-4-E4B-it-GGUF) | Q4_K_M |
-| **DeepSeek-R1** | [DeepSeek-R1-0528-Qwen3-8B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-8B-GGUF) | Q4_K_M |
-| **Ministral** | [Ministral-3-14B-Reasoning](https://huggingface.co/bartowski/Ministral-3-14B-Reasoning-GGUF) | Q4_K_M |
-| **StarCoder2** | [StarCoder2-3B](https://huggingface.co/second-state/StarCoder2-3B-GGUF) | Q4_K_M |
-
-**SafeTensors format** (`.safetensors`) is supported for model loading via `safetensors_native`. Full Airframe-native inference for SafeTensors remains roadmap work; see [docs/v2-roadmap.md](docs/v2-roadmap.md).
-
-
-
-## Features
-
-- **⚡ [TurboShimmy INT4 KV Cache](docs/turboshimmy.md)** — About 7× lower KV-cache memory in tested configurations. Run Llama-3.2-3B on 4 GB GPUs.
-- **🚀 [OpenAI SDK Compatibility](docs/INTEGRATION.md)** — Chat completions, text completions, streaming, and model endpoints. Works with OpenAI SDKs and tools using that surface.
-- **🔧 [Extended Context](docs/EXTENDED_CONTEXT.md)** — YaRN RoPE scaling via `SHIMMY_MAX_CTX`.
-- **📦 [Migrating from v1.x](docs/MIGRATION_v2.md)** — llama.cpp, MLX, HuggingFace, and RustChain backends removed in v2.0+. Shimmy is now a pure Airframe product.
-- **🏆 Certification** — Every model passes a 3-box certification regimen (MATH + INFERENCE + DETERMINISM). See [docs/CERTIFICATION.md](docs/CERTIFICATION.md).
-- **🧠 MOE support** — Mixture-of-Experts CPU offloading is on the Airframe roadmap.
-
----
-
-## Quick Start
-
-Local loopback access needs no key. Network binds require `SHIMMY_API_KEY`;
-browser clients must also be listed in `SHIMMY_ALLOWED_ORIGINS`.
-See the [network-access instructions](docs/quickstart.md#network-access-and-api-keys).
-
+Install the versioned crate with a Rust toolchain:
 
 ```bash
-cargo install shimmy --locked
-shimmy serve --model-path /absolute/path/to/model.gguf --bind 127.0.0.1:11435
+cargo install shimmy --version 2.6.6 --locked
+shimmy --version
+shimmy --ctx 512 --kv-quant f32 serve --model-path /path/to/model.gguf --bind 127.0.0.1:11435
 ```
 
-Then in another terminal:
+Use a verified admitted fixture in place of the path. A working Rust toolchain
+and GPU driver are required. The fast profile does not provide inference.
+A **crates.io-only 2.6.6 release does not create GitHub binary assets, Docker
+images, Homebrew, Scoop or npm packages**. Verify the installed version; an old latest asset is not version 2.6.6.
 
-```bash
-shimmy list --short
-curl -s http://127.0.0.1:11435/v1/chat/completions \
-  -H 'Content-Type: application/json' \
-  -d '{"model":"tinyllama-1.1b","messages":[{"role":"user","content":"Say hi in 5 words."}],"max_tokens":32}'
-```
+See [quickstart](docs/quickstart.md) for model hashes, listing, requests and
+network access. Unavailable translations are not linked as current guides.
 
-Full install, model acquisition, GPU, VRAM sizing, platform-specific builds: **[docs/quickstart.md](docs/quickstart.md)**
+## Correctness and support
 
----
+The [exact fixture matrix](docs/SUPPORTED_MODELS.md) covers selected
+Qwen3-0.6B/Qwen3-1.7B and Llama 3.2 3B Q4_K_M cases, with independent FP32 full
+logits, maximum absolute 0.1/RMS 0.03 gates and matching measured greedy decisions.
+These are bounded model/context/mode results, not universal family support.
+
+F32 KV and reference kernels define the validated path. Parsing metadata,
+tokenizers or quantization is not certification. Gemma2, MoE, MLA, recurrent,
+state-space and multimodal executors are not enabled.
+INT4/TurboShimmy and experimental kernels remain excluded and rejected.
+
+Executed GPU evidence is NVIDIA through WSL Dozen/Vulkan. **NOT_RUN:** Metal/M4,
+other unexecuted native GPU platforms, extended-context Llama, alternate
+prefill chunks and unlisted combinations. WSL device-destruction and
+active-generation device-loss investigations remain open.
+No universal determinism, startup, multi-GPU, memory or speed guarantee is made.
+
+## Server contract
+
+Selected OpenAI-compatible endpoints provide model listing, JSON chat/text
+completions and explicit **chat-only SSE**. Chat defaults to JSON; text
+streaming rejects. Usage, stop/finish metadata and typed errors are part of
+the tested contract. This is not every OpenAI endpoint/SDK feature.
+
+Loopback can run without a key. Non-loopback binds require SHIMMY_API_KEY;
+browser origins require SHIMMY_ALLOWED_ORIGINS. With a key, routes except
+GET /health require credentials; origin checks still apply to health.
+Use TLS and appropriate network access controls remotely.
+Lazy loading is the default; optional selected-model warm-up shifts cold work
+before readiness without eliminating it or guaranteeing stability.
 
 ## Documentation
 
-| Start here | What you need |
-|---|---|
-| [Quick Start](docs/quickstart.md) | Install, models, GPU, VRAM |
-| [Supported Models](docs/SUPPORTED_MODELS.md) | Certified models and quantization |
-| [API Compatibility](docs/OPENAI_COMPAT.md) | Endpoints, SDKs, integration |
-| [Configuration](docs/CONFIGURATION.md) | Env vars and config options |
-| [Troubleshooting](docs/TROUBLESHOOTING.md) | GPU errors, model failures |
+- [Quickstart](docs/quickstart.md) and [configuration](docs/CONFIGURATION.md)
+- [API](docs/API.md), [compatibility](docs/OPENAI_COMPAT.md) and [integration](docs/INTEGRATION.md)
+- [Model scope](docs/SUPPORTED_MODELS.md), [certification](docs/CERTIFICATION.md) and [quantization](docs/QUANTIZATION.md)
+- [Context capacity](docs/EXTENDED_CONTEXT.md) and [templates](docs/CHAT_TEMPLATES.md)
+- [Docker scope](README-DOCKER.md), [Windows scope](docs/WINDOWS_GPU_BUILD_GUIDE.md) and [troubleshooting](docs/TROUBLESHOOTING.md)
+- [Security](SECURITY.md), [release process](RELEASE_PROCESS.md) and [release gates](RELEASE_GATES_CHECKLIST.md)
+- [Developer guide](DEVELOPERS.md), [contribution policy](CONTRIBUTING.md) and [roadmap](ROADMAP.md)
 
-<details>
-<summary>Complete documentation index</summary>
-
-| Section | Documents |
-|---|---|
-| **Models & Performance** | [TurboShimmy](docs/turboshimmy.md) — INT4 KV cache compression · [Extended Context](docs/EXTENDED_CONTEXT.md) — YaRN RoPE scaling, VRAM math · [Performance](docs/PERFORMANCE.md) — Tuning and token/sec · [Model Expansion](docs/MODEL_EXPANSION.md) — Onboarding protocol |
-| **API & Integration** | [API Reference](docs/API.md) · [OpenAPI / Swagger UI](docs/OPENAPI.md) · [Integration Guides](docs/INTEGRATION.md) · [Examples](docs/EXAMPLES.md) · [Cross-Compilation](docs/CROSS_COMPILATION.md) |
-| **Engine** | [Architecture](docs/ARCHITECTURE.md) · [GPU Pipeline](docs/GPU_PIPELINE.md) · [Quantization](docs/QUANTIZATION.md) · [Chat Templates](docs/CHAT_TEMPLATES.md) |
-| **Certification** | [Certification](docs/CERTIFICATION.md) · [Methodology](docs/METHODOLOGY.md) · [Regression Testing](docs/REGRESSION_TESTING.md) · [PPT Testing](docs/ppt-invariant-testing.md) · [Metrics](docs/METRICS.md) |
-| **FAQ** | [FAQ](docs/FAQ.md) · [Features](docs/FEATURES.md) · [Migration](docs/MIGRATION_v2.md) · [Windows GPU](docs/WINDOWS_GPU_BUILD_GUIDE.md) |
-
-</details>
-
----
-
-## Development Testing
-
-Shimmy maintains high code quality through comprehensive testing:
-
-```bash
-# Full test suite (default features = GPU engine)
-cargo test --release --locked
-
-# Quick CPU-only tests (no GPU required)
-cargo test --release --locked --no-default-features --features fast
-```
-
-See [docs/ppt-invariant-testing.md](docs/ppt-invariant-testing.md) for technical details.
-
----
-
-## Community & Support
-
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/Michael-A-Kuykendall/shimmy/issues)
-- **💬 Discussions**: [GitHub Discussions](https://github.com/Michael-A-Kuykendall/shimmy/discussions)
-- **📖 Security**: [Security Policy](https://github.com/Michael-A-Kuykendall/shimmy/security)
-
-### 🚀 Momentum Snapshot
-
-🌟 **![GitHub stars](https://img.shields.io/github/stars/Michael-A-Kuykendall/shimmy?style=flat&color=yellow) stars and climbing fast**
-⏱ **<1s startup**
-🦀 **100% Rust, no Python**
-
-### 📰 As Featured On
-
-🔥 [**Hacker News**](https://news.ycombinator.com/item?id=45130322) · [**Front Page Again**](https://news.ycombinator.com/item?id=45199898) · [**IPE Newsletter**](https://ipenewsletter.substack.com/p/the-strange-new-side-hustles-of-openai)
-
-**Companies**: Need invoicing? Email [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
-
----
-
-## Performance
-
-| Tool | Startup | Memory | API |
-|------|---------|--------|-----|
-| **Shimmy** | **<1s** | **~50MB** | Chat, completions, streaming, models |
-| Ollama | 5-10s | 200MB+ | Partial |
-
-_Measured on RTX 3060, Shimmy v2.6.0, TinyLlama-1.1B. Your results vary by hardware._
-
----
+Shimmy source is Apache-2.0. Airframe runtime is MIT. libfse retains its
+FSE Noncommercial Evaluation License: commercial use, product embedding and
+derivatives require separate permission. Public source availability and
+sponsorship do not waive component/model licenses.
 
 ## Support
 
-This project is independently maintained and free forever. Sponsorship helps fund ongoing development, certification, compatibility work, and releases.
+This project is independently maintained. Component licensing terms described above apply. Sponsorship helps fund ongoing development, certification, compatibility work, and releases.
 
 [Sponsor on GitHub](https://github.com/sponsors/Michael-A-Kuykendall) · [Buy Me a Coffee](https://www.buymeacoffee.com/michaelakuykendall)
 
@@ -199,7 +114,7 @@ Any amount is appreciated. Suggested tiers:
 
 ## License & Philosophy
 
-MIT License — see [LICENSE](LICENSE). **Shimmy will be free forever.**
+Shimmy server code: Apache-2.0 — see [LICENSE](LICENSE). Airframe and libfse retain their separate licensing terms; commercial deployments using libfse require separate permission.
 
 **Promise**: This will never become a paid product.
 

@@ -134,6 +134,9 @@ pub async fn messages(
     State(state): State<Arc<AppState>>,
     Json(req): Json<AnthropicMessageRequest>,
 ) -> impl IntoResponse {
+    if req.stream.unwrap_or(false) {
+        return (axum::http::StatusCode::BAD_REQUEST,Json(serde_json::json!({"error":{"type":"invalid_request_error","code":"unsupported_streaming_mode","message":"Anthropic streaming is not supported"}}))).into_response();
+    }
     if contains_unsupported_media(&req.messages) {
         return (
             axum::http::StatusCode::BAD_REQUEST,
@@ -195,24 +198,62 @@ pub async fn messages(
         }
     }
 
-    let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &req.model);
-    let prompt = crate::prompt_render::render_chat_prompt_with_extras(
-        spec.chat_template.as_deref(),
-        fam,
-        None,
-        &pairs,
-        None,
-        &crate::prompt_render::JinjaExtras::for_model(&req.model),
-    )
-    .text;
-
     // Load the model and generate response
-    let Ok(loaded_model) = state.engine.load(&spec).await else {
-        tracing::error!("Failed to load model '{}'", req.model);
-        return axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    let loaded_model = match state.engine.load(&spec).await {
+        Ok(m) => m,
+        Err(e) => return crate::inference_error::response(&e),
+    };
+    let extras = match crate::prompt_render::extras_for_loaded_model(
+        &req.model,
+        loaded_model.as_ref(),
+    )
+    .await
+    {
+        Ok(extras) => extras,
+        Err(error) => {
+            tracing::error!("Model special tokens unavailable: {error}");
+            return crate::inference_error::response(&error);
+        }
     };
 
-    match loaded_model.generate(&prompt, options, None).await {
+    let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &req.model);
+    let owned_template = match loaded_model.chat_template().await {
+        Ok(t) => t,
+        Err(e) => return crate::inference_error::response(&e),
+    };
+    let template = if loaded_model.strict_prompt_contract() {
+        owned_template.as_deref()
+    } else {
+        spec.chat_template.as_deref()
+    };
+    let rendered = if loaded_model.strict_prompt_contract() {
+        match crate::prompt_render::render_chat_prompt_strict(template, None, &pairs, None, &extras)
+        {
+            Ok(p) => p,
+            Err(e) => return crate::inference_error::response(&e.into()),
+        }
+    } else {
+        crate::prompt_render::render_chat_prompt_with_extras(
+            template, fam, None, &pairs, None, &extras,
+        )
+    };
+    let prepared = match loaded_model
+        .prepare_prompt(
+            &rendered.text,
+            rendered.source,
+            template,
+            &options.stop_tokens,
+        )
+        .await
+    {
+        Ok(p) => p,
+        Err(e) => return crate::inference_error::response(&e),
+    };
+    let prompt = rendered.text;
+    match loaded_model
+        .generate_prepared(prepared, options, None, None)
+        .await
+    {
         Ok(response) => {
             let anthropic_response = AnthropicMessageResponse {
                 id: format!("msg_{}", Uuid::new_v4()),
@@ -220,14 +261,27 @@ pub async fn messages(
                 role: "assistant".to_string(),
                 content: vec![AnthropicContentBlock {
                     content_type: "text".to_string(),
-                    text: response.clone(),
+                    text: response.text.clone(),
                 }],
                 model: req.model,
-                stop_reason: "end_turn".to_string(),
+                stop_reason: if response.finish_reason.as_deref() == Some("length") {
+                    "max_tokens"
+                } else {
+                    "end_turn"
+                }
+                .into(),
                 stop_sequence: None,
                 usage: AnthropicUsage {
-                    input_tokens: estimate_tokens(&prompt),
-                    output_tokens: estimate_tokens(&response),
+                    input_tokens: response
+                        .usage
+                        .as_ref()
+                        .map(|u| u.prompt_tokens)
+                        .unwrap_or_else(|| estimate_tokens(&prompt)),
+                    output_tokens: response
+                        .usage
+                        .as_ref()
+                        .map(|u| u.completion_tokens)
+                        .unwrap_or_else(|| estimate_tokens(&response.text)),
                 },
             };
 
@@ -235,7 +289,7 @@ pub async fn messages(
         }
         Err(e) => {
             tracing::error!("Generation failed: {}", e);
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            crate::inference_error::response(&e)
         }
     }
 }

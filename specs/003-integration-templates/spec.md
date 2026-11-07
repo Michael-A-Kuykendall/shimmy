@@ -1,5 +1,7 @@
 # Feature 003 — Integration Templates & Auto-Configuration
 
+> **HISTORICAL DESIGN RECORD — not current release guidance.** Retained statements, commands, planned capabilities and numerical/performance claims below are not verified 2.6.6 support. Use the [current contract](../../deploy/README.md) instead. No publication, deployment or platform certification is authorized by this record.
+
 ## Intent
 Dramatically reduce deployment friction by providing one-command generation of complete integration templates for popular platforms, frameworks, and deployment scenarios, enabling developers to integrate Shimmy in minutes rather than hours.
 

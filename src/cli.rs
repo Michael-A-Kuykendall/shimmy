@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand};
 #[command(
     name = "shimmy",
     version,
-    about = "Shimmy: single-binary GGUF + LoRA server"
+    about = "Shimmy: local dense GGUF inference server; support is fixture-specific"
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -18,44 +18,44 @@ pub struct Cli {
     )]
     pub model_dirs: Option<String>,
 
-    /// GPU backend to use for inference (auto, cpu)
+    /// Compatibility option; default Airframe selects its wgpu adapter independently
     #[arg(
         long,
         global = true,
-        help = "GPU backend: auto, cpu, cuda, vulkan, opencl"
+        help = "Compatibility option; does not select or certify a backend in default Airframe"
     )]
     pub gpu_backend: Option<String>,
 
-    /// Offload ALL MoE expert tensors to CPU (saves VRAM for large MoE models)
+    /// Compatibility flag; MoE execution is unsupported by the validated dense engine
     #[arg(long, global = true)]
     pub cpu_moe: bool,
 
-    /// Offload first N MoE layers' expert tensors to CPU
+    /// Compatibility option; does not enable a supported MoE executor
     #[arg(long, global = true, value_name = "N", conflicts_with = "cpu_moe")]
     pub n_cpu_moe: Option<usize>,
 
-    /// Use legacy CPU adapter instead of Airframe GPU
+    /// Select compatibility adapter; no certified CPU inference path is implied
     #[arg(long, global = true)]
     pub legacy: bool,
 
-    /// Enable TurboShimmy INT4 KV cache to cut VRAM usage ~60% with minimal quality loss.
-    /// Values: f32 (default, full precision) | int4 (TurboShimmy — recommended for 4GB+ GPUs)
+    /// Select KV cache precision; validated execution requires f32.
+    /// The retained int4 option is uncertified and rejected by validated admission.
     #[arg(
         long,
         global = true,
         value_name = "MODE",
         default_value = "f32",
         value_parser = ["f32", "int4"],
-        help = "KV cache precision: f32 (default) or int4 (TurboShimmy — ~60% less VRAM)"
+        help = "KV cache precision: f32 (validated default); int4 is uncertified and rejected"
     )]
     pub kv_quant: String,
 
-    /// Prefill chunk size for long-context stability on Windows (default: 64).
-    /// If you see GPU TDR crashes on long prompts, set this to 8 or 16.
+    /// Override prefill chunk size; distinct sizes require separate certification.
+    /// This does not guarantee avoidance of driver timeouts or device loss.
     #[arg(long, global = true, value_name = "N")]
     pub prefill_chunk: Option<u32>,
 
-    /// Override maximum context length (tokens). Default: model's native context from GGUF.
+    /// Override registry context capacity; default 2048, capped at model native context.
     #[arg(long, global = true, value_name = "N")]
     pub ctx: Option<u32>,
 }
@@ -82,7 +82,7 @@ pub enum Command {
         #[arg(long)]
         llm_only: bool,
     },
-    /// Load a model once (verifies base + optional LoRA)
+    /// Attempt model loading/admission; success alone is not numerical certification
     Probe { name: String },
     /// Simple throughput benchmark
     Bench {
@@ -116,7 +116,7 @@ pub enum Command {
         #[arg(long, default_value_t = false)]
         raw: bool,
     },
-    /// Show GPU backend information and capabilities
+    /// Show detected GPU information; detection is not platform certification
     GpuInfo,
     /// Initialize integration templates for deployment platforms
     Init {

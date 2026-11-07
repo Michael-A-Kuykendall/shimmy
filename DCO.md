@@ -50,18 +50,17 @@ By making a contribution to this project, I certify that:
 
 ## How to Sign Your Commits
 
-### Option 1: Automatic Sign-off (Recommended)
-Configure git to automatically sign off your commits:
+### Option 1: Set identity and explicitly sign off
+Configure your identity, then use --signoff on each commit:
 
 ```bash
 git config user.name "Your Name"
 git config user.email "your.email@example.com"
-git config format.signoff true
 ```
 
-Then commit normally:
+Sign off each ordinary commit explicitly (format.signoff controls format-patch, not ordinary commits):
 ```bash
-git commit -m "Add new feature"
+git commit --signoff -m "Add new feature"
 ```
 
 ### Option 2: Manual Sign-off
@@ -91,7 +90,7 @@ git rebase --signoff HEAD~3  # Last 3 commits
 
 ## DCO Check
 
-All pull requests are automatically checked for DCO compliance. The DCO bot will:
+Maintainers verify DCO compliance for approved contributions. A configured DCO check may:
 
 - ✅ **Pass**: All commits are properly signed off
 - ❌ **Fail**: One or more commits are missing sign-off
@@ -103,7 +102,7 @@ If the DCO check fails:
    ```bash
    git push --force-with-lease origin your-branch
    ```
-3. **The DCO check will automatically re-run**
+3. **Request maintainer re-review; do not assume an automatic check exists**
 
 ## Corporate Contributions
 
@@ -130,7 +129,7 @@ Organizations contributing to Shimmy should:
 - Ongoing commercial partnerships
 - Complex intellectual property situations
 
-For such cases, contact the maintainer at `contributions@shimmy-ai.dev` to discuss a separate CLA.
+For such cases, contact the maintainer at `michaelallenkuykendall@gmail.com` to discuss a separate CLA.
 
 ## Frequently Asked Questions
 
@@ -152,7 +151,7 @@ For such cases, contact the maintainer at `contributions@shimmy-ai.dev` to discu
 ## Enforcement
 
 - **All commits** must be signed off to be accepted
-- **DCO bot** automatically checks all pull requests
+- **Maintainer review** verifies sign-off for approved contributions; configured automation may assist
 - **Maintainers** will not merge unsigned commits
 - **No exceptions** - this protects both contributors and the project
 
@@ -160,8 +159,8 @@ For such cases, contact the maintainer at `contributions@shimmy-ai.dev` to discu
 
 For questions about DCO or contribution licensing:
 - **General questions**: Open a GitHub discussion
-- **Corporate contributions**: Email `contributions@shimmy-ai.dev`
-- **Legal concerns**: Email `legal@shimmy-ai.dev`
+- **Corporate contributions**: Email `michaelallenkuykendall@gmail.com`
+- **Legal concerns**: Email `michaelallenkuykendall@gmail.com`
 
 ---
 

@@ -1,237 +1,78 @@
-# Configuration Guide
-
-This guide covers all configuration options for Shimmy.
+# Configuration — Shimmy 2.6.6
 
 ## HTTP access policy
 
-- `SHIMMY_API_KEY`: at least 16 printable ASCII characters, without spaces.
-  Required for any non-loopback bind. When set, clients authenticate using
-  `Authorization: Bearer <key>` or Anthropic's `x-api-key` header.
-- `SHIMMY_ALLOWED_ORIGINS`: comma-separated exact HTTP(S) browser origins.
-  Empty by default; wildcards and URL paths are rejected. Origin permission
-  does not bypass authentication.
-- `GET /health` remains available to health probes. Other API, diagnostics,
-  model-management and WebSocket routes require credentials when configured.
-- Use a TLS reverse proxy for remote traffic. See the
-  [deployment examples](quickstart.md#network-access-and-api-keys).
+`SHIMMY_API_KEY` must contain at least 16 printable ASCII characters without
+spaces. It is required on non-loopback binds. When configured, authenticate
+using Authorization: Bearer or Anthropic's x-api-key header.
+`SHIMMY_ALLOWED_ORIGINS` is a comma-separated list of exact HTTP(S) browser
+origins. Empty is the default; wildcards and paths are rejected.
 
-## Environment Variables
+GET /health is credential-exempt. Disallowed Origin headers are rejected before
+route/auth processing, including health. Allowed preflight OPTIONS returns 204;
+OPTIONS without Origin returns 400. Other routes require credentials when a key
+is configured. Use TLS at a reverse proxy for remote access.
 
-### Required
+## Model selection and binding
 
-- **`SHIMMY_BASE_GGUF`**: Path to the base GGUF model file
-  ```bash
-  export SHIMMY_BASE_GGUF=/path/to/your/model.gguf
-  ```
+| Setting | Actual behavior |
+|---|---|
+| `--model-dirs` | Additional semicolon-separated discovery directories |
+| `SHIMMY_BASE_GGUF` | Optional explicit model-file registration |
+| `serve --model-path` | Direct existing model file, registered using its filename stem |
+| `serve --bind` | Explicit listener address, or auto allocation |
+| `SHIMMY_BIND_ADDRESS` | Default address consulted when bind is auto |
+| `--ctx` / `SHIMMY_MAX_CTX` | Registry capacity defaults to 2048 and is capped at model-native context |
+| `--kv-quant f32` | Validated release precision and CLI default |
+| `--prefill-chunk` / `SHIMMY_PREFILL_CHUNK` | Chunk override; distinct values need their own certification |
+| `RUST_LOG` | tracing filter |
 
-### Optional
+SHIMMY_MAX_CTX accepts values 512 through 131072; unset, invalid or out-of-range values fall back to 2048. The CLI --ctx is routed through this registry setting. Airframe uses the smaller of that capacity and the model-native context. This is not arbitrary context scaling or a certification claim.
 
-- **`SHIMMY_ENGINE_BACKEND`**: Inference engine to use. Default: `airframe`.
-  - `airframe` — Airframe GPU engine (pure-Rust WGSL, default in v2.0)
-  - `llama` — llama.cpp legacy path
-  ```bash
-  export SHIMMY_ENGINE_BACKEND=airframe
-  ```
+Obsolete, unsupported keys: `SHIMMY_PORT`, `SHIMMY_HOST` and `SHIMMY_LOG_LEVEL`.
+Use explicit bind and RUST_LOG instead. Model discovery is not execution
+admission. An environment variable retained by compatibility code does not
+establish LoRA, CPU or MoE inference support.
 
-- **`SHIMMY_MAX_CTX`**: Maximum context window in tokens. Default: model native (typically 2048).
-  Set higher values to enable YaRN RoPE scaling for extended context.
-  ```bash
-  export SHIMMY_MAX_CTX=4096   # 4K context
-  export SHIMMY_MAX_CTX=16384  # 16K context with YaRN scaling
-  ```
+The `--gpu-backend`, CPU-MoE and legacy options are compatibility surfaces,
+not a supported backend switch or new executor. Default Airframe selects its
+wgpu adapter independently. INT4 is retained as an option but rejected by
+validated admission. Leave experimental flags and output-normalization bypass
+options unset. A context override is not YaRN enablement or certification.
 
-- **`SHIMMY_LORA_GGUF`**: Path to LoRA adapter file (llama.cpp legacy path only)
-  ```bash
-  export SHIMMY_LORA_GGUF=/path/to/your/lora.gguf
-  ```
+## Startup warm-up
 
-- **`SHIMMY_LOG_LEVEL`**: Logging level (error, warn, info, debug, trace)
-  ```bash
-  export SHIMMY_LOG_LEVEL=info
-  ```
+Models are lazy-loaded by default. `SHIMMY_WARMUP=1` runs a fixed small prompt
+with a one-output-token budget before readiness:
 
-- **`SHIMMY_BIND_ADDRESS`**: Default bind address for server
-  ```bash
-  export SHIMMY_BIND_ADDRESS=127.0.0.1:11435
-  ```
-
-## Command Line Options
-
-### Server Configuration
-
-```bash
-shimmy serve [OPTIONS]
+```sh
+SHIMMY_WARMUP=1 shimmy --ctx 512 --kv-quant f32 serve --model-path /path/to/model.gguf
 ```
 
-**Options:**
-- `--bind <ADDRESS>`: Bind address (default: 127.0.0.1:11435)
-- `--port <PORT>`: Port number (overrides port in bind address)
-- `--workers <N>`: Number of worker threads (default: auto-detected)
-- `--max-connections <N>`: Maximum concurrent connections (default: 100)
+`SHIMMY_WARMUP_MODEL` selects one discovered name if several models exist.
+An explicit model path takes precedence; a conflicting selector errors.
+Otherwise selection uses the explicit selector, then SHIMMY_BASE_GGUF, then the
+sole available model. It does not load every discovered file.
+Accepted values are 1/true and 0/false, with case-insensitive words; unset is
+disabled. Invalid settings, unsupported backends, initialization or reset
+failures stop startup before readiness.
 
-### Model Configuration
+The same engine handles warm-up and subsequent requests; weights remain
+resident and KV request state is reset. One model file is resident per engine.
+A different file rejects rather than silently using the resident model;
+restart to change files. Automatic eviction/hot replacement is not supported.
 
-```bash
-shimmy generate [OPTIONS]
-```
+Warm-up shifts initialization to startup, not guaranteed faster execution or a
+driver-stability fix. See [profiling](https://github.com/Michael-A-Kuykendall/airframe/blob/main/docs/PROFILING.md).
 
-**Options:**
-- `--model <NAME>`: Model name to use (default: "default")
-- `--prompt <TEXT>`: Input prompt
-- `--max-tokens <N>`: Maximum tokens to generate (default: 100)
-- `--temperature <F>`: Sampling temperature (default: 0.7)
-- `--top-p <F>`: Top-p sampling (default: 0.9)
-- `--top-k <N>`: Top-k sampling (default: 40)
-
-## Model Setup
-
-### GGUF Models
-
-Place your GGUF model files in a accessible location and set the environment variable:
+## Inspect the installed CLI
 
 ```bash
-# Example model locations
-export SHIMMY_BASE_GGUF=~/.cache/models/phi3-mini.gguf
-export SHIMMY_BASE_GGUF=/models/llama2-7b.gguf
-export SHIMMY_BASE_GGUF=./models/mistral-7b.gguf
+shimmy --help
+shimmy serve --help
+shimmy generate --help
 ```
 
-### LoRA Adapters
-
-If using LoRA adapters, ensure they are compatible with your base model:
-
-```bash
-export SHIMMY_LORA_GGUF=~/.cache/adapters/coding-adapter.gguf
-```
-
-## Templates
-
-Shimmy supports multiple prompt templates:
-
-### Available Templates
-
-- **`chatml`**: ChatML format for chat-based models
-- **`llama3`**: Llama 3 instruction format
-- **`openchat`**: OpenChat conversation format
-
-### Template Selection
-
-Templates are automatically selected based on model detection, but can be overridden:
-
-```bash
-shimmy generate --template chatml --prompt "Hello"
-```
-
-## Performance Tuning
-
-### CPU Optimization
-
-```bash
-# Set number of threads for inference
-export OMP_NUM_THREADS=8
-
-# Enable CPU optimizations
-export SHIMMY_CPU_THREADS=8
-```
-
-### Memory Management
-
-```bash
-# Limit memory usage (in MB)
-export SHIMMY_MAX_MEMORY=4096
-
-# Enable memory mapping for large models
-export SHIMMY_MMAP=true
-```
-
-### GPU Support
-
-Shimmy v2.0 uses the **Airframe** engine (WebGPU via wgpu) for GPU acceleration. No CUDA toolkit, Vulkan SDK, or ROCm installation is required.
-
-**Supported GPU Vendors:**
-- **NVIDIA**: D3D12 (Windows) or Vulkan (Linux) backend via wgpu
-- **AMD**: Vulkan backend (Linux/Windows); Metal on macOS via wgpu
-- **Intel**: D3D12 or Vulkan adapter selected by wgpu
-- **Apple Silicon**: Metal backend selected automatically
-
-**Requirements:**
-- Download a release binary from GitHub Releases (Airframe GPU engine included)
-- No additional SDK or driver installation needed for default path
-
-**Configuration:**
-No manual configuration required — wgpu auto-selects the best GPU adapter.
-
-**Verification:**
-Check which GPU adapter was selected:
-```bash
-shimmy gpu-info
-```
-
-**Legacy llama.cpp GPU (CUDA, ROCm, Vulkan):**
-Available via `--legacy` flag or `SHIMMY_ENGINE_BACKEND=llama`. See `docs/MIGRATION_v2.md`.
-
-## Security Considerations
-
-### Network Security
-
-- Bind to localhost (`127.0.0.1`) for local-only access
-- Use a reverse proxy (nginx, caddy) for external access
-- Consider authentication middleware for production use
-
-### Model Security
-
-- Verify model file integrity before loading
-- Use trusted model sources
-- Monitor resource usage for potential abuse
-
-## Logging Configuration
-
-### Log Levels
-
-```bash
-# Minimal logging (errors only)
-export SHIMMY_LOG_LEVEL=error
-
-# Standard logging (info and above)
-export SHIMMY_LOG_LEVEL=info
-
-# Debug logging (all messages)
-export SHIMMY_LOG_LEVEL=debug
-```
-
-### Log Output
-
-```bash
-# Log to file
-shimmy serve 2>&1 | tee shimmy.log
-
-# Structured JSON logging
-export SHIMMY_LOG_FORMAT=json
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Model not loading**
-   - Check file path and permissions
-   - Verify GGUF format compatibility
-   - Check available memory
-
-2. **Server not starting**
-   - Verify port is not in use
-   - Check bind address format
-   - Review log output for errors
-
-3. **Slow inference**
-   - Increase CPU thread count
-   - Verify model size vs available memory
-   - Consider model quantization
-
-### Debug Mode
-
-Enable verbose logging for troubleshooting:
-
-```bash
-SHIMMY_LOG_LEVEL=debug shimmy serve --verbose
-```
+Generation takes a positional registered model name:
+`shimmy generate MODEL_NAME --prompt "Hello" --max-tokens 8`.
+See [API](API.md), [quickstart](quickstart.md) and [context limits](EXTENDED_CONTEXT.md).

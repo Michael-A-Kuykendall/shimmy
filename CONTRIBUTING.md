@@ -1,65 +1,35 @@
-# Contributing to shimmy
+# Contributing to Shimmy
 
-## Open Source, Not Open Contribution
+Shimmy is open source, not open contribution. Unsolicited pull requests are not
+accepted. Prospective co-maintainers must email
+michaelallenkuykendall@gmail.com, follow the maintainer's directions and receive
+approval before contributing. Issues and respectful discussion are welcome;
+never put vulnerability details or credentials in public reports.
 
-shimmy is **open source** but **not open contribution**.
+## Approved work
 
-- The code is freely available under the MIT license
-- You can fork, modify, use, and learn from it without restriction
-- **Pull requests are not accepted by default**
-- All architectural, roadmap, and merge decisions are made by the project maintainer
+Use a focused feature branch, source-grounded design, explicit acceptance and
+failure cases. Preserve tested inference contracts, exact fixtures and numerical
+bounds. Do not claim a model/platform works based on parsing, loading or mocks.
+Run relevant local checks before any hosted workflow.
 
-This model keeps the project coherent, maintains clear ownership, and ensures consistent quality. It's the same approach used by SQLite and many infrastructure projects.
+```bash
+cargo fmt --check
+cargo test --locked --lib -- --test-threads=1
+cargo clippy --locked --all-targets -- -D warnings
+```
 
-## How to Contribute
+Generic tests are additional quality gates, not numerical certification.
+See [release gates](RELEASE_GATES_CHECKLIST.md) and [methodology](docs/METHODOLOGY.md).
 
-If you believe you can contribute meaningfully to shimmy:
+## Rights and publication
 
-1. **Email the maintainer first**: [michaelallenkuykendall@gmail.com](mailto:michaelallenkuykendall@gmail.com)
-2. Describe your background and proposed contribution
-3. If there is alignment, a scoped collaboration may be discussed privately
-4. Only after discussion will PRs be considered
+Shimmy is Apache-2.0; see [LICENSE](LICENSE). Preserve third-party attribution,
+component licenses and patent notices. Airframe's runtime is MIT; libfse has
+separate noncommercial/evaluation and commercial-permission terms.
+Approved contributors sign off each commit with git commit --signoff;
+see [DCO](DCO.md). Sign-off does not imply co-maintainer approval or waive rights.
 
-**Unsolicited PRs will be closed without merge.** This isn't personal, it's how this project operates.
-
-## What We Welcome (via email first)
-
-- Bug reports with detailed reproduction steps (Issues are fine)
-- Security vulnerability reports (please email directly)
-- Documentation improvements (discuss first)
-- Platform-specific bug fixes (discuss first)
-
-## What We Handle Internally
-
-- New features and architectural changes
-- API design decisions
-- Dependency updates
-- Performance optimizations
-- Cross-platform compatibility work
-
-## Bug Reports
-
-Bug reports via GitHub Issues are welcome! Please include:
-- Platform (Windows/macOS/Linux) and version
-- Rust version and shimmy version
-- Minimal reproduction case
-- Expected vs actual behavior
-
-## Why This Model?
-
-Building reliable infrastructure requires tight architectural control. This ensures:
-- Consistent design across the ecosystem
-- No ownership disputes or governance overhead
-- Quality control without committee delays
-- Clear direction for the project's future
-
-The code is open. The governance is centralized. This is intentional.
-
-## Recognition
-
-Helpful bug reports and community feedback are acknowledged in release notes.
-If email collaboration leads to merged work, attribution will be given appropriately.
-
----
-
-**Maintainer**: Michael A. Kuykendall
+Public source integration, tags, publication, hosted releases and images need
+explicit maintainer approval of the exact result. A private push is not public
+release authority.

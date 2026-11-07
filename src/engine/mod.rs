@@ -3,6 +3,10 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+#[derive(Debug, thiserror::Error)]
+#[error("Airframe supports one resident model per engine; restart with the requested model")]
+pub struct ResidentModelConflict;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenOptions {
     pub max_tokens: usize,
@@ -84,6 +88,47 @@ pub struct GenerationOutput {
 
 #[async_trait]
 pub trait LoadedModel: Send + Sync {
+    fn strict_prompt_contract(&self) -> bool {
+        false
+    }
+    async fn chat_template(&self) -> Result<Option<String>> {
+        Ok(None)
+    }
+    async fn thinking_policy(&self) -> Result<Option<bool>> {
+        Ok(None)
+    }
+    async fn prepare_prompt(
+        &self,
+        text: &str,
+        source: crate::prompt_render::RenderSource,
+        template: Option<&str>,
+        stops: &[String],
+    ) -> Result<crate::prepared_prompt::PreparedPrompt> {
+        Ok(crate::prepared_prompt::PreparedPrompt::backend_owned(
+            text, source, template, stops,
+        ))
+    }
+    async fn generate_prepared(
+        &self,
+        prepared: crate::prepared_prompt::PreparedPrompt,
+        mut opts: GenOptions,
+        _cancel: Option<crate::prepared_prompt::Cancellation>,
+        on_token: Option<Box<dyn FnMut(String) + Send>>,
+    ) -> Result<GenerationOutput> {
+        opts.raw_prompt = true;
+        self.generate_with_metadata(prepared.text(), opts, on_token)
+            .await
+    }
+
+    /// Model-owned BOS/EOS strings; unknown backends retain template fallbacks.
+    async fn special_tokens(&self) -> Result<Option<(String, String)>> {
+        Ok(None)
+    }
+    /// Initialize a loaded backend without accepting a user request.
+    async fn warmup(&self) -> Result<()> {
+        anyhow::bail!("Startup warm-up is unsupported by this backend")
+    }
+
     async fn generate(
         &self,
         prompt: &str,
@@ -109,4 +154,8 @@ pub trait LoadedModel: Send + Sync {
 pub mod adapter;
 #[cfg(feature = "airframe")]
 pub mod airframe;
+#[cfg(feature = "airframe")]
+mod resident;
 pub mod safetensors_native;
+#[cfg(any(feature = "airframe", test))]
+mod stop_buffer;

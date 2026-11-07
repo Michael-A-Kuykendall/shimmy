@@ -1,176 +1,48 @@
-# Security Policy
+# Security policy — Shimmy 2.6.6
 
-## Supported Versions
+## Supported versions
 
-We actively support the following versions of Shimmy with security updates:
+Security fixes target the latest maintainer-approved 2.6.x patch; this candidate
+is **2.6.6**, coordinated with **Airframe 0.4.5**. Earlier 2.x releases should
+upgrade when the patched package is published. Version 1.x is unsupported.
+There is no promise of backports to every older patch or long-term-support branch.
+A prepared candidate is not a claim that publication has already occurred.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.3.x   | :white_check_mark: |
-| 1.2.x   | :white_check_mark: |
-| 1.1.x   | :x:                |
-| < 1.1   | :x:                |
+## Dependency review scope
 
-## Reporting a Vulnerability
+The coordinated candidate reviews actual compiled default and fast graphs,
+official registry sources and lockfiles. The accepted set includes Tokio 1.53.3,
+rustls 0.23.46, rustls-webpki 0.103.16 and webpki-roots 1.0.10.
+The recorded audit found zero applicable active vulnerability/unsoundness
+advisories in those graphs at audit time. This is not complete security clearance
+or a promise against newly disclosed advisories.
 
-We take the security of Shimmy seriously. If you discover a security vulnerability, please follow these guidelines:
+Inactive lockfile findings remain visible: Quinn RUSTSEC-2026-0343,
+RUSTSEC-2026-0340 and RUSTSEC-2026-0338; inactive Paste RUSTSEC-2024-0436
+unmaintained warning. They are excluded only from active-graph claims, not
+suppressed or declared fixed. The final authorization record must retain fresh
+audit classifications for the exact candidate.
 
-### 🔒 Private Disclosure Process
+## Deployment boundaries
 
-**DO NOT** create a public GitHub issue for security vulnerabilities.
+Non-loopback binds require SHIMMY_API_KEY; browser access requires explicit
+SHIMMY_ALLOWED_ORIGINS. Use TLS and restrict network access.
+See [configuration](docs/CONFIGURATION.md) and [Docker instructions](README-DOCKER.md).
+Health is credential-exempt but origin checks still apply. Keys, model files,
+prompts and diagnostic captures should be handled as sensitive data.
+Untrusted GGUF metadata has checked parsing/allocation limits, not a universal
+resource-exhaustion guarantee. See
+[ShimmyTok parser security](https://github.com/Michael-A-Kuykendall/shimmytok/blob/master/docs/GGUF_SECURITY.md).
 
-Instead, please report security issues privately using one of these methods:
+Numerical fixture evidence does not prove host/driver stability. Both WSL device
+destruction and active-generation device loss remain unresolved; Metal/M4 and
+other unexecuted native GPU platforms are NOT_RUN. INT4 and experimental kernels remain uncertified and must not be deployed as certified configurations.
 
-1. **GitHub Security Advisories (Preferred)**
-   - Go to the [Security tab](https://github.com/Michael-A-Kuykendall/shimmy/security) of this repository
-   - Click "Report a vulnerability"
-   - Fill out the advisory form with details
+## Private vulnerability reporting
 
-2. **Direct Email**
-   - Send details to: security@shimmy-ai.dev
-   - Use PGP encryption if possible (key available on request)
-   - Include "SECURITY" in the subject line
-
-### 📋 What to Include
-
-Please provide the following information in your report:
-
-- **Description**: Clear description of the vulnerability
-- **Impact**: What could an attacker accomplish?
-- **Reproduction**: Step-by-step instructions to reproduce the issue
-- **Environment**:
-  - Shimmy version
-  - Operating system
-  - Rust version (if building from source)
-  - Any relevant configuration
-- **Proof of Concept**: Code, screenshots, or logs demonstrating the issue
-- **Suggested Fix**: If you have ideas for remediation
-
-### 🕒 Response Timeline
-
-We aim to respond to security reports according to the following timeline:
-
-- **Initial Response**: Within 48 hours of report
-- **Triage**: Within 7 days - confirm/deny vulnerability
-- **Resolution**: Within 30 days for critical issues, 90 days for others
-- **Disclosure**: Public disclosure after fix is released and users have time to update
-
-### 🛡️ Vulnerability Severity Guidelines
-
-We use the following criteria to classify vulnerabilities:
-
-#### Critical
-- Remote code execution
-- Privilege escalation to system level
-- Authentication bypass allowing admin access
-
-#### High
-- Local privilege escalation
-- SQL injection or similar injection attacks
-- Authentication bypass for user accounts
-- Sensitive data exposure
-
-#### Medium
-- Cross-site scripting (XSS)
-- Cross-site request forgery (CSRF)
-- Information disclosure (non-sensitive)
-- Denial of service attacks
-
-#### Low
-- Issues requiring local access
-- Minor information leaks
-- Issues with minimal security impact
-
-### 🎁 Recognition
-
-We believe in recognizing security researchers who help keep Shimmy secure:
-
-- **Hall of Fame**: Public recognition in our security acknowledgments
-- **CVE Assignment**: For qualifying vulnerabilities
-- **Early Access**: Beta access to new features
-- **Swag**: Shimmy stickers and merchandise
-
-*Note: We currently do not offer monetary bug bounties, but we deeply appreciate responsible disclosure.*
-
-### 🚨 Emergency Contact
-
-For critical vulnerabilities that are being actively exploited:
-
-- **Email**: security-urgent@shimmy-ai.dev
-- **Subject**: "URGENT SECURITY - [Brief Description]"
-- **Response**: Within 12 hours
-
-## Security Best Practices
-
-### For Users
-
-1. **Keep Updated**: Always use the latest supported version
-2. **Network Security**:
-   - Run Shimmy behind a firewall in production
-   - Use HTTPS/TLS for external access
-   - Limit network access to necessary ports only
-3. **Model Security**:
-   - Only use models from trusted sources
-   - Scan downloaded models with antivirus
-   - Be cautious with user-uploaded models
-4. **Container Security**:
-   - Use official Shimmy Docker images
-   - Keep base images updated
-   - Run containers as non-root when possible
-
-### For Developers
-
-1. **Dependencies**:
-   - Regularly audit and update dependencies
-   - Use `cargo audit` to check for known vulnerabilities
-2. **Input Validation**:
-   - Validate all user inputs
-   - Sanitize file paths and model names
-   - Implement rate limiting
-3. **Error Handling**:
-   - Don't expose internal errors to users
-   - Log security events for monitoring
-
-## Security Features
-
-Shimmy includes several built-in security features:
-
-- **Input Sanitization**: All API inputs are validated and sanitized
-- **Path Traversal Protection**: File access is restricted to configured directories
-- **Memory Safety**: Built with Rust for memory-safe execution
-- **Sandboxed Execution**: Model inference runs in isolated contexts
-- **Audit Logging**: Security events are logged for monitoring
-
-## Scope
-
-This security policy covers:
-
-- **In Scope**:
-  - Shimmy server binary and source code
-  - Official Docker images and containers
-  - API endpoints and interfaces
-  - Configuration and deployment scripts
-  - Dependencies and third-party integrations
-
-- **Out of Scope**:
-  - Third-party models (GGUF files)
-  - User-provided configurations or scripts
-  - Issues in unsupported versions
-  - General Rust language or standard library issues
-  - Infrastructure or hosting environment issues
-
-## Legal
-
-- We will not pursue legal action against security researchers who follow this policy
-- We ask that researchers not access, modify, or delete data without explicit permission
-- Please do not perform testing on production systems without prior authorization
-
-## Contact
-
-For non-security related issues, please use:
-- GitHub Issues: https://github.com/Michael-A-Kuykendall/shimmy/issues
-- General Questions: hello@shimmy-ai.dev
-
----
-
-*This security policy is effective as of September 14, 2025 and may be updated periodically.*
+Do not file exploitable vulnerability details in public issues.
+Use [GitHub private vulnerability reporting](https://github.com/Michael-A-Kuykendall/shimmy/security/advisories/new)
+or email michaelallenkuykendall@gmail.com with SECURITY in the subject.
+Include version/commit, platform, reproduction, impact and sanitized logs.
+Response and remediation depend on severity and maintainer availability;
+no guaranteed response-time SLA is offered.

@@ -11,7 +11,7 @@
 //! 5-prompt inference battery (oqu.9) only has to confirm generation works.
 //!
 //! Gated on the `airframe` feature (needs BindlessMetadata). Reads the model
-//! dir from SHIMMY_MODELS_DIR (default /home/michael/models); skips (passes)
+//! dir from explicitly configured SHIMMY_MODELS_DIR; opt-in and NOT_RUN by default
 //! if the dir is absent so CI without models stays green.
 
 #![cfg(feature = "airframe")]
@@ -25,12 +25,12 @@ use shimmy::prompt_render::{decide, RenderMode, RenderSource};
 fn models_dir() -> Option<PathBuf> {
     let dir = std::env::var("SHIMMY_MODELS_DIR")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from("/home/michael/models"));
-    if dir.is_dir() {
-        Some(dir)
-    } else {
-        None
-    }
+        .expect("set SHIMMY_MODELS_DIR for opt-in routing fixtures");
+    assert!(
+        dir.is_dir(),
+        "required routing fixture directory is missing"
+    );
+    Some(dir)
 }
 
 fn walk_ggufs(dir: &std::path::Path) -> Vec<PathBuf> {
@@ -49,6 +49,7 @@ fn walk_ggufs(dir: &std::path::Path) -> Vec<PathBuf> {
 }
 
 #[test]
+#[ignore = "requires explicitly provisioned routing models; NOT_RUN by default"]
 fn gguf_routing_every_model_correct_source() {
     let Some(dir) = models_dir() else {
         eprintln!("SHIMMY_MODELS_DIR absent — skipping gguf_routing (no models)");

@@ -1,5 +1,7 @@
 # Feature 005 — Advanced Observability & Self-Optimization
 
+> **HISTORICAL DESIGN RECORD — not current release guidance.** Retained statements, commands, planned capabilities and numerical/performance claims below are not verified 2.6.6 support. Use the [current contract](../../docs/METRICS.md) instead. No publication, deployment or platform certification is authorized by this record.
+
 ## Intent
 Provide comprehensive observability, metrics collection, and self-optimization capabilities that enable users to understand Shimmy's performance, troubleshoot issues, and automatically optimize configuration for their specific workloads.
 

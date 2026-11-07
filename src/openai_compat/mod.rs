@@ -73,7 +73,41 @@ pub async fn models(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         data: models,
     })
 }
-
+pub async fn models_with_capabilities(
+    State(state): State<Arc<AppState>>,
+    axum::extract::Query(query): axum::extract::Query<std::collections::HashMap<String, String>>,
+) -> axum::response::Response {
+    if !query
+        .get("capabilities")
+        .is_some_and(|s| s == "true" || s == "1")
+    {
+        return models(State(state)).await.into_response();
+    }
+    let mut data = Vec::new();
+    for name in state.registry.list_all_available() {
+        let mut item = serde_json::json!({"id":name,"object":"model","owned_by":"shimmy","created":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs()});
+        #[cfg(feature = "airframe")]
+        if let Some(spec) = state.registry.to_spec(&name) {
+            let path = spec.base_path.clone();
+            let inspection = tokio::task::spawn_blocking(move || {
+                airframe::execution::admission::inspect_model(&path)
+            })
+            .await;
+            item["capabilities"] = match inspection {
+                Ok(Ok(report)) => serde_json::to_value(report).unwrap_or(serde_json::Value::Null),
+                _ => {
+                    serde_json::json!({"structural_support":false,"reason_code":"invalid_model_manifest","numerical_certification":"NOT_RUN","platform_certification":"NOT_RUN"})
+                }
+            };
+        }
+        #[cfg(not(feature = "airframe"))]
+        {
+            item["capabilities"] = serde_json::json!({"structural_support":null,"executor_available":false,"numerical_certification":"NOT_RUN","platform_certification":"NOT_RUN"});
+        }
+        data.push(item);
+    }
+    Json(serde_json::json!({"object":"list","data":data})).into_response()
+}
 pub async fn chat_completions(
     State(state): State<Arc<AppState>>,
     Json(req): Json<ChatCompletionRequest>,
@@ -150,9 +184,18 @@ pub async fn chat_completions(
         Ok(loaded) => loaded,
         Err(e) => {
             tracing::error!("Failed to load model '{}': {:?}", req.model, e);
-            return StatusCode::BAD_GATEWAY.into_response();
+            return crate::inference_error::response(&e);
         }
     };
+
+    let extras =
+        match crate::prompt_render::extras_for_loaded_model(&req.model, loaded.as_ref()).await {
+            Ok(extras) => extras,
+            Err(error) => {
+                tracing::error!("Model special tokens unavailable: {error}");
+                return crate::inference_error::response(&error);
+            }
+        };
 
     // Construct prompt via the single renderer (Jinja-first with the model's
     // real GGUF chat_template; family fallback; raw for completion).
@@ -163,15 +206,26 @@ pub async fn chat_completions(
         .map(|m| (m.role.clone(), m.content_text()))
         .collect::<Vec<_>>();
 
-    let prompt = crate::prompt_render::render_chat_prompt_with_extras(
-        spec.chat_template.as_deref(),
-        fam,
-        None,
-        &pairs,
-        None,
-        &crate::prompt_render::JinjaExtras::for_model(&req.model),
-    )
-    .text;
+    let strict_template = match loaded.chat_template().await {
+        Ok(template) => template,
+        Err(error) => return crate::inference_error::response(&error),
+    };
+    let template = if loaded.strict_prompt_contract() {
+        strict_template.as_deref()
+    } else {
+        spec.chat_template.as_deref()
+    };
+    let rendered = if loaded.strict_prompt_contract() {
+        match crate::prompt_render::render_chat_prompt_strict(template, None, &pairs, None, &extras)
+        {
+            Ok(rendered) => rendered,
+            Err(error) => return crate::inference_error::response(&error.into()),
+        }
+    } else {
+        crate::prompt_render::render_chat_prompt_with_extras(
+            template, fam, None, &pairs, None, &extras,
+        )
+    };
 
     // Set generation options
     let mut opts = crate::engine::GenOptions {
@@ -203,12 +257,23 @@ pub async fn chat_completions(
     }
 
     // Auto-configure stop tokens based on template family
-    let mut stop_tokens = fam.stop_tokens();
+    let mut stop_tokens = if loaded.strict_prompt_contract() {
+        Vec::new()
+    } else {
+        fam.stop_tokens()
+    };
     // Merge with user-provided stop tokens if any
     if let Some(user_stop) = req.stop {
         stop_tokens.extend(user_stop.into_vec());
     }
     opts.stop_tokens = stop_tokens;
+    let prepared = match loaded
+        .prepare_prompt(&rendered.text, rendered.source, template, &opts.stop_tokens)
+        .await
+    {
+        Ok(prepared) => prepared,
+        Err(error) => return crate::inference_error::response(&error),
+    };
 
     let include_usage = req.stream_options.as_ref().is_some_and(|o| o.include_usage);
     if opts.stream {
@@ -220,7 +285,7 @@ pub async fn chat_completions(
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<String>();
         let mut opts_clone = opts.clone();
         opts_clone.stream = false;
-        let prompt_clone = prompt.clone();
+        let prompt_clone = prepared.clone();
         let model_clone = req.model.clone();
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -229,6 +294,13 @@ pub async fn chat_completions(
         let id = format!("chatcmpl-{}", uuid::Uuid::new_v4().simple());
 
         tokio::spawn(async move {
+            let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let watcher_cancel = cancelled.clone();
+            let watcher_tx = tx.clone();
+            let watcher = tokio::spawn(async move {
+                watcher_tx.closed().await;
+                watcher_cancel.store(true, std::sync::atomic::Ordering::Release);
+            });
             let tx_tokens = tx.clone();
             let id_for_tokens = id.clone();
             let model_for_tokens = model_clone.clone();
@@ -257,9 +329,10 @@ pub async fn chat_completions(
 
             // Generate and stream tokens
             let result = loaded
-                .generate_with_metadata(
-                    &prompt_clone,
+                .generate_prepared(
+                    prompt_clone,
                     opts_clone,
+                    Some(cancelled),
                     Some(Box::new(move |tok| {
                         let chunk = ChatCompletionChunk {
                             id: id_for_tokens.clone(),
@@ -282,14 +355,14 @@ pub async fn chat_completions(
                     })),
                 )
                 .await;
+            watcher.abort();
+            let _ = watcher.await;
 
             let result = match result {
                 Ok(output) => output,
                 Err(error) => {
                     tracing::error!("Streaming generation failed: {error}");
-                    let _ = tx.send(serde_json::json!({"error": {
-                        "message": "Generation failed", "type": "server_error", "code": "generation_failed"
-                    }}).to_string());
+                    let _ = tx.send(crate::inference_error::body(&error).to_string());
                     let _ = tx.send("[DONE]".into());
                     return;
                 }
@@ -330,7 +403,7 @@ pub async fn chat_completions(
         Sse::new(stream).into_response()
     } else {
         // Handle non-streaming response
-        match loaded.generate_with_metadata(&prompt, opts, None).await {
+        match loaded.generate_prepared(prepared, opts, None, None).await {
             Ok(result) => {
                 let content = result.text;
                 tracing::debug!(
@@ -368,7 +441,7 @@ pub async fn chat_completions(
                     req.model,
                     e
                 );
-                StatusCode::BAD_GATEWAY.into_response()
+                crate::inference_error::response(&e)
             }
         }
     }
@@ -385,6 +458,9 @@ pub async fn completions(
 ) -> impl IntoResponse {
     use axum::http::StatusCode;
 
+    if req.stream.unwrap_or(false) {
+        return (StatusCode::BAD_REQUEST,Json(serde_json::json!({"error":{"type":"invalid_request_error","code":"unsupported_streaming_mode","message":"Streaming text completions are not supported; use chat completions for SSE"}}))).into_response();
+    }
     // Input validation
     if req.prompt.trim().is_empty() {
         return (
@@ -437,9 +513,18 @@ pub async fn completions(
         Ok(l) => l,
         Err(e) => {
             tracing::error!("Failed to load model '{}': {:?}", req.model, e);
-            return StatusCode::BAD_GATEWAY.into_response();
+            return crate::inference_error::response(&e);
         }
     };
+
+    let extras =
+        match crate::prompt_render::extras_for_loaded_model(&req.model, loaded.as_ref()).await {
+            Ok(extras) => extras,
+            Err(error) => {
+                tracing::error!("Model special tokens unavailable: {error}");
+                return crate::inference_error::response(&error);
+            }
+        };
 
     let mut opts = crate::engine::GenOptions {
         raw_prompt: true, // This handler renders the prompt before generation.
@@ -457,31 +542,48 @@ pub async fn completions(
     opts.stream = false;
 
     let fam = crate::prompt_render::family_from_spec(spec.template.as_deref(), &req.model);
-    let prompt = crate::prompt_render::render_completion_prompt_with_extras(
-        &req.prompt,
-        spec.chat_template.as_deref(),
-        fam,
-        false,
-        &crate::prompt_render::JinjaExtras::for_model(&req.model),
-    )
-    .text;
+    let strict_template = match loaded.chat_template().await {
+        Ok(t) => t,
+        Err(error) => return crate::inference_error::response(&error),
+    };
+    let template = if loaded.strict_prompt_contract() {
+        strict_template.as_deref()
+    } else {
+        spec.chat_template.as_deref()
+    };
+    let rendered = if loaded.strict_prompt_contract() {
+        match crate::prompt_render::render_completion_prompt_strict(
+            &req.prompt,
+            template,
+            false,
+            &extras,
+        ) {
+            Ok(p) => p,
+            Err(e) => return crate::inference_error::response(&e.into()),
+        }
+    } else {
+        crate::prompt_render::render_completion_prompt_with_extras(
+            &req.prompt,
+            template,
+            fam,
+            false,
+            &extras,
+        )
+    };
+    let prepared = match loaded
+        .prepare_prompt(&rendered.text, rendered.source, template, &opts.stop_tokens)
+        .await
+    {
+        Ok(p) => p,
+        Err(e) => return crate::inference_error::response(&e),
+    };
     let model_id = req.model.clone();
 
-    let result = match loaded.generate_with_metadata(&prompt, opts, None).await {
+    let result = match loaded.generate_prepared(prepared, opts, None, None).await {
         Ok(t) => t,
         Err(e) => {
             tracing::error!("Generation error: {:?}", e);
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({
-                    "error": {
-                        "message": "Generation failed",
-                        "type": "server_error",
-                        "code": "generation_failed"
-                    }
-                })),
-            )
-                .into_response();
+            return crate::inference_error::response(&e);
         }
     };
 

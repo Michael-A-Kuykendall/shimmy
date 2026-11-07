@@ -8,16 +8,19 @@ mod auto_discovery;
 mod cache;
 mod cli;
 mod engine;
+mod inference_error;
 mod invariant_ppt;
 mod model_registry;
 mod observability;
 mod openai_compat;
 mod openapi;
 mod port_manager;
+mod prepared_prompt;
 mod prompt_render;
 mod security;
 mod server;
 mod templates;
+mod warmup;
 mod util {
     pub mod diag;
     pub mod memory;
@@ -104,7 +107,7 @@ fn print_startup_diagnostics(
 
     if airframe_selected {
         if kv_quant == "int4" {
-            println!("⚡ Backend: Airframe (GPU) + TurboShimmy INT4 KV — ~60% less VRAM");
+            println!("⚠ Backend: Airframe (GPU), INT4 requested; validated admission rejects this uncertified mode");
         } else {
             println!("🔧 Backend: Airframe (GPU)");
         }
@@ -113,9 +116,9 @@ fn print_startup_diagnostics(
     // Model count
     println!("📦 Models: {} available", model_count);
     if airframe_selected && kv_quant == "int4" {
-        println!("💡 TurboShimmy active: enable with --kv-quant int4 (already on)");
+        println!("⚠ Use F32 KV for the validated dense execution path");
     } else if airframe_selected {
-        println!("💡 Tip: add --kv-quant int4 to enable TurboShimmy (INT4 KV, ~60% less VRAM)");
+        println!("ℹ F32 KV/reference kernels: certification is model and platform specific");
     }
 }
 
@@ -247,7 +250,7 @@ async fn main() -> anyhow::Result<()> {
                 n_threads: None,
             });
 
-            println!("🎯 Direct model loaded: {} -> {}", model_name, path);
+            println!("🎯 Direct model registered: {} -> {}", model_name, path);
         } else {
             eprintln!("❌ Model file not found: {}", path);
             std::process::exit(1);
@@ -258,7 +261,14 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(state);
 
     match cli.cmd {
-        cli::Command::Serve { ref bind, .. } => {
+        cli::Command::Serve {
+            ref bind,
+            ref model_path,
+            ..
+        } => {
+            let warmup_config = warmup::WarmupConfig::from_env()?;
+            let warmup_path = model_path.as_deref().map(std::path::Path::new);
+            let warmup_base_env = std::env::var_os("SHIMMY_BASE_GGUF").is_some();
             // Use smart bind address resolution instead of direct parsing
             let addr = port_manager::GLOBAL_PORT_ALLOCATOR
                 .resolve_bind_address(bind)
@@ -273,6 +283,8 @@ async fn main() -> anyhow::Result<()> {
                     eprintln!("🔧 Environment variable: SHIMMY_BIND_ADDRESS=127.0.0.1:11435");
                     std::process::exit(1);
                 });
+
+            security::ApiSecurity::from_env()?.validate_bind(addr)?;
 
             // Print startup diagnostics before server starts
             let use_airframe = airframe_engine_selected(cli.legacy);
@@ -312,6 +324,15 @@ async fn main() -> anyhow::Result<()> {
                     std::process::exit(1);
                 }
 
+                warmup::prepare_warmup(
+                    &*enhanced_state.engine,
+                    &enhanced_state.registry,
+                    warmup_path,
+                    warmup_base_env,
+                    &warmup_config,
+                )
+                .await?;
+
                 // Show final model count and ready message
                 println!("📦 Models: {} available", available_models.len());
                 println!("✅ Ready to serve requests");
@@ -332,6 +353,15 @@ async fn main() -> anyhow::Result<()> {
                 eprintln!("   • Place .gguf files in ~/.cache/huggingface/hub/");
                 std::process::exit(1);
             }
+
+            warmup::prepare_warmup(
+                &*state.engine,
+                &state.registry,
+                warmup_path,
+                warmup_base_env,
+                &warmup_config,
+            )
+            .await?;
 
             // Show final model count and ready message
             println!("📦 Models: {} available", available_models.len());

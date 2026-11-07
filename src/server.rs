@@ -121,7 +121,7 @@ pub fn router(state: Arc<AppState>, security: crate::security::ApiSecurity) -> R
             "/v1/chat/completions",
             post(openai_compat::chat_completions),
         )
-        .route("/v1/models", get(openai_compat::models))
+        .route("/v1/models", get(openai_compat::models_with_capabilities))
         .route("/v1/completions", post(openai_compat::completions))
         // Ollama-compatible endpoints (used by AnythingLLM, SillyTavern, Zed, Open WebUI)
         .route("/api/tags", get(openai_compat::api_tags))

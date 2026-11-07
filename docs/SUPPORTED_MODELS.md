@@ -1,84 +1,49 @@
-# Supported Models
+# Supported models — Shimmy 2.6.6 / Airframe 0.4.5
 
-Shimmy loads **GGUF**-format models and auto-detects the architecture from each
-file's metadata — no hardcoded per-model constants, no recompilation. Context
-window is read directly from the GGUF.
+This release is scoped to the validated dense Llama and Qwen3 execution plans.
+Model discovery, structural admission and numerical certification are distinct.
+Discovering a GGUF file does not certify its architecture, quantization or platform.
+Missing required metadata and unsupported execution graphs reject explicitly.
 
-## Certified Models
+## Executed numerical coverage
 
-The following model configurations have passed the full **3-box certification
-regimen** (MATH + INFERENCE + DETERMINISM), validated on the RTX 3060 reference
-GPU. Certification records live in the workspace ledger
-(`cert/math_ledger.duckdb`) and per-model packages under `cert/packages/`. The
-README's **Supported Models** table is generated from this same data, so the two
-stay in lockstep.
+The independent reference uses the same quantized weights dequantized to FP32,
+identical injected token IDs and full logit vectors. Greedy decisions must match;
+maximum absolute error must be at most 0.1 and RMS error at most 0.03.
 
-**12 model families** — every model below is verified to load and generate through Shimmy's certified engine path. Certification is **ledger-backed** (`cert/ledger.duckdb` + per-model packages under `cert/packages/`); the table is regenerated from that ledger via `scripts/cert/generate_models_table.py` so it can't drift from what actually passed. GGUF files load as-is; no recompilation, no hardcoded per-model constants.
-
-> **Chat templating (v2.7):** all models now render through a single `prompt_render`
-> path that uses each model's real GGUF `chat_template` (Jinja), with a family
-> fallback and `--raw` escape for base models. See [CHAT_TEMPLATING.md](CHAT_TEMPLATING.md).
-> Routing is validated offline per-model by `tests/gguf_routing.rs` (no GPU).
-
-| Family | Model | Quants |
+| Exact GGUF SHA-256 | Model / quantization | Executed context / modes |
 |---|---|---|
-| **Llama** | [Llama-3.2-1B-Instruct](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF) | Q4_K_M · Q6_K |
-|  | [Llama-3.2-3B-Instruct](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF) | Q4_K_M |
-|  | [Llama-3.1-8B-Instruct](https://huggingface.co/bartowski/Llama-3.1-8B-Instruct-GGUF) | Q4_K_M |
-|  | [TinyLlama-1.1B-Chat](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF) | Q4_0 · Q5_K_M · Q6_K |
-| **Qwen3** | [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B-GGUF) | Q4_K_M |
-|  | [Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B-GGUF) | Q4_K_M |
-|  | [Qwen3-4B](https://huggingface.co/Qwen/Qwen3-4B-GGUF) | Q4_K_M |
-|  | [Qwen3-4B-Thinking](https://huggingface.co/Qwen/Qwen3-4B-Thinking-GGUF) | Q4_K_M |
-|  | [Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B-GGUF) | Q4_K_M |
-| **Qwen2** | [Qwen2-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF) | Q4_K_M |
-|  | [Qwen2-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF) | Q4_K_M |
-|  | [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct-GGUF) | Q4_K_M |
-| **Qwen3.5** | [Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B-GGUF) | Q4_K_M |
-| **Phi-3** | [Phi-3.5-mini-Instruct](https://huggingface.co/microsoft/Phi-3.5-mini-instruct-gguf) | Q4_K_M |
-|  | [Phi-3-mini-4k-Instruct](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) | Q4_0 |
-| **Phi-2** | [Phi-2](https://huggingface.co/TheBloke/phi-2-GGUF) | Q4_K_M |
-| **Gemma-2** | [Gemma-2-2B-it](https://huggingface.co/bartowski/gemma-2-2b-it-GGUF) | Q4_K_M |
-|  | [Gemma-2-9B-it](https://huggingface.co/bartowski/gemma-2-9b-it-GGUF) | Q4_K_M (supported; cert pending [tensor-scatter fix](https://github.com/Michael-A-Kuykendall/airframe/blob/main/CHANGELOG.md#040--2026-08-26---certification-consolidation--26-models--metadata-driven-architecture)) |
-| **Gemma-4** | [Gemma-4-12B-coder](https://huggingface.co/google/gemma-4-12B-coder-GGUF) | Q4_K_M |
-|  | [Gemma-4-E4B](https://huggingface.co/google/gemma-4-E4B-it-GGUF) | Q4_K_M |
-| **DeepSeek-R1** | [DeepSeek-R1-0528-Qwen3-8B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-8B-GGUF) | Q4_K_M |
-| **Ministral** | [Ministral-3-14B-Reasoning](https://huggingface.co/bartowski/Ministral-3-14B-Reasoning-GGUF) | Q4_K_M |
-| **StarCoder2** | [StarCoder2-3B](https://huggingface.co/second-state/StarCoder2-3B-GGUF) | Q4_K_M |
+| `ac2d97712095a558e31573f62f466a3f9d93990898b0ec79d7c974c1780d524a` | Qwen3-0.6B Q4_K_M | 512, 2048, 4096, 8192; selected text/injected/repeat and final-slot cases |
+| `72c5c3cb38fa32d5256e2fe30d03e7a64c6c79e668ad84057e3bd66e250b24fb` | Qwen3-1.7B Q4_K_M | Original 2032-token request at context 2048; capture off/on/repeat |
+| `dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff` | Llama 3.2 3B Instruct Q4_K_M | Context 512; selected text/injected/repeat cases |
 
+These are bounded fixtures, not certification of every prompt, model revision or
+combination of settings. The 198 measured comparisons include repeated positions
+and modes; they are not 198 independent prompts.
 
+Executed GPU environment: NVIDIA RTX 4070 Laptop through WSL Dozen/Vulkan,
+FP32 accumulation, F32 KV, reference kernels. Numerical correctness on this
+environment does not establish native Linux, Windows or Apple GPU correctness.
+WSL device destruction and active-generation device-loss investigations remain
+open. A successful run does not establish that those failures are fixed.
 
-> **GPU Math Verified** means the Airframe GPU dequantization shader produces
-> results matching the CPU reference implementation, independently confirmed for
-> every tensor type in each model via `quant_verify` (512 elements per quant
-> type per model).
+Actual server coverage includes JSON/SSE, usage/finish reasons, state isolation,
+reset/cancellation, typed errors and recovery on selected Qwen3/Llama fixtures.
+Qwen3-1.7B coverage is the exact context-2048 JSON request; its other contexts and
+SSE remain NOT_RUN. Extended-context Llama and distinct alternate prefill chunks
+remain NOT_RUN. The release validation record identifies the exact binary used.
 
-> Llama-3.2's native context is 131072 tokens. Airframe reads this from GGUF and
-> allocates KV cache accordingly. Use `SHIMMY_MAX_CTX=8192` for a practical 8K
-> window on consumer hardware (~256 MB KV cache for the 1B model).
+## Excluded or unexecuted configurations
 
-## Supported Quantization Types
+Metal/M4 and other unavailable native GPU platforms: **NOT_RUN**.
+INT4 KV and experimental kernels: **NOT_RUN**, disabled for this candidate.
+Gemma2 and other new architecture executors: not enabled by this dense foundation.
+MoE, MLA, hybrid recurrent/Gated DeltaNet, state-space and multimodal execution:
+unsupported by the validated dense plan and must reject explicitly.
+Other models and quantizations are not certified by the three fixtures above.
+Do not use historical family-wide support lists as release certification.
 
-| Type | GGML ID | Notes |
-|---|---|---|
-| `F32` | 0 | Raw floats — maximum precision |
-| `F16` | 1 | Half-precision floats |
-| `Q4_0` | 2 | 4-bit, 32-element blocks |
-| `Q5_0` | 6 | 5-bit, 32-element blocks |
-| `Q8_0` | 8 | 8-bit, 32-element blocks |
-| `Q4_K` | 12 | 4-bit K-quant superblocks (256 elements) — used in Q4_K_M GGUFs |
-| `Q5_K` | 13 | 5-bit K-quant superblocks — used alongside Q4_K in mixed-precision models |
-| `Q6_K` | 14 | 6-bit K-quant superblocks — typically used for output/embedding layers |
-
-All types are implemented in both the GPU inference shader and a CPU reference
-implementation. GPU vs CPU agreement is validated for every type. In practice,
-any standard `Q4_K_M`, `Q5_K_M`, or `Q6_K` GGUF will load and run — those
-formats mix Q4_K / Q5_K / Q6_K blocks across layers.
-
-## Auto-Discovery
-
-If Shimmy finds GGUF models in your HuggingFace cache, Ollama directory, LM
-Studio cache (`~/.cache/lm-studio/models`), or local `./models/` folder, it
-registers and serves them automatically. See
-[docs/MODEL_EXPANSION.md](MODEL_EXPANSION.md) for the full onboarding protocol
-and how to add a new architecture or quant type.
+GGUF parsing and tokenizer support alone do not establish inference support.
+SafeTensors parsing does not establish a certified SafeTensors inference path.
+Use `SHIMMY_MAX_CTX` or `--ctx` within the selected model's validated capacity;
+a configured capacity is not evidence of numerical certification at that size.

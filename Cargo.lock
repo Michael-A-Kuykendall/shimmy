@@ -13,9 +13,9 @@ dependencies = [
 
 [[package]]
 name = "airframe"
-version = "0.4.4"
+version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df7d91c7f94aad4a73fd7979a78e447965685f75070996e9419ddfe421a07900"
+checksum = "dd3023114910507d1743349b1aa288d158453be78d58e44fcd997ecba99ba862"
 dependencies = [
  "aho-corasick",
  "airframe-observe",
@@ -41,9 +41,9 @@ dependencies = [
 
 [[package]]
 name = "airframe-observe"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f25ddd92c50ec35ffdf523fe311142fe14e6e6266e2d98d7da09170c2a6330d0"
+checksum = "84fd8551a1bc8da265044dfe1a5b3370953ec32f8847c035ce44f03800bf093b"
 dependencies = [
  "dzero",
  "serde",
@@ -1393,9 +1393,9 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "libfse"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20ae97c006f0decc1514d5b6168f2a3506d80458fef022d75a3e9ed69d9b85e9"
+checksum = "2f82e271748f6b7919c5fbe4f4cd72532bc48ab82c04250298035939b6f13e06"
 dependencies = [
  "aho-corasick",
 ]
@@ -2123,9 +2123,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.43"
+version = "0.23.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
+checksum = "48e13bd8c0e9365c43cfa5c9e8f9ad49d3c8444926c9aac819e0e4dc503c8fdf"
 dependencies = [
  "once_cell",
  "ring",
@@ -2147,9 +2147,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.15"
+version = "0.103.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
+checksum = "4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281"
 dependencies = [
  "ring",
  "rustls-pki-types",
@@ -2323,7 +2323,7 @@ dependencies = [
 
 [[package]]
 name = "shimmy"
-version = "2.6.5"
+version = "2.6.6"
 dependencies = [
  "airframe",
  "anyhow",
@@ -2348,6 +2348,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serial_test",
+ "sha2",
  "shimmyjinja",
  "subtle",
  "sys-info",
@@ -2371,9 +2372,9 @@ checksum = "7231fcf252b84a01d8a739d19ad92dbc185ec41af8844e7ad7e62fba5a26ebd7"
 
 [[package]]
 name = "shimmytok"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6502ce81fc44ca9cf73e1f3808477707919d7ea2c139da6a649d6f999c1078a"
+checksum = "c0530545244470e6c65a92e7f4193a5be69b4fbc568911793fdabb2950bc2c98"
 dependencies = [
  "fancy-regex",
  "rayon",
@@ -2641,9 +2642,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.53.1"
+version = "1.53.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+checksum = "ce3335fa71841cda333a58d7615b03901380ecf09d59b3296d21f8bbac0dde4e"
 dependencies = [
  "bytes",
  "libc",
@@ -3078,9 +3079,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-roots"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a"
+checksum = "1c1c8e20c8a38fc7d65abfe74eb7280e4aa667e8eec8bc84996d2874810748d9"
 dependencies = [
  "rustls-pki-types",
 ]

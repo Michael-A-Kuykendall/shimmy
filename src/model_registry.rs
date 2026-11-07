@@ -18,11 +18,9 @@ pub fn shimmy_ctx_len() -> usize {
 /// source of the REAL chat template that prompt_render's Jinja-first path uses.
 #[cfg(feature = "airframe")]
 pub fn read_chat_template(path: &std::path::Path) -> Option<String> {
-    use std::io::BufReader;
-    let f = std::fs::File::open(path).ok()?;
-    let mut r = BufReader::new(f);
-    let meta = airframe::backend::bindless::metadata::BindlessMetadata::new(&mut r);
-    meta.to_model_spec().chat_template
+    airframe::execution::admission::inspect_model(path)
+        .ok()?
+        .chat_template
 }
 
 /// Airframe-independent fallback (no-op) for non-airframe builds.

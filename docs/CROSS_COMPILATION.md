@@ -1,38 +1,19 @@
-# Cross-Compilation Guide
+# Build portability — Shimmy 2.6.6
 
-## ARM64 Linux Build with Docker
+Rust/wgpu portability is not executed native GPU certification. The release
+does not claim Windows/macOS/Linux/ARM inference correctness merely because a
+target compiles. Metal/M4 and unavailable native GPU configurations are NOT_RUN.
 
-When cross-compiling for ARM64 Linux fails in CI/CD due to C++ dependencies (ring crate, llama-cpp), use Docker with QEMU emulation as a reliable alternative.
+The default feature includes Airframe; no-default-features fast is useful for
+non-inference checks and does not provide a CPU engine. Deprecated llama feature
+names are empty compatibility stubs.
 
-### Prerequisites
+Cross compilation requires the Rust target plus its actual linker/system
+dependencies. Run native package/install/CLI/protocol and model tests on the
+target before making support claims. CI cannot emulate Apple GPU execution.
+No hosted build, tag or release is authorized by this guide.
 
-- Docker Desktop with QEMU emulation support
-- Windows, macOS, or Linux host system
-
-### Build Command
-
-```bash
-docker run --rm --platform linux/arm64 \
-  -v "C:\Users\micha\repos\shimmy:/workspace" \
-  rust:1.89 \
-  bash -c "cd /workspace && cargo build --release --target aarch64-unknown-linux-gnu --no-default-features --features huggingface"
-```
-
-### Key Notes
-
-- **Path Format**: Use Windows-style paths with quotes for Docker volume mounts
-- **Platform**: `--platform linux/arm64` enables QEMU emulation for ARM64
-- **Features**: Use `--no-default-features --features huggingface` to avoid C++ cross-compilation issues
-- **Performance**: Slower than native builds due to QEMU emulation, but reliable compilation
-- **Output**: Binary will be in `target/aarch64-unknown-linux-gnu/release/shimmy`
-
-### Troubleshooting
-
-If you encounter path issues:
-- Ensure proper quote usage around Windows paths
-- Use forward slashes in the container path (`:workspace`)
-- Verify Docker Desktop is running with QEMU support enabled
-
-### GitHub Actions Alternative
-
-For CI/CD environments where Docker with QEMU is not available, consider temporarily excluding ARM64 from release builds until dedicated ARM64 runners are available.
+A crates.io-only release creates no new GitHub platform binaries. Any later
+binary distribution needs its own exact source/build/hash verification.
+See [release gates](../RELEASE_GATES_CHECKLIST.md), [Windows scope](WINDOWS_GPU_BUILD_GUIDE.md)
+and [fixtures](SUPPORTED_MODELS.md).
