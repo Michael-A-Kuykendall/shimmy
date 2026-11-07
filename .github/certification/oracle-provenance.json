@@ -1,0 +1,139 @@
+{
+  "schema": "frozen.fp32.oracle-provenance.v1",
+  "source": "llama.cpp b11763/a01ce9ffc64cf370439d6f861a534a65100133ae",
+  "legacy_archive_sha256": "49ef0539592eebdd6c867fa9d168bbfcdc1910b5424c3bd127694e7194d00f53",
+  "erratum": "Archive global reference_binary_sha256 describes the baseline oracle only. Exact per-case oracle identities below supersede that generic label, without changing any vector, case, sampler or numerical tolerance.",
+  "jobs": {
+    "qwen-thinking": {
+      "reference_binary_sha256": "f5d0cd928e5c783e426a7108e27c1fd8801876173a57e0410c74a570f7e6c96f",
+      "f32_model_sha256": "04516bf4a8e67f271e8dbe32d6a435cdcc8d1a3e937088acaafcf56126e892f9",
+      "precision": {
+        "file_sha256": "e534d8ab14b352a5cbc057db4c736ce1ca29766a951d1c7661d6d3ea23a68b20",
+        "observed": [
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 0,
+            "step": 1
+          },
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 1,
+            "step": 1
+          }
+        ]
+      },
+      "provenance_file_sha256": "e534d8ab14b352a5cbc057db4c736ce1ca29766a951d1c7661d6d3ea23a68b20"
+    },
+    "qwen-nothink": {
+      "reference_binary_sha256": "f5d0cd928e5c783e426a7108e27c1fd8801876173a57e0410c74a570f7e6c96f",
+      "f32_model_sha256": "04516bf4a8e67f271e8dbe32d6a435cdcc8d1a3e937088acaafcf56126e892f9",
+      "precision": {
+        "file_sha256": "e534d8ab14b352a5cbc057db4c736ce1ca29766a951d1c7661d6d3ea23a68b20",
+        "observed": [
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 0,
+            "step": 1
+          },
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 1,
+            "step": 1
+          }
+        ]
+      },
+      "provenance_file_sha256": "e534d8ab14b352a5cbc057db4c736ce1ca29766a951d1c7661d6d3ea23a68b20"
+    },
+    "llama": {
+      "reference_binary_sha256": "f5d0cd928e5c783e426a7108e27c1fd8801876173a57e0410c74a570f7e6c96f",
+      "f32_model_sha256": "b0dd20c95a6605d9773d9d3153c52f89f21628f21048ff81bb184684b6f7a42b",
+      "precision": {
+        "file_sha256": "e534d8ab14b352a5cbc057db4c736ce1ca29766a951d1c7661d6d3ea23a68b20",
+        "observed": [
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 0,
+            "step": 1
+          },
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 1,
+            "step": 1
+          }
+        ]
+      },
+      "provenance_file_sha256": "e534d8ab14b352a5cbc057db4c736ce1ca29766a951d1c7661d6d3ea23a68b20"
+    },
+    "qwen2k": {
+      "reference_binary_sha256": "f5d0cd928e5c783e426a7108e27c1fd8801876173a57e0410c74a570f7e6c96f",
+      "f32_model_sha256": "04516bf4a8e67f271e8dbe32d6a435cdcc8d1a3e937088acaafcf56126e892f9",
+      "precision": {
+        "file_sha256": "aa35f0d7588916900e0a593cba6aea824799868836d7426be903ba26271fa0d5",
+        "observed": [
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": null,
+            "step": 1
+          }
+        ]
+      }
+    },
+    "qwen17": {
+      "reference_binary_sha256": "652680693760c41a594014f55cb22c34748e35ef79858b313450689f66cdc2b6",
+      "f32_model_sha256": "d16eda02baa8a735b482a7aad0c6fb8d7473178e52fd9b3686289200638ac10b",
+      "precision": {
+        "file_sha256": "c1cb678a0b0d55de689b0f78f8d86dd0b013069dcbded7096d325bea5f385af5",
+        "observed": [
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 0,
+            "step": 1
+          }
+        ]
+      },
+      "provenance_file_sha256": "b18c8e0af1340238d1028fc2611cc7a41481fc27e3255c563720616fecc74ee4"
+    },
+    "qwen4096": {
+      "reference_binary_sha256": "652680693760c41a594014f55cb22c34748e35ef79858b313450689f66cdc2b6",
+      "f32_model_sha256": "04516bf4a8e67f271e8dbe32d6a435cdcc8d1a3e937088acaafcf56126e892f9",
+      "precision": {
+        "file_sha256": "29cafe3e1b9ecaf39514ef2d7b59733ddd1fed88cd3c3c3835975645b8afdd1b",
+        "observed": [
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 0,
+            "step": 1
+          }
+        ]
+      },
+      "provenance_file_sha256": "d174aad035f16d46d7988d3415288f427a15b42c24e438ffe4c89c4eb9ef220d",
+      "short_cases_source": "qwen-thinking"
+    },
+    "qwen8192": {
+      "reference_binary_sha256": "652680693760c41a594014f55cb22c34748e35ef79858b313450689f66cdc2b6",
+      "f32_model_sha256": "04516bf4a8e67f271e8dbe32d6a435cdcc8d1a3e937088acaafcf56126e892f9",
+      "precision": {
+        "file_sha256": "f7eaa8dc80c8741ec567c652a24ef940bb56764903767914dc02672e02bfcabd",
+        "observed": [
+          {
+            "contract": "unfused-attention-F32-v1",
+            "layers": 28,
+            "request": 0,
+            "step": 1
+          }
+        ]
+      },
+      "provenance_file_sha256": "0661459361aa767b316382deb42554f9971df94b6c98b890a7acc95d877362be",
+      "short_cases_source": "qwen-thinking"
+    }
+  }
+}
