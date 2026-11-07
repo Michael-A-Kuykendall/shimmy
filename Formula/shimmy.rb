@@ -6,13 +6,9 @@ class Shimmy < Formula
   license all_of: ["Apache-2.0", "MIT"]
 
   on_macos do
-    on_arm do
-      url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.6/shimmy-macos-arm64.tar.gz"
-      sha256 "eabba8acf94450242f0b8da221a391a935185b3c3877f1350b1ff7ffec2d4a2e"
-    end
-    on_intel do
-      odie "Shimmy 2.6.6 has no macOS Intel binary; use an independently validated source build."
-    end
+    depends_on arch: :arm64
+    url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.6/shimmy-macos-arm64.tar.gz"
+    sha256 "eabba8acf94450242f0b8da221a391a935185b3c3877f1350b1ff7ffec2d4a2e"
   end
 
   on_linux do
@@ -27,6 +23,7 @@ class Shimmy < Formula
   end
 
   def install
+    odie "Shimmy 2.6.6 has no macOS Intel binary." if OS.mac? && Hardware::CPU.intel?
     bin.install "shimmy"
     (share/"shimmy").install "LICENSES", "THIRD-PARTY-NOTICES.md", "DISTRIBUTION-LICENSE.txt", "native-manifest.json"
   end
