@@ -1,23 +1,70 @@
-name: Package Manager Smoke
+name: Release Build Verification
+
 on:
   workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Exact human-approved release tag selected as the workflow ref
+        required: true
+        type: string
+
 permissions:
   contents: read
-concurrency:
-  group: homebrew-2.6.6-validation
-  cancel-in-progress: false
+
 jobs:
-  homebrew:
-    if: github.repository == 'Michael-A-Kuykendall/shimmy'
-    runs-on: macos-15
+  build:
+    name: Build (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            binary: shimmy
+            artifact: shimmy-linux-x86_64
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            binary: shimmy
+            artifact: shimmy-linux-arm64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary: shimmy.exe
+            artifact: shimmy-windows-x86_64.exe
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary: shimmy
+            artifact: shimmy-macos-arm64
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_BUILD_JOBS: "2"
+      SOURCE_REF: ${{ inputs.source_ref }}
     steps:
       - uses: actions/checkout@v5
-      - name: Require ARM64 native host
-        run: test "$(uname -m)" = arm64
-      - name: Real Homebrew install and test with licensing
-        run: python3 .github/scripts/homebrew_distribution.py --source "$GITHUB_WORKSPACE" --output results/macos-arm64.json
+        with:
+          ref: ${{ inputs.source_ref }}
+      - name: Verify approved source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$SOURCE_REF" = "$GITHUB_REF_NAME"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          [[ "$SOURCE_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Test default and fast
+        shell: bash
+        run: |
+          cargo test --locked --target ${{ matrix.target }} -- --test-threads=1
+          cargo test --locked --target ${{ matrix.target }} --no-default-features --features fast -- --test-threads=1
+      - name: Build default release
+        run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Verify CLI startup
+        shell: bash
+        run: |
+          ./target/${{ matrix.target }}/release/${{ matrix.binary }} --version
+          ./target/${{ matrix.target }}/release/${{ matrix.binary }} --help > /dev/null
       - uses: actions/upload-artifact@v4
         with:
-          name: homebrew-macos-arm64
-          path: results/macos-arm64.json
-          retention-days: 14
+          name: ${{ matrix.artifact }}
+          path: target/${{ matrix.target }}/release/${{ matrix.binary }}
