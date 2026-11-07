@@ -1,0 +1,11 @@
+accepted = ["Apache-2.0", "MIT", "BSD-3-Clause", "BSD-2-Clause", "ISC", "CC0-1.0", "Zlib", "Unicode-3.0", "Unicode-DFS-2016", "OpenSSL", "BSL-1.0", "Unlicense", "MPL-2.0", "CDLA-Permissive-2.0"]
+ignore-dev-dependencies = true
+ignore-build-dependencies = false
+
+[libfse.clarify]
+license = "Apache-2.0"
+override-git-commit = "8efb1e7a830b0822cfc5ac1b121e149948d5ffe3"
+[[libfse.clarify.git]]
+path = "crates/libfse/LICENSE"
+license = "Apache-2.0"
+checksum = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
