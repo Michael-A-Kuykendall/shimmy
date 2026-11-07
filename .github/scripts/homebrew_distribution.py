@@ -6,7 +6,7 @@ def run(*args):
     return subprocess.check_output(args,text=True).strip()
 def main():
     p=argparse.ArgumentParser();p.add_argument("--brew",default="brew");p.add_argument("--source",required=True);p.add_argument("--output",required=True);a=p.parse_args()
-    os.environ.update(HOMEBREW_NO_AUTO_UPDATE="1",HOMEBREW_NO_ANALYTICS="1",HOMEBREW_NO_INSTALL_FROM_API="1",HOMEBREW_NO_INSTALL_CLEANUP="1")
+    os.environ.update(HOMEBREW_NO_AUTO_UPDATE="1",HOMEBREW_NO_ANALYTICS="1",GIT_CONFIG_GLOBAL="/dev/null",GIT_CONFIG_SYSTEM="/dev/null",HOMEBREW_NO_INSTALL_CLEANUP="1")
     source=pathlib.Path(a.source).resolve()
     tap=pathlib.Path(run(a.brew,"--repository",TAP))
     if tap.exists():

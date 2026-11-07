@@ -44,4 +44,16 @@ Keep the extracted LICENSES directory and notices beside the executable. Choose 
 
 Native unit tests, default-engine build, install, CLI version/help and architecture checks passed for all four targets in [the selected manual run](https://github.com/Michael-A-Kuykendall/shimmy/actions/runs/42404833070). This is not native GPU model certification. An Apple Paravirtual Metal diagnostic produced correct Qwen3-0.6B arithmetic/JSON/usage; its extra bare-number assertion was corrected by local evaluation of preserved outputs. Full-vector Metal/M4, DGX Spark, INT4 and other unexecuted modes remain NOT_RUN. WSL destructor/device-loss investigations remain open.
 
-Docker/GHCR, Homebrew and Scoop have separate publication/installation gates; a GitHub executable release does not automatically update them. npm is not included.
+## Homebrew
+
+The repository provides a versioned custom tap (not Homebrew core):
+
+```bash
+brew tap Michael-A-Kuykendall/shimmy https://github.com/Michael-A-Kuykendall/shimmy.git
+brew install Michael-A-Kuykendall/shimmy/shimmy
+brew test Michael-A-Kuykendall/shimmy/shimmy
+```
+
+macOS ARM64 and Linux x86-64/ARM64 select their exact licensed archives above. macOS Intel has no release binary. Licenses and the libfse grant are retained under the formula prefix at share/shimmy. This custom formula does not certify additional GPU configurations.
+
+[Versioned Docker/GHCR instructions](../README-DOCKER.md) are separate from native downloads; Docker latest remains unchanged. Scoop requires its own installation gate. npm is not included.
