@@ -48,6 +48,7 @@ jobs:
         working-directory: source
     env:
       CARGO_BUILD_JOBS: "2"
+      PYTHONUTF8: "1"
       CARGO_TARGET_DIR: ${{ github.workspace }}/native-target
       SOURCE_REF: ${{ inputs.source_ref }}
       TARGET: ${{ matrix.target }}
