@@ -19,6 +19,4 @@ images or package-manager distributions. Review [quickstart](quickstart.md),
 [configuration](CONFIGURATION.md), [API](API.md) and
 [2.6.6 changes](../CHANGELOG.md).
 
-Shimmy is Apache-2.0; the Airframe runtime is MIT, while libfse has separate
-noncommercial/evaluation and commercial-permission terms. Deployment must
-respect all applicable component/model licenses.
+Shimmy is Apache-2.0; Airframe and Observe are MIT, and ShimmyTok is dual-licensed. The [additional Apache-2.0 grant for libfse 0.1.4](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md) permits commercial use, embedding, modification and redistribution without separate permission. Original crate metadata remains unchanged. Deployment must respect applicable component, third-party and model terms; see [stack licensing](../LICENSING.md).

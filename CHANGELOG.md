@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.6 postpublication licensing correction — 2026-11-07
+
+- The existing libfse 0.1.4 archive is additionally licensed under [Apache-2.0](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md), including commercial use, modification and redistribution without separate permission. Original crates, dependency locks and tags remain unchanged; see [stack licensing](LICENSING.md).
+
+
 ## [2.6.6] — 2026-11-06
 
 - Exclude development housekeeping files and internal tracker references from crate archives; preserve runtime behavior and existing license rights.
@@ -22,7 +27,7 @@
 
 
 - Pin Tokio 1.53.3; default and fast graphs pass active-advisory checks. Retain inactive findings explicitly.
-- Align license metadata with the existing Apache-2.0 LICENSE. Airframe and libfse have separate terms; libfse commercial, embedding and derivative use still requires separate permission.
+- Align Shimmy metadata with its existing Apache-2.0 LICENSE. Historical libfse archive restrictions are superseded for the licensor's rights by the additional grant above; archive bytes and historical metadata remain unchanged.
 
 
 - Coordinate Airframe 0.4.5 with the exact certified dense inference source and supporting packages.
