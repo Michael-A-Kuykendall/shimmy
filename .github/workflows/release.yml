@@ -1,61 +1,25 @@
-name: Release Build Verification
-
+name: Apple Metal Diagnostic
 on:
   workflow_dispatch:
     inputs:
       source_ref:
-        description: Immutable released source tag
+        description: Immutable release source already built and verified
         required: true
         type: choice
         options: [v2.6.6]
-
+        default: v2.6.6
 permissions:
   contents: read
-
+  actions: read
 jobs:
-  build:
-    name: Native (${{ matrix.target }})
+  diagnostic:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
-            arch: X64
-            asset: shimmy-linux-x86_64
-            binary: shimmy
-          - os: ubuntu-22.04-arm
-            target: aarch64-unknown-linux-gnu
-            arch: ARM64
-            asset: shimmy-linux-arm64
-            binary: shimmy
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            arch: X64
-            asset: shimmy-windows-x86_64.exe
-            binary: shimmy.exe
-          - os: macos-15
-            target: aarch64-apple-darwin
-            arch: ARM64
-            asset: shimmy-macos-arm64
-            binary: shimmy
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash
-        working-directory: source
+    runs-on: macos-15
+    timeout-minutes: 25
     env:
       CARGO_BUILD_JOBS: "2"
       PYTHONUTF8: "1"
-      CARGO_TARGET_DIR: ${{ github.workspace }}/native-target
-      SOURCE_REF: ${{ inputs.source_ref }}
-      TARGET: ${{ matrix.target }}
-      EXPECTED_ARCH: ${{ matrix.arch }}
-      ASSET: ${{ matrix.asset }}
-      BINARY: ${{ matrix.binary }}
-      NATIVE_DIST_DIR: ${{ github.workspace }}/native-dist
+      CARGO_TARGET_DIR: ${{ github.workspace }}/metal-target
     steps:
       - uses: actions/checkout@v5
         with:
@@ -66,48 +30,49 @@ jobs:
           ref: ${{ inputs.source_ref }}
           path: source
           persist-credentials: false
-      - name: Verify immutable source and control identity
+      - name: Guard native Apple host and immutable source
+        shell: bash
         run: |
           set -euo pipefail
-          test "$SOURCE_REF" = "v2.6.6"
-          test "$(git rev-parse HEAD)" = "21c7d28381352e1cafc55e84ba941b48d2b12d3e"
-          test "$(git -C ../control rev-parse HEAD)" = "$GITHUB_SHA"
-          test "$RUNNER_ARCH" = "$EXPECTED_ARCH"
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.99.1"
-          targets: ${{ matrix.target }}
+          test "$RUNNER_ARCH" = ARM64
+          test "$(uname -s)" = Darwin
+          test "$(uname -m)" = arm64
+          test "$(git -C source rev-parse HEAD)" = 21c7d28381352e1cafc55e84ba941b48d2b12d3e
+          test "$(git -C control rev-parse HEAD)" = "$GITHUB_SHA"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify native host
-        run: |
-          set -euo pipefail
-          test "$(rustc -vV | awk '/^host:/ {print $2}')" = "$TARGET"
-          python ../control/.github/scripts/native_artifacts.py --self-test
-      - name: Native default and fast unit tests
-        run: |
-          set -euo pipefail
-          cargo test --release --locked --target "$TARGET" -- --test-threads=1
-          cargo test --release --locked --target "$TARGET" --no-default-features --features fast -- --test-threads=1
-      - name: Build default Airframe executable and capture compiler facts
-        run: |
-          set -euo pipefail
-          cargo build --release --locked --target "$TARGET" --bin shimmy --message-format=json | tee "$RUNNER_TEMP/native-build.jsonl"
-          cargo metadata --locked --format-version 1 --filter-platform "$TARGET" > "$RUNNER_TEMP/native-metadata.json"
-      - name: Install smoke and retain exact component licenses
-        run: |
-          set -euo pipefail
-          python ../control/.github/scripts/native_artifacts.py \
-            --source . --binary "$CARGO_TARGET_DIR/$TARGET/release/$BINARY" \
-            --target "$TARGET" --asset "$ASSET" \
-            --metadata "$RUNNER_TEMP/native-metadata.json" \
-            --build "$RUNNER_TEMP/native-build.jsonl" \
-            --output "$NATIVE_DIST_DIR" --run-id "$GITHUB_RUN_ID"
-          git diff --exit-code
-      - uses: actions/upload-artifact@v4
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          name: ${{ matrix.asset }}
-          path: ${{ env.NATIVE_DIST_DIR }}
+          toolchain: "1.99.1"
+          components: rustfmt, clippy
+      - uses: actions/download-artifact@v4
+        with:
+          name: shimmy-macos-arm64
+          run-id: 42404833070
+          github-token: ${{ github.token }}
+          path: verified-binary
+      - name: Validate diagnostic logic locally on the native host
+        shell: bash
+        run: |
+          set -euo pipefail
+          python control/.github/scripts/metal_diagnostic.py --self-test
+          cargo fmt --manifest-path control/.github/diagnostics/metal-probe/Cargo.toml -- --check
+          cargo clippy --locked --manifest-path control/.github/diagnostics/metal-probe/Cargo.toml -- -D warnings
+          cargo build --locked --manifest-path control/.github/diagnostics/metal-probe/Cargo.toml
+      - name: Execute real Metal capability and model requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python control/.github/scripts/metal_diagnostic.py \
+            --binary verified-binary/shimmy-macos-arm64 \
+            --probe "$CARGO_TARGET_DIR/debug/shimmy-metal-diagnostic" \
+            --output metal-evidence
+          git -C source diff --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shimmy-metal-diagnostic
+          path: metal-evidence/
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
