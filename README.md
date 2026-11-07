@@ -29,6 +29,8 @@ See [CHANGELOG](CHANGELOG.md).
 
 ## Install and run
 
+Verified [native 2.6.6 archives and checksum instructions](docs/BINARY_INSTALL.md) are available separately from crates.io, including the Windows executable and complete licensing bundles.
+
 Install the versioned crate with a Rust toolchain:
 
 ```bash
@@ -57,7 +59,7 @@ tokenizers or quantization is not certification. Gemma2, MoE, MLA, recurrent,
 state-space and multimodal executors are not enabled.
 INT4/TurboShimmy and experimental kernels remain excluded and rejected.
 
-Executed GPU evidence is NVIDIA through WSL Dozen/Vulkan. **NOT_RUN:** Metal/M4,
+Executed full-logit GPU evidence is NVIDIA through WSL Dozen/Vulkan. **NOT_RUN for full-logit certification:** Metal/M4,
 other unexecuted native GPU platforms, extended-context Llama, alternate
 prefill chunks and unlisted combinations. WSL device-destruction and
 active-generation device-loss investigations remain open.

@@ -1,5 +1,9 @@
 # Quickstart — Shimmy 2.6.6
 
+## Verified native downloads
+
+The separately validated [2.6.6 native archive installation guide](BINARY_INSTALL.md) covers Linux x86-64/ARM64, Windows x86-64 and macOS ARM64, with exact checksums and retained component license materials. Native CLI tests and GPU model certification are different gates.
+
 ## Install the coordinated crate
 
 Install Shimmy 2.6.6 from crates.io:
