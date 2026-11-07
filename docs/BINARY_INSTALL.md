@@ -56,4 +56,17 @@ brew test Michael-A-Kuykendall/shimmy/shimmy
 
 macOS ARM64 and Linux x86-64/ARM64 select their exact licensed archives above. macOS Intel has no release binary. Licenses and the libfse grant are retained under the formula prefix at share/shimmy. This custom formula does not certify additional GPU configurations.
 
-[Versioned Docker/GHCR instructions](../README-DOCKER.md) are separate from native downloads; Docker latest remains unchanged. Scoop requires its own installation gate. npm is not included.
+[Versioned Docker/GHCR instructions](../README-DOCKER.md) are separate from native downloads; Docker latest remains unchanged. Scoop installation is described below. npm is not included.
+
+## Scoop (Windows x86-64)
+
+The repository provides an explicit custom bucket (not Scoop main):
+
+```powershell
+scoop bucket add shimmy https://github.com/Michael-A-Kuykendall/shimmy
+scoop install shimmy/shimmy
+shimmy --version
+shimmy --help
+```
+
+The 2.6.6 manifest selects the exact Windows ZIP and checksum above. It retains LICENSES, the libfse additional grant and notices in the installed app directory. ARM Windows and native Windows GPU inference are not certified by the x86-64 CLI installation test. No npm package is implied.
