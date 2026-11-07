@@ -1,0 +1,16 @@
+[package]
+name = "shimmy-metal-certification"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+airframe = "=0.4.5"
+shimmytok = "=0.8.5"
+shimmyjinja = "=0.5.0"
+serde_json = "=1.0.151"
+tokio = { version = "=1.53.3", features = ["full"] }
+wgpu = "=27.0.1"
+pollster = "=0.3.0"

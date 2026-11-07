@@ -1,0 +1,15 @@
+# Apple Metal certification for Shimmy 2.6.6 / Airframe 0.4.5
+
+Manual-only postrelease test; no publication, product change or baseline regeneration. The published server is downloaded by exact bundle/binary hashes; existing numerical/state probes compile against official Airframe0.4.5 and the frozen release dependency versions. The extra pollster0.3 is a diagnostic-only helper.
+
+The immutable derived fixture archive contains sanitized test prompts, exact token IDs and previously qualified FP32 logit vectors; no model weights. Reference source llama.cpp b11763/a01ce9ffc64cf370439d6f861a534a65100133ae, original acceptance evidence57745675eaab2767e5beac5bd3d4833b6a2165ec. It is not rebuilt on the runner. Archive SHA25649ef0539592eebdd6c867fa9d168bbfcdc1910b5424c3bd127694e7194d00f53.
+
+Required matrix: Qwen0.6/Llama512 54 comparisons, Qwen0.6 2K32, original Qwen1.7 2032-token off/on/repeat12, Qwen0.6 final-slot4K67/8K33, plus actual Metal compute/HTTP and state/reset/cancel/busy/concurrent/error recovery. Every full vector must be finite, maximum absolute error<=0.1, RMS<=0.03, matching greedy decisions, identical input IDs and deterministic repeats. Counts are repeated positions/modes, not independent prompts. Capture buffers are observations; production code/math is unchanged.
+
+Standard macos-15 is documented M1/3CPU/7GB and free on public repositories. This runner previously exposed Apple Paravirtual Metal; runtime sysctl/system_profiler/actual compute, not its label alone, establish the tested configuration. macos-15-xlarge documents M2 GPU acceleration/5CPU/14GB, paid USD0.102/minute and organization Team/Enterprise eligibility. This personal repository does not imply eligibility; no plan upgrade or paid dispatch is performed. GitHub documents no M4 runner here. M4 stays NOT_RUN and requires an actual M4 Metal environment running these exact contracts. A paravirtual adapter is not a physical M4 or M2 performance certificate.
+
+References: https://docs.github.com/en/actions/reference/runners/github-hosted-runners ; https://docs.github.com/en/actions/reference/runners/larger-runners ; https://docs.github.com/en/billing/reference/actions-runner-pricing . Reviewed2026-11-07.
+
+Local gates before dispatch: cargo check/clippy/fmt with the probe manifest, verify.py --self-test, metal_diagnostic.py --self-test, run.py --fixtures TEMP --self-test, actionlint and fresh checkout. Use CARGO_BUILD_JOBS=2. On native ARM64 macOS, run the selected workflow steps or run.py with --binary/--bins/--fixtures/--output. The existing candidate-platforms.yml workflow ID dispatches this isolated feature control; apple-certification.yml carries the same reproducible workflow. Neither triggers on push.
+
+Artifacts retain hardware, limits, commands, hashes, raw full vectors, logs and per-cell matrix statuses, including failures. Model downloads remain OUTSIDE the upload directory. Stop on the first numerical failure; subsequent cells are NOT_RUN, not inferred PASS. Missing Metal infrastructure is BLOCKED. Full accepted matrix is required before closure. WSL device loss, macOS Paste warning and M2 performance are separate unchanged risks.

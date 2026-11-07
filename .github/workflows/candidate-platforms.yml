@@ -1,0 +1,49 @@
+name: Apple Metal Certification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: apple-metal-certification
+  cancel-in-progress: false
+jobs:
+  metal:
+    if: github.repository == 'Michael-A-Kuykendall/shimmy'
+    runs-on: macos-15
+    timeout-minutes: 75
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v5
+      - name: Native hardware facts
+        run: |
+          test "$(uname -m)" = arm64
+          mkdir -p cert-work/result
+          sw_vers | tee cert-work/result/macos.txt
+          sysctl machdep.cpu.brand_string hw.model hw.memsize hw.ncpu | tee cert-work/result/hardware.txt
+          rustc --version --verbose > cert-work/result/rustc.txt
+      - name: Strict frozen fixture and rejection gates
+        run: |
+          python3 .github/certification/verify.py --self-test
+          python3 .github/certification/metal_diagnostic.py --self-test
+          python3 .github/certification/run.py --fixtures cert-work/fixtures --self-test
+      - name: Compile existing probes against locked published engine
+        run: |
+          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --bins
+          shasum -a 256 .github/certification/probes/target/release/{generation,dense,original,state,metal} > cert-work/result/probe-SHA256SUMS
+          cp .github/certification/probes/Cargo.lock cert-work/result/probe-Cargo.lock
+      - name: Download exact already-published server
+        run: |
+          mkdir -p cert-work/published
+          curl --fail --location --retry 2 --output cert-work/server.tar.gz https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.6/shimmy-macos-arm64.tar.gz
+          echo 'eabba8acf94450242f0b8da221a391a935185b3c3877f1350b1ff7ffec2d4a2e  cert-work/server.tar.gz' | shasum -a 256 -c -
+          tar -xzf cert-work/server.tar.gz -C cert-work/published
+      - name: Execute native Metal compute HTTP full vectors and state contracts
+        run: python3 .github/certification/run.py --fixtures cert-work/fixtures --bins .github/certification/probes/target/release --binary cert-work/published/shimmy --output cert-work/result
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: apple-metal-certification
+          path: cert-work/result/
+          if-no-files-found: error
+          retention-days: 7
