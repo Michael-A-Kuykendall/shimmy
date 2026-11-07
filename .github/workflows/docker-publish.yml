@@ -1,30 +1,17 @@
 name: Docker Publish
-
 on:
   workflow_dispatch:
     inputs:
-      source_ref:
-        description: "Verified release tag (e.g. v2.6.6)"
-        required: true
-      image_tag:
-        description: "Matching versioned image tag"
-        required: true
       publish_images:
-        description: Publish images only after separate human authorization
+        description: Publish only versioned 2.6.6 after BOTH native gates pass; never latest
+        type: boolean
         required: true
         default: false
-        type: boolean
-      push_latest:
-        description: "Also publish latest after both architectures pass"
-        required: true
-        default: false
-        type: boolean
-
 permissions:
   contents: read
-  actions: read
-  packages: write
-
+concurrency:
+  group: versioned-container-2.6.6
+  cancel-in-progress: false
 jobs:
   build:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
@@ -37,68 +24,62 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: arm64
     runs-on: ${{ matrix.os }}
-    env:
-      TAG: ${{ inputs.image_tag }}
-      SOURCE_REF: ${{ inputs.source_ref }}
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.source_ref }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Require matching tested release
-        shell: bash
+      - name: Prepare immutable licensed release binary
+        run: python3 .github/scripts/container_distribution.py prepare --arch ${{ matrix.arch }} --context build-context
+      - name: Build native image without Cargo
+        run: docker build -f deploy/Dockerfile -t shimmy:2.6.6-${{ matrix.arch }} build-context
+      - name: Download exact startup catalog fixture
+        run: curl --fail --location --retry 2 --output Qwen3-0.6B-Q4_K_M.gguf https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/50968a4468ef4233ed78cd7c3de230dd1d61a56b/Qwen3-0.6B-Q4_K_M.gguf
+      - name: Native version architecture licensing and authentication gate
+        run: python3 .github/scripts/container_distribution.py test --arch ${{ matrix.arch }} --image shimmy:2.6.6-${{ matrix.arch }} --model Qwen3-0.6B-Q4_K_M.gguf --output results/${{ matrix.arch }}.json
+      - name: Save exact tested image
         run: |
-          set -euo pipefail
-          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          test "$SOURCE_REF" = "$TAG"
-          python3 -c 'import os,tomllib; assert tomllib.load(open("Cargo.toml","rb"))["package"]["version"] == os.environ["TAG"][1:]'
-          SHA=$(git rev-parse HEAD)
-          COUNT=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow release.yml --commit "$SHA" --limit 30 --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')
-          test "$COUNT" -gt 0
-      - name: Build and smoke native image
-        shell: bash
-        env:
-          ARCH: ${{ matrix.arch }}
-        run: |
-          set -euo pipefail
-          REPO_LC="${GITHUB_REPOSITORY,,}"
-          docker build -f deploy/Dockerfile -t "ghcr.io/$REPO_LC:$TAG-$ARCH" .
-          docker run --rm "ghcr.io/$REPO_LC:$TAG-$ARCH" shimmy --version
-          docker run --rm "ghcr.io/$REPO_LC:$TAG-$ARCH" shimmy --help > /dev/null
-      - name: Publish approved native image
-        if: inputs.publish_images
-        shell: bash
-        env:
-          ARCH: ${{ matrix.arch }}
-        run: |
-          set -euo pipefail
-          REPO_LC="${GITHUB_REPOSITORY,,}"
-          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker push "ghcr.io/$REPO_LC:$TAG-$ARCH"
-
-  manifest:
+          docker save shimmy:2.6.6-${{ matrix.arch }} | gzip -1 > results/image-${{ matrix.arch }}.tar.gz
+          sha256sum results/image-${{ matrix.arch }}.tar.gz > results/image-${{ matrix.arch }}.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: container-${{ matrix.arch }}
+          path: results/*
+          retention-days: 3
+  publish:
     if: inputs.publish_images
     needs: [build]
-    runs-on: ubuntu-latest
-    env:
-      TAG: ${{ inputs.image_tag }}
-      PUSH_LATEST: ${{ inputs.push_latest }}
-      GH_TOKEN: ${{ github.token }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: container-*
+          merge-multiple: true
+          path: results
       - uses: docker/setup-buildx-action@v3
-      - name: Publish multi-platform manifest
+      - name: Publish only tested versioned images and manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          REPO_LC="${GITHUB_REPOSITORY,,}"
-          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker buildx imagetools create --tag "ghcr.io/$REPO_LC:$TAG" \
-            "ghcr.io/$REPO_LC:$TAG-amd64" "ghcr.io/$REPO_LC:$TAG-arm64"
-          docker buildx imagetools inspect "ghcr.io/$REPO_LC:$TAG"
-          if [ "$PUSH_LATEST" = "true" ]; then
-            docker buildx imagetools create --tag "ghcr.io/$REPO_LC:latest" \
-              "ghcr.io/$REPO_LC:$TAG-amd64" "ghcr.io/$REPO_LC:$TAG-arm64"
+          IMAGE=ghcr.io/michael-a-kuykendall/shimmy
+          OLD=$(docker buildx imagetools inspect "$IMAGE:latest" --format '{{.Manifest.Digest}}')
+          test "$OLD" = sha256:16e3762b2d18ff57408a83177a44a933ca8771058aa43a5da2c7115dadae9906
+          if docker buildx imagetools inspect "$IMAGE:2.6.6" >/dev/null 2>&1; then
+            echo 'Version already exists; stop instead of overwriting.' >&2
+            exit 1
           fi
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          for ARCH in amd64 arm64; do
+            sha256sum -c "results/image-$ARCH.sha256"
+            docker load -i "results/image-$ARCH.tar.gz"
+            docker tag "shimmy:2.6.6-$ARCH" "$IMAGE:2.6.6-$ARCH"
+            docker push "$IMAGE:2.6.6-$ARCH"
+          done
+          docker buildx imagetools create --tag "$IMAGE:2.6.6" "$IMAGE:2.6.6-amd64" "$IMAGE:2.6.6-arm64"
+          docker buildx imagetools inspect "$IMAGE:2.6.6"
+          test "$(docker buildx imagetools inspect "$IMAGE:latest" --format '{{.Manifest.Digest}}')" = "$OLD"
