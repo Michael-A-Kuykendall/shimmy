@@ -1,0 +1,23 @@
+name: Package Manager Smoke
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: homebrew-2.6.6-validation
+  cancel-in-progress: false
+jobs:
+  homebrew:
+    if: github.repository == 'Michael-A-Kuykendall/shimmy'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Require ARM64 native host
+        run: test "$(uname -m)" = arm64
+      - name: Real Homebrew install and test with licensing
+        run: python3 .github/scripts/homebrew_distribution.py --source "$GITHUB_WORKSPACE" --output results/macos-arm64.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: homebrew-macos-arm64
+          path: results/macos-arm64.json
+          retention-days: 14
