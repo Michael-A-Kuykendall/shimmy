@@ -46,4 +46,4 @@ jobs:
           name: apple-metal-certification
           path: cert-work/result/
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 1
