@@ -44,6 +44,9 @@ def materials(source,target,output,data,policy):
         for used in row["used_by"]:
             package=used["crate"];key=package["name"]+"@"+package["version"]
             records.setdefault(key,{})[name]=h
+    import tomllib
+    locked=tomllib.loads((source/"Cargo.lock").read_text())
+    checksums={(p["name"],p["version"]):p["checksum"] for p in locked["package"] if p.get("source")==OFFICIAL and p.get("checksum")}
     packages=[];exceptions=[];components={}
     for row in data["crates"]:
         p=row["package"];name=p["name"];version=p["version"];key=name+"@"+version
@@ -85,7 +88,8 @@ def materials(source,target,output,data,policy):
             evidence=policy["observe_notice"];relative=prefix+evidence["path"];files[relative]=emit(relative,download(evidence))
         if name in OWNED:
             assert version==OWNED[name],"Wrong component version";components[name]=version
-        checksum=None
+        checksum=checksums.get((name,version))
+        if p.get("source")==OFFICIAL:assert checksum and len(checksum)==64,"Package absent from official locked graph"
         if (root/".cargo-checksum.json").is_file():checksum=json.loads((root/".cargo-checksum.json").read_text()).get("package")
         packages.append({"name":name,"version":version,"original_declared_license":p.get("license"),"effective_license":row["license"],
                          "authors":p.get("authors",[]),"repository":p.get("repository"),"source":p.get("source"),
