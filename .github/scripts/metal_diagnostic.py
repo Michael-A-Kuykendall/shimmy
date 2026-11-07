@@ -17,12 +17,15 @@ def check(value,answer=False):
     assert u["total_tokens"]==u["prompt_tokens"]+u["completion_tokens"],"Invalid usage"
     content=value["choices"][0]["message"]["content"]
     assert isinstance(content,str) and content.strip() and "<|im" not in content and "\ufffd" not in content,"Invalid generated content"
-    if answer:assert content.strip().strip(".")=="4","Controlled generated arithmetic answer is not4"
+    if answer:
+        import re
+        assert re.sub(r"\s+", "", content).rstrip(".") in {"4","2+2=4"},"Generated arithmetic answer is incorrect"
 def selftest():
     import copy
     good={"object":"chat.completion","usage":{"prompt_tokens":10,"completion_tokens":1,"total_tokens":11},"choices":[{"message":{"content":"4"}}]}
     check(good,True)
-    for label,change in (("zero prompt",lambda v:v["usage"].update(prompt_tokens=0)),("wrong answer",lambda v:v["choices"][0]["message"].update(content="unrelated")),("SSE",lambda v:v.update(object="chat.completion.chunk"))):
+    expression=json.loads(json.dumps(good));expression["choices"][0]["message"]["content"]="2 + 2 = 4.";check(expression,True)
+    for label,change in (("zero prompt",lambda v:v["usage"].update(prompt_tokens=0)),("wrong answer",lambda v:v["choices"][0]["message"].update(content="unrelated")),("wrong arithmetic",lambda v:v["choices"][0]["message"].update(content="2 + 2 = 5")),("SSE",lambda v:v.update(object="chat.completion.chunk"))):
         bad=copy.deepcopy(good);change(bad)
         try:check(bad,True)
         except AssertionError:pass
@@ -89,7 +92,7 @@ def main():
                     if case=="controlled_no_think":q["messages"][0]["content"]+=" /no_think";q["max_tokens"]=64
                     started=time.monotonic();value=request(base,q)
                     result["requests"].append({"case":case,"request":q,"response":value,"elapsed_seconds":time.monotonic()-started})
-                    check(value,case=="controlled_no_think")
+                    check(value,True)
             result["adapter_log"]=log.read_text()
             assert "backend=Metal" in result["adapter_log"],"Inference selected another backend"
     except BaseException as e:
