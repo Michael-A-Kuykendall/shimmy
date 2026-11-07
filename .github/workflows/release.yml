@@ -4,67 +4,109 @@ on:
   workflow_dispatch:
     inputs:
       source_ref:
-        description: Exact human-approved release tag selected as the workflow ref
+        description: Immutable released source tag
         required: true
-        type: string
+        type: choice
+        options: [v2.6.6]
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build (${{ matrix.target }})
+    name: Native (${{ matrix.target }})
+    if: github.repository == 'Michael-A-Kuykendall/shimmy'
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
+            arch: X64
+            asset: shimmy-linux-x86_64
             binary: shimmy
-            artifact: shimmy-linux-x86_64
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-22.04-arm
             target: aarch64-unknown-linux-gnu
+            arch: ARM64
+            asset: shimmy-linux-arm64
             binary: shimmy
-            artifact: shimmy-linux-arm64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            arch: X64
+            asset: shimmy-windows-x86_64.exe
             binary: shimmy.exe
-            artifact: shimmy-windows-x86_64.exe
-          - os: macos-latest
+          - os: macos-15
             target: aarch64-apple-darwin
+            arch: ARM64
+            asset: shimmy-macos-arm64
             binary: shimmy
-            artifact: shimmy-macos-arm64
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: source
     env:
       CARGO_BUILD_JOBS: "2"
+      CARGO_TARGET_DIR: ${{ github.workspace }}/native-target
       SOURCE_REF: ${{ inputs.source_ref }}
+      TARGET: ${{ matrix.target }}
+      EXPECTED_ARCH: ${{ matrix.arch }}
+      ASSET: ${{ matrix.asset }}
+      BINARY: ${{ matrix.binary }}
+      NATIVE_DIST_DIR: ${{ github.workspace }}/native-dist
     steps:
       - uses: actions/checkout@v5
         with:
+          path: control
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
           ref: ${{ inputs.source_ref }}
-      - name: Verify approved source identity
-        shell: bash
+          path: source
+          persist-credentials: false
+      - name: Verify immutable source and control identity
         run: |
           set -euo pipefail
-          test "$SOURCE_REF" = "$GITHUB_REF_NAME"
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          [[ "$SOURCE_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$SOURCE_REF" = "v2.6.6"
+          test "$(git rev-parse HEAD)" = "21c7d28381352e1cafc55e84ba941b48d2b12d3e"
+          test "$(git -C ../control rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$RUNNER_ARCH" = "$EXPECTED_ARCH"
       - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: "1.99.1"
           targets: ${{ matrix.target }}
-      - name: Test default and fast
-        shell: bash
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify native host
         run: |
-          cargo test --locked --target ${{ matrix.target }} -- --test-threads=1
-          cargo test --locked --target ${{ matrix.target }} --no-default-features --features fast -- --test-threads=1
-      - name: Build default release
-        run: cargo build --release --locked --target ${{ matrix.target }}
-      - name: Verify CLI startup
-        shell: bash
+          set -euo pipefail
+          test "$(rustc -vV | awk '/^host:/ {print $2}')" = "$TARGET"
+          python ../control/.github/scripts/native_artifacts.py --self-test
+      - name: Native default and fast unit tests
         run: |
-          ./target/${{ matrix.target }}/release/${{ matrix.binary }} --version
-          ./target/${{ matrix.target }}/release/${{ matrix.binary }} --help > /dev/null
+          set -euo pipefail
+          cargo test --release --locked --target "$TARGET" -- --test-threads=1
+          cargo test --release --locked --target "$TARGET" --no-default-features --features fast -- --test-threads=1
+      - name: Build default Airframe executable and capture compiler facts
+        run: |
+          set -euo pipefail
+          cargo build --release --locked --target "$TARGET" --bin shimmy --message-format=json | tee "$RUNNER_TEMP/native-build.jsonl"
+          cargo metadata --locked --format-version 1 --filter-platform "$TARGET" > "$RUNNER_TEMP/native-metadata.json"
+      - name: Install smoke and retain exact component licenses
+        run: |
+          set -euo pipefail
+          python ../control/.github/scripts/native_artifacts.py \
+            --source . --binary "$CARGO_TARGET_DIR/$TARGET/release/$BINARY" \
+            --target "$TARGET" --asset "$ASSET" \
+            --metadata "$RUNNER_TEMP/native-metadata.json" \
+            --build "$RUNNER_TEMP/native-build.jsonl" \
+            --output "$NATIVE_DIST_DIR" --run-id "$GITHUB_RUN_ID"
+          git diff --exit-code
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: target/${{ matrix.target }}/release/${{ matrix.binary }}
+          name: ${{ matrix.asset }}
+          path: ${{ env.NATIVE_DIST_DIR }}
+          if-no-files-found: error
+          retention-days: 7
