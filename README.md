@@ -41,8 +41,7 @@ shimmy --ctx 512 --kv-quant f32 serve --model-path /path/to/model.gguf --bind 12
 
 Use a verified admitted fixture in place of the path. A working Rust toolchain
 and GPU driver are required. The fast profile does not provide inference.
-A **crates.io-only 2.6.6 release does not create GitHub binary assets, Docker
-images, Homebrew, Scoop or npm packages**. Verify the installed version; an old latest asset is not version 2.6.6.
+The separately verified [native downloads, Homebrew and Scoop installers](docs/BINARY_INSTALL.md) and [versioned GHCR image](README-DOCKER.md) are now available for 2.6.6. A crates.io upload does not create those channels automatically. Docker latest is unchanged; npm is not included. Verify the exact installed version.
 
 See [quickstart](docs/quickstart.md) for model hashes, listing, requests and
 network access. Unavailable translations are not linked as current guides.

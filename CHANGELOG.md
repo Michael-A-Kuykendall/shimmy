@@ -1,6 +1,10 @@
 # Changelog
 
-## 2.6.6 postpublication licensing correction — 2026-11-07
+## 2.6.6 postpublication licensing and distribution — 2026-11-07
+
+- Publish verified native Linux x86-64/ARM64, Windows x86-64 and macOS ARM64 binary bundles with component and third-party licenses, exact checksums and source identities.
+- Add the versioned GHCR 2.6.6 multiarch image with native startup/authentication checks; retain the existing latest tag. Add tested custom Homebrew and Scoop installation paths. No crate republishing or npm release.
+- Execute an Apple Paravirtual Metal compute/Qwen3-0.6B HTTP diagnostic; full-vector Metal/M4 and WSL stability remain uncertified. Preserve the active macOS Paste maintenance warning.
 
 - The existing libfse 0.1.4 archive is additionally licensed under [Apache-2.0](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md), including commercial use, modification and redistribution without separate permission. Original crates, dependency locks and tags remain unchanged; see [stack licensing](LICENSING.md).
 
