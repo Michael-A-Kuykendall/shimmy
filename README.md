@@ -25,12 +25,7 @@ This is a coordinated dense-text correctness, dependency-security and
 documentation release, not a new architecture or performance release.
 See [CHANGELOG](CHANGELOG.md).
 
-**Default dependency licensing:** Shimmy → Airframe → libfse. The default
-build includes libfse 0.1.4 under the FSE Noncommercial Evaluation License.
-Commercial use or embedding of that distribution requires separate permission
-for libfse, as do derivative works under its terms. Shimmy's Apache-2.0 license
-does not waive those restrictions; the complete default distribution is not
-unrestricted Apache-2.0 open source. See [libfse licensing](https://github.com/Michael-A-Kuykendall/airframe/blob/main/crates/libfse/LICENSE).
+**Default dependency licensing:** Shimmy → Airframe → libfse. Shimmy is Apache-2.0; Airframe and airframe-observe are MIT; ShimmyTok is MIT OR Apache-2.0. The [libfse 0.1.4 additional Apache-2.0 grant](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md) permits commercial use, modification, redistribution and incorporation into products without separate commercial permission. The original crates.io archive and metadata remain unchanged. Preserve component and third-party notices; see [stack licensing](LICENSING.md).
 
 ## Install and run
 
@@ -92,10 +87,7 @@ before readiness without eliminating it or guaranteeing stability.
 - [Security](SECURITY.md), [release process](RELEASE_PROCESS.md) and [release gates](RELEASE_GATES_CHECKLIST.md)
 - [Developer guide](DEVELOPERS.md), [contribution policy](CONTRIBUTING.md) and [roadmap](ROADMAP.md)
 
-Shimmy source is Apache-2.0. Airframe runtime is MIT. libfse retains its
-FSE Noncommercial Evaluation License: commercial use, product embedding and
-derivatives require separate permission. Public source availability and
-sponsorship do not waive component/model licenses.
+Shimmy source is Apache-2.0. Airframe runtime and Observe are MIT; ShimmyTok is dual-licensed. libfse 0.1.4 is covered by the [additional Apache-2.0 grant](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md), permitting commercial use without separate permission. Preserve applicable component, dependency and model terms; see [stack licensing](LICENSING.md).
 
 ## Support
 
@@ -114,7 +106,7 @@ Any amount is appreciated. Suggested tiers:
 
 ## License & Philosophy
 
-Shimmy server code: Apache-2.0 — see [LICENSE](LICENSE). Airframe and libfse retain their separate licensing terms; commercial deployments using libfse require separate permission.
+Shimmy server code: Apache-2.0 — see [LICENSE](LICENSE). The default dependency stack permits commercial use under its component terms, including the [libfse additional grant](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md). See [stack licensing](LICENSING.md); original published archives remain unchanged.
 
 **Promise**: This will never become a paid product.
 

@@ -25,8 +25,7 @@ See [release gates](RELEASE_GATES_CHECKLIST.md) and [methodology](docs/METHODOLO
 ## Rights and publication
 
 Shimmy is Apache-2.0; see [LICENSE](LICENSE). Preserve third-party attribution,
-component licenses and patent notices. Airframe's runtime is MIT; libfse has
-separate noncommercial/evaluation and commercial-permission terms.
+component licenses and patent notices. Airframe's runtime is MIT; libfse 0.1.4 has an [additional Apache-2.0 grant](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md) permitting commercial use without separate permission. See [stack licensing](LICENSING.md).
 Approved contributors sign off each commit with git commit --signoff;
 see [DCO](DCO.md). Sign-off does not imply co-maintainer approval or waive rights.
 
