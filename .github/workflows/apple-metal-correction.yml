@@ -79,7 +79,7 @@ jobs:
       - name: Exact Metal embeddings, state and real HTTP gates
         if: inputs.stage == 'qualify-qwen17'
         timeout-minutes: 35
-        run: python3 .github/certification/corrected.py --job qualify --fixtures cert-work/frozen --output cert-work/result/qualify --binary cert-work/server/target/release/shimmy
+        run: python3 .github/certification/corrected.py --job qualify --fixtures cert-work/frozen --output cert-work/result/qualify --binary cert-work/server/target/release/shimmy --binary-hash-file cert-work/result/server-SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: inputs.stage == 'qualify-qwen17'
         with:

@@ -13,12 +13,15 @@ def main():
     p.add_argument("--fixtures",type=pathlib.Path,required=True)
     p.add_argument("--bins",type=pathlib.Path,default=HERE/"probes/target/release")
     p.add_argument("--binary",type=pathlib.Path)
+    p.add_argument("--binary-hash-file",type=pathlib.Path)
     p.add_argument("--local",action="store_true")
     p.add_argument("--timeout-seconds",type=int,default=19500)
     p.add_argument("--self-test",action="store_true")
     a=p.parse_args(); frozen=prepare(a.fixtures)
     if a.self_test:
         assert process_self_test()
+        from metal_diagnostic import selftest as diagnostic_selftest
+        diagnostic_selftest()
         print(json.dumps(dict(status="PASS",negative_controls=falsify(),process_group_timeout="PASS",frozen_jobs=EXPECTED)))
         return
     assert a.job and 1<=a.timeout_seconds<=19500
@@ -31,7 +34,7 @@ def main():
     models=root.parent/"test-models" if a.local else HERE.parents[1]/"cert-work/test-models"
     if not a.local:assert not models.is_relative_to(HERE.parents[1]/"cert-work/result"),"model assets must stay outside uploaded artifacts"
     env={k:v for k,v in os.environ.items() if not k.startswith(("AIRFRAME_","SHIMMY_","WGPU_","MESA_"))}
-    env.update(WGPU_BACKEND="vulkan" if a.local else "metal",SHIMMY_KV_CACHE_DTYPE="f32",AIRFRAME_PREFILL_CHUNK="64")
+    env.update(WGPU_BACKEND="vulkan" if a.local else "metal",SHIMMY_KV_CACHE_DTYPE="f32",AIRFRAME_PREFILL_CHUNK="64",SHIMMY_CERT_MODEL_DIR=str(models))
     if a.local:
         env.update(MESA_D3D12_DEFAULT_ADAPTER_NAME="NVIDIA",VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/dzn_icd.json",WGPU_ALLOW_UNDERLYING_NONCOMPLIANT_ADAPTER="1")
     result=dict(schema="apple.dense.certification.v1",host=host,control_sha=os.environ.get("GITHUB_SHA"),
@@ -76,7 +79,10 @@ def main():
             active="http";assert a.binary and a.binary.is_file()
             result["server_binary_sha256"]=sha(a.binary)
             if not a.local:
-                execute([os.sys.executable,HERE/"metal_diagnostic.py","--binary",a.binary.resolve(),"--probe",bins/"metal","--output",root/"http"],"http-driver",timeout=1200)
+                assert a.binary_hash_file and a.binary_hash_file.is_file(),"Candidate build checksum required"
+                from metal_diagnostic import verified_identity
+                verified_identity(a.binary,a.binary_hash_file,env)
+                execute([os.sys.executable,HERE/"metal_diagnostic.py","--binary",a.binary.resolve(),"--candidate-binary-sha256-file",a.binary_hash_file.resolve(),"--probe",bins/"metal","--output",root/"http"],"http-driver",timeout=1200)
             from server_contract import run as server_contract
             server_contract(a.binary.resolve(),small,root/"http-contract",env,expected_backend="Vulkan" if a.local else "Metal")
             result["tests"][active]=dict(status="PASS",artifact="http-contract/results.json");save()

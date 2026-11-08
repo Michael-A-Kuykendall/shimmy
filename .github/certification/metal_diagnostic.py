@@ -12,6 +12,29 @@ def sha(path):
         for chunk in iter(lambda:f.read(1024*1024),b""):h.update(chunk)
     return h.hexdigest()
 
+def verified_identity(binary, candidate_checksum=None, env=None):
+    env=os.environ if env is None else env
+    if candidate_checksum is None:
+        expected=BINARY
+        identity=dict(source_sha=SOURCE,binary_sha256=expected,native_build_run=42404833070,identity_mode="published-release")
+    else:
+        lines=Path(candidate_checksum).read_text().splitlines()
+        assert len(lines)==1 and len(lines[0].split())==2,"One build checksum required"
+        expected,name=lines[0].split()
+        assert len(expected)==64 and all(c in "0123456789abcdef" for c in expected),"Invalid build checksum"
+        assert Path(name).name=="shimmy","Wrong binary member"
+        assert env.get("CERT_ENGINE_SHA")=="3ae10b682f6b2732823ba685959393192a2492d3","Wrong candidate engine"
+        assert env.get("CERT_ENGINE_TREE")=="708a53ed996e6d47811cf1aeceb98aa25d8455be","Wrong candidate source tree"
+        control=env.get("GITHUB_SHA","")
+        assert len(control)==40 and all(c in "0123456789abcdef" for c in control),"Missing control source"
+        run=int(env.get("GITHUB_RUN_ID","0"));assert run>0,"Missing build run"
+        identity=dict(source_sha=SOURCE,binary_sha256=expected,native_build_run=run,identity_mode="verified-candidate",
+            engine_sha=env["CERT_ENGINE_SHA"],engine_tree=env["CERT_ENGINE_TREE"],control_sha=control,
+            checksum_file_sha256=sha(candidate_checksum))
+    assert sha(binary)==expected,"Wrong verified binary"
+    assert env.get("SHIMMY_CERT_MODEL_DIR"),"Missing external model directory"
+    return identity
+
 def check(value,answer=False):
     assert value["object"]=="chat.completion","Expected JSON completion, not SSE"
     u=value["usage"];assert u["prompt_tokens"]>0 and u["completion_tokens"]>0,"Zero token usage"
@@ -32,7 +55,30 @@ def selftest():
         try:check(bad,True)
         except AssertionError:pass
         else:raise AssertionError("Negative escaped: "+label)
-    print(json.dumps({"result":"PASS","controls":["valid answer","zero prompt rejected","wrong answer rejected","SSE rejected"],"metal":"NOT_RUN"}))
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        binary=Path(tmp)/"shimmy";binary.write_bytes(b"candidate-binary")
+        checksum=Path(tmp)/"SHA256SUMS"
+        good_line=sha(binary)+"  shimmy\n";checksum.write_text(good_line)
+        env=dict(CERT_ENGINE_SHA="3ae10b682f6b2732823ba685959393192a2492d3",
+            CERT_ENGINE_TREE="708a53ed996e6d47811cf1aeceb98aa25d8455be",
+            GITHUB_SHA="a"*40,GITHUB_RUN_ID="1",SHIMMY_CERT_MODEL_DIR=tmp)
+        assert verified_identity(binary,checksum,env)["identity_mode"]=="verified-candidate"
+        rejected=0
+        def reject(check):
+            try:check()
+            except (AssertionError,ValueError):return 1
+            raise AssertionError("Bad candidate identity accepted")
+        rejected+=reject(lambda:verified_identity(binary,None,env))
+        for key,value in (("CERT_ENGINE_SHA","0"*40),("CERT_ENGINE_TREE","0"*40),("GITHUB_SHA","invalid"),("GITHUB_RUN_ID","0"),("SHIMMY_CERT_MODEL_DIR","")):
+            rejected+=reject(lambda:verified_identity(binary,checksum,{**env,key:value}))
+        for line in ("0"*64+"  shimmy\n",sha(binary)+"  wrong-member\n",good_line+good_line,"invalid  shimmy\n"):
+            checksum.write_text(line)
+            rejected+=reject(lambda:verified_identity(binary,checksum,env))
+        checksum.write_text(good_line);binary.write_bytes(b"substituted-binary")
+        rejected+=reject(lambda:verified_identity(binary,checksum,env))
+        assert rejected==11
+    print(json.dumps({"candidate_identity_negatives":rejected,"result":"PASS","controls":["valid answer","zero prompt rejected","wrong answer rejected","SSE rejected"],"metal":"NOT_RUN"}))
 
 def request(base,payload):
     q=urllib.request.Request(base+"/v1/chat/completions",data=json.dumps(payload).encode(),headers={"Content-Type":"application/json"})
@@ -43,11 +89,13 @@ def request(base,payload):
 def main():
     p=argparse.ArgumentParser();p.add_argument("--self-test",action="store_true")
     for name in ("binary","probe","output"):p.add_argument("--"+name,type=Path)
+    p.add_argument("--candidate-binary-sha256-file",type=Path)
     a=p.parse_args()
     if a.self_test:selftest();return
     assert all((a.binary,a.probe,a.output))
+    binary=a.binary.resolve();identity=verified_identity(binary,a.candidate_binary_sha256_file)
     assert platform.system()=="Darwin" and platform.machine().lower() in {"arm64","aarch64"} and os.environ["RUNNER_ARCH"]=="ARM64","A real native Apple runner is required"
-    binary=a.binary.resolve();binary.chmod(0o755);assert sha(binary)==BINARY,"Wrong verified binary"
+    binary.chmod(0o755)
     assert subprocess.check_output([str(binary),"--version"],text=True).strip()=="shimmy 2.6.6"
     out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
     with (out/"system-profiler.json").open("w") as f:subprocess.run(["system_profiler","SPDisplaysDataType","-json"],stdout=f,check=True)
@@ -55,8 +103,7 @@ def main():
         probe=subprocess.run([str(a.probe.resolve())],stdout=subprocess.PIPE,stderr=f,text=True,timeout=180,check=True)
     (out/"probe.json").write_text(probe.stdout)
     facts=json.loads(probe.stdout)
-    result={"run_id":int(os.environ["GITHUB_RUN_ID"]),"source_sha":SOURCE,"binary_sha256":BINARY,
-            "native_build_run":42404833070,"host":{"system":platform.system(),"machine":platform.machine().lower(),"runner_arch":os.environ["RUNNER_ARCH"]},
+    result={"run_id":int(os.environ["GITHUB_RUN_ID"]),**identity,"host":{"system":platform.system(),"machine":platform.machine().lower(),"runner_arch":os.environ["RUNNER_ARCH"]},
             "probe":facts,"model":{"expected_sha256":MODEL,"status":"NOT_RUN"},"requests":[],
             "numerical":{"status":"NOT_RUN","reason":"Build/capability/HTTP checks are not full-vector comparison against a frozen independent reference."},
             "m4_max_certification":"NOT_RUN","m2_performance":"NOT_RUN","adapter_log":""}
