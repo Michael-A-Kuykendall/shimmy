@@ -4,6 +4,7 @@ import argparse,copy,json,math,os,pathlib,platform,subprocess,time
 from run import hardware,model_path
 from verify import sha
 from bounded import validate_embedding
+from process_control import execute as execute_group, self_test as process_self_test
 HERE=pathlib.Path(__file__).resolve().parent
 MODEL="72c5c3cb38fa32d5256e2fe30d03e7a64c6c79e668ad84057e3bd66e250b24fb"
 CASES=[
@@ -12,6 +13,7 @@ CASES=[
  ("wait-after-model","wait","after-model"),("submit-after-kv","submit","after-kv"),
  ("wait-after-kv","wait","after-kv"),("readback-after-model","readback","after-model"),
  ("original-c",None,None)]
+PAIR_CASES=[("small-batch",536870912,"device-ext-pair"),("large-flushed",1282439584,"device-ext-pair-flushed"),("boundary-batch",1073741824,"device-ext-pair"),("boundary-flushed",1073741824,"device-ext-pair-flushed"),("large-retained",1282439584,"device-ext-pair-retained"),("large-batch",1282439584,"device-ext-pair"),("large-flushed-repeat",1282439584,"device-ext-pair-flushed")]
 
 def inspect_capture(data,exit_code):
     assert data["complete"] is True and data["model_sha256"]==MODEL
@@ -28,12 +30,14 @@ def inspect_capture(data,exit_code):
     if passed:validate_embedding(data,contract)
     return "PASS" if passed else "FAIL"
 
-def validate_pairs(data):
+def validate_pairs(data,selected=None):
     assert data["complete"] is True and data["model_sha256"]==MODEL and data["kind"]=="pairs"
     expected={(n,m) for n in [536870912,1073741824,1282439584] for m in ["device-ext-pair","device-ext-pair-flushed"]}
-    assert len(data["results"])==6 and {(r["size"],r["method"]) for r in data["results"]}==expected
+    if selected is not None:expected={selected}
+    assert len(data["results"])==len(expected) and {(r["size"],r["method"]) for r in data["results"]}==expected
     for r in data["results"]:
         assert r["peer_payload_distinct"] is True
+        if r["method"]=="device-ext-pair-retained":assert r["retained_staging_size"]==r["size"] and r["retained_cpu_samples_match"] is True
         groups=[r["samples"],r["peer_samples"]]
         for group in groups:
             assert len(group)==4
@@ -43,6 +47,7 @@ def validate_pairs(data):
     return all(r["pass"] for r in data["results"])
 
 def self_test():
+    assert process_self_test()
     refs=json.loads((HERE/"embedding-row-hashes.json").read_text())["rows"]
     good=dict(complete=True,status="PASS",model_sha256=MODEL,rows=[dict(token_id=r["token_id"],reference_sha256=r["f32_sha256"],actual_sha256=r["f32_sha256"],max_abs=0.0,rms=0.0,**{"pass":True}) for r in refs])
     assert inspect_capture(good,0)=="PASS"
@@ -77,26 +82,38 @@ def main():
     if a.baseline_binary:report["baseline_binary_sha256"]=sha(a.baseline_binary)
     def save():(root/"report.json").write_text(json.dumps(report,indent=2)+"\n")
     save()
-    cases=[("pairs",None,None)] if a.pairs else CASES
+    cases=[(name,None,None) for name,_,_ in PAIR_CASES] if a.pairs else CASES
     if a.baseline_binary and not a.pairs:cases=[("published-baseline",None,None)]+cases
     for name,action,stage in cases:
         folder=root/name;folder.mkdir()
         env=base.copy()
         if action:env.update(AIRFRAME_METAL_LOAD_TRACE_PATH=str(folder/"load-trace.jsonl"),AIRFRAME_METAL_LOAD_ACTION=action,AIRFRAME_METAL_LOAD_STAGE=stage)
-        if a.pairs:env["AIRFRAME_METAL_UPLOAD_VARIANTS"]="pairs"
+        selected=None
+        if a.pairs:
+            _,size,method=next(x for x in PAIR_CASES if x[0]==name)
+            selected=(size,method)
+            env.update(AIRFRAME_METAL_UPLOAD_VARIANTS="pairs",AIRFRAME_METAL_UPLOAD_SIZE=str(size),AIRFRAME_METAL_UPLOAD_METHOD=method)
         command=[str(a.baseline_binary.resolve() if name=="published-baseline" else binary),str(model),str(HERE/"embedding-row-hashes.json"),str(folder/"capture.json")]
         if not a.local:command=["/usr/bin/time","-l"]+command
         start=time.monotonic()
         with (folder/"run.log").open("w") as log:
-            try:result=subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,env=env,timeout=600 if a.pairs else 180);code=result.returncode
-            except subprocess.TimeoutExpired:code=124
+            code=execute_group(command,env,log,120 if a.pairs else 180)
         item=dict(case=name,action=action,stage=stage,command=command,exit=code,elapsed=time.monotonic()-start,log_sha256=sha(folder/"run.log"),status="BLOCKED")
+        if selected:item.update(upload_size=selected[0],upload_method=selected[1])
+        item["timeout_seconds"]=120 if a.pairs else 180
         report["tests"].append(item);save()
+        if code==124 or (a.pairs and code!=0) or not (folder/"capture.json").exists():
+            item["reason"]="process-group timeout" if code==124 else "execution ended without complete capture"
+            if code!=124:item["status"]="FAIL"
+            save()
+            if a.pairs:continue
+            report["stop"]=item["reason"];save()
+            raise AssertionError(report["stop"])
         capture=json.loads((folder/"capture.json").read_text())
         if a.pairs:
             assert code==0
             if not a.local:assert capture["backend"]=="Metal"
-            item["status"]="PASS" if validate_pairs(capture) else "FAIL"
+            item["status"]="PASS" if validate_pairs(capture,selected) else "FAIL"
         else:item["status"]=inspect_capture(capture,code)
         if not a.local and not a.pairs:assert "backend=Metal" in (folder/"run.log").read_text()
         item["capture_sha256"]=sha(folder/"capture.json")
@@ -111,7 +128,7 @@ def main():
     if not a.pairs:
         statuses={r["case"]:r["status"] for r in report["tests"]}
         report["controlled_reproduction"]="PASS" if all(statuses[n]=="FAIL" for n in ("original-a","original-b","original-c")) and statuses["readback-all"]=="PASS" else "UNRESOLVED"
-    report["complete"]=True;save()
+    report["complete"]=all(r["status"]!="BLOCKED" for r in report["tests"]);save()
     if not a.local and not a.pairs:assert report["controlled_reproduction"]=="PASS","same-host failure not established; no cause/fix claim"
 
 if __name__=="__main__":main()

@@ -1,4 +1,4 @@
-name: Metal Same Host Load Order Investigation
+name: Metal Pending Upload Primitive Controls
 on:
   workflow_dispatch:
 permissions:
@@ -10,65 +10,50 @@ jobs:
   metal:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
     runs-on: macos-15
-    timeout-minutes: 75
+    timeout-minutes: 40
     env:
       CARGO_BUILD_JOBS: '2'
     steps:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - name: Verify contracts before execution
+      - name: Test process group deadlines and frozen dependency identities
         run: |
           test "$(uname -m)" = arm64
           python3 .github/certification/ablate.py --self-test
           python3 .github/certification/investigate.py --self-test
       - uses: actions/checkout@v5
         with:
-          repository: Michael-A-Kuykendall/shimmy
-          ref: 9fac0fe1b425cdd35ab559fc7229fe067beb7bd7
-          path: cert-work/baseline-control
-          sparse-checkout: .github/certification/probes
-          persist-credentials: false
-      - name: Compile preserved official registry baseline
-        timeout-minutes: 15
-        run: |
-          CARGO_TARGET_DIR="$GITHUB_WORKSPACE/.github/certification/probes/target" cargo build --release --locked --manifest-path cert-work/baseline-control/.github/certification/probes/Cargo.toml --bin embedding --bin metal
-          mkdir -p cert-work/result
-          cp .github/certification/probes/target/release/embedding cert-work/published-baseline-embedding
-          cp .github/certification/probes/target/release/metal cert-work/native-metal-probe
-          shasum -a 256 cert-work/published-baseline-embedding cert-work/native-metal-probe > cert-work/result/baseline-SHA256SUMS
-          cp cert-work/baseline-control/.github/certification/probes/Cargo.lock cert-work/result/baseline-Cargo.lock
-      - uses: actions/checkout@v5
-        with:
           repository: Michael-A-Kuykendall/airframe
           ref: 366c8aa429116cf305e04c9dde182a842040b4b1
           path: cert-work/engine
           persist-credentials: false
-      - name: Apply only frozen dev observations
+      - name: Apply exact dev-only observation tree
         run: |
           git -C cert-work/engine apply --check "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
           git -C cert-work/engine apply --index "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
-          test "$(git -C cert-work/engine write-tree)" = 2e07c1e9e556656b7920038b4708b9e443eb1244
-      - name: Compile diagnostic binary with unchanged dependency versions
+          test "$(git -C cert-work/engine write-tree)" = 704d3c605c565135bc76cc928afc9e2d7311bb5b
+      - name: Build locked primitive probes
         timeout-minutes: 15
         run: |
           cp .github/certification/probes/diagnostic.Cargo.lock .github/certification/probes/Cargo.lock
-          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --features diagnostic-boundaries --bin embedding --bin upload --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
-          shasum -a 256 .github/certification/probes/target/release/embedding .github/certification/probes/target/release/upload > cert-work/result/diagnostic-SHA256SUMS
-          cp .github/certification/probes/Cargo.lock cert-work/result/diagnostic-Cargo.lock
+          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --features diagnostic-boundaries --bin upload --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
+          mkdir -p cert-work/result
+          shasum -a 256 .github/certification/probes/target/release/{upload,metal} > cert-work/result/probe-SHA256SUMS
+          cp .github/certification/probes/Cargo.lock cert-work/result/probe-Cargo.lock
           rustc --version --verbose > cert-work/result/rustc.txt
-      - name: Establish current actual Metal hardware
+      - name: Actual Metal device compute and host state
         run: |
-          cert-work/native-metal-probe > cert-work/result/compute.json
+          .github/certification/probes/target/release/metal > cert-work/result/compute.json
           python3 -c 'import json,pathlib; p=json.loads(pathlib.Path("cert-work/result/compute.json").read_text()); assert p["compute"]=="PASS" and p["selected"]["backend"]=="Metal" and p["selected"]["device_type"]!="Cpu"; assert p["actual"]==[float(2*i+1) for i in range(32)]'
           system_profiler SPHardwareDataType SPDisplaysDataType SPSoftwareDataType -json > cert-work/result/system-profiler.json
           vm_stat > cert-work/result/memory-before.txt
-      - name: Preserved baseline and same binary load order contrasts
-        timeout-minutes: 35
-        run: python3 .github/certification/ablate.py --baseline-binary cert-work/published-baseline-embedding --output cert-work/result
-      - name: Distinct paired pending initializer controls
-        timeout-minutes: 12
-        run: python3 .github/certification/ablate.py --pairs --output cert-work/result/pairs
+      - name: Independent paired batching and retained memory contrasts
+        timeout-minutes: 18
+        run: python3 .github/certification/ablate.py --pairs --output cert-work/result
+      - name: Assert initialized storage is correct
+        run: |
+          python3 -c 'import json,pathlib; d=json.loads(pathlib.Path("cert-work/result/report.json").read_text()); assert len(d["tests"])==7; assert all(t["status"]=="PASS" for t in d["tests"]),d["tests"]'
       - name: Preserve host memory state
         if: always()
         run: |
@@ -77,7 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: apple-metal-order
+          name: apple-metal-pending
           path: cert-work/result/
           if-no-files-found: error
           retention-days: 1

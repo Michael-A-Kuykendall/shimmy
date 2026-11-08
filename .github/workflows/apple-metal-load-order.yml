@@ -48,7 +48,7 @@ jobs:
         run: |
           git -C cert-work/engine apply --check "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
           git -C cert-work/engine apply --index "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
-          test "$(git -C cert-work/engine write-tree)" = 2e07c1e9e556656b7920038b4708b9e443eb1244
+          test "$(git -C cert-work/engine write-tree)" = 704d3c605c565135bc76cc928afc9e2d7311bb5b
       - name: Compile diagnostic binary with unchanged dependency versions
         timeout-minutes: 15
         run: |
