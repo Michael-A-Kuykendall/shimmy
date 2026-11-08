@@ -27,6 +27,8 @@ def main():
     assert not (root/"matrix.json").exists(),"preserve prior attempt"
     host=hardware() if not a.local else dict(system=platform.system(),machine=platform.machine(),certification="NOT_RUN")
     bins=a.bins.resolve()
+    models=root.parent/"test-models" if a.local else HERE.parents[1]/"cert-work/test-models"
+    if not a.local:assert not models.is_relative_to(HERE.parents[1]/"cert-work/result"),"model assets must stay outside uploaded artifacts"
     env={k:v for k,v in os.environ.items() if not k.startswith(("AIRFRAME_","SHIMMY_","WGPU_","MESA_"))}
     env.update(WGPU_BACKEND="vulkan" if a.local else "metal",SHIMMY_KV_CACHE_DTYPE="f32",AIRFRAME_PREFILL_CHUNK="64")
     if a.local:
@@ -62,11 +64,11 @@ def main():
         else:
             result["tests"]["metal_compute"]=dict(status="NOT_RUN",reason="local NVIDIA qualification is not Metal");save()
         if a.job=="qualify":
-            active="embedding";model=model_path("72c5c3cb38fa32d5256e2fe30d03e7a64c6c79e668ad84057e3bd66e250b24fb",root.parent/"test-models")
+            active="embedding";model=model_path("72c5c3cb38fa32d5256e2fe30d03e7a64c6c79e668ad84057e3bd66e250b24fb",models)
             execute([bins/"embedding",model,HERE/"embedding-row-hashes.json",root/"embedding.json"],"embedding",timeout=420)
             validate_embedding(json.loads((root/"embedding.json").read_text()),json.loads((HERE/"embedding-row-hashes.json").read_text()))
             result["tests"]["embedding"]=dict(status="PASS",rows=33,artifact="embedding.json");save()
-            active="state_reset_cancel";small=model_path(next(iter(MODELS)),root.parent/"test-models")
+            active="state_reset_cancel";small=model_path(next(iter(MODELS)),models)
             log=execute([bins/"state"],"state",{**env,"AIRFRAME_QWEN_FIXTURE":str(small)},900)
             assert "STATE_PROBE_PASS" in log.read_text()
             result["tests"][active]=dict(status="PASS",artifact="state.log");save()
@@ -79,7 +81,7 @@ def main():
             result["tests"][active]=dict(status="PASS",artifact="http-contract/results.json");save()
         else:
             active=a.job;job=next(j for j in frozen["jobs"] if j["name"]==active)
-            model=model_path(job["model_sha256"],root.parent/"test-models")
+            model=model_path(job["model_sha256"],models)
             settings={**env,"SHIMMY_MAX_CTX":str(job["context"]),"AIRFRAME_CERT_LOGITS_ONLY":"1"}
             command=[bins/job["kind"],model,a.fixtures/job["cases"],root/(active+".json")]
             if job["kind"]=="original":
