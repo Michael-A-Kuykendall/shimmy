@@ -10,7 +10,7 @@ jobs:
   metal:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
     runs-on: macos-15
-    timeout-minutes: 35
+    timeout-minutes: 45
     env:
       CARGO_BUILD_JOBS: '2'
     steps:
@@ -31,19 +31,33 @@ jobs:
         run: |
           git -C cert-work/engine apply --check "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
           git -C cert-work/engine apply --index "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
-          test "$(git -C cert-work/engine write-tree)" = fab3d85a30dd638d48669fbf8de20ce9a4eba23a
+          test "$(git -C cert-work/engine write-tree)" = 93505e9640d82fb553d02eec86603e66fce4d446
       - name: Build exact diagnostic source and lock
         timeout-minutes: 20
         run: |
           cp .github/certification/probes/diagnostic.Cargo.lock .github/certification/probes/Cargo.lock
-          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --features diagnostic-boundaries --bin boundaries --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
+          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --features diagnostic-boundaries --bin boundaries --bin upload --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
           mkdir -p cert-work/boundaries
-          shasum -a 256 .github/certification/probes/target/release/boundaries > cert-work/boundaries/probe-SHA256SUMS
+          shasum -a 256 .github/certification/probes/target/release/boundaries .github/certification/probes/target/release/upload > cert-work/boundaries/probe-SHA256SUMS
           cp .github/certification/probes/Cargo.lock cert-work/boundaries/probe-Cargo.lock
           rustc --version --verbose > cert-work/boundaries/rustc.txt
       - name: Observe actual Metal embedding operands and execution boundaries
         timeout-minutes: 12
+        continue-on-error: true
         run: python3 .github/certification/investigate.py
+      - name: Isolate constructor size source lifetime and transfer APIs
+        if: always()
+        timeout-minutes: 12
+        run: python3 .github/certification/investigate.py --upload --output cert-work/boundaries/upload
+      - name: Require both diagnostic outcomes
+        if: always()
+        run: |
+          python3 -c 'import json,pathlib; p=pathlib.Path("cert-work/boundaries"); assert json.loads((p/"report.json").read_text())["tests"]["boundaries"]["status"]=="PASS"; assert json.loads((p/"upload/report.json").read_text())["tests"]["upload"]["status"]=="PASS"'
+      - name: Preserve host memory state
+        if: always()
+        run: |
+          mkdir -p cert-work/boundaries
+          vm_stat > cert-work/boundaries/memory-after.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:

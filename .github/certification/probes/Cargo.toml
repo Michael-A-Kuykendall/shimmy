@@ -12,6 +12,11 @@ name = "boundaries"
 path = "src/bin/boundaries.rs"
 required-features = ["diagnostic-boundaries"]
 
+[[bin]]
+name = "upload"
+path = "src/bin/upload.rs"
+required-features = ["diagnostic-boundaries"]
+
 [workspace]
 
 [dependencies]

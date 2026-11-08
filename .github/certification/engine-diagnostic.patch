@@ -1,5 +1,5 @@
 diff --git a/src/runtime/gpu.rs b/src/runtime/gpu.rs
-index c8e41b2..c4d1a72 100644
+index c8e41b2..089e102 100644
 --- a/src/runtime/gpu.rs
 +++ b/src/runtime/gpu.rs
 @@ -4,6 +4,10 @@
@@ -13,13 +13,62 @@ index c8e41b2..c4d1a72 100644
  use crate::backend::bindless::kv_cache::KVCache;
  use crate::backend::bindless::loader::BindlessModel;
  use crate::backend::bindless::pipeline::BindlessPipeline;
+@@ -429,12 +433,36 @@ impl GpuRuntime {
+         device.push_error_scope(wgpu::ErrorFilter::OutOfMemory);
+         device.push_error_scope(wgpu::ErrorFilter::Validation);
+         let gpu_model = BindlessModel::try_load_prepared(&device, prepared)?;
++        #[cfg(feature = "dev")]
++        metal_diagnostic::upload::capture_load(
++            &device,
++            &queue,
++            &gpu_model,
++            model_path,
++            "after-model",
++        );
+         let pipeline = BindlessPipeline::new(&device);
+         let shift_pipeline = RopeShiftPipeline::new(&device);
++        #[cfg(feature = "dev")]
++        metal_diagnostic::upload::capture_load(
++            &device,
++            &queue,
++            &gpu_model,
++            model_path,
++            "after-pipelines",
++        );
+ 
+         // Dequantize output head (Q6_K → F32)
+         let output_head_f32 =
+             Self::load_output_head_f32(&model_path_str, &gpu_model, &device, &spec)?;
++        #[cfg(feature = "dev")]
++        metal_diagnostic::upload::capture_load(
++            &device,
++            &queue,
++            &gpu_model,
++            model_path,
++            "after-output-head",
++        );
+ 
+         // === END DIAGNOSTIC ===
+ 
+@@ -448,6 +476,8 @@ impl GpuRuntime {
+             max_ctx,
+         )));
+ 
++        #[cfg(feature = "dev")]
++        metal_diagnostic::upload::capture_load(&device, &queue, &gpu_model, model_path, "after-kv");
+         let validation_error = device.pop_error_scope().await;
+         let allocation_error = device.pop_error_scope().await;
+         if let Some(e) = allocation_error {
 diff --git a/src/runtime/metal_diagnostic.rs b/src/runtime/metal_diagnostic.rs
 new file mode 100644
-index 0000000..7963976
+index 0000000..63081fb
 --- /dev/null
 +++ b/src/runtime/metal_diagnostic.rs
-@@ -0,0 +1,317 @@
+@@ -0,0 +1,320 @@
 +//! Dev-only observations of actual production embedding buffers. No math overrides.
++#[path = "metal_upload_diagnostic.rs"]
++pub(super) mod upload;
++
 +use super::GpuRuntime;
 +use crate::backend::bindless::pipeline::DequantAnyParams;
 +use serde_json::{json, Value};
@@ -334,5 +383,196 @@ index 0000000..7963976
 +            "whole_binding":metrics(&whole,expected),"prefix_binding":metrics(&prefix,expected),"read_blob_checkpoint":{"params":reader_params,"bytes_match":reader_bytes==raw},"bounded_binding":metrics(&bounded,expected),
 +            "gpu_copied_row":metrics(&gpu_row,expected),"cpu_uploaded_row":metrics(&cpu_row,expected),"rewrite":rewrite
 +        })
++    }
++}
+diff --git a/src/runtime/metal_upload_diagnostic.rs b/src/runtime/metal_upload_diagnostic.rs
+new file mode 100644
+index 0000000..0f2dcd8
+--- /dev/null
++++ b/src/runtime/metal_upload_diagnostic.rs
+@@ -0,0 +1,185 @@
++//! Isolate mapped initialization from later model-load allocations.
++use super::{read_bytes, GpuRuntime};
++use crate::backend::bindless::loader::BindlessModel;
++use serde_json::{json, Value};
++use std::io::{Read, Seek, SeekFrom, Write};
++use wgpu::util::DeviceExt;
++
++pub(crate) fn capture_load(
++    device: &wgpu::Device,
++    queue: &wgpu::Queue,
++    model: &BindlessModel,
++    path: &std::path::Path,
++    stage: &str,
++) {
++    let Ok(output) = std::env::var("AIRFRAME_METAL_LOAD_TRACE_PATH") else {
++        return;
++    };
++    let Some(tensor) = model.validated().manifest().tensor("token_embd.weight") else {
++        return;
++    };
++    if tensor.ggml_type() != 12 || tensor.row_bytes() != 1152 {
++        return;
++    }
++    let mut file = std::fs::File::open(path).expect("diagnostic model");
++    let mut rows = Vec::new();
++    for token in [11_u32, 151644] {
++        let offset = tensor.absolute_offset() + u64::from(token) * tensor.row_bytes();
++        let (chunk, word) = model.buffer_for_word((offset / 4) as u32);
++        let mut cpu = vec![0; 1152];
++        file.seek(SeekFrom::Start(offset)).unwrap();
++        file.read_exact(&mut cpu).unwrap();
++        let gpu = read_bytes(
++            device,
++            queue,
++            &model.gpu_buffers[chunk],
++            u64::from(word) * 4,
++            1152,
++        );
++        rows.push(json!({"token":token,"byte_offset":offset,"matches":cpu==gpu,"zero_bytes":gpu.iter().filter(|x|**x==0).count()}));
++    }
++    let mut out = std::fs::OpenOptions::new()
++        .create(true)
++        .append(true)
++        .open(output)
++        .expect("diagnostic trace");
++    writeln!(out, "{}", json!({"stage":stage,"rows":rows})).unwrap();
++}
++
++fn samples(size: u64) -> Vec<(u64, u64)> {
++    vec![
++        (0, 256),
++        (261225248, 1152),
++        (435906464, 1152),
++        (size - 256, 256),
++    ]
++}
++
++fn inspect(
++    device: &wgpu::Device,
++    queue: &wgpu::Queue,
++    buffer: &wgpu::Buffer,
++    expected_samples: &[(u64, Vec<u8>)],
++) -> Vec<Value> {
++    expected_samples.iter().map(|(offset,expected)| {
++        let gpu=read_bytes(device,queue,buffer,*offset,expected.len() as u64);
++        json!({"offset":offset,"size":expected.len(),"matches":gpu.as_slice()==expected.as_slice(),"zero_bytes":gpu.iter().filter(|x|**x==0).count(),"cpu_zero_bytes":expected.iter().filter(|x|**x==0).count()})
++    }).collect()
++}
++
++impl GpuRuntime {
++    /// Dev-only sequential allocation/API control; never substitutes inference.
++    pub async fn diagnose_buffer_upload(
++        path: &std::path::Path,
++        output: &std::path::Path,
++    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
++        let file = std::fs::File::open(path)?;
++        let file_len = file.metadata()?.len();
++        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
++            flags: wgpu::InstanceFlags::default().with_env(),
++            ..Default::default()
++        });
++        let adapters = instance.enumerate_adapters(wgpu::Backends::all());
++        let adapter = adapters
++            .iter()
++            .find(|a| a.get_info().device_type == wgpu::DeviceType::DiscreteGpu)
++            .or_else(|| {
++                adapters
++                    .iter()
++                    .find(|a| a.get_info().device_type == wgpu::DeviceType::IntegratedGpu)
++            })
++            .or_else(|| adapters.first())
++            .ok_or("no GPU")?;
++        let actual = adapter.limits();
++        let mut limits = wgpu::Limits::downlevel_defaults();
++        limits.max_storage_buffer_binding_size = actual.max_storage_buffer_binding_size;
++        limits.max_buffer_size = actual.max_buffer_size;
++        limits.max_storage_buffers_per_shader_stage =
++            actual.max_storage_buffers_per_shader_stage.max(14);
++        limits.max_compute_invocations_per_workgroup = 256;
++        let (device, queue) = adapter
++            .request_device(&wgpu::DeviceDescriptor {
++                required_limits: limits,
++                memory_hints: wgpu::MemoryHints::Performance,
++                ..Default::default()
++            })
++            .await?;
++        let usage = wgpu::BufferUsages::STORAGE
++            | wgpu::BufferUsages::COPY_DST
++            | wgpu::BufferUsages::COPY_SRC;
++        let mut results = Vec::new();
++        let info = adapter.get_info();
++        for size in [512 * 1024 * 1024_u64, 1024 * 1024 * 1024, file_len] {
++            assert!(size <= actual.max_buffer_size && size <= file_len);
++            for method in [
++                "device-ext",
++                "device-ext-drop-source",
++                "explicit-mapped",
++                "bounded-queue",
++            ] {
++                // Immutable SHA-pinned fixture, remapped independently for each control.
++                let mut backing = Some(unsafe { memmap2::Mmap::map(&file)? });
++                let bytes = &backing.as_ref().unwrap()[..size as usize];
++                let expected_samples: Vec<_> = samples(size)
++                    .iter()
++                    .map(|(o, n)| (*o, bytes[*o as usize..(o + n) as usize].to_vec()))
++                    .collect();
++                let started = std::time::Instant::now();
++                let mut cpu_mapped_match = None;
++                let buffer = if method.starts_with("device-ext") {
++                    device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
++                        label: Some("Isolated DeviceExt upload"),
++                        contents: bytes,
++                        usage,
++                    })
++                } else {
++                    let mapped = method == "explicit-mapped";
++                    let b = device.create_buffer(&wgpu::BufferDescriptor {
++                        label: Some("Isolated upload control"),
++                        size,
++                        usage,
++                        mapped_at_creation: mapped,
++                    });
++                    if mapped {
++                        let mut view = b.slice(..).get_mapped_range_mut();
++                        view.copy_from_slice(bytes);
++                        cpu_mapped_match = Some(samples(size).iter().all(|(o, n)| {
++                            view[*o as usize..(o + n) as usize]
++                                == bytes[*o as usize..(o + n) as usize]
++                        }));
++                        drop(view);
++                        b.unmap();
++                    } else {
++                        for (chunk, data) in bytes.chunks(16 * 1024 * 1024).enumerate() {
++                            queue.write_buffer(&b, (chunk * 16 * 1024 * 1024) as u64, data);
++                            queue.submit([]);
++                            device.poll(wgpu::PollType::wait_indefinitely())?;
++                        }
++                    }
++                    b
++                };
++                if method == "device-ext-drop-source" {
++                    drop(backing.take());
++                }
++                let values = inspect(&device, &queue, &buffer, &expected_samples);
++                let pass = values.iter().all(|v| v["matches"] == true);
++                results.push(json!({"size":size,"method":method,"source_dropped_before_submit":method=="device-ext-drop-source","cpu_mapped_samples_match":cpu_mapped_match,"samples":values,"pass":pass,"elapsed":started.elapsed().as_secs_f64()}));
++                std::fs::write(
++                    output,
++                    serde_json::to_vec_pretty(
++                        &json!({"complete":false,"adapter":info.name,"backend":format!("{:?}",info.backend),"limits":format!("{:?}",actual),"results":results}),
++                    )?,
++                )?;
++                drop(buffer);
++                device.poll(wgpu::PollType::wait_indefinitely())?;
++            }
++        }
++        std::fs::write(
++            output,
++            serde_json::to_vec_pretty(
++                &json!({"complete":true,"adapter":info.name,"backend":format!("{:?}",info.backend),"limits":format!("{:?}",actual),"results":results}),
++            )?,
++        )?;
++        Ok(())
 +    }
 +}

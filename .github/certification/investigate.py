@@ -4,6 +4,7 @@ import argparse, copy, json, math, os, pathlib, platform, subprocess, time
 from run import hardware, model_path
 from verify import sha
 from verify_boundary_lock import verify_locks
+from verify_upload import validate_upload, validate_load_trace, self_test as upload_self_test
 HERE=pathlib.Path(__file__).resolve().parent
 MODEL="72c5c3cb38fa32d5256e2fe30d03e7a64c6c79e668ad84057e3bd66e250b24fb"
 OPS=("original","after_wait","whole_binding","prefix_binding","bounded_binding","gpu_copied_row","cpu_uploaded_row")
@@ -36,6 +37,7 @@ def validate(data):
 
 def self_test():
     assert verify_locks()
+    assert upload_self_test()==7
     clean=json.loads((HERE/"boundary-clean-fixture.json").read_text())
     assert validate(clean)
     mutations=[
@@ -60,7 +62,7 @@ def self_test():
     print(json.dumps(dict(clean="PASS",rejected=len(mutations),numerical_failure="FAIL")))
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument("--self-test",action="store_true")
+    p=argparse.ArgumentParser();p.add_argument("--self-test",action="store_true");p.add_argument("--upload",action="store_true")
     p.add_argument("--output",type=pathlib.Path,default=pathlib.Path("cert-work/boundaries"))
     a=p.parse_args()
     if a.self_test:return self_test()
@@ -70,10 +72,12 @@ def main():
     report=dict(host=hardware(),control_sha=os.environ["GITHUB_SHA"],run_id=os.environ["GITHUB_RUN_ID"],engine_base="366c8aa429116cf305e04c9dde182a842040b4b1",patch_sha256=sha(HERE/"engine-diagnostic.patch"),M4="NOT_RUN",full_certification="NOT_RUN",tests={})
     record.write_text(json.dumps(report,indent=2)+"\n")
     subprocess.run(["system_profiler","SPHardwareDataType","SPDisplaysDataType","-json"],stdout=(root/"system-profiler.json").open("w"),check=True)
-    model=model_path(MODEL,root.parent/"test-models")
-    command=[HERE/"probes/target/release/boundaries",model,HERE/"embedding-row-hashes.json",root/"boundaries.json"]
+    model=model_path(MODEL,pathlib.Path("cert-work/test-models").resolve())
+    name="upload" if a.upload else "boundaries"
+    command=[HERE/("probes/target/release/"+name),model,HERE/"embedding-row-hashes.json",root/(name+".json")]
     env={k:v for k,v in os.environ.items() if not k.startswith(("AIRFRAME_","SHIMMY_","WGPU_","MESA_"))}
     env.update(WGPU_BACKEND="metal",SHIMMY_KV_CACHE_DTYPE="f32",AIRFRAME_PREFILL_CHUNK="64")
+    if not a.upload:env["AIRFRAME_METAL_LOAD_TRACE_PATH"]=str(root/"load-trace.jsonl")
     start=time.monotonic();code=124;status="BLOCKED"
     try:
         with (root/"boundaries.log").open("w") as log:
@@ -83,11 +87,17 @@ def main():
     report["tests"]["capture"]=dict(status=status,exit=code,command=list(map(str,command)),elapsed=time.monotonic()-start,log_sha256=sha(root/"boundaries.log"))
     record.write_text(json.dumps(report,indent=2)+"\n")
     assert code==0
-    assert "backend=Metal" in (root/"boundaries.log").read_text()
-    data=json.loads((root/"boundaries.json").read_text());numerical=validate(data)
-    report["tests"]["embedding"]=dict(status="PASS" if numerical else "FAIL",rows=2)
+    data=json.loads((root/(name+".json")).read_text())
+    if a.upload:
+        assert data["backend"]=="Metal"
+        numerical=validate_upload(data)
+    else:
+        assert "backend=Metal" in (root/"boundaries.log").read_text()
+        validate_load_trace(root/"load-trace.jsonl")
+        numerical=validate(data)
+    report["tests"][name]=dict(status="PASS" if numerical else "FAIL",rows=12 if a.upload else 2)
     record.write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps(report,indent=2))
-    assert numerical,"original production embedding still FAIL; checkpoints preserved"
+    assert numerical,"original upload/embedding still FAIL; checkpoints preserved"
 
 if __name__=="__main__":main()
