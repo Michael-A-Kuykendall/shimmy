@@ -1,7 +1,8 @@
 """Run the unchanged existing JSON/SSE/usage/stop/cancel assertions against the release."""
 import json, os, pathlib, socket, subprocess, sys, time, urllib.request
 HERE=pathlib.Path(__file__).resolve().parent
-def run(binary,model,out,env):
+def run(binary,model,out,env,expected_backend="Metal"):
+    assert expected_backend in ("Metal","Vulkan")
     out.mkdir(parents=True,exist_ok=True)
     with socket.socket() as sock:sock.bind(("127.0.0.1",0));port=sock.getsockname()[1]
     base="http://127.0.0.1:"+str(port)
@@ -27,7 +28,7 @@ def run(binary,model,out,env):
                 jobs.append(dict(test=name,exit=result.returncode))
                 (out/"results.json").write_text(json.dumps(jobs,indent=2)+"\n")
                 assert result.returncode==0,(name,result.returncode)
-            assert "backend=Metal" in (out/"server.log").read_text()
+            assert ("backend="+expected_backend) in (out/"server.log").read_text()
         finally:
             if process is not None:
                 process.terminate()

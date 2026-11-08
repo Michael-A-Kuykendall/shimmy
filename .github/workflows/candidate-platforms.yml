@@ -30,6 +30,7 @@ jobs:
       - name: Verify frozen gates and native hardware
         run: |
           test "$(uname -m)" = arm64
+          echo "CERT_TEST_DEADLINE=$(( $(date +%s) + 20700 ))" >> "$GITHUB_ENV"
           python3 .github/certification/corrected.py --self-test --fixtures cert-work/frozen --output cert-work/unused
           python3 .github/certification/verify_candidate_lock.py --self-test
           python3 -c 'import sys; sys.path.insert(0,".github/certification"); from verify_boundary_lock import verify_locks; assert verify_locks()'
@@ -79,12 +80,22 @@ jobs:
         if: inputs.stage == 'qualify-qwen17'
         timeout-minutes: 35
         run: python3 .github/certification/corrected.py --job qualify --fixtures cert-work/frozen --output cert-work/result/qualify --binary cert-work/server/target/release/shimmy
+      - uses: actions/upload-artifact@v4
+        if: inputs.stage == 'qualify-qwen17'
+        with:
+          name: apple-metal-correction-qualify-checkpoint
+          path: cert-work/result/qualify/
+          if-no-files-found: error
+          retention-days: 7
       - name: Frozen full-vector numerical shard
         timeout-minutes: 330
         run: |
           stage="$CERT_STAGE"
           if test "$stage" = qualify-qwen17; then stage=qwen17; fi
-          python3 .github/certification/corrected.py --job "$stage" --fixtures cert-work/frozen --output "cert-work/result/$stage"
+          budget=$(( CERT_TEST_DEADLINE - $(date +%s) ))
+          test "$budget" -gt 0
+          if test "$budget" -gt 19500; then budget=19500; fi
+          python3 .github/certification/corrected.py --job "$stage" --fixtures cert-work/frozen --output "cert-work/result/$stage" --timeout-seconds "$budget"
       - name: Preserve host memory state
         if: always()
         run: |

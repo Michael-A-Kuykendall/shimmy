@@ -14,13 +14,14 @@ def main():
     p.add_argument("--bins",type=pathlib.Path,default=HERE/"probes/target/release")
     p.add_argument("--binary",type=pathlib.Path)
     p.add_argument("--local",action="store_true")
+    p.add_argument("--timeout-seconds",type=int,default=19500)
     p.add_argument("--self-test",action="store_true")
     a=p.parse_args(); frozen=prepare(a.fixtures)
     if a.self_test:
         assert process_self_test()
         print(json.dumps(dict(status="PASS",negative_controls=falsify(),process_group_timeout="PASS",frozen_jobs=EXPECTED)))
         return
-    assert a.job
+    assert a.job and 1<=a.timeout_seconds<=19500
     if not a.local:
         assert platform.system()=="Darwin" and platform.machine().lower()=="arm64"
     root=a.output.resolve();root.mkdir(parents=True,exist_ok=True)
@@ -77,7 +78,7 @@ def main():
             if not a.local:
                 execute([os.sys.executable,HERE/"metal_diagnostic.py","--binary",a.binary.resolve(),"--probe",bins/"metal","--output",root/"http"],"http-driver",timeout=1200)
             from server_contract import run as server_contract
-            server_contract(a.binary.resolve(),small,root/"http-contract",env)
+            server_contract(a.binary.resolve(),small,root/"http-contract",env,expected_backend="Vulkan" if a.local else "Metal")
             result["tests"][active]=dict(status="PASS",artifact="http-contract/results.json");save()
         else:
             active=a.job;job=next(j for j in frozen["jobs"] if j["name"]==active)
@@ -87,7 +88,7 @@ def main():
             if job["kind"]=="original":
                 settings.update(AIRFRAME_CAPTURE_POSITION="2031",AIRFRAME_CAPTURE_FULL_LAYER="all",AIRFRAME_CAPTURE_KV_LAYERS="none")
                 command.append(a.fixtures/active/"reference-0")
-            log=execute(command,active,settings,timeout=19500)
+            log=execute(command,active,settings,timeout=min(600,a.timeout_seconds) if a.local else a.timeout_seconds)
             assert ("backend=Vulkan" if a.local else "backend=Metal") in log.read_text()
             capture=json.loads((root/(active+".json")).read_text())
             if job["kind"]=="original":
