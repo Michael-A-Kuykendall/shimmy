@@ -1,0 +1,29 @@
+diff --git a/src/runtime/gpu.rs b/src/runtime/gpu.rs
+index c8e41b2..64233ea 100644
+--- a/src/runtime/gpu.rs
++++ b/src/runtime/gpu.rs
+@@ -429,6 +429,24 @@ impl GpuRuntime {
+         device.push_error_scope(wgpu::ErrorFilter::OutOfMemory);
+         device.push_error_scope(wgpu::ErrorFilter::Validation);
+         let gpu_model = BindlessModel::try_load_prepared(&device, prepared)?;
++        // Metal mapped initializers enqueue transfers until submission. Complete the
++        // model phase before allocating the independently initialized output head:
++        // Apple Paravirtual Metal returned zero storage when both large uploads
++        // shared one pending batch. This is an ordering workaround, not a kernel fix.
++        if adapter.get_info().backend == wgpu::Backend::Metal {
++            let submission = queue.submit([]);
++            device
++                .poll(wgpu::PollType::Wait {
++                    submission_index: Some(submission),
++                    timeout: Some(std::time::Duration::from_secs(120)),
++                })
++                .map_err(
++                    |error| crate::execution::admission::ModelAdmissionError::Device {
++                        code: "gpu_model_upload_failed",
++                        detail: format!("Metal model initialization did not complete: {error}"),
++                    },
++                )?;
++        }
+         let pipeline = BindlessPipeline::new(&device);
+         let shift_pipeline = RopeShiftPipeline::new(&device);
+ 

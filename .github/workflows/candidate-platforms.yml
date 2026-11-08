@@ -1,6 +1,13 @@
-name: Metal Pending Upload Primitive Controls
+name: Metal Model Initialization Correction Certification
 on:
   workflow_dispatch:
+    inputs:
+      stage:
+        description: Exact sequential certification shard
+        required: true
+        default: qualify-qwen17
+        type: choice
+        options: [qualify-qwen17, qwen512, qwen2k, llama512, qwen4k, qwen8k]
 permissions:
   contents: read
 concurrency:
@@ -10,50 +17,74 @@ jobs:
   metal:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
     runs-on: macos-15
-    timeout-minutes: 40
+    timeout-minutes: 360
     env:
       CARGO_BUILD_JOBS: '2'
+      CERT_ENGINE_SHA: 3ae10b682f6b2732823ba685959393192a2492d3
+      CERT_ENGINE_TREE: 708a53ed996e6d47811cf1aeceb98aa25d8455be
+      CERT_STAGE: ${{ inputs.stage }}
     steps:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - name: Test process group deadlines and frozen dependency identities
+      - name: Verify frozen gates and native hardware
         run: |
           test "$(uname -m)" = arm64
-          python3 .github/certification/ablate.py --self-test
-          python3 .github/certification/investigate.py --self-test
+          python3 .github/certification/corrected.py --self-test --fixtures cert-work/frozen --output cert-work/unused
+          python3 .github/certification/verify_candidate_lock.py --self-test
+          python3 -c 'import sys; sys.path.insert(0,".github/certification"); from verify_boundary_lock import verify_locks; assert verify_locks()'
+          mkdir -p cert-work/result
+          system_profiler SPHardwareDataType SPDisplaysDataType SPSoftwareDataType -json > cert-work/result/system-profiler.json
+          vm_stat > cert-work/result/memory-before.txt
+          rustc --version --verbose > cert-work/result/rustc.txt
       - uses: actions/checkout@v5
         with:
           repository: Michael-A-Kuykendall/airframe
           ref: 366c8aa429116cf305e04c9dde182a842040b4b1
           path: cert-work/engine
           persist-credentials: false
-      - name: Apply exact dev-only observation tree
+      - name: Reconstruct exact minimal correction
         run: |
-          git -C cert-work/engine apply --check "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
-          git -C cert-work/engine apply --index "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
-          test "$(git -C cert-work/engine write-tree)" = 704d3c605c565135bc76cc928afc9e2d7311bb5b
-      - name: Build locked primitive probes
-        timeout-minutes: 15
-        run: |
+          git -C cert-work/engine apply --check "$GITHUB_WORKSPACE/.github/certification/engine-correction.patch"
+          git -C cert-work/engine apply --index "$GITHUB_WORKSPACE/.github/certification/engine-correction.patch"
+          test "$(git -C cert-work/engine write-tree)" = "$CERT_ENGINE_TREE"
+          printf '%s\n' "$CERT_ENGINE_SHA" "$CERT_ENGINE_TREE" > cert-work/result/engine-source.txt
           cp .github/certification/probes/diagnostic.Cargo.lock .github/certification/probes/Cargo.lock
-          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --features diagnostic-boundaries --bin upload --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
-          mkdir -p cert-work/result
-          shasum -a 256 .github/certification/probes/target/release/{upload,metal} > cert-work/result/probe-SHA256SUMS
+      - name: Compile exact source numerical and state probes
+        timeout-minutes: 20
+        run: |
+          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --bin metal --bin embedding --bin original --bin dense --bin generation --bin state --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
+          cargo clippy --locked --manifest-path .github/certification/probes/Cargo.toml --all-targets --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" -- -D warnings
+          shasum -a 256 .github/certification/probes/target/release/{metal,embedding,original,dense,generation,state} > cert-work/result/probe-SHA256SUMS
           cp .github/certification/probes/Cargo.lock cert-work/result/probe-Cargo.lock
-          rustc --version --verbose > cert-work/result/rustc.txt
-      - name: Actual Metal device compute and host state
+      - uses: actions/checkout@v5
+        if: inputs.stage == 'qualify-qwen17'
+        with:
+          repository: Michael-A-Kuykendall/shimmy
+          ref: 21c7d28381352e1cafc55e84ba941b48d2b12d3e
+          path: cert-work/server
+          persist-credentials: false
+      - name: Build real default-engine server and verify graph
+        if: inputs.stage == 'qualify-qwen17'
+        timeout-minutes: 20
         run: |
-          .github/certification/probes/target/release/metal > cert-work/result/compute.json
-          python3 -c 'import json,pathlib; p=json.loads(pathlib.Path("cert-work/result/compute.json").read_text()); assert p["compute"]=="PASS" and p["selected"]["backend"]=="Metal" and p["selected"]["device_type"]!="Cpu"; assert p["actual"]==[float(2*i+1) for i in range(32)]'
-          system_profiler SPHardwareDataType SPDisplaysDataType SPSoftwareDataType -json > cert-work/result/system-profiler.json
-          vm_stat > cert-work/result/memory-before.txt
-      - name: Independent paired batching and retained memory contrasts
-        timeout-minutes: 18
-        run: python3 .github/certification/ablate.py --pairs --output cert-work/result
-      - name: Assert initialized storage is correct
+          cp cert-work/server/Cargo.lock cert-work/result/server-baseline.Cargo.lock
+          cargo build --release --manifest-path cert-work/server/Cargo.toml --bin shimmy --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
+          python3 .github/certification/verify_candidate_lock.py --baseline cert-work/result/server-baseline.Cargo.lock --candidate cert-work/server/Cargo.lock
+          cargo metadata --locked --format-version 1 --manifest-path cert-work/server/Cargo.toml --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" > cert-work/result/server-metadata.json
+          cp cert-work/server/Cargo.lock cert-work/result/server-Cargo.lock
+          cert-work/server/target/release/shimmy --version > cert-work/result/server-version.txt
+          shasum -a 256 cert-work/server/target/release/shimmy > cert-work/result/server-SHA256SUMS
+      - name: Exact Metal embeddings, state and real HTTP gates
+        if: inputs.stage == 'qualify-qwen17'
+        timeout-minutes: 35
+        run: python3 .github/certification/corrected.py --job qualify --fixtures cert-work/frozen --output cert-work/result/qualify --binary cert-work/server/target/release/shimmy
+      - name: Frozen full-vector numerical shard
+        timeout-minutes: 330
         run: |
-          python3 -c 'import json,pathlib; d=json.loads(pathlib.Path("cert-work/result/report.json").read_text()); assert len(d["tests"])==7; assert all(t["status"]=="PASS" for t in d["tests"]),d["tests"]'
+          stage="$CERT_STAGE"
+          if test "$stage" = qualify-qwen17; then stage=qwen17; fi
+          python3 .github/certification/corrected.py --job "$stage" --fixtures cert-work/frozen --output "cert-work/result/$stage"
       - name: Preserve host memory state
         if: always()
         run: |
@@ -62,7 +93,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: apple-metal-pending
+          name: apple-metal-correction-${{ inputs.stage }}
           path: cert-work/result/
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
