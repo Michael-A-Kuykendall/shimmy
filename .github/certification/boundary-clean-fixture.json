@@ -1,0 +1,260 @@
+{
+  "complete": true,
+  "model_sha256": "72c5c3cb38fa32d5256e2fe30d03e7a64c6c79e668ad84057e3bd66e250b24fb",
+  "rows": [
+    {
+      "absolute_byte_offset": 261225248,
+      "after_wait": {
+        "finite": true,
+        "first4": [
+          0.03491353988647461,
+          -0.005687236785888672,
+          -0.005687236785888672,
+          -0.04628801345825195
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "bind_offset": 127007488,
+      "bind_size": 1184,
+      "bounded_binding": {
+        "finite": true,
+        "first4": [
+          0.03491353988647461,
+          -0.005687236785888672,
+          -0.005687236785888672,
+          -0.04628801345825195
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "buffer_size": 134217728,
+      "chunk": 1,
+      "chunk_words": 33554432,
+      "count": 2048,
+      "cpu_uploaded_row": {
+        "finite": true,
+        "first4": [
+          0.03491353988647461,
+          -0.005687236785888672,
+          -0.005687236785888672,
+          -0.04628801345825195
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "gpu_copied_row": {
+        "finite": true,
+        "first4": [
+          0.03491353988647461,
+          -0.005687236785888672,
+          -0.005687236785888672,
+          -0.04628801345825195
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "identity": {
+        "bytes_match": true,
+        "reported_array_words": 33554432,
+        "reported_base": 31751880,
+        "reported_count": 288,
+        "sentinel_written": true,
+        "zero_words": 0
+      },
+      "local_byte_offset": 127007520,
+      "original": {
+        "finite": true,
+        "first4": [
+          0.03491353988647461,
+          -0.005687236785888672,
+          -0.005687236785888672,
+          -0.04628801345825195
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "prefix_binding": {
+        "finite": true,
+        "first4": [
+          0.03491353988647461,
+          -0.005687236785888672,
+          -0.005687236785888672,
+          -0.04628801345825195
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "raw_copy_matches": true,
+      "raw_copy_zero_bytes": 1,
+      "raw_cpu_sha256": "f7a965b3e52bc98af8362bbf18550ff1517c7a0c4f8693384381dd621719b188",
+      "read_blob_checkpoint": {
+        "bytes_match": true,
+        "params": [
+          31751880,
+          0,
+          2048,
+          5,
+          33554432
+        ]
+      },
+      "reference_sha256": "8e48d73e497457505589702f9026c9132a935a733a9cfd2709aed9a9da192e20",
+      "rewrite": null,
+      "row_bytes": 1152,
+      "token": 11,
+      "whole_binding": {
+        "finite": true,
+        "first4": [
+          0.03491353988647461,
+          -0.005687236785888672,
+          -0.005687236785888672,
+          -0.04628801345825195
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "workgroups": 32
+    },
+    {
+      "absolute_byte_offset": 435906464,
+      "after_wait": {
+        "finite": true,
+        "first4": [
+          0.0034723281860351562,
+          0.0012273788452148438,
+          0.005717277526855469,
+          0.010207176208496094
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "bind_offset": 33253120,
+      "bind_size": 1312,
+      "bounded_binding": {
+        "finite": true,
+        "first4": [
+          0.0034723281860351562,
+          0.0012273788452148438,
+          0.005717277526855469,
+          0.010207176208496094
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "buffer_size": 134217728,
+      "chunk": 3,
+      "chunk_words": 33554432,
+      "count": 2048,
+      "cpu_uploaded_row": {
+        "finite": true,
+        "first4": [
+          0.0034723281860351562,
+          0.0012273788452148438,
+          0.005717277526855469,
+          0.010207176208496094
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "gpu_copied_row": {
+        "finite": true,
+        "first4": [
+          0.0034723281860351562,
+          0.0012273788452148438,
+          0.005717277526855469,
+          0.010207176208496094
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "identity": {
+        "bytes_match": true,
+        "reported_array_words": 33554432,
+        "reported_base": 8313320,
+        "reported_count": 288,
+        "sentinel_written": true,
+        "zero_words": 0
+      },
+      "local_byte_offset": 33253280,
+      "original": {
+        "finite": true,
+        "first4": [
+          0.0034723281860351562,
+          0.0012273788452148438,
+          0.005717277526855469,
+          0.010207176208496094
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "prefix_binding": {
+        "finite": true,
+        "first4": [
+          0.0034723281860351562,
+          0.0012273788452148438,
+          0.005717277526855469,
+          0.010207176208496094
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "raw_copy_matches": true,
+      "raw_copy_zero_bytes": 1,
+      "raw_cpu_sha256": "ee4209c4ef98fe8b235de79f52f4c1f8c4e37f123982e83398794e54514f4f8c",
+      "read_blob_checkpoint": {
+        "bytes_match": true,
+        "params": [
+          8313320,
+          0,
+          2048,
+          5,
+          33554432
+        ]
+      },
+      "reference_sha256": "202211183d261ac77a1a36e11d893c8aaab0d8d09b3d1289e5b160cc0400a22d",
+      "rewrite": null,
+      "row_bytes": 1152,
+      "token": 151644,
+      "whole_binding": {
+        "finite": true,
+        "first4": [
+          0.0034723281860351562,
+          0.0012273788452148438,
+          0.005717277526855469,
+          0.010207176208496094
+        ],
+        "max_abs": 0.0,
+        "pass": true,
+        "rms": 0.0,
+        "zeros": 0
+      },
+      "workgroups": 32
+    }
+  ]
+}

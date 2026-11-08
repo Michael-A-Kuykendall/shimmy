@@ -1,0 +1,338 @@
+diff --git a/src/runtime/gpu.rs b/src/runtime/gpu.rs
+index c8e41b2..c4d1a72 100644
+--- a/src/runtime/gpu.rs
++++ b/src/runtime/gpu.rs
+@@ -4,6 +4,10 @@
+ //! KV cache, and tokenizer. It exposes `load()` → `GpuSession` → `generate()`.
+ #![allow(clippy::type_complexity)]
+ 
++#[cfg(feature = "dev")]
++#[path = "metal_diagnostic.rs"]
++mod metal_diagnostic;
++
+ use crate::backend::bindless::kv_cache::KVCache;
+ use crate::backend::bindless::loader::BindlessModel;
+ use crate::backend::bindless::pipeline::BindlessPipeline;
+diff --git a/src/runtime/metal_diagnostic.rs b/src/runtime/metal_diagnostic.rs
+new file mode 100644
+index 0000000..7963976
+--- /dev/null
++++ b/src/runtime/metal_diagnostic.rs
+@@ -0,0 +1,317 @@
++//! Dev-only observations of actual production embedding buffers. No math overrides.
++use super::GpuRuntime;
++use crate::backend::bindless::pipeline::DequantAnyParams;
++use serde_json::{json, Value};
++use wgpu::util::DeviceExt;
++
++fn read_bytes(
++    device: &wgpu::Device,
++    queue: &wgpu::Queue,
++    source: &wgpu::Buffer,
++    offset: u64,
++    size: u64,
++) -> Vec<u8> {
++    let staging = device.create_buffer(&wgpu::BufferDescriptor {
++        label: Some("Embedding boundary readback"),
++        size,
++        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
++        mapped_at_creation: false,
++    });
++    let mut encoder = device.create_command_encoder(&Default::default());
++    encoder.copy_buffer_to_buffer(source, offset, &staging, 0, size);
++    queue.submit(Some(encoder.finish()));
++    let slice = staging.slice(..);
++    let (tx, rx) = std::sync::mpsc::channel();
++    slice.map_async(wgpu::MapMode::Read, move |r| tx.send(r).unwrap());
++    device
++        .poll(wgpu::PollType::wait_indefinitely())
++        .expect("diagnostic poll");
++    rx.recv().unwrap().expect("diagnostic map");
++    let result = slice.get_mapped_range().to_vec();
++    staging.unmap();
++    result
++}
++
++fn metrics(actual: &[f32], expected: &[f32]) -> Value {
++    assert_eq!(actual.len(), expected.len());
++    let max_abs = actual
++        .iter()
++        .zip(expected)
++        .map(|(a, b)| f64::from(*a) - f64::from(*b))
++        .map(f64::abs)
++        .fold(0.0, f64::max);
++    let rms = (actual
++        .iter()
++        .zip(expected)
++        .map(|(a, b)| (f64::from(*a) - f64::from(*b)).powi(2))
++        .sum::<f64>()
++        / actual.len() as f64)
++        .sqrt();
++    json!({"max_abs":max_abs,"rms":rms,"finite":actual.iter().all(|x|x.is_finite()),"zeros":actual.iter().filter(|x|**x==0.0).count(),"first4":&actual[..4],"pass":max_abs<=0.00002 && actual.iter().all(|x|x.is_finite())})
++}
++
++impl GpuRuntime {
++    fn diagnostic_dequant(
++        &self,
++        buffer: &wgpu::Buffer,
++        bind_offset: u64,
++        bind_size: Option<std::num::NonZeroU64>,
++        row_word: u32,
++        inspect_words: bool,
++    ) -> Vec<f32> {
++        let params = DequantAnyParams {
++            blob_base_words: row_word,
++            offset_words: 0,
++            formula_index: 5,
++            count: self.spec.n_embd as u32,
++            chunk_words: self.model.chunk_words(),
++        };
++        let uniform = self
++            .device
++            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
++                label: Some("Diagnostic exact dequant params"),
++                contents: bytemuck::bytes_of(&params),
++                usage: wgpu::BufferUsages::UNIFORM,
++            });
++        let sentinel = vec![f32::NAN; self.spec.n_embd];
++        let output = self
++            .device
++            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
++                label: Some("Diagnostic dequant sentinel"),
++                contents: bytemuck::cast_slice(&sentinel),
++                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
++            });
++        let mut entries = vec![
++            wgpu::BindGroupEntry {
++                binding: 0,
++                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
++                    buffer,
++                    offset: bind_offset,
++                    size: bind_size,
++                }),
++            },
++            wgpu::BindGroupEntry {
++                binding: 1,
++                resource: output.as_entire_binding(),
++            },
++            wgpu::BindGroupEntry {
++                binding: 2,
++                resource: uniform.as_entire_binding(),
++            },
++        ];
++        for binding in 10..=16 {
++            entries.push(wgpu::BindGroupEntry {
++                binding,
++                resource: self.model.dummy_buf.as_entire_binding(),
++            });
++        }
++        let group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
++            label: Some("Diagnostic exact production dequant"),
++            layout: &self.pipeline.dequant_any_bind_group_layout,
++            entries: &entries,
++        });
++        let debug_pipeline = inspect_words.then(|| {
++            let mut source = include_str!("../backend/bindless/sh_dequant_any.wgsl").to_owned();
++            source.push_str(&format!(r#"
++@compute @workgroup_size(64)
++fn diagnostic_read_words(@builtin(global_invocation_id) id:vec3<u32>) {{
++ let i=id.x;
++ if (i<10u) {{
++   let fields=array<u32,5>(params.blob_base_words,params.offset_words,params.count,params.formula_index,params.chunk_words);
++   output[i]=f32((fields[i/2u] >> (16u*(i%2u))) & 65535u);
++ }} else if (i<10u+{}u) {{
++   let j=i-10u;
++   output[i]=f32((read_blob(params.blob_base_words+j/2u) >> (16u*(j%2u))) & 65535u);
++ }}
++}}
++"#,self.row_bytes/2));
++            let shader=self.device.create_shader_module(wgpu::ShaderModuleDescriptor{label:Some("Actual read_blob checkpoint"),source:wgpu::ShaderSource::Wgsl(source.into())});
++            let layout=self.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor{label:None,bind_group_layouts:&[&self.pipeline.dequant_any_bind_group_layout],push_constant_ranges:&[]});
++            self.device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor{label:Some("Actual read_blob checkpoint"),layout:Some(&layout),module:&shader,entry_point:Some("diagnostic_read_words"),compilation_options:Default::default(),cache:None})
++        });
++        let mut encoder = self.device.create_command_encoder(&Default::default());
++        {
++            let mut pass = encoder.begin_compute_pass(&Default::default());
++            pass.set_pipeline(
++                debug_pipeline
++                    .as_ref()
++                    .unwrap_or(&self.pipeline.dequant_any_pipeline),
++            );
++            pass.set_bind_group(0, &group, &[]);
++            pass.dispatch_workgroups((self.spec.n_embd as u32).div_ceil(64), 1, 1);
++        }
++        self.queue.submit(Some(encoder.finish()));
++        bytemuck::cast_slice(&read_bytes(
++            &self.device,
++            &self.queue,
++            &output,
++            0,
++            self.spec.n_embd as u64 * 4,
++        ))
++        .to_vec()
++    }
++
++    fn diagnostic_words(&self, buffer: &wgpu::Buffer, row_word: u32, count: u32) -> Vec<u32> {
++        let source = r#"
++struct Params { base:u32, count:u32, unused0:u32, unused1:u32 };
++@group(0) @binding(0) var<storage,read> input:array<u32>;
++@group(0) @binding(1) var<storage,read_write> output:array<u32>;
++@group(0) @binding(2) var<uniform> p:Params;
++@compute @workgroup_size(64)
++fn main(@builtin(global_invocation_id) gid:vec3<u32>) {
++ if (gid.x == 0u) {output[0]=0x1234abcdu;output[1]=arrayLength(&input);output[2]=p.base;output[3]=p.count;}
++ if (gid.x < p.count) {output[gid.x+4u]=input[p.base+gid.x];}
++}"#;
++        let shader = self
++            .device
++            .create_shader_module(wgpu::ShaderModuleDescriptor {
++                label: Some("Raw storage identity"),
++                source: wgpu::ShaderSource::Wgsl(source.into()),
++            });
++        let pipeline = self
++            .device
++            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
++                label: Some("Raw storage identity"),
++                layout: None,
++                module: &shader,
++                entry_point: Some("main"),
++                compilation_options: Default::default(),
++                cache: None,
++            });
++        let uniform = self
++            .device
++            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
++                label: Some("Raw identity params"),
++                contents: bytemuck::cast_slice(&[row_word, count, 0, 0]),
++                usage: wgpu::BufferUsages::UNIFORM,
++            });
++        let initial = vec![0xa5a5a5a5u32; count as usize + 4];
++        let output = self
++            .device
++            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
++                label: Some("Raw identity sentinel"),
++                contents: bytemuck::cast_slice(&initial),
++                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
++            });
++        let group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
++            label: None,
++            layout: &pipeline.get_bind_group_layout(0),
++            entries: &[
++                wgpu::BindGroupEntry {
++                    binding: 0,
++                    resource: buffer.as_entire_binding(),
++                },
++                wgpu::BindGroupEntry {
++                    binding: 1,
++                    resource: output.as_entire_binding(),
++                },
++                wgpu::BindGroupEntry {
++                    binding: 2,
++                    resource: uniform.as_entire_binding(),
++                },
++            ],
++        });
++        let mut encoder = self.device.create_command_encoder(&Default::default());
++        {
++            let mut pass = encoder.begin_compute_pass(&Default::default());
++            pass.set_pipeline(&pipeline);
++            pass.set_bind_group(0, &group, &[]);
++            pass.dispatch_workgroups(count.div_ceil(64), 1, 1);
++        }
++        self.queue.submit(Some(encoder.finish()));
++        bytemuck::cast_slice(&read_bytes(
++            &self.device,
++            &self.queue,
++            &output,
++            0,
++            u64::from(count + 4) * 4,
++        ))
++        .to_vec()
++    }
++
++    /// Dev-only, sequential checkpoint experiment. This API is not an inference route.
++    pub fn diagnose_embedding_storage(&self, token: u32, raw: &[u8], expected: &[f32]) -> Value {
++        assert_eq!(self.embd_quant_type, 12);
++        assert_eq!(raw.len() as u64, self.row_bytes);
++        assert_eq!(expected.len(), self.spec.n_embd);
++        let offset = self.embd_weight_offset + u64::from(token) * self.row_bytes;
++        let (chunk, word) = self.model.buffer_for_word((offset / 4) as u32);
++        let buffer = &self.model.gpu_buffers[chunk];
++        let local = u64::from(word) * 4;
++        assert!(
++            local + raw.len() as u64 <= buffer.size(),
++            "selected row must stay in one resident chunk"
++        );
++        // Observe untouched production computation BEFORE adding copies or waits.
++        let original = self.dequant_token_embd(token);
++        let copied = read_bytes(&self.device, &self.queue, buffer, local, raw.len() as u64);
++        let words = self.diagnostic_words(buffer, word, (raw.len() / 4) as u32);
++        let word_bytes: &[u8] = bytemuck::cast_slice(&words[4..]);
++        let repeated = self.dequant_token_embd(token);
++        let whole = self.diagnostic_dequant(buffer, 0, None, word, false);
++        let prefix = self.diagnostic_dequant(
++            buffer,
++            0,
++            std::num::NonZeroU64::new(local + raw.len() as u64),
++            word,
++            false,
++        );
++        let reader = self.diagnostic_dequant(buffer, 0, None, word, true);
++        let reader_params: Vec<u32> = reader[..10]
++            .chunks_exact(2)
++            .map(|v| (v[0] as u32) | ((v[1] as u32) << 16))
++            .collect();
++        let reader_bytes: Vec<u8> = reader[10..10 + raw.len() / 2]
++            .iter()
++            .flat_map(|x| (*x as u16).to_le_bytes())
++            .collect();
++
++        let alignment = u64::from(self.device.limits().min_storage_buffer_offset_alignment);
++        let aligned = local / alignment * alignment;
++        let span = local - aligned + raw.len() as u64;
++        let bounded = self.diagnostic_dequant(
++            buffer,
++            aligned,
++            std::num::NonZeroU64::new(span),
++            ((local - aligned) / 4) as u32,
++            false,
++        );
++        let row_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
++            label: Some("GPU-copied identical row"),
++            size: raw.len() as u64,
++            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
++            mapped_at_creation: false,
++        });
++        let mut encoder = self.device.create_command_encoder(&Default::default());
++        encoder.copy_buffer_to_buffer(buffer, local, &row_buffer, 0, raw.len() as u64);
++        self.queue.submit(Some(encoder.finish()));
++        let gpu_row = self.diagnostic_dequant(&row_buffer, 0, None, 0, false);
++        let cpu_row = self.pipeline.run_dequant_any_blob(
++            &self.device,
++            &self.queue,
++            raw,
++            0,
++            self.spec.n_embd as u32,
++            self.embd_quant_type,
++        );
++        let mut rewrite = Value::Null;
++        if copied != raw {
++            // Controlled mutation only AFTER the baseline observations.
++            self.queue.write_buffer(buffer, local, raw);
++            self.queue.submit([]);
++            self.device
++                .poll(wgpu::PollType::wait_indefinitely())
++                .expect("rewrite completion");
++            let bytes = read_bytes(&self.device, &self.queue, buffer, local, raw.len() as u64);
++            rewrite = json!({"bytes_match":bytes==raw,"dequant":metrics(&self.dequant_token_embd(token),expected)});
++        }
++        json!({
++            "token":token,"absolute_byte_offset":offset,"chunk":chunk,"local_byte_offset":local,"buffer_size":buffer.size(),"chunk_words":self.model.chunk_words(),"row_bytes":raw.len(),"count":self.spec.n_embd,"workgroups":self.spec.n_embd.div_ceil(64),"bind_offset":aligned,"bind_size":span,
++            "raw_copy_matches":copied==raw,"raw_copy_zero_bytes":copied.iter().filter(|x|**x==0).count(),
++            "identity":{"sentinel_written":words[0]==0x1234abcd,"reported_array_words":words[1],"reported_base":words[2],"reported_count":words[3],"bytes_match":word_bytes==raw,"zero_words":words[4..].iter().filter(|x|**x==0).count()},
++            "original":metrics(&original,expected),"after_wait":metrics(&repeated,expected),
++            "whole_binding":metrics(&whole,expected),"prefix_binding":metrics(&prefix,expected),"read_blob_checkpoint":{"params":reader_params,"bytes_match":reader_bytes==raw},"bounded_binding":metrics(&bounded,expected),
++            "gpu_copied_row":metrics(&gpu_row,expected),"cpu_uploaded_row":metrics(&cpu_row,expected),"rewrite":rewrite
++        })
++    }
++}

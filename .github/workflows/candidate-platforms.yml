@@ -1,4 +1,4 @@
-name: Bounded Apple Metal Operator and State
+name: Metal Embedding Boundary Investigation
 on:
   workflow_dispatch:
 permissions:
@@ -10,41 +10,44 @@ jobs:
   metal:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 35
     env:
       CARGO_BUILD_JOBS: '2'
     steps:
       - uses: actions/checkout@v5
-      - name: Local rejection controls on native host
+        with:
+          persist-credentials: false
+      - name: Validate observational contract and frozen dependency identities
         run: |
           test "$(uname -m)" = arm64
-          python3 .github/certification/bounded.py --self-test
-      - name: Compile exact published-engine probes
+          python3 .github/certification/investigate.py --self-test
+      - uses: actions/checkout@v5
+        with:
+          repository: Michael-A-Kuykendall/airframe
+          ref: 366c8aa429116cf305e04c9dde182a842040b4b1
+          path: cert-work/engine
+          persist-credentials: false
+      - name: Apply only the reviewed dev observation patch
+        run: |
+          git -C cert-work/engine apply --check "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
+          git -C cert-work/engine apply --index "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
+          test "$(git -C cert-work/engine write-tree)" = fab3d85a30dd638d48669fbf8de20ce9a4eba23a
+      - name: Build exact diagnostic source and lock
         timeout-minutes: 20
         run: |
-          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --bin embedding --bin state --bin metal
-          mkdir -p cert-work/bounded
-          shasum -a 256 .github/certification/probes/target/release/{embedding,state,metal} > cert-work/bounded/probe-SHA256SUMS
-          cp .github/certification/probes/Cargo.lock cert-work/bounded/probe-Cargo.lock
-          rustc --version --verbose > cert-work/bounded/rustc.txt
-      - name: Actual Metal compute and hardware
-        run: python3 .github/certification/bounded.py --stage prepare
-      - name: Original 33 consumed embedding operands
+          cp .github/certification/probes/diagnostic.Cargo.lock .github/certification/probes/Cargo.lock
+          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --features diagnostic-boundaries --bin boundaries --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
+          mkdir -p cert-work/boundaries
+          shasum -a 256 .github/certification/probes/target/release/boundaries > cert-work/boundaries/probe-SHA256SUMS
+          cp .github/certification/probes/Cargo.lock cert-work/boundaries/probe-Cargo.lock
+          rustc --version --verbose > cert-work/boundaries/rustc.txt
+      - name: Observe actual Metal embedding operands and execution boundaries
         timeout-minutes: 12
-        continue-on-error: true
-        run: python3 .github/certification/bounded.py --stage embedding
-      - name: Existing reset cancellation concurrent and error recovery contract
-        timeout-minutes: 12
-        if: always()
-        continue-on-error: true
-        run: python3 .github/certification/bounded.py --stage state
-      - name: Assert all bounded evidence
-        if: always()
-        run: python3 .github/certification/bounded.py --stage verify
+        run: python3 .github/certification/investigate.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: apple-metal-bounded
-          path: cert-work/bounded/
+          name: apple-metal-boundaries
+          path: cert-work/boundaries/
           if-no-files-found: error
           retention-days: 1
