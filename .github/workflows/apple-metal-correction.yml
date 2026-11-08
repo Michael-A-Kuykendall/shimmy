@@ -88,13 +88,13 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Frozen full-vector numerical shard
-        timeout-minutes: 330
+        timeout-minutes: 185
         run: |
           stage="$CERT_STAGE"
           if test "$stage" = qualify-qwen17; then stage=qwen17; fi
           budget=$(( CERT_TEST_DEADLINE - $(date +%s) ))
           test "$budget" -gt 0
-          if test "$budget" -gt 19500; then budget=19500; fi
+          if test "$budget" -gt 10800; then budget=10800; fi
           python3 .github/certification/corrected.py --job "$stage" --fixtures cert-work/frozen --output "cert-work/result/$stage" --timeout-seconds "$budget"
       - name: Preserve host memory state
         if: always()

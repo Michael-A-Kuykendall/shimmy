@@ -15,16 +15,19 @@ def main():
     p.add_argument("--binary",type=pathlib.Path)
     p.add_argument("--binary-hash-file",type=pathlib.Path)
     p.add_argument("--local",action="store_true")
-    p.add_argument("--timeout-seconds",type=int,default=19500)
+    p.add_argument("--timeout-seconds",type=int,default=10800)
+    p.add_argument("--stall-seconds",type=int,default=1200)
     p.add_argument("--self-test",action="store_true")
     a=p.parse_args(); frozen=prepare(a.fixtures)
     if a.self_test:
         assert process_self_test()
         from metal_diagnostic import selftest as diagnostic_selftest
         diagnostic_selftest()
+        from live_process import self_test as live_self_test
+        print(json.dumps(live_self_test()))
         print(json.dumps(dict(status="PASS",negative_controls=falsify(),process_group_timeout="PASS",frozen_jobs=EXPECTED)))
         return
-    assert a.job and 1<=a.timeout_seconds<=19500
+    assert a.job and 1<=a.timeout_seconds<=10800 and 1<=a.stall_seconds<=1200
     if not a.local:
         assert platform.system()=="Darwin" and platform.machine().lower()=="arm64"
     root=a.output.resolve();root.mkdir(parents=True,exist_ok=True)
@@ -34,27 +37,32 @@ def main():
     models=root.parent/"test-models" if a.local else HERE.parents[1]/"cert-work/test-models"
     if not a.local:assert not models.is_relative_to(HERE.parents[1]/"cert-work/result"),"model assets must stay outside uploaded artifacts"
     env={k:v for k,v in os.environ.items() if not k.startswith(("AIRFRAME_","SHIMMY_","WGPU_","MESA_"))}
-    env.update(WGPU_BACKEND="vulkan" if a.local else "metal",SHIMMY_KV_CACHE_DTYPE="f32",AIRFRAME_PREFILL_CHUNK="64",SHIMMY_CERT_MODEL_DIR=str(models))
+    env.update(WGPU_BACKEND="vulkan" if a.local else "metal",SHIMMY_KV_CACHE_DTYPE="f32",AIRFRAME_TRACE_PREFILL_CHUNKS="1",SHIMMY_CERT_MODEL_DIR=str(models))
     if a.local:
         env.update(MESA_D3D12_DEFAULT_ADAPTER_NAME="NVIDIA",VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/dzn_icd.json",WGPU_ALLOW_UNDERLYING_NONCOMPLIANT_ADAPTER="1")
     result=dict(schema="apple.dense.certification.v1",host=host,control_sha=os.environ.get("GITHUB_SHA"),
         run_id=int(os.environ.get("GITHUB_RUN_ID","0")),engine_sha=os.environ.get("CERT_ENGINE_SHA"),
         engine_tree=os.environ.get("CERT_ENGINE_TREE"),limits=dict(max_abs=0.1,rms=0.03),
         reference_precision=frozen["reference_precision"],reference_manifest_sha256=sha(a.fixtures/"manifest.json"),
-        lock_sha256=sha(HERE/"probes/Cargo.lock"),m4="NOT_RUN",complete=False,shard=a.job,
+        lock_sha256=sha(HERE/"probes/Cargo.lock"),execution_configuration=dict(runtime_prefill_default=512,qkv_prefill_default=1,shared_chunk_override="UNSET",prefill_progress_trace=True),m4="NOT_RUN",complete=False,shard=a.job,
         tests={name:dict(status="NOT_RUN",reason="outside this shard") for name in (*EXPECTED,"metal_compute","http","state_reset_cancel","embedding")},
         commands=[],files=[])
     def save():
         result["files"]=[dict(path=str(f.relative_to(root)),sha256=sha(f)) for f in sorted(root.rglob("*")) if f.is_file() and f.name!="matrix.json"]
         (root/"matrix.json").write_text(json.dumps(result,indent=2)+"\n")
-    def execute(command,name,settings=env,timeout=900):
+    def execute(command,name,settings=env,timeout=900,live=False):
         log=root/(name+".log");start=time.monotonic()
-        with log.open("w") as output:
-            code=execute_group(list(map(str,command)),settings,output,timeout)
-        result["commands"].append(dict(command=list(map(str,command)),exit=code,elapsed=time.monotonic()-start,
-            timeout_seconds=timeout,log_sha256=sha(log)))
-        if code==124:
-            result["tests"][active]=dict(status="BLOCKED",reason="process-group execution deadline",timeout_seconds=timeout)
+        record={}
+        if live:
+            from live_process import execute as execute_live
+            record=execute_live(command,settings,log,root/(name+"-progress.jsonl"),timeout,a.stall_seconds)
+            code=record["exit"]
+        else:
+            with log.open("w") as output:
+                code=execute_group(list(map(str,command)),settings,output,timeout)
+        result["commands"].append(dict(**record,command=list(map(str,command)),log_sha256=sha(log)) if live else dict(command=list(map(str,command)),exit=code,elapsed=time.monotonic()-start,timeout_seconds=timeout,log_sha256=sha(log)))
+        if code in (124,130):
+            result["tests"][active]=dict(status="BLOCKED",reason=record.get("reason") or "process-group execution deadline",timeout_seconds=timeout)
         assert code==0,(name,code)
         return log
     active="metal_compute";save()
@@ -94,7 +102,7 @@ def main():
             if job["kind"]=="original":
                 settings.update(AIRFRAME_CAPTURE_POSITION="2031",AIRFRAME_CAPTURE_FULL_LAYER="all",AIRFRAME_CAPTURE_KV_LAYERS="none")
                 command.append(a.fixtures/active/"reference-0")
-            log=execute(command,active,settings,timeout=min(600,a.timeout_seconds) if a.local else a.timeout_seconds)
+            log=execute(command,active,settings,timeout=min(600,a.timeout_seconds) if a.local else a.timeout_seconds,live=True)
             assert ("backend=Vulkan" if a.local else "backend=Metal") in log.read_text()
             capture=json.loads((root/(active+".json")).read_text())
             if job["kind"]=="original":
