@@ -387,10 +387,10 @@ index 0000000..63081fb
 +}
 diff --git a/src/runtime/metal_upload_diagnostic.rs b/src/runtime/metal_upload_diagnostic.rs
 new file mode 100644
-index 0000000..0f2dcd8
+index 0000000..4fc7c46
 --- /dev/null
 +++ b/src/runtime/metal_upload_diagnostic.rs
-@@ -0,0 +1,185 @@
+@@ -0,0 +1,268 @@
 +//! Isolate mapped initialization from later model-load allocations.
 +use super::{read_bytes, GpuRuntime};
 +use crate::backend::bindless::loader::BindlessModel;
@@ -408,6 +408,37 @@ index 0000000..0f2dcd8
 +    let Ok(output) = std::env::var("AIRFRAME_METAL_LOAD_TRACE_PATH") else {
 +        return;
 +    };
++    let selected = std::env::var("AIRFRAME_METAL_LOAD_STAGE").unwrap_or_else(|_| "all".into());
++    if selected != "all" && selected != stage {
++        return;
++    }
++    let action = std::env::var("AIRFRAME_METAL_LOAD_ACTION").unwrap_or_else(|_| "readback".into());
++    if action != "readback" {
++        match action.as_str() {
++            "submit" => {
++                queue.submit([]);
++            }
++            "wait" => {
++                queue.submit([]);
++                device
++                    .poll(wgpu::PollType::wait_indefinitely())
++                    .expect("load diagnostic wait");
++            }
++            "poll" => {
++                device
++                    .poll(wgpu::PollType::wait_indefinitely())
++                    .expect("load diagnostic poll");
++            }
++            _ => panic!("invalid load diagnostic action"),
++        }
++        let mut out = std::fs::OpenOptions::new()
++            .create(true)
++            .append(true)
++            .open(output)
++            .expect("diagnostic trace");
++        writeln!(out, "{}", json!({"stage":stage,"action":action})).unwrap();
++        return;
++    }
 +    let Some(tensor) = model.validated().manifest().tensor("token_embd.weight") else {
 +        return;
 +    };
@@ -500,16 +531,25 @@ index 0000000..0f2dcd8
 +        let usage = wgpu::BufferUsages::STORAGE
 +            | wgpu::BufferUsages::COPY_DST
 +            | wgpu::BufferUsages::COPY_SRC;
-+        let mut results = Vec::new();
-+        let info = adapter.get_info();
-+        for size in [512 * 1024 * 1024_u64, 1024 * 1024 * 1024, file_len] {
-+            assert!(size <= actual.max_buffer_size && size <= file_len);
-+            for method in [
++        let pair_mode = std::env::var("AIRFRAME_METAL_UPLOAD_VARIANTS")
++            .ok()
++            .as_deref()
++            == Some("pairs");
++        let methods: &[&str] = if pair_mode {
++            &["device-ext-pair", "device-ext-pair-flushed"]
++        } else {
++            &[
 +                "device-ext",
 +                "device-ext-drop-source",
 +                "explicit-mapped",
 +                "bounded-queue",
-+            ] {
++            ]
++        };
++        let mut results = Vec::new();
++        let info = adapter.get_info();
++        for size in [512 * 1024 * 1024_u64, 1024 * 1024 * 1024, file_len] {
++            assert!(size <= actual.max_buffer_size && size <= file_len);
++            for &method in methods {
 +                // Immutable SHA-pinned fixture, remapped independently for each control.
 +                let mut backing = Some(unsafe { memmap2::Mmap::map(&file)? });
 +                let bytes = &backing.as_ref().unwrap()[..size as usize];
@@ -554,15 +594,58 @@ index 0000000..0f2dcd8
 +                if method == "device-ext-drop-source" {
 +                    drop(backing.take());
 +                }
++                let mut peer_backing = if pair_mode {
++                    Some(unsafe { memmap2::MmapOptions::new().map_copy(&file)? })
++                } else {
++                    None
++                };
++                let peer_expected = if let Some(data) = peer_backing.as_mut() {
++                    for (offset, length) in samples(size) {
++                        for j in 0..length {
++                            data[(offset + j) as usize] = ((j % 251) as u8) ^ 0xa7;
++                        }
++                    }
++                    Some(
++                        samples(size)
++                            .iter()
++                            .map(|(o, n)| (*o, data[*o as usize..(o + n) as usize].to_vec()))
++                            .collect::<Vec<_>>(),
++                    )
++                } else {
++                    None
++                };
++                let peer = if method.starts_with("device-ext-pair") {
++                    if method.ends_with("flushed") {
++                        queue.submit([]);
++                        device.poll(wgpu::PollType::wait_indefinitely())?;
++                    }
++                    Some(
++                        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
++                            label: Some("Second pending initialized buffer"),
++                            contents: &peer_backing.as_ref().unwrap()[..size as usize],
++                            usage,
++                        }),
++                    )
++                } else {
++                    None
++                };
 +                let values = inspect(&device, &queue, &buffer, &expected_samples);
-+                let pass = values.iter().all(|v| v["matches"] == true);
-+                results.push(json!({"size":size,"method":method,"source_dropped_before_submit":method=="device-ext-drop-source","cpu_mapped_samples_match":cpu_mapped_match,"samples":values,"pass":pass,"elapsed":started.elapsed().as_secs_f64()}));
++                let peer_samples = peer
++                    .as_ref()
++                    .map(|b| inspect(&device, &queue, b, peer_expected.as_ref().unwrap()));
++
++                let pass = values.iter().all(|v| v["matches"] == true)
++                    && peer_samples
++                        .as_ref()
++                        .is_none_or(|s| s.iter().all(|v| v["matches"] == true));
++                results.push(json!({"size":size,"method":method,"source_dropped_before_submit":method=="device-ext-drop-source","cpu_mapped_samples_match":cpu_mapped_match,"samples":values,"peer_samples":peer_samples,"peer_payload_distinct":pair_mode,"pass":pass,"elapsed":started.elapsed().as_secs_f64()}));
 +                std::fs::write(
 +                    output,
 +                    serde_json::to_vec_pretty(
-+                        &json!({"complete":false,"adapter":info.name,"backend":format!("{:?}",info.backend),"limits":format!("{:?}",actual),"results":results}),
++                        &json!({"kind":if pair_mode{"pairs"}else{"single"},"complete":false,"adapter":info.name,"backend":format!("{:?}",info.backend),"limits":format!("{:?}",actual),"results":results}),
 +                    )?,
 +                )?;
++                drop(peer);
 +                drop(buffer);
 +                device.poll(wgpu::PollType::wait_indefinitely())?;
 +            }
@@ -570,7 +653,7 @@ index 0000000..0f2dcd8
 +        std::fs::write(
 +            output,
 +            serde_json::to_vec_pretty(
-+                &json!({"complete":true,"adapter":info.name,"backend":format!("{:?}",info.backend),"limits":format!("{:?}",actual),"results":results}),
++                &json!({"kind":if pair_mode{"pairs"}else{"single"},"complete":true,"adapter":info.name,"backend":format!("{:?}",info.backend),"limits":format!("{:?}",actual),"results":results}),
 +            )?,
 +        )?;
 +        Ok(())

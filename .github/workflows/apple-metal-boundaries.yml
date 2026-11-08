@@ -31,7 +31,7 @@ jobs:
         run: |
           git -C cert-work/engine apply --check "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
           git -C cert-work/engine apply --index "$GITHUB_WORKSPACE/.github/certification/engine-diagnostic.patch"
-          test "$(git -C cert-work/engine write-tree)" = 93505e9640d82fb553d02eec86603e66fce4d446
+          test "$(git -C cert-work/engine write-tree)" = 2e07c1e9e556656b7920038b4708b9e443eb1244
       - name: Build exact diagnostic source and lock
         timeout-minutes: 20
         run: |
