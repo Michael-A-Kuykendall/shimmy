@@ -80,9 +80,13 @@ jobs:
               path=root/name/"result.json"
               results[name]=json.loads(path.read_text()) if path.is_file() else {"status":"NOT_RUN"}
           low,baseline=results.values()
-          supported=(low["status"]=="PASS" and baseline["status"]=="BLOCKED"
+          matched=all(low.get(k)==baseline.get(k) for k in
+              ("host","source_control","engine_sha","engine_tree","model_sha256","limits","reference_precision","minimal_case_sha256"))
+          supported=(matched and low["status"]=="PASS" and baseline["status"]=="BLOCKED"
+              and low.get("optional_dense_head")=="SKIPPED_DIAGNOSTIC"
+              and baseline.get("optional_dense_head")=="BASELINE"
               and baseline.get("execution",{}).get("reason")=="operation-timeout"
-              and baseline["execution"]["last_boundary"]["operation"].startswith("device.poll:"))
+              and baseline["execution"]["last_boundary"]["operation"].startswith("device.poll:layer-"))
           report=dict(hypothesis="SUPPORTED" if supported else "UNRESOLVED_OR_REJECTED",
               tests={k:v["status"] for k,v in results.items()},full_certification="INCOMPLETE",M4="NOT_RUN")
           (root/"allocation-control.json").write_text(json.dumps(report,indent=2))
