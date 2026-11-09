@@ -178,7 +178,7 @@ index 07e725f..5d75888 100644
              p.record_wait(start);
          }
 diff --git a/src/runtime/gpu.rs b/src/runtime/gpu.rs
-index c8e41b2..19c5f37 100644
+index c8e41b2..5b2636b 100644
 --- a/src/runtime/gpu.rs
 +++ b/src/runtime/gpu.rs
 @@ -428,17 +428,47 @@ impl GpuRuntime {
@@ -246,3 +246,18 @@ index c8e41b2..19c5f37 100644
          let embd_weight_offset = gpu_model
              .metadata
              .get_tensor_offset("token_embd.weight")
+@@ -714,6 +747,14 @@ impl GpuRuntime {
+             .ok()
+             .and_then(|s| s.parse().ok())
+             .unwrap_or(512);
++        let prefill_chunk =
++            if std::env::var("AIRFRAME_DIAGNOSTIC_BOUNDARIES").as_deref() == Ok("1")
++                && std::env::var("AIRFRAME_DIAGNOSTIC_BOUNDED_PREFILL").as_deref() == Ok("1")
++            {
++                prefill_chunk.min(64)
++            } else {
++                prefill_chunk
++            };
+         if let Some(profile) = &profile_handle { profile.set_prefill_chunk(prefill_chunk); }
+         let temp = params.temperature;
+         let top_p_val = params.top_p;

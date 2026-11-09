@@ -5,14 +5,35 @@ from run import HERE,prepare,model_path,hardware
 from verify import metric,sha
 from live_process import execute,self_test
 
+def validate_prefill_trace(text,record):
+    import re
+    starts=[tuple(map(int,m)) for m in re.findall(r"\[PREFILL\] chunk=(\d+) tokens=(\d+) current_pos=(\d+) seq_len=(\d+)",text)]
+    assert starts==[(0,64,0,64),(1,64,64,128),(2,64,128,192),(3,64,192,256),(4,52,256,308)],"outer chunk policy ignored or positions changed"
+    assert record["completed_chunks"]==5
+    return True
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--self-test",action="store_true")
+    parser.add_argument("--bounded-prefill",action="store_true")
     parser.add_argument("--fixtures",type=pathlib.Path,default=pathlib.Path("cert-work/frozen"))
     parser.add_argument("--output",type=pathlib.Path,default=pathlib.Path("cert-work/result/llama-stall"))
     args=parser.parse_args()
     if args.self_test:
-        print(json.dumps(self_test()));return
+        report=self_test()
+        text="\n".join(f"[PREFILL] chunk={i} tokens={n} current_pos={p} seq_len={q}" for i,n,p,q in
+            [(0,64,0,64),(1,64,64,128),(2,64,128,192),(3,64,192,256),(4,52,256,308)])
+        assert validate_prefill_trace(text,dict(completed_chunks=5))
+        for bad,record in [
+            ("[PREFILL] chunk=0 tokens=308 current_pos=0 seq_len=308",dict(completed_chunks=1)),
+            ("",dict(completed_chunks=5)),
+            (text.replace("current_pos=64","current_pos=0"),dict(completed_chunks=5)),
+            (text,dict(completed_chunks=4))]:
+            try:validate_prefill_trace(bad,record)
+            except AssertionError:pass
+            else:raise AssertionError("unsafe dispatch trace accepted")
+        report["prefill_policy_negative_controls"]=4
+        print(json.dumps(report));return
     assert platform.system()=="Darwin" and platform.machine()=="arm64"
     frozen=prepare(args.fixtures)
     job=next(j for j in frozen["jobs"] if j["name"]=="llama512")
@@ -27,6 +48,7 @@ def main():
         engine_sha=os.environ.get("CERT_ENGINE_SHA"),engine_tree=os.environ.get("CERT_ENGINE_TREE"),
         original_case_sha256=sha(args.fixtures/job["cases"]),minimal_case_sha256=sha(cases),
         model_sha256=job["model_sha256"],optional_dense_head="BASELINE",
+        runtime_prefill_limit=64 if args.bounded_prefill else 512,qkv_microbatch=1,
         limits=dict(max_abs=.1,rms=.03),
         reference_precision=job["reference_precision"],per_operation_timeout_seconds=180,wall_timeout_seconds=1200)
     try:
@@ -38,6 +60,7 @@ def main():
         env={k:v for k,v in os.environ.items() if not k.startswith(("AIRFRAME_","SHIMMY_","WGPU_","MESA_"))}
         env.update(WGPU_BACKEND="metal",SHIMMY_KV_CACHE_DTYPE="f32",SHIMMY_MAX_CTX="512",
             AIRFRAME_CERT_LOGITS_ONLY="1",AIRFRAME_TRACE_PREFILL_CHUNKS="1",AIRFRAME_DIAGNOSTIC_BOUNDARIES="1")
+        if args.bounded_prefill:env["AIRFRAME_DIAGNOSTIC_BOUNDED_PREFILL"]="1"
         samples=[]
         def sample(pid,operation):
             import subprocess
@@ -63,6 +86,8 @@ def main():
             result.update(status="FAIL" if record["reason"]=="native-command-error" else "BLOCKED",
                 reason=record["reason"] or "process failed",full_vector_comparison="NOT_RUN")
             raise RuntimeError("minimal Llama did not complete; inspect last_boundary/active_operations")
+        if args.bounded_prefill:
+            validate_prefill_trace((root/"diagnostic.log").read_text(),record)
         assert "backend=Metal" in (root/"diagnostic.log").read_text(),"inference did not select Metal"
         capture=json.loads((root/"capture.json").read_text())
         import struct

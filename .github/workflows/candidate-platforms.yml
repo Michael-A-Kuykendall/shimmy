@@ -20,8 +20,8 @@ jobs:
     timeout-minutes: 70
     env:
       CARGO_BUILD_JOBS: '2'
-      CERT_ENGINE_SHA: e7b5bdb8c6f700d37dbff4a710c9f39ffd6604b9
-      CERT_ENGINE_TREE: d58dcac1a4187318c9a388e97492bd5ee35bf997
+      CERT_ENGINE_SHA: cd497aee69946f24d1e53f0efafd948f7034ed2d
+      CERT_ENGINE_TREE: 8835dd12af5a16bc6f14ff9455e24be7d407ef82
     steps:
       - uses: actions/checkout@v5
         with:
@@ -75,7 +75,7 @@ jobs:
         run: .github/certification/probes/target/release/metal > cert-work/result/compute.json
       - name: Original Llama prefill with raw Metal status and error observation
         timeout-minutes: 22
-        run: python3 .github/certification/llama_stall.py --output cert-work/result/hal-status
+        run: python3 .github/certification/llama_stall.py --bounded-prefill --output cert-work/result/hal-status
       - name: Preserve resource state
         if: always()
         run: |
