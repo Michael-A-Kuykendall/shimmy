@@ -53,10 +53,12 @@ jobs:
           tar -xzf cert-work/hal.crate -C cert-work
           git -C cert-work/wgpu-hal-27.0.4 init
           echo '5ff22c78a8ef905a2c265818bdb63e522ec6622becc20f1eee01adf8f0a6f77f  cert-work/wgpu-hal-27.0.4/src/metal/device.rs' | shasum -a 256 --check
+          echo '82d7e8b96ba04fab5b42722574e9f081def9e50c92dcc7d554d8111b9d0aa2a1  cert-work/wgpu-hal-27.0.4/src/metal/mod.rs' | shasum -a 256 --check
           git -C cert-work/wgpu-hal-27.0.4 apply --check "$GITHUB_WORKSPACE/.github/certification/metal-wait-status.patch"
           git -C cert-work/wgpu-hal-27.0.4 apply "$GITHUB_WORKSPACE/.github/certification/metal-wait-status.patch"
           echo 'c886a515dec58c7b9d3fcc63ee60111dd644b1c179d1adad3b09e10230384841  cert-work/wgpu-hal-27.0.4/src/metal/device.rs' | shasum -a 256 --check
-          shasum -a 256 cert-work/hal.crate cert-work/wgpu-hal-27.0.4/src/metal/device.rs > cert-work/result/hal-source-SHA256SUMS
+          echo '661c7ec4f4db908e7f5a93d54fe4c5df53bfb8c551a30c84505122bd515fef57  cert-work/wgpu-hal-27.0.4/src/metal/mod.rs' | shasum -a 256 --check
+          shasum -a 256 cert-work/hal.crate cert-work/wgpu-hal-27.0.4/src/metal/device.rs cert-work/wgpu-hal-27.0.4/src/metal/mod.rs > cert-work/result/hal-source-SHA256SUMS
           cp .github/certification/probes/metal-status.Cargo.lock .github/certification/probes/Cargo.lock
           python3 .github/certification/verify_metal_status_lock.py --candidate .github/certification/probes/Cargo.lock
       - name: Compile and check exact diagnostic

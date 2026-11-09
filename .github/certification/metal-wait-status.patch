@@ -43,3 +43,79 @@ index 9f994e6..601a6fb 100644
              if let MTLCommandBufferStatus::Completed = cmd_buf.status() {
                  return Ok(true);
              }
+diff --git a/src/metal/mod.rs b/src/metal/mod.rs
+index 00223b2..2cf7514 100644
+--- a/src/metal/mod.rs
++++ b/src/metal/mod.rs
+@@ -417,6 +417,41 @@ impl core::borrow::Borrow<dyn crate::DynTexture> for SurfaceTexture {
+ unsafe impl Send for SurfaceTexture {}
+ unsafe impl Sync for SurfaceTexture {}
+ 
++fn diagnostic_completed_command(
++    command: &metal::CommandBufferRef,
++    signal: u64,
++    index: usize,
++    total: usize,
++) {
++    use metal::foreign_types::ForeignTypeRef;
++    use objc::{msg_send, sel, sel_impl};
++    let status = command.status();
++    if status == metal::MTLCommandBufferStatus::Error {
++        let raw = command.as_ptr() as *mut objc::runtime::Object;
++        let error: *mut objc::runtime::Object = unsafe { msg_send![raw, error] };
++        if !error.is_null() {
++            let code: isize = unsafe { msg_send![error, code] };
++            let description: *mut objc::runtime::Object = unsafe { msg_send![error, description] };
++            if !description.is_null() {
++                let text: *const core::ffi::c_char = unsafe { msg_send![description, UTF8String] };
++                if !text.is_null() {
++                    std::eprintln!(
++                        "METAL_COMMAND_ERROR fence={signal} index={index} total={total} code={code} description={}",
++                        unsafe { std::ffi::CStr::from_ptr(text) }.to_string_lossy()
++                    );
++                }
++            }
++        } else {
++            std::eprintln!(
++                "METAL_COMMAND_ERROR fence={signal} index={index} total={total} missingNSError"
++            );
++        }
++    }
++    std::eprintln!(
++        "METAL_NATIVE_COMPLETION fence={signal} index={index} total={total} status={status:?}"
++    );
++}
++
+ impl crate::Queue for Queue {
+     type A = Api;
+ 
+@@ -461,11 +496,28 @@ impl crate::Queue for Queue {
+                 }
+             };
+ 
+-            for cmd_buffer in command_buffers {
++            let total = command_buffers.len();
++            for (index, cmd_buffer) in command_buffers.iter().enumerate() {
++                let observation =
++                    block::ConcreteBlock::new(move |raw: &metal::CommandBufferRef| {
++                        objc::rc::autoreleasepool(|| {
++                            diagnostic_completed_command(raw, signal_value, index, total);
++                        });
++                    })
++                    .copy();
++                cmd_buffer.raw.add_completed_handler(&observation);
+                 cmd_buffer.raw.commit();
+             }
+ 
+             if let Some(raw) = extra_command_buffer {
++                let observation =
++                    block::ConcreteBlock::new(move |command: &metal::CommandBufferRef| {
++                        objc::rc::autoreleasepool(|| {
++                            diagnostic_completed_command(command, signal_value, 0, 0);
++                        });
++                    })
++                    .copy();
++                raw.add_completed_handler(&observation);
+                 raw.commit();
+             }
+         });

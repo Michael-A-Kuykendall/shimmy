@@ -23,7 +23,7 @@ class Progress:
             return True
         return False
 
-def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartbeat=30,echo=True,operation_timeout=0,sampler=None,sample_after=30):
+def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartbeat=30,echo=True,operation_timeout=0,sampler=None,sample_after=30,stop_on_native_error=False):
     assert timeout>0 and stall_timeout>0 and heartbeat>0
     log_path=pathlib.Path(log_path);progress_path=pathlib.Path(progress_path)
     child=subprocess.Popen(list(map(str,command)),stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
@@ -82,6 +82,8 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
                 elif line:
                     log.write(line);log.flush()
                     if echo:print(line,end="",flush=True)
+                    if stop_on_native_error and line.startswith("METAL_COMMAND_ERROR "):
+                        reason="native-command-error";kill();break
                     if operation_timeout and line.startswith("METAL_BOUNDARY "):
                         _,timestamp,edge,operation=line.strip().split(" ",3)
                         assert timestamp.isdigit() and edge in ("enter","exit","point"),"invalid operation boundary"
@@ -208,6 +210,11 @@ def self_test():
             os.environ.copy(),root/"sample.log",root/"sample.jsonl",3,2,.05,False,operation_timeout=.3,sampler=sample_failure,sample_after=.05)
         assert len(calls)==1 and calls[0][1]=="device.poll:stuck"
         assert sampled_result["reason"]=="operation-timeout" and sampled_result["sample_errors"]==["sample unavailable"]
-    return dict(clean="PASS",negative_controls=13,actual_Metal="NOT_RUN")
+        native=execute([sys.executable,"-u","-c","import time;print('METAL_COMMAND_ERROR fence=1 index=0 total=1 code=3 synthetic',flush=True);time.sleep(5)"],
+            os.environ.copy(),root/"native.log",root/"native.jsonl",3,2,.05,False,stop_on_native_error=True)
+        assert native["exit"]!=0 and native["reason"]=="native-command-error"
+        assert "code=3 synthetic" in (root/"native.log").read_text()
+        assert native["cleanup"][-1]["reaped"]
+    return dict(clean="PASS",negative_controls=14,actual_Metal="NOT_RUN")
 
 if __name__=="__main__":print(json.dumps(self_test()))

@@ -53,14 +53,15 @@ def main():
         binary=HERE/"probes/target/release/generation"
         result["binary_sha256"]=sha(binary)
         record=execute([binary,model,cases,root/"capture.json"],env,root/"diagnostic.log",root/"progress.jsonl",
-            timeout=1200,stall_timeout=600,operation_timeout=180,sampler=sample)
+            timeout=1200,stall_timeout=600,operation_timeout=180,sampler=sample,stop_on_native_error=True)
         result["execution"]=record
         native=(root/"diagnostic.log").read_text().splitlines()
         statuses=[line for line in native if line.startswith("METAL_WAIT_STATUS ")]
         errors=[line for line in native if line.startswith("METAL_COMMAND_ERROR ")]
         result["native_status"]=dict(records=len(statuses),tail=statuses[-16:],errors=errors[-16:])
         if record["exit"]:
-            result.update(status="BLOCKED",reason=record["reason"] or "process failed")
+            result.update(status="FAIL" if record["reason"]=="native-command-error" else "BLOCKED",
+                reason=record["reason"] or "process failed",full_vector_comparison="NOT_RUN")
             raise RuntimeError("minimal Llama did not complete; inspect last_boundary/active_operations")
         assert "backend=Metal" in (root/"diagnostic.log").read_text(),"inference did not select Metal"
         capture=json.loads((root/"capture.json").read_text())
