@@ -1,0 +1,45 @@
+diff --git a/src/metal/device.rs b/src/metal/device.rs
+index 9f994e6..601a6fb 100644
+--- a/src/metal/device.rs
++++ b/src/metal/device.rs
+@@ -1599,7 +1599,40 @@ impl crate::Device for super::Device {
+         };
+ 
+         let start = time::Instant::now();
++        let mut last_status = None;
++        let mut last_log = start;
+         loop {
++            let status = cmd_buf.status();
++            if last_status != Some(status) || last_log.elapsed().as_secs() >= 10 {
++                std::eprintln!(
++                    "METAL_WAIT_STATUS fence={wait_value} status={status:?} completed={} pending={} elapsed_ms={}",
++                    fence.completed_value.load(atomic::Ordering::Acquire),
++                    fence.pending_command_buffers.len(),
++                    start.elapsed().as_millis()
++                );
++                if status == MTLCommandBufferStatus::Error {
++                    use objc::{msg_send, sel, sel_impl};
++                    let raw = cmd_buf.as_ptr() as *mut objc::runtime::Object;
++                    let error: *mut objc::runtime::Object = unsafe { msg_send![raw, error] };
++                    if !error.is_null() {
++                        let code: isize = unsafe { msg_send![error, code] };
++                        let description: *mut objc::runtime::Object =
++                            unsafe { msg_send![error, description] };
++                        if !description.is_null() {
++                            let text: *const core::ffi::c_char =
++                                unsafe { msg_send![description, UTF8String] };
++                            if !text.is_null() {
++                                std::eprintln!(
++                                    "METAL_COMMAND_ERROR code={code} description={}",
++                                    unsafe { std::ffi::CStr::from_ptr(text) }.to_string_lossy()
++                                );
++                            }
++                        }
++                    }
++                }
++                last_status = Some(status);
++                last_log = time::Instant::now();
++            }
+             if let MTLCommandBufferStatus::Completed = cmd_buf.status() {
+                 return Ok(true);
+             }

@@ -20,8 +20,8 @@ jobs:
     timeout-minutes: 70
     env:
       CARGO_BUILD_JOBS: '2'
-      CERT_ENGINE_SHA: 5ad2f1a854de60ba9755f80fe6b1824042154220
-      CERT_ENGINE_TREE: 90307c3a1d88ae336c3e7df671572fe3f5753cbb
+      CERT_ENGINE_SHA: e7b5bdb8c6f700d37dbff4a710c9f39ffd6604b9
+      CERT_ENGINE_TREE: d58dcac1a4187318c9a388e97492bd5ee35bf997
     steps:
       - uses: actions/checkout@v5
         with:
@@ -31,6 +31,7 @@ jobs:
           test "$(uname -m)" = arm64
           python3 .github/certification/llama_stall.py --self-test
           python3 .github/certification/verify.py --self-test
+          python3 .github/certification/verify_metal_status_lock.py --self-test
           mkdir -p cert-work/result
           system_profiler SPHardwareDataType SPDisplaysDataType SPSoftwareDataType -json > cert-work/result/system-profiler.json
           vm_stat > cert-work/result/memory-before.txt
@@ -47,12 +48,22 @@ jobs:
           git -C cert-work/engine apply --index "$GITHUB_WORKSPACE/.github/certification/llama-boundaries.patch"
           test "$(git -C cert-work/engine write-tree)" = "$CERT_ENGINE_TREE"
           printf '%s\n' "$CERT_ENGINE_SHA" "$CERT_ENGINE_TREE" > cert-work/result/engine-source.txt
-          cp .github/certification/probes/diagnostic.Cargo.lock .github/certification/probes/Cargo.lock
+          curl --fail --location https://static.crates.io/crates/wgpu-hal/wgpu-hal-27.0.4.crate --output cert-work/hal.crate
+          echo '5b21cb61c57ee198bc4aff71aeadff4cbb80b927beb912506af9c780d64313ce  cert-work/hal.crate' | shasum -a 256 --check
+          tar -xzf cert-work/hal.crate -C cert-work
+          git -C cert-work/wgpu-hal-27.0.4 init
+          echo '5ff22c78a8ef905a2c265818bdb63e522ec6622becc20f1eee01adf8f0a6f77f  cert-work/wgpu-hal-27.0.4/src/metal/device.rs' | shasum -a 256 --check
+          git -C cert-work/wgpu-hal-27.0.4 apply --check "$GITHUB_WORKSPACE/.github/certification/metal-wait-status.patch"
+          git -C cert-work/wgpu-hal-27.0.4 apply "$GITHUB_WORKSPACE/.github/certification/metal-wait-status.patch"
+          echo 'c886a515dec58c7b9d3fcc63ee60111dd644b1c179d1adad3b09e10230384841  cert-work/wgpu-hal-27.0.4/src/metal/device.rs' | shasum -a 256 --check
+          shasum -a 256 cert-work/hal.crate cert-work/wgpu-hal-27.0.4/src/metal/device.rs > cert-work/result/hal-source-SHA256SUMS
+          cp .github/certification/probes/metal-status.Cargo.lock .github/certification/probes/Cargo.lock
+          python3 .github/certification/verify_metal_status_lock.py --candidate .github/certification/probes/Cargo.lock
       - name: Compile and check exact diagnostic
         timeout-minutes: 20
         run: |
-          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --bin generation --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\""
-          cargo clippy --locked --manifest-path .github/certification/probes/Cargo.toml --bin generation --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" -- -D warnings
+          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --bin generation --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" --config "patch.crates-io.wgpu-hal.path=\"$GITHUB_WORKSPACE/cert-work/wgpu-hal-27.0.4\""
+          cargo clippy --locked --manifest-path .github/certification/probes/Cargo.toml --bin generation --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" --config "patch.crates-io.wgpu-hal.path=\"$GITHUB_WORKSPACE/cert-work/wgpu-hal-27.0.4\"" -- -D warnings
           shasum -a 256 .github/certification/probes/target/release/{generation,metal} > cert-work/result/probe-SHA256SUMS
           cp .github/certification/probes/Cargo.lock cert-work/result/probe-Cargo.lock
       - name: Actual Metal compute
@@ -60,38 +71,9 @@ jobs:
         env:
           WGPU_BACKEND: metal
         run: .github/certification/probes/target/release/metal > cert-work/result/compute.json
-      - name: Optional cache omitted - identical original Llama prefill
+      - name: Original Llama prefill with raw Metal status and error observation
         timeout-minutes: 22
-        run: python3 .github/certification/llama_stall.py --skip-dense-head --output cert-work/result/cache-omitted
-      - name: Same-host original cache allocation control
-        continue-on-error: true
-        timeout-minutes: 22
-        run: |
-          .github/certification/probes/target/release/metal > cert-work/result/compute.json
-          python3 .github/certification/llama_stall.py --output cert-work/result/baseline-cache
-      - name: Adjudicate allocation hypothesis without certification credit
-        if: always()
-        run: |
-          python3 - <<'PY'
-          import json,pathlib
-          root=pathlib.Path("cert-work/result")
-          results={}
-          for name in ("cache-omitted","baseline-cache"):
-              path=root/name/"result.json"
-              results[name]=json.loads(path.read_text()) if path.is_file() else {"status":"NOT_RUN"}
-          low,baseline=results.values()
-          matched=all(low.get(k)==baseline.get(k) for k in
-              ("host","source_control","engine_sha","engine_tree","model_sha256","limits","reference_precision","minimal_case_sha256"))
-          supported=(matched and low["status"]=="PASS" and baseline["status"]=="BLOCKED"
-              and low.get("optional_dense_head")=="SKIPPED_DIAGNOSTIC"
-              and baseline.get("optional_dense_head")=="BASELINE"
-              and baseline.get("execution",{}).get("reason")=="operation-timeout"
-              and baseline["execution"]["last_boundary"]["operation"].startswith("device.poll:layer-"))
-          report=dict(hypothesis="SUPPORTED" if supported else "UNRESOLVED_OR_REJECTED",
-              tests={k:v["status"] for k,v in results.items()},full_certification="INCOMPLETE",M4="NOT_RUN")
-          (root/"allocation-control.json").write_text(json.dumps(report,indent=2))
-          print(json.dumps(report));assert supported,"No allocation correction established"
-          PY
+        run: python3 .github/certification/llama_stall.py --output cert-work/result/hal-status
       - name: Preserve resource state
         if: always()
         run: |
@@ -101,7 +83,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: apple-llama-stall-diagnostic
+          name: apple-llama-metal-status
           path: cert-work/result/
           if-no-files-found: error
           retention-days: 7

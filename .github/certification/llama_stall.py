@@ -8,7 +8,6 @@ from live_process import execute,self_test
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--self-test",action="store_true")
-    parser.add_argument("--skip-dense-head",action="store_true")
     parser.add_argument("--fixtures",type=pathlib.Path,default=pathlib.Path("cert-work/frozen"))
     parser.add_argument("--output",type=pathlib.Path,default=pathlib.Path("cert-work/result/llama-stall"))
     args=parser.parse_args()
@@ -27,7 +26,7 @@ def main():
         host=hardware(),source_control=os.environ.get("GITHUB_SHA"),
         engine_sha=os.environ.get("CERT_ENGINE_SHA"),engine_tree=os.environ.get("CERT_ENGINE_TREE"),
         original_case_sha256=sha(args.fixtures/job["cases"]),minimal_case_sha256=sha(cases),
-        model_sha256=job["model_sha256"],optional_dense_head="SKIPPED_DIAGNOSTIC" if args.skip_dense_head else "BASELINE",
+        model_sha256=job["model_sha256"],optional_dense_head="BASELINE",
         limits=dict(max_abs=.1,rms=.03),
         reference_precision=job["reference_precision"],per_operation_timeout_seconds=180,wall_timeout_seconds=1200)
     try:
@@ -39,7 +38,6 @@ def main():
         env={k:v for k,v in os.environ.items() if not k.startswith(("AIRFRAME_","SHIMMY_","WGPU_","MESA_"))}
         env.update(WGPU_BACKEND="metal",SHIMMY_KV_CACHE_DTYPE="f32",SHIMMY_MAX_CTX="512",
             AIRFRAME_CERT_LOGITS_ONLY="1",AIRFRAME_TRACE_PREFILL_CHUNKS="1",AIRFRAME_DIAGNOSTIC_BOUNDARIES="1")
-        if args.skip_dense_head:env["AIRFRAME_DIAGNOSTIC_SKIP_DENSE_HEAD"]="1"
         samples=[]
         def sample(pid,operation):
             import subprocess
@@ -57,6 +55,10 @@ def main():
         record=execute([binary,model,cases,root/"capture.json"],env,root/"diagnostic.log",root/"progress.jsonl",
             timeout=1200,stall_timeout=600,operation_timeout=180,sampler=sample)
         result["execution"]=record
+        native=(root/"diagnostic.log").read_text().splitlines()
+        statuses=[line for line in native if line.startswith("METAL_WAIT_STATUS ")]
+        errors=[line for line in native if line.startswith("METAL_COMMAND_ERROR ")]
+        result["native_status"]=dict(records=len(statuses),tail=statuses[-16:],errors=errors[-16:])
         if record["exit"]:
             result.update(status="BLOCKED",reason=record["reason"] or "process failed")
             raise RuntimeError("minimal Llama did not complete; inspect last_boundary/active_operations")

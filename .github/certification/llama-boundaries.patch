@@ -178,7 +178,7 @@ index 07e725f..5d75888 100644
              p.record_wait(start);
          }
 diff --git a/src/runtime/gpu.rs b/src/runtime/gpu.rs
-index c8e41b2..cc2d3bd 100644
+index c8e41b2..19c5f37 100644
 --- a/src/runtime/gpu.rs
 +++ b/src/runtime/gpu.rs
 @@ -428,17 +428,47 @@ impl GpuRuntime {
@@ -246,19 +246,3 @@ index c8e41b2..cc2d3bd 100644
          let embd_weight_offset = gpu_model
              .metadata
              .get_tensor_offset("token_embd.weight")
-@@ -1193,6 +1226,15 @@ impl GpuRuntime {
-             }
-         };
- 
-+        // Diagnostic control only: remove the unused prefill F32 head allocation.
-+        // The existing quantized head remains responsible for final logits.
-+        if std::env::var("AIRFRAME_DIAGNOSTIC_BOUNDARIES").as_deref() == Ok("1")
-+            && std::env::var("AIRFRAME_DIAGNOSTIC_SKIP_DENSE_HEAD").as_deref() == Ok("1")
-+        {
-+            eprintln!("[Diagnostic] skip optional F32 output-head cache");
-+            return Ok(None);
-+        }
-+
-         let file = std::fs::File::open(model_path)?;
-         let mmap = unsafe { Mmap::map(&file)? };
-         let data_start = gpu_model.metadata.data_start_offset;
