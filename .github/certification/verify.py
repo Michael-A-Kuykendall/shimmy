@@ -49,7 +49,7 @@ def falsify():
 def compare_capture(capture,job,root):
     assert capture["complete"] and capture["model_sha256_at_load"]==job["model_sha256"]
     cases=json.loads((root/job["cases"]).read_text());rows=capture["results"];compared=[];repeat={}
-    expected_rows=sum(len(c.get("modes",["text","injected","repeat"])) for c in cases)
+    expected_rows=sum(3 if job.get("kind")=="original" else len(c.get("modes",["text","injected","repeat"])) for c in cases)
     assert len(rows)==expected_rows
     pairs=[(r["case"],r["mode"]) for r in rows]
     wanted=[(c["name"],m) for c in cases for m in (["off","on","repeat"] if job.get("kind")=="original" else c.get("modes",["text","injected","repeat"]))]
@@ -89,7 +89,29 @@ def capture_controls():
             try:compare_capture(bad,design,root)
             except (AssertionError,KeyError):pass
             else:raise AssertionError("capture falsification accepted")
-    return 5
+    # Original request captures off/on/repeat independently of token-input modes.
+    with tempfile.TemporaryDirectory() as tmp:
+        root=pathlib.Path(tmp);ref=root/"ref.f32";ref.write_bytes(struct.pack("<ff",0.0,2.0))
+        case=dict(name="original",ids=[1,2],max_tokens=4,modes=["injected"])
+        (root/"cases.json").write_text(json.dumps([case]))
+        job=dict(name="qwen17",kind="original",model_sha256="known-model",cases="cases.json",
+            references={"original":[dict(path="ref.f32",sha256=sha(ref))]*4})
+        row=dict(case="original",encoded_ids=[1,2],injected_ids=[1,2],prompt_tokens=2,
+            completion_tokens=4,text="ok",finish_reason="Length",logits=[[0.0,2.0] for _ in range(4)])
+        capture=dict(complete=True,model_sha256_at_load="known-model",
+            results=[{**copy.deepcopy(row),"mode":mode} for mode in ("off","on","repeat")])
+        assert compare_capture(capture,job,root)["comparisons"]==12
+        bads=[]
+        bad=copy.deepcopy(capture);bad["results"].pop();bads.append(bad)
+        bad=copy.deepcopy(capture);bad["results"][1]["mode"]="off";bads.append(bad)
+        bad=copy.deepcopy(capture);bad["results"][0]["logits"][0]=[1.0,2.0];bads.append(bad)
+        bad=copy.deepcopy(capture);bad["results"][0]["injected_ids"]=[2,1];bads.append(bad)
+        bad=copy.deepcopy(capture);bad["results"][0]["logits"].pop();bads.append(bad)
+        for bad in bads:
+            try:compare_capture(bad,job,root)
+            except (AssertionError,KeyError):pass
+            else:raise AssertionError("original capture falsification accepted")
+    return 10
 
 def main():
     p=argparse.ArgumentParser();p.add_argument("--self-test",action="store_true");p.add_argument("--matrix");a=p.parse_args()

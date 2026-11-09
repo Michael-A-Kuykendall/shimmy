@@ -1,4 +1,4 @@
-name: Metal Model Initialization Correction Certification
+name: Metal Bounded Prefill Correctness Certification
 on:
   workflow_dispatch:
     inputs:
@@ -20,8 +20,8 @@ jobs:
     timeout-minutes: 360
     env:
       CARGO_BUILD_JOBS: '2'
-      CERT_ENGINE_SHA: 3ae10b682f6b2732823ba685959393192a2492d3
-      CERT_ENGINE_TREE: 708a53ed996e6d47811cf1aeceb98aa25d8455be
+      CERT_ENGINE_SHA: 68091da8c55a2f96bc4309b46ece92630c996f71
+      CERT_ENGINE_TREE: 8f03c1130e2c6ecd0b157128a36c6e339bcfcce4
       CERT_STAGE: ${{ inputs.stage }}
     steps:
       - uses: actions/checkout@v5

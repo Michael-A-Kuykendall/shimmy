@@ -44,7 +44,7 @@ def main():
         run_id=int(os.environ.get("GITHUB_RUN_ID","0")),engine_sha=os.environ.get("CERT_ENGINE_SHA"),
         engine_tree=os.environ.get("CERT_ENGINE_TREE"),limits=dict(max_abs=0.1,rms=0.03),
         reference_precision=frozen["reference_precision"],reference_manifest_sha256=sha(a.fixtures/"manifest.json"),
-        lock_sha256=sha(HERE/"probes/Cargo.lock"),execution_configuration=dict(runtime_prefill_default=512,qkv_prefill_default=1,shared_chunk_override="UNSET",prefill_progress_trace=True),m4="NOT_RUN",complete=False,shard=a.job,
+        lock_sha256=sha(HERE/"probes/Cargo.lock"),execution_configuration=dict(runtime_prefill_default=512 if a.local else 64,qkv_prefill_default=1,shared_chunk_override="UNSET",prefill_progress_trace=True),m4="NOT_RUN",complete=False,shard=a.job,
         tests={name:dict(status="NOT_RUN",reason="outside this shard") for name in (*EXPECTED,"metal_compute","http","state_reset_cancel","embedding")},
         commands=[],files=[])
     def save():

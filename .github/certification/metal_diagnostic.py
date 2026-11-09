@@ -23,8 +23,8 @@ def verified_identity(binary, candidate_checksum=None, env=None):
         expected,name=lines[0].split()
         assert len(expected)==64 and all(c in "0123456789abcdef" for c in expected),"Invalid build checksum"
         assert Path(name).name=="shimmy","Wrong binary member"
-        assert env.get("CERT_ENGINE_SHA")=="3ae10b682f6b2732823ba685959393192a2492d3","Wrong candidate engine"
-        assert env.get("CERT_ENGINE_TREE")=="708a53ed996e6d47811cf1aeceb98aa25d8455be","Wrong candidate source tree"
+        assert env.get("CERT_ENGINE_SHA")=="68091da8c55a2f96bc4309b46ece92630c996f71","Wrong candidate engine"
+        assert env.get("CERT_ENGINE_TREE")=="8f03c1130e2c6ecd0b157128a36c6e339bcfcce4","Wrong candidate source tree"
         control=env.get("GITHUB_SHA","")
         assert len(control)==40 and all(c in "0123456789abcdef" for c in control),"Missing control source"
         run=int(env.get("GITHUB_RUN_ID","0"));assert run>0,"Missing build run"
@@ -60,8 +60,8 @@ def selftest():
         binary=Path(tmp)/"shimmy";binary.write_bytes(b"candidate-binary")
         checksum=Path(tmp)/"SHA256SUMS"
         good_line=sha(binary)+"  shimmy\n";checksum.write_text(good_line)
-        env=dict(CERT_ENGINE_SHA="3ae10b682f6b2732823ba685959393192a2492d3",
-            CERT_ENGINE_TREE="708a53ed996e6d47811cf1aeceb98aa25d8455be",
+        env=dict(CERT_ENGINE_SHA="68091da8c55a2f96bc4309b46ece92630c996f71",
+            CERT_ENGINE_TREE="8f03c1130e2c6ecd0b157128a36c6e339bcfcce4",
             GITHUB_SHA="a"*40,GITHUB_RUN_ID="1",SHIMMY_CERT_MODEL_DIR=tmp)
         assert verified_identity(binary,checksum,env)["identity_mode"]=="verified-candidate"
         rejected=0

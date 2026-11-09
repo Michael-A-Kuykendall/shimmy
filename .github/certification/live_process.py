@@ -23,7 +23,7 @@ class Progress:
             return True
         return False
 
-def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartbeat=30,echo=True):
+def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartbeat=30,echo=True,operation_timeout=0,sampler=None,sample_after=30,stop_on_native_error=False):
     assert timeout>0 and stall_timeout>0 and heartbeat>0
     log_path=pathlib.Path(log_path);progress_path=pathlib.Path(progress_path)
     child=subprocess.Popen(list(map(str,command)),stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
@@ -38,17 +38,25 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
     previous_term=signal.signal(signal.SIGTERM,cancelled)
     started=time.monotonic();last_progress=started;last_heartbeat=started
     state=Progress();reason=None;end=False;events=0;exit_observed=None
+    cleanup=[];operations={};last_boundary=None;sampled=set();sample_errors=[]
     def kill():
-        try:os.killpg(child.pid,signal.SIGKILL)
-        except ProcessLookupError:pass
-        child.wait(timeout=10)
+        # Cleanup failure is evidence, never a replacement for the timeout verdict.
+        # A driver-blocked process may be unreapable even after SIGKILL.
+        for sig,wait_seconds in ((signal.SIGTERM,.5),(signal.SIGKILL,2)):
+            try:os.killpg(child.pid,sig)
+            except ProcessLookupError:pass
+            except OSError as error:cleanup.append(dict(operation="killpg",signal=int(sig),error=str(error)))
+            try:child.wait(timeout=wait_seconds)
+            except subprocess.TimeoutExpired:cleanup.append(dict(operation="wait",signal=int(sig),error="timeout"))
+        cleanup.append(dict(operation="final",reaped=child.poll() is not None,returncode=child.returncode))
     with log_path.open("w") as log,progress_path.open("w") as progress:
         def event(kind):
             nonlocal events
             now=time.monotonic();entry=dict(event=kind,elapsed_seconds=round(now-started,3),
                 idle_seconds=round(now-last_progress,3),completed_chunks=state.completed,
                 completed_modes=state.modes.copy(),chunk_tokens=state.tokens,last_observed=state.last,
-                wall_timeout_seconds=timeout,stall_timeout_seconds=stall_timeout)
+                wall_timeout_seconds=timeout,stall_timeout_seconds=stall_timeout,cleanup=cleanup.copy(),
+                active_operations=list(operations),last_boundary=last_boundary,operation_timeout_seconds=operation_timeout)
             progress.write(json.dumps(entry)+"\n");progress.flush();events+=1
             if echo:
                 notice=kind=="progress" and (state.last.startswith("full request") or (state.tokens>1 and (state.index==0 or state.tokens<512)))
@@ -58,6 +66,14 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
         try:
             while True:
                 now=time.monotonic()
+                if sampler:
+                    for operation,started_operation in list(operations.items()):
+                        if operation not in sampled and now-started_operation>=sample_after:
+                            sampled.add(operation)
+                            try:sampler(child.pid,operation)
+                            except Exception as error:sample_errors.append(str(error))
+                if operation_timeout and any(now-t>=operation_timeout for t in operations.values()):
+                    reason="operation-timeout";kill();break
                 if now-started>=timeout:reason="wall-timeout";kill();break
                 if now-last_progress>=stall_timeout:reason="no-GPU-progress-timeout";kill();break
                 try:line=messages.get(timeout=min(.1,heartbeat))
@@ -66,6 +82,23 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
                 elif line:
                     log.write(line);log.flush()
                     if echo:print(line,end="",flush=True)
+                    if stop_on_native_error and line.startswith("METAL_COMMAND_ERROR "):
+                        reason="native-command-error";kill();break
+                    if operation_timeout and line.startswith("METAL_BOUNDARY "):
+                        _,timestamp,edge,operation=line.strip().split(" ",3)
+                        assert timestamp.isdigit() and edge in ("enter","exit","point"),"invalid operation boundary"
+                        last_boundary=dict(timestamp_ns=timestamp,edge=edge,operation=operation)
+                        if edge=="enter":
+                            assert operation not in operations,"reentered incomplete operation"
+                            operations[operation]=time.monotonic()
+                        elif edge=="exit":
+                            assert operation in operations,"unmatched operation completion"
+                            del operations[operation]
+                            # Diagnostic-only completed blocking GPU waits are real progress.
+                            # Point/enter/chatter records cannot extend the stall deadline.
+                            if operation.startswith(("device.poll:","model.device.poll")):
+                                last_progress=time.monotonic()
+                        event("boundary")
                     if state.consume(line):
                         last_progress=time.monotonic();event("progress")
                 if now-last_heartbeat>=heartbeat:event("heartbeat");last_heartbeat=now
@@ -74,7 +107,9 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
                     if exit_observed is None:exit_observed=time.monotonic()
                     if not end and time.monotonic()-exit_observed>2:
                         reason="orphaned-output-process";kill();break
-            code=child.wait()
+            code=child.poll()
+            if code is None:
+                reason=reason or "cleanup-blocked";code=1
             # A descendant must not survive its parent and keep the pipe open.
             if not end and reason is None:
                 reason="orphaned-output-process";kill()
@@ -93,7 +128,7 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
             if not reader.is_alive():child.stdout.close()
     return dict(exit=code,reason=reason,elapsed=time.monotonic()-started,
         completed_chunks=state.completed,completed_modes=state.modes,progress_events=events,
-        stall_timeout_seconds=stall_timeout,timeout_seconds=timeout)
+        stall_timeout_seconds=stall_timeout,timeout_seconds=timeout,cleanup=cleanup,last_boundary=last_boundary,active_operations=list(operations),sample_errors=sample_errors)
 
 def self_test():
     with tempfile.TemporaryDirectory() as tmp:
@@ -125,6 +160,61 @@ def self_test():
         cancelled=run("cancelled","import time;time.sleep(30)")
         timer.join();assert cancelled["exit"]==130 and cancelled["reason"]=="cancelled"
         assert all(any(json.loads(line)["event"].endswith("timeout") for line in (root/(name+".jsonl")).read_text().splitlines()) for name in ("stalled","chatter","start-only","wall","descendant"))
-    return dict(clean="PASS",negative_controls=8,actual_Metal="NOT_RUN")
+        from unittest import mock
+        real_killpg=os.killpg
+        # Reproduce EPERM without permitting a long-lived process to leak.
+        with mock.patch.object(os,"killpg",side_effect=PermissionError(1,"simulated driver denial")):
+            denied=run("permission-denied","import time;time.sleep(.6)",stall=.1)
+        assert denied["exit"]==124 and denied["reason"]=="no-GPU-progress-timeout"
+        assert any(x.get("operation")=="killpg" for x in denied["cleanup"])
+        assert denied["cleanup"][-1]["reaped"]
+        # Reproduce an unreapable driver task: bounded cleanup must retain logs/verdict.
+        spawned=[];real_popen=subprocess.Popen
+        def wrapped(*args,**kwargs):
+            child=real_popen(*args,**kwargs);spawned.append(child)
+            child.wait=mock.Mock(side_effect=subprocess.TimeoutExpired(args[0],2))
+            return child
+        try:
+            with mock.patch.object(subprocess,"Popen",side_effect=wrapped):
+                unreaped=run("unreapable","import time;print('preserved',flush=True);time.sleep(30)",stall=.2)
+            assert unreaped["exit"]==124 and unreaped["reason"]=="no-GPU-progress-timeout"
+            assert any(x.get("operation")=="wait" for x in unreaped["cleanup"])
+            assert "preserved" in (root/"unreapable.log").read_text()
+            assert json.loads((root/"unreapable.jsonl").read_text().splitlines()[-1])["event"]=="no-GPU-progress-timeout"
+        finally:
+            for child in spawned:
+                # Darwin may report EPERM for an already-reaped empty process group.
+                # Do not signal it again; always verify the owned child is reaped.
+                if child.poll() is None:
+                    try:real_killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
+                real_popen.wait(child,timeout=3)
+        operation=execute([sys.executable,"-u","-c","import time;print('METAL_BOUNDARY 123 enter queue.submit:first');time.sleep(5)"],
+            os.environ.copy(),root/"operation.log",root/"operation.jsonl",3,2,.05,False,operation_timeout=.2)
+        assert operation["exit"]==124 and operation["reason"]=="operation-timeout"
+        assert operation["active_operations"]==["queue.submit:first"]
+        assert operation["last_boundary"]["edge"]=="enter"
+        completed=execute([sys.executable,"-u","-c","print('METAL_BOUNDARY 123 enter queue.submit:first');print('METAL_BOUNDARY 124 exit queue.submit:first')"],
+            os.environ.copy(),root/"operation-good.log",root/"operation-good.jsonl",3,2,.05,False,operation_timeout=.2)
+        assert completed["exit"]==0 and not completed["active_operations"]
+        point=execute([sys.executable,"-u","-c","import time\nfor i in range(50):\n print(f'METAL_BOUNDARY {i} point alive');time.sleep(.03)"],
+            os.environ.copy(),root/"point.log",root/"point.jsonl",3,.2,.05,False,operation_timeout=1)
+        assert point["reason"]=="no-GPU-progress-timeout"
+        waits=execute([sys.executable,"-u","-c","import time\nfor i in range(8):\n print(f'METAL_BOUNDARY {i} enter device.poll:case');time.sleep(.04);print(f'METAL_BOUNDARY {i} exit device.poll:case')"],
+            os.environ.copy(),root/"waits.log",root/"waits.jsonl",3,.2,.05,False,operation_timeout=1)
+        assert waits["exit"]==0 and not waits["active_operations"]
+        calls=[]
+        def sample_failure(pid,operation):
+            calls.append((pid,operation));raise RuntimeError("sample unavailable")
+        sampled_result=execute([sys.executable,"-u","-c","import time;print('METAL_BOUNDARY 1 enter device.poll:stuck');time.sleep(5)"],
+            os.environ.copy(),root/"sample.log",root/"sample.jsonl",3,2,.05,False,operation_timeout=.3,sampler=sample_failure,sample_after=.05)
+        assert len(calls)==1 and calls[0][1]=="device.poll:stuck"
+        assert sampled_result["reason"]=="operation-timeout" and sampled_result["sample_errors"]==["sample unavailable"]
+        native=execute([sys.executable,"-u","-c","import time;print('METAL_COMMAND_ERROR fence=1 index=0 total=1 code=3 synthetic',flush=True);time.sleep(5)"],
+            os.environ.copy(),root/"native.log",root/"native.jsonl",3,2,.05,False,stop_on_native_error=True)
+        assert native["exit"]!=0 and native["reason"]=="native-command-error"
+        assert "code=3 synthetic" in (root/"native.log").read_text()
+        assert native["cleanup"][-1]["reaped"]
+    return dict(clean="PASS",negative_controls=14,actual_Metal="NOT_RUN")
 
 if __name__=="__main__":print(json.dumps(self_test()))
