@@ -1,0 +1,248 @@
+diff --git a/src/backend/bindless/pipeline/inference.rs b/src/backend/bindless/pipeline/inference.rs
+index 667ca19..7c6c44c 100644
+--- a/src/backend/bindless/pipeline/inference.rs
++++ b/src/backend/bindless/pipeline/inference.rs
+@@ -735,6 +735,8 @@ impl BindlessPipeline {
+         spec: &ModelSpec,
+         profile_context: Option<crate::backend::bindless::profiling::ProfileContext>,
+     ) -> InferenceResult {
++        use crate::backend::tdr::diagnostic_boundary as boundary;
++        boundary("enter", "prefill.prepare");
+         if spec.n_embd == 0 || !input_embd.len().is_multiple_of(spec.n_embd) {
+             return Err("input embeddings do not form complete token rows".into());
+         }
+@@ -943,8 +945,12 @@ impl BindlessPipeline {
+             //
+             // Patent Notice: FSE + D0 Saturation Fabric scheduling.
+             // Pending patent by Michael A. Kuykendall. All rights reserved.
++            boundary("exit", "prefill.prepare");
++            boundary("enter", "encoder.create");
+             let mut tdr = TdrScheduler::new(device, queue, "Full Model", None);
+             tdr.profiling = profile.submission_counter();
++            boundary("exit", "encoder.create");
++            boundary("enter", "prefill.buffers-and-bindings");
+             let tdr_log = std::env::var("AIRFRAME_LOG_TDR_POLLS")
+                 .map(|v| v == "1")
+                 .unwrap_or(false);
+@@ -1268,7 +1274,9 @@ impl BindlessPipeline {
+             let mut _qkv_chunk_bind_groups: Vec<Vec<wgpu::BindGroup>> =
+                 Vec::with_capacity(layer_count);
+ 
++            boundary("exit", "prefill.buffers-and-bindings");
+             for i in 0..layer_count {
++                boundary("point", &format!("layer.start:{i}"));
+                 let compiled = &model.metadata.compiled_layers[i];
+                 let layer_params_base = _layer_params[i];
+                 // Use window-adjusted blob_base_words for multi-resident-chunk models
+@@ -2849,7 +2857,13 @@ impl BindlessPipeline {
+             tdr.encoder
+                 .copy_buffer_to_buffer(&logits_buffer, 0, &staging_buffer, 0, output_size);
+             profile.resolve(&mut tdr.encoder);
+-            profile.submit_final(queue, tdr.encoder.finish());
++            boundary("enter", "encoder.finish:final");
++            let final_commands = tdr.encoder.finish();
++            boundary("exit", "encoder.finish:final");
++            boundary("enter", "queue.submit:final");
++            profile.submit_final(queue, final_commands);
++            boundary("exit", "queue.submit:final");
++            boundary("enter", "readback.map");
+             profile.begin_readback();
+ 
+             let pre_norm_slice = pre_norm_buffer.slice(..);
+@@ -2864,6 +2878,8 @@ impl BindlessPipeline {
+             let (tx, rx) = std::sync::mpsc::channel();
+             slice.map_async(wgpu::MapMode::Read, move |res| tx.send(res).unwrap());
+ 
++            boundary("exit", "readback.map");
++            boundary("enter", "readback.poll-and-callbacks");
+             let profile_wait = profile.wait_start();
+             let mut pre_done = false;
+             let mut l21_done = false;
+@@ -2904,6 +2920,8 @@ impl BindlessPipeline {
+                 }
+             }
+ 
++            boundary("exit", "readback.poll-and-callbacks");
++            boundary("enter", "readback.copy");
+             profile.wait_end(profile_wait);
+             let pre_norm_data = pre_norm_slice.get_mapped_range();
+             let pre_norm_result: Vec<f32> = bytemuck::cast_slice(&pre_norm_data).to_vec();
+@@ -2920,6 +2938,7 @@ impl BindlessPipeline {
+             drop(data);
+             staging_buffer.unmap();
+ 
++            boundary("exit", "readback.copy");
+             profile.finish(device);
+             Ok((pre_norm_result, l21_result, result))
+         })();
+diff --git a/src/backend/bindless/profiling.rs b/src/backend/bindless/profiling.rs
+index 14c1c08..25def3e 100644
+--- a/src/backend/bindless/profiling.rs
++++ b/src/backend/bindless/profiling.rs
+@@ -200,6 +200,12 @@ impl FrameProfile {
+         layer: Option<u32>,
+         stage: KernelStage,
+     ) -> ProfiledPass<'a> {
++        let diagnostic_enabled =
++            std::env::var("AIRFRAME_DIAGNOSTIC_BOUNDARIES").as_deref() == Ok("1");
++        let diagnostic_label = diagnostic_enabled.then(|| format!("encode:{layer:?}:{stage:?}"));
++        if let Some(label) = &diagnostic_label {
++            diagnostic_boundary("enter", label);
++        }
+         #[cfg(feature = "isf")]
+         if let Some(inner) = self.inner.as_mut() {
+             use airframe_observe::profiling::{MissingGpu, StageMeasurement};
+@@ -238,6 +244,7 @@ impl FrameProfile {
+                 counter.increment(&counter.passes, 1);
+             }
+             return ProfiledPass {
++                diagnostic_label,
+                 pass: Some(pass),
+                 started: Some(started),
+                 counter: self.counter.clone(),
+@@ -246,6 +253,7 @@ impl FrameProfile {
+         }
+         let _ = (layer, stage);
+         ProfiledPass {
++            diagnostic_label,
+             pass: Some(encoder.begin_compute_pass(descriptor)),
+             started: None,
+             counter: None,
+@@ -403,7 +411,16 @@ impl Drop for FrameProfile {
+         }
+     }
+ }
++fn diagnostic_boundary(edge: &str, operation: &str) {
++    let timestamp = std::time::SystemTime::now()
++        .duration_since(std::time::UNIX_EPOCH)
++        .unwrap_or_default()
++        .as_nanos();
++    eprintln!("METAL_BOUNDARY {timestamp} {edge} {operation}");
++}
++
+ pub(crate) struct ProfiledPass<'a> {
++    diagnostic_label: Option<String>,
+     pass: Option<wgpu::ComputePass<'a>>,
+     #[cfg_attr(not(feature = "isf"), allow(dead_code))]
+     started: Option<Instant>,
+@@ -440,6 +457,9 @@ impl DerefMut for ProfiledPass<'_> {
+ impl Drop for ProfiledPass<'_> {
+     fn drop(&mut self) {
+         self.pass.take();
++        if let Some(label) = &self.diagnostic_label {
++            diagnostic_boundary("exit", label);
++        }
+         #[cfg(feature = "isf")]
+         if let (Some(start), Some(record)) = (self.started, &mut self.record) {
+             record.sample.host_encode_ns = elapsed(start);
+diff --git a/src/backend/tdr.rs b/src/backend/tdr.rs
+index 07e725f..5d75888 100644
+--- a/src/backend/tdr.rs
++++ b/src/backend/tdr.rs
+@@ -43,6 +43,16 @@ pub const DEFAULT_TDR_BUDGET_MS: u128 = 30_000;
+ /// Owns the active `wgpu::CommandEncoder` and tracks accumulated dispatch
+ /// time since the last yield. Callers use `encoder` directly for compute
+ /// passes; checkpoints call `yield_if_needed` or `force_yield`.
++pub(crate) fn diagnostic_boundary(edge: &str, operation: &str) {
++    if std::env::var("AIRFRAME_DIAGNOSTIC_BOUNDARIES").as_deref() == Ok("1") {
++        let timestamp = std::time::SystemTime::now()
++            .duration_since(std::time::UNIX_EPOCH)
++            .unwrap_or_default()
++            .as_nanos();
++        eprintln!("METAL_BOUNDARY {timestamp} {edge} {operation}");
++    }
++}
++
+ pub struct TdrScheduler<'d> {
+     pub(crate) profiling:
+         Option<std::sync::Arc<crate::backend::bindless::profiling::SubmissionTiming>>,
+@@ -129,14 +139,20 @@ impl<'d> TdrScheduler<'d> {
+                     label: Some("tdr-placeholder"),
+                 }),
+         );
++        diagnostic_boundary("enter", &format!("encoder.finish:{label}"));
+         let command = encoder.finish();
++        diagnostic_boundary("exit", &format!("encoder.finish:{label}"));
++        diagnostic_boundary("enter", &format!("queue.submit:{label}"));
+         if let Some(p) = &self.profiling {
+             p.submit(self.queue, command);
+         } else {
+             self.queue.submit(Some(command));
+         }
++        diagnostic_boundary("exit", &format!("queue.submit:{label}"));
++        diagnostic_boundary("enter", &format!("device.poll:{label}"));
+         let profile_wait = self.profiling.as_ref().map(|_| std::time::Instant::now());
+         let poll_result = self.device.poll(wgpu::PollType::wait_indefinitely());
++        diagnostic_boundary("exit", &format!("device.poll:{label}"));
+         if let (Some(p), Some(start)) = (&self.profiling, profile_wait) {
+             p.record_wait(start);
+         }
+diff --git a/src/runtime/gpu.rs b/src/runtime/gpu.rs
+index c8e41b2..19c5f37 100644
+--- a/src/runtime/gpu.rs
++++ b/src/runtime/gpu.rs
+@@ -428,17 +428,47 @@ impl GpuRuntime {
+         }
+         device.push_error_scope(wgpu::ErrorFilter::OutOfMemory);
+         device.push_error_scope(wgpu::ErrorFilter::Validation);
++        use crate::backend::tdr::diagnostic_boundary as boundary;
++        boundary("enter", "model.buffers");
+         let gpu_model = BindlessModel::try_load_prepared(&device, prepared)?;
++        boundary("exit", "model.buffers");
++        // Metal mapped initializers enqueue transfers until submission. Complete the
++        // model phase before allocating the independently initialized output head:
++        // Apple Paravirtual Metal returned zero storage when both large uploads
++        // shared one pending batch. This is an ordering workaround, not a kernel fix.
++        if adapter.get_info().backend == wgpu::Backend::Metal {
++            boundary("enter", "model.queue.submit");
++            let submission = queue.submit([]);
++            boundary("exit", "model.queue.submit");
++            boundary("enter", "model.device.poll");
++            device
++                .poll(wgpu::PollType::Wait {
++                    submission_index: Some(submission),
++                    timeout: Some(std::time::Duration::from_secs(120)),
++                })
++                .map_err(
++                    |error| crate::execution::admission::ModelAdmissionError::Device {
++                        code: "gpu_model_upload_failed",
++                        detail: format!("Metal model initialization did not complete: {error}"),
++                    },
++                )?;
++            boundary("exit", "model.device.poll");
++        }
++        boundary("enter", "model.pipelines");
+         let pipeline = BindlessPipeline::new(&device);
+         let shift_pipeline = RopeShiftPipeline::new(&device);
+ 
++        boundary("exit", "model.pipelines");
++        boundary("enter", "model.output-head");
+         // Dequantize output head (Q6_K → F32)
+         let output_head_f32 =
+             Self::load_output_head_f32(&model_path_str, &gpu_model, &device, &spec)?;
+ 
++        boundary("exit", "model.output-head");
+         // === END DIAGNOSTIC ===
+ 
+         // KV cache
++        boundary("enter", "model.kv");
+         let max_ctx = spec.n_ctx as u32;
+         let kv_cache = Arc::new(Mutex::new(KVCache::new(
+             &device,
+@@ -448,6 +478,8 @@ impl GpuRuntime {
+             max_ctx,
+         )));
+ 
++        boundary("exit", "model.kv");
++        boundary("enter", "model.validation");
+         let validation_error = device.pop_error_scope().await;
+         let allocation_error = device.pop_error_scope().await;
+         if let Some(e) = allocation_error {
+@@ -464,6 +496,7 @@ impl GpuRuntime {
+             }
+             .into());
+         }
++        boundary("exit", "model.validation");
+         let embd_weight_offset = gpu_model
+             .metadata
+             .get_tensor_offset("token_embd.weight")
