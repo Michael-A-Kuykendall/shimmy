@@ -1,13 +1,13 @@
-name: Bounded Llama Metal Stall Diagnostic
+name: Qwen8K Metal Boundary Diagnostic
 on:
   workflow_dispatch:
     inputs:
       stage:
-        description: One minimal original Llama prefill only
+        description: Original Qwen8K input, stop after first blocked boundary
         required: true
-        default: llama-stall
+        default: qwen8k-boundary
         type: choice
-        options: [llama-stall]
+        options: [qwen8k-boundary]
 permissions:
   contents: read
 concurrency:
@@ -17,7 +17,7 @@ jobs:
   metal:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
     runs-on: macos-15
-    timeout-minutes: 70
+    timeout-minutes: 120
     env:
       CARGO_BUILD_JOBS: '2'
       CERT_ENGINE_SHA: cd497aee69946f24d1e53f0efafd948f7034ed2d
@@ -29,7 +29,7 @@ jobs:
       - name: Verify watchdog and frozen fixtures
         run: |
           test "$(uname -m)" = arm64
-          python3 .github/certification/llama_stall.py --self-test
+          python3 .github/certification/qwen8k_boundary.py --self-test
           python3 .github/certification/verify.py --self-test
           python3 .github/certification/verify_metal_status_lock.py --self-test
           mkdir -p cert-work/result
@@ -64,18 +64,18 @@ jobs:
       - name: Compile and check exact diagnostic
         timeout-minutes: 20
         run: |
-          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --bin generation --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" --config "patch.crates-io.wgpu-hal.path=\"$GITHUB_WORKSPACE/cert-work/wgpu-hal-27.0.4\""
-          cargo clippy --locked --manifest-path .github/certification/probes/Cargo.toml --bin generation --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" --config "patch.crates-io.wgpu-hal.path=\"$GITHUB_WORKSPACE/cert-work/wgpu-hal-27.0.4\"" -- -D warnings
-          shasum -a 256 .github/certification/probes/target/release/{generation,metal} > cert-work/result/probe-SHA256SUMS
+          cargo build --release --locked --manifest-path .github/certification/probes/Cargo.toml --bin dense --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" --config "patch.crates-io.wgpu-hal.path=\"$GITHUB_WORKSPACE/cert-work/wgpu-hal-27.0.4\""
+          cargo clippy --locked --manifest-path .github/certification/probes/Cargo.toml --bin dense --bin metal --config "patch.crates-io.airframe.path=\"$GITHUB_WORKSPACE/cert-work/engine\"" --config "patch.crates-io.wgpu-hal.path=\"$GITHUB_WORKSPACE/cert-work/wgpu-hal-27.0.4\"" -- -D warnings
+          shasum -a 256 .github/certification/probes/target/release/{dense,metal} > cert-work/result/probe-SHA256SUMS
           cp .github/certification/probes/Cargo.lock cert-work/result/probe-Cargo.lock
       - name: Actual Metal compute
         timeout-minutes: 2
         env:
           WGPU_BACKEND: metal
         run: .github/certification/probes/target/release/metal > cert-work/result/compute.json
-      - name: Original Llama prefill with raw Metal status and error observation
-        timeout-minutes: 22
-        run: python3 .github/certification/llama_stall.py --bounded-prefill --output cert-work/result/hal-status
+      - name: Original Qwen8K first blocked prefix with raw Metal errors
+        timeout-minutes: 92
+        run: python3 .github/certification/qwen8k_boundary.py --output cert-work/result/qwen8k-boundary
       - name: Preserve resource state
         if: always()
         run: |
@@ -85,7 +85,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: apple-llama-metal-status
+          name: apple-qwen8k-boundary
           path: cert-work/result/
           if-no-files-found: error
           retention-days: 7
