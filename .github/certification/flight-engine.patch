@@ -1,0 +1,351 @@
+diff --git a/src/backend/bindless/pipeline/inference.rs b/src/backend/bindless/pipeline/inference.rs
+index 667ca19..6aa1501 100644
+--- a/src/backend/bindless/pipeline/inference.rs
++++ b/src/backend/bindless/pipeline/inference.rs
+@@ -671,6 +671,7 @@ impl BindlessPipeline {
+                 );
+             }
+ 
++            crate::diagnostic_flight::emit(20, chunk_current_pos as u64, chunk_token_count as u64);
+             last_result = Some(self.run_full_model_with_cache_state_profiled(
+                 device,
+                 queue,
+@@ -688,6 +689,7 @@ impl BindlessPipeline {
+                 eprintln!("[PREFILL] chunk={} complete", chunk_idx);
+             }
+ 
++            crate::diagnostic_flight::emit(21, chunk_current_pos as u64, chunk_token_count as u64);
+             processed_tokens += chunk_token_count;
+         }
+ 
+diff --git a/src/backend/tdr.rs b/src/backend/tdr.rs
+index 07e725f..220c726 100644
+--- a/src/backend/tdr.rs
++++ b/src/backend/tdr.rs
+@@ -129,14 +129,24 @@ impl<'d> TdrScheduler<'d> {
+                     label: Some("tdr-placeholder"),
+                 }),
+         );
++        crate::diagnostic_flight::emit(
++            10,
++            crate::diagnostic_flight::label_id(label),
++            self.accumulated_ms as u64,
++        );
+         let command = encoder.finish();
++        crate::diagnostic_flight::emit(11, 0, 0);
++        crate::diagnostic_flight::emit(12, 0, 0);
+         if let Some(p) = &self.profiling {
+             p.submit(self.queue, command);
+         } else {
+             self.queue.submit(Some(command));
+         }
++        crate::diagnostic_flight::emit(13, 0, 0);
+         let profile_wait = self.profiling.as_ref().map(|_| std::time::Instant::now());
++        crate::diagnostic_flight::emit(14, 0, 0);
+         let poll_result = self.device.poll(wgpu::PollType::wait_indefinitely());
++        crate::diagnostic_flight::emit(15, u64::from(poll_result.is_ok()), 0);
+         if let (Some(p), Some(start)) = (&self.profiling, profile_wait) {
+             p.record_wait(start);
+         }
+@@ -196,6 +206,7 @@ impl<'d> TdrScheduler<'d> {
+     /// Returns `true` if a yield happened (and resets the accumulator), or
+     /// `false` if the budget is still safe.
+     pub fn yield_if_needed(&mut self, label: &str) -> Result<bool, String> {
++        crate::diagnostic_flight::emit(16, self.accumulated_ms as u64, self.budget_ms as u64);
+         if self.accumulated_ms >= self.budget_ms {
+             let elapsed = self.force_yield(label)?;
+             self.accumulated_ms = 0; // reset after yield
+diff --git a/src/diagnostic_flight/core.rs b/src/diagnostic_flight/core.rs
+new file mode 100644
+index 0000000..1c4e183
+--- /dev/null
++++ b/src/diagnostic_flight/core.rs
+@@ -0,0 +1,126 @@
++//! Fixed-size append-only diagnostic records. No allocation, clock, lock or I/O on emit.
++use std::sync::atomic::{AtomicU64, Ordering};
++
++pub const HEADER: usize = 64;
++pub const SLOT: usize = 40;
++pub const MAGIC: u64 = u64::from_le_bytes(*b"AF8KFR01");
++
++pub struct Store {
++    ptr: *mut u8,
++    capacity: u64,
++}
++// SAFETY: callers keep the shared mapping alive; every mutable field is AtomicU64.
++unsafe impl Send for Store {}
++unsafe impl Sync for Store {}
++
++impl Store {
++    /// # Safety
++    /// Mapping must remain live, aligned to 8, writable, and initialized before writers start.
++    pub unsafe fn attach(ptr: *mut u8, len: usize) -> Result<Self, &'static str> {
++        if ptr.is_null() || !(ptr as usize).is_multiple_of(8) || len < HEADER {
++            return Err("invalid mapping");
++        }
++        // SAFETY: the checked mapping covers the aligned header.
++        let word = |i: usize| unsafe { &*ptr.add(i * 8).cast::<AtomicU64>() };
++        if word(0).load(Ordering::Relaxed) != MAGIC {
++            return Err("invalid magic");
++        }
++        let capacity = word(1).load(Ordering::Relaxed);
++        if capacity == 0
++            || capacity > 1_048_576
++            || HEADER as u64 + capacity * SLOT as u64 != len as u64
++        {
++            return Err("invalid capacity");
++        }
++        Ok(Self { ptr, capacity })
++    }
++
++    fn word(&self, byte: usize) -> &AtomicU64 {
++        // SAFETY: attach validates the layout; callers supply checked header/slot offsets.
++        unsafe { &*self.ptr.add(byte).cast::<AtomicU64>() }
++    }
++
++    pub fn emit(&self, code: u64, a: u64, b: u64) {
++        let index = self.word(16).fetch_add(1, Ordering::Relaxed);
++        if index >= self.capacity {
++            self.word(24).fetch_add(1, Ordering::Relaxed);
++            return;
++        }
++        let slot = HEADER + index as usize * SLOT;
++        self.word(slot + 8).store(code, Ordering::Relaxed);
++        self.word(slot + 16).store(a, Ordering::Relaxed);
++        self.word(slot + 24).store(b, Ordering::Relaxed);
++        self.word(slot + 32)
++            .store(checksum(index, code, a, b), Ordering::Relaxed);
++        self.word(slot).store(index + 1, Ordering::Release);
++    }
++}
++
++pub fn checksum(index: u64, code: u64, a: u64, b: u64) -> u64 {
++    [index, code, a, b]
++        .iter()
++        .fold(MAGIC, |h, v| (h ^ v).wrapping_mul(1_099_511_628_211))
++}
++
++pub fn label_id(label: &str) -> u64 {
++    label.bytes().fold(1_469_598_103_934_665_603, |h, b| {
++        (h ^ b as u64).wrapping_mul(1_099_511_628_211)
++    })
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    fn memory(capacity: usize) -> Vec<u64> {
++        let mut data = vec![0; (HEADER + capacity * SLOT) / 8];
++        data[0] = MAGIC;
++        data[1] = capacity as u64;
++        data
++    }
++    #[test]
++    fn flight_publication_overflow_and_invalid_layout() {
++        let mut data = memory(2);
++        let ptr = data.as_mut_ptr().cast::<u8>();
++        let store = unsafe { Store::attach(ptr, data.len() * 8) }.unwrap();
++        store.emit(7, 11, 13);
++        assert_eq!(store.word(HEADER).load(Ordering::Acquire), 1);
++        assert_eq!(
++            store.word(HEADER + 32).load(Ordering::Relaxed),
++            checksum(0, 7, 11, 13)
++        );
++        store.emit(8, 17, 19);
++        store.emit(9, 23, 29);
++        assert_eq!(store.word(24).load(Ordering::Relaxed), 1);
++        assert!(unsafe { Store::attach(ptr, HEADER) }.is_err());
++        assert!(unsafe { Store::attach(ptr.add(1), data.len() * 8 - 1) }.is_err());
++        data[0] = 0;
++        assert!(unsafe { Store::attach(ptr, data.len() * 8) }.is_err());
++    }
++    #[test]
++    fn flight_concurrent_writers_publish_unique_complete_records() {
++        let mut data = memory(4096);
++        let store = unsafe { Store::attach(data.as_mut_ptr().cast(), data.len() * 8) }.unwrap();
++        std::thread::scope(|scope| {
++            for thread in 0..4 {
++                let store = &store;
++                scope.spawn(move || {
++                    for i in 0..1024 {
++                        store.emit(17, thread, i);
++                    }
++                });
++            }
++        });
++        assert_eq!(store.word(16).load(Ordering::Relaxed), 4096);
++        for i in 0..4096 {
++            let offset = HEADER + i * SLOT;
++            assert_eq!(store.word(offset).load(Ordering::Acquire), i as u64 + 1);
++            let code = store.word(offset + 8).load(Ordering::Relaxed);
++            let a = store.word(offset + 16).load(Ordering::Relaxed);
++            let b = store.word(offset + 24).load(Ordering::Relaxed);
++            assert_eq!(
++                store.word(offset + 32).load(Ordering::Relaxed),
++                checksum(i as u64, code, a, b)
++            );
++        }
++    }
++}
+diff --git a/src/diagnostic_flight/mod.rs b/src/diagnostic_flight/mod.rs
+new file mode 100644
+index 0000000..77f2d28
+--- /dev/null
++++ b/src/diagnostic_flight/mod.rs
+@@ -0,0 +1,48 @@
++//! Opt-in shared-memory flight recorder; initialization happens before model loading.
++mod core;
++pub(crate) use core::label_id;
++use std::sync::OnceLock;
++
++struct Recorder {
++    _mapping: memmap2::MmapMut,
++    store: core::Store,
++}
++static RECORDER: OnceLock<Option<Recorder>> = OnceLock::new();
++
++pub(crate) fn initialize() -> std::io::Result<()> {
++    if RECORDER.get().is_some() {
++        return Ok(());
++    }
++    let value = match std::env::var_os("AIRFRAME_FLIGHT_PATH") {
++        None => None,
++        Some(path) => {
++            let file = std::fs::OpenOptions::new()
++                .read(true)
++                .write(true)
++                .open(path)?;
++            // SAFETY: the parent exclusively initializes this bounded file before spawning us.
++            let mut mapping = unsafe { memmap2::MmapOptions::new().map_mut(&file)? };
++            for offset in (0..mapping.len()).step_by(4096) {
++                // Prefault before inference so emitting events requires no page-in I/O.
++                unsafe {
++                    std::ptr::read_volatile(mapping.as_ptr().add(offset));
++                }
++            }
++            let store = unsafe { core::Store::attach(mapping.as_mut_ptr(), mapping.len()) }
++                .map_err(std::io::Error::other)?;
++            Some(Recorder {
++                _mapping: mapping,
++                store,
++            })
++        }
++    };
++    let _ = RECORDER.set(value);
++    emit(1, 0, 0);
++    Ok(())
++}
++
++pub(crate) fn emit(code: u64, a: u64, b: u64) {
++    if let Some(Some(recorder)) = RECORDER.get() {
++        recorder.store.emit(code, a, b);
++    }
++}
+diff --git a/src/lib.rs b/src/lib.rs
+index 3e376b0..45388f7 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -7,6 +7,7 @@ pub mod conformance;
+ pub mod control;
+ pub mod core;
+ pub mod debug_trace;
++mod diagnostic_flight;
+ pub mod execution;
+ pub mod fixtures;
+ pub mod grammar;
+diff --git a/src/runtime/gpu.rs b/src/runtime/gpu.rs
+index c8e41b2..6e3f325 100644
+--- a/src/runtime/gpu.rs
++++ b/src/runtime/gpu.rs
+@@ -87,6 +87,16 @@ pub struct GpuRuntime {
+     im_end_token: Option<u32>,
+ }
+ 
++// macOS Metal can time out a large dense prefill command before completion.
++// Bound the outer batch only; preserve QKV microbatching and every operator.
++fn prefill_chunk_for_platform(requested: u32, macos: bool) -> u32 {
++    if macos {
++        requested.min(64)
++    } else {
++        requested
++    }
++}
++
+ impl GpuRuntime {
+     /// Construct a runtime from pre-loaded parts.
+     ///
+@@ -138,6 +148,7 @@ impl GpuRuntime {
+     /// - Output head dequantization (Q6_K → F32)
+     /// - Tokenizer initialization
+     pub async fn load(model_path: &Path) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
++        crate::diagnostic_flight::initialize()?;
+         Self::load_with_context(
+             model_path,
+             crate::execution::admission::configured_context()?,
+@@ -429,6 +440,24 @@ impl GpuRuntime {
+         device.push_error_scope(wgpu::ErrorFilter::OutOfMemory);
+         device.push_error_scope(wgpu::ErrorFilter::Validation);
+         let gpu_model = BindlessModel::try_load_prepared(&device, prepared)?;
++        // Metal mapped initializers enqueue transfers until submission. Complete the
++        // model phase before allocating the independently initialized output head:
++        // Apple Paravirtual Metal returned zero storage when both large uploads
++        // shared one pending batch. This is an ordering workaround, not a kernel fix.
++        if adapter.get_info().backend == wgpu::Backend::Metal {
++            let submission = queue.submit([]);
++            device
++                .poll(wgpu::PollType::Wait {
++                    submission_index: Some(submission),
++                    timeout: Some(std::time::Duration::from_secs(120)),
++                })
++                .map_err(
++                    |error| crate::execution::admission::ModelAdmissionError::Device {
++                        code: "gpu_model_upload_failed",
++                        detail: format!("Metal model initialization did not complete: {error}"),
++                    },
++                )?;
++        }
+         let pipeline = BindlessPipeline::new(&device);
+         let shift_pipeline = RopeShiftPipeline::new(&device);
+ 
+@@ -714,6 +743,7 @@ impl GpuRuntime {
+             .ok()
+             .and_then(|s| s.parse().ok())
+             .unwrap_or(512);
++        let prefill_chunk = prefill_chunk_for_platform(prefill_chunk, cfg!(target_os = "macos"));
+         if let Some(profile) = &profile_handle { profile.set_prefill_chunk(prefill_chunk); }
+         let temp = params.temperature;
+         let top_p_val = params.top_p;
+@@ -1378,6 +1408,33 @@ fn sample_token(
+ #[cfg(test)]
+ #[allow(clippy::items_after_test_module)]
+ mod tests {
++    #[test]
++    fn metal_prefill_bounds_the_observed_oversized_workload() {
++        assert_eq!(super::prefill_chunk_for_platform(308, true), 64);
++        assert_eq!(super::prefill_chunk_for_platform(512, true), 64);
++        assert_eq!(super::prefill_chunk_for_platform(u32::MAX, true), 64);
++    }
++
++    #[test]
++    fn metal_prefill_preserves_smaller_chunks_and_invalid_zero() {
++        for requested in [0, 1, 16, 32, 64] {
++            assert_eq!(
++                super::prefill_chunk_for_platform(requested, true),
++                requested
++            );
++        }
++    }
++
++    #[test]
++    fn other_platform_prefill_configuration_is_unchanged() {
++        for requested in [0, 1, 32, 64, 128, 308, 512, u32::MAX] {
++            assert_eq!(
++                super::prefill_chunk_for_platform(requested, false),
++                requested
++            );
++        }
++    }
++
+     use super::*;
+ 
+     #[test]

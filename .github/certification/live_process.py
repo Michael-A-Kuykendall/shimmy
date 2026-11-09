@@ -23,7 +23,7 @@ class Progress:
             return True
         return False
 
-def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartbeat=30,echo=True,operation_timeout=0,sampler=None,sample_after=30,stop_on_native_error=False):
+def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartbeat=30,echo=True,operation_timeout=0,sampler=None,sample_after=30,stop_on_native_error=False,event_source=None,stop_after_chunks=0):
     assert timeout>0 and stall_timeout>0 and heartbeat>0
     log_path=pathlib.Path(log_path);progress_path=pathlib.Path(progress_path)
     child=subprocess.Popen(list(map(str,command)),stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
@@ -66,6 +66,8 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
         try:
             while True:
                 now=time.monotonic()
+                if event_source:
+                    for observation in event_source(): messages.put(observation)
                 if sampler:
                     for operation,started_operation in list(operations.items()):
                         if operation not in sampled and now-started_operation>=sample_after:
@@ -101,6 +103,8 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
                         event("boundary")
                     if state.consume(line):
                         last_progress=time.monotonic();event("progress")
+                        if stop_after_chunks and state.completed>=stop_after_chunks:
+                            reason="diagnostic-prefix-completed";kill();break
                 if now-last_heartbeat>=heartbeat:event("heartbeat");last_heartbeat=now
                 if end and child.poll() is not None:break
                 if child.poll() is not None:
