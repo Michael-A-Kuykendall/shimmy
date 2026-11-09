@@ -49,6 +49,18 @@ def verify_engine(engine):
     return True
 
 def main():
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        root=pathlib.Path(tmp);nested=root/"hal";nested.mkdir()
+        subprocess.run(["git","init","-q",str(root)],check=True)
+        patch=root/"fixture.patch"
+        patch.write_text("diff --git a/src/flight b/src/flight\nnew file mode 100644\n--- /dev/null\n+++ b/src/flight\n@@ -0,0 +1 @@\n+fixture\n")
+        subprocess.run(["git","-C",str(nested),"apply",str(patch)],check=True)
+        assert not (nested/"src/flight").exists(),"nested precondition changed"
+        subprocess.run(["git","init","-q",str(nested)],check=True)
+        subprocess.run(["git","-C",str(nested),"apply","--check",str(patch)],check=True)
+        subprocess.run(["git","-C",str(nested),"apply",str(patch)],check=True)
+        assert (nested/"src/flight").read_text()=="fixture\n"
     p=argparse.ArgumentParser();p.add_argument("--engine",type=pathlib.Path);p.add_argument("--hal",type=pathlib.Path);a=p.parse_args()
     assert graph(HERE/"probes/diagnostic.Cargo.lock",HERE/"probes/flight.Cargo.lock")
     if a.engine:

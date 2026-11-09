@@ -45,6 +45,7 @@ jobs:
           echo "5b21cb61c57ee198bc4aff71aeadff4cbb80b927beb912506af9c780d64313ce  cert-work/hal.crate" | shasum -a 256 -c -
           mkdir cert-work/hal
           tar -xzf cert-work/hal.crate --strip-components=1 -C cert-work/hal
+          git -C cert-work/hal init -q
           git -C cert-work/hal apply --check "$GITHUB_WORKSPACE/.github/certification/flight-hal.patch"
           git -C cert-work/hal apply "$GITHUB_WORKSPACE/.github/certification/flight-hal.patch"
           cmp cert-work/engine/src/diagnostic_flight/core.rs cert-work/hal/src/diagnostic_flight/core.rs
