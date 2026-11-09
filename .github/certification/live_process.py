@@ -175,8 +175,11 @@ def self_test():
             assert json.loads((root/"unreapable.jsonl").read_text().splitlines()[-1])["event"]=="no-GPU-progress-timeout"
         finally:
             for child in spawned:
-                try:real_killpg(child.pid,signal.SIGKILL)
-                except ProcessLookupError:pass
+                # Darwin may report EPERM for an already-reaped empty process group.
+                # Do not signal it again; always verify the owned child is reaped.
+                if child.poll() is None:
+                    try:real_killpg(child.pid,signal.SIGKILL)
+                    except ProcessLookupError:pass
                 real_popen.wait(child,timeout=3)
         operation=execute([sys.executable,"-u","-c","import time;print('METAL_BOUNDARY 123 enter queue.submit:first');time.sleep(5)"],
             os.environ.copy(),root/"operation.log",root/"operation.jsonl",3,2,.05,False,operation_timeout=.2)
