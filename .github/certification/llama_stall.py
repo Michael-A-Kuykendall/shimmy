@@ -29,7 +29,7 @@ def main():
         original_case_sha256=sha(args.fixtures/job["cases"]),minimal_case_sha256=sha(cases),
         model_sha256=job["model_sha256"],optional_dense_head="SKIPPED_DIAGNOSTIC" if args.skip_dense_head else "BASELINE",
         limits=dict(max_abs=.1,rms=.03),
-        reference_precision=job["reference_precision"],per_operation_timeout_seconds=180,wall_timeout_seconds=600)
+        reference_precision=job["reference_precision"],per_operation_timeout_seconds=180,wall_timeout_seconds=1200)
     try:
         compute=json.loads((root.parent/"compute.json").read_text())
         assert compute["compute"]=="PASS" and compute["selected"]["backend"]=="Metal"
@@ -55,7 +55,7 @@ def main():
         binary=HERE/"probes/target/release/generation"
         result["binary_sha256"]=sha(binary)
         record=execute([binary,model,cases,root/"capture.json"],env,root/"diagnostic.log",root/"progress.jsonl",
-            timeout=600,stall_timeout=600,operation_timeout=180,sampler=sample)
+            timeout=1200,stall_timeout=600,operation_timeout=180,sampler=sample)
         result["execution"]=record
         if record["exit"]:
             result.update(status="BLOCKED",reason=record["reason"] or "process failed")

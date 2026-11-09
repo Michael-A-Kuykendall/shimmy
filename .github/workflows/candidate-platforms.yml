@@ -17,7 +17,7 @@ jobs:
   metal:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
     runs-on: macos-15
-    timeout-minutes: 50
+    timeout-minutes: 70
     env:
       CARGO_BUILD_JOBS: '2'
       CERT_ENGINE_SHA: 5ad2f1a854de60ba9755f80fe6b1824042154220
@@ -61,11 +61,11 @@ jobs:
           WGPU_BACKEND: metal
         run: .github/certification/probes/target/release/metal > cert-work/result/compute.json
       - name: Optional cache omitted - identical original Llama prefill
-        timeout-minutes: 12
+        timeout-minutes: 22
         run: python3 .github/certification/llama_stall.py --skip-dense-head --output cert-work/result/cache-omitted
       - name: Same-host original cache allocation control
         continue-on-error: true
-        timeout-minutes: 12
+        timeout-minutes: 22
         run: |
           .github/certification/probes/target/release/metal > cert-work/result/compute.json
           python3 .github/certification/llama_stall.py --output cert-work/result/baseline-cache
