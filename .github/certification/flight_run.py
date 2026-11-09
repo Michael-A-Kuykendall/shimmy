@@ -76,9 +76,23 @@ def main():
                     entry[label]=dict(exit=c.returncode,stdout=c.stdout,stderr=c.stderr)
                 except Exception as error:entry[label]=dict(error=str(error))
             (root/"samples.json").write_text(json.dumps(samples,indent=2))
+        import time
+        last_memory=[0.0]
+        def observe():
+            lines=recorder.poll()
+            now=time.monotonic()
+            if now-last_memory[0]>=30:
+                last_memory[0]=now
+                try:
+                    memory=subprocess.run(["vm_stat"],capture_output=True,text=True,timeout=3)
+                    with (root/"memory-timeline.jsonl").open("a") as output:
+                        output.write(json.dumps(dict(received_monotonic=now,exit=memory.returncode,stdout=memory.stdout,stderr=memory.stderr))+"\n")
+                except Exception as error:
+                    with (root/"memory-timeline.jsonl").open("a") as output:output.write(json.dumps(dict(error=str(error)))+"\n")
+            return lines
         record=execute([binary,model,cases,root/"capture.json"],env,root/"child.log",root/"progress.jsonl",
-                       timeout=5400,stall_timeout=600,operation_timeout=180,sampler=sample,
-                       stop_on_native_error=True,event_source=recorder.poll,stop_after_chunks=85)
+                       timeout=5400,stall_timeout=600,operation_timeout=180,sampler=sample,sample_after=150,
+                       stop_on_native_error=True,event_source=observe,stop_after_chunks=85)
         result["execution"]=record
         recorder.poll()
         result["last_record"]=recorder.last
