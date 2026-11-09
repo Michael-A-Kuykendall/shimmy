@@ -86,6 +86,10 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
                         elif edge=="exit":
                             assert operation in operations,"unmatched operation completion"
                             del operations[operation]
+                            # Diagnostic-only completed blocking GPU waits are real progress.
+                            # Point/enter/chatter records cannot extend the stall deadline.
+                            if operation.startswith(("device.poll:","model.device.poll")):
+                                last_progress=time.monotonic()
                         event("boundary")
                     if state.consume(line):
                         last_progress=time.monotonic();event("progress")
@@ -182,6 +186,12 @@ def self_test():
         completed=execute([sys.executable,"-u","-c","print('METAL_BOUNDARY 123 enter queue.submit:first');print('METAL_BOUNDARY 124 exit queue.submit:first')"],
             os.environ.copy(),root/"operation-good.log",root/"operation-good.jsonl",3,2,.05,False,operation_timeout=.2)
         assert completed["exit"]==0 and not completed["active_operations"]
-    return dict(clean="PASS",negative_controls=11,actual_Metal="NOT_RUN")
+        point=execute([sys.executable,"-u","-c","import time\nfor i in range(50):\n print(f'METAL_BOUNDARY {i} point alive');time.sleep(.03)"],
+            os.environ.copy(),root/"point.log",root/"point.jsonl",3,.2,.05,False,operation_timeout=1)
+        assert point["reason"]=="no-GPU-progress-timeout"
+        waits=execute([sys.executable,"-u","-c","import time\nfor i in range(8):\n print(f'METAL_BOUNDARY {i} enter device.poll:case');time.sleep(.04);print(f'METAL_BOUNDARY {i} exit device.poll:case')"],
+            os.environ.copy(),root/"waits.log",root/"waits.jsonl",3,.2,.05,False,operation_timeout=1)
+        assert waits["exit"]==0 and not waits["active_operations"]
+    return dict(clean="PASS",negative_controls=12,actual_Metal="NOT_RUN")
 
 if __name__=="__main__":print(json.dumps(self_test()))
