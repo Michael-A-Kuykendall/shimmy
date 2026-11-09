@@ -17,11 +17,11 @@ jobs:
   metal:
     if: github.repository == 'Michael-A-Kuykendall/shimmy'
     runs-on: macos-15
-    timeout-minutes: 40
+    timeout-minutes: 50
     env:
       CARGO_BUILD_JOBS: '2'
-      CERT_ENGINE_SHA: e7b5bdb8c6f700d37dbff4a710c9f39ffd6604b9
-      CERT_ENGINE_TREE: d58dcac1a4187318c9a388e97492bd5ee35bf997
+      CERT_ENGINE_SHA: 5ad2f1a854de60ba9755f80fe6b1824042154220
+      CERT_ENGINE_TREE: 90307c3a1d88ae336c3e7df671572fe3f5753cbb
     steps:
       - uses: actions/checkout@v5
         with:
@@ -60,9 +60,34 @@ jobs:
         env:
           WGPU_BACKEND: metal
         run: .github/certification/probes/target/release/metal > cert-work/result/compute.json
-      - name: One original Llama prefill with operation deadlines
+      - name: Optional cache omitted - identical original Llama prefill
         timeout-minutes: 12
-        run: python3 .github/certification/llama_stall.py
+        run: python3 .github/certification/llama_stall.py --skip-dense-head --output cert-work/result/cache-omitted
+      - name: Same-host original cache allocation control
+        continue-on-error: true
+        timeout-minutes: 12
+        run: |
+          .github/certification/probes/target/release/metal > cert-work/result/compute.json
+          python3 .github/certification/llama_stall.py --output cert-work/result/baseline-cache
+      - name: Adjudicate allocation hypothesis without certification credit
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path("cert-work/result")
+          results={}
+          for name in ("cache-omitted","baseline-cache"):
+              path=root/name/"result.json"
+              results[name]=json.loads(path.read_text()) if path.is_file() else {"status":"NOT_RUN"}
+          low,baseline=results.values()
+          supported=(low["status"]=="PASS" and baseline["status"]=="BLOCKED"
+              and baseline.get("execution",{}).get("reason")=="operation-timeout"
+              and baseline["execution"]["last_boundary"]["operation"].startswith("device.poll:"))
+          report=dict(hypothesis="SUPPORTED" if supported else "UNRESOLVED_OR_REJECTED",
+              tests={k:v["status"] for k,v in results.items()},full_certification="INCOMPLETE",M4="NOT_RUN")
+          (root/"allocation-control.json").write_text(json.dumps(report,indent=2))
+          print(json.dumps(report));assert supported,"No allocation correction established"
+          PY
       - name: Preserve resource state
         if: always()
         run: |

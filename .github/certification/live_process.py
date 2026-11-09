@@ -23,7 +23,7 @@ class Progress:
             return True
         return False
 
-def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartbeat=30,echo=True,operation_timeout=0):
+def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartbeat=30,echo=True,operation_timeout=0,sampler=None,sample_after=30):
     assert timeout>0 and stall_timeout>0 and heartbeat>0
     log_path=pathlib.Path(log_path);progress_path=pathlib.Path(progress_path)
     child=subprocess.Popen(list(map(str,command)),stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
@@ -38,7 +38,7 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
     previous_term=signal.signal(signal.SIGTERM,cancelled)
     started=time.monotonic();last_progress=started;last_heartbeat=started
     state=Progress();reason=None;end=False;events=0;exit_observed=None
-    cleanup=[];operations={};last_boundary=None
+    cleanup=[];operations={};last_boundary=None;sampled=set();sample_errors=[]
     def kill():
         # Cleanup failure is evidence, never a replacement for the timeout verdict.
         # A driver-blocked process may be unreapable even after SIGKILL.
@@ -66,6 +66,12 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
         try:
             while True:
                 now=time.monotonic()
+                if sampler:
+                    for operation,started_operation in list(operations.items()):
+                        if operation not in sampled and now-started_operation>=sample_after:
+                            sampled.add(operation)
+                            try:sampler(child.pid,operation)
+                            except Exception as error:sample_errors.append(str(error))
                 if operation_timeout and any(now-t>=operation_timeout for t in operations.values()):
                     reason="operation-timeout";kill();break
                 if now-started>=timeout:reason="wall-timeout";kill();break
@@ -120,7 +126,7 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
             if not reader.is_alive():child.stdout.close()
     return dict(exit=code,reason=reason,elapsed=time.monotonic()-started,
         completed_chunks=state.completed,completed_modes=state.modes,progress_events=events,
-        stall_timeout_seconds=stall_timeout,timeout_seconds=timeout,cleanup=cleanup,last_boundary=last_boundary,active_operations=list(operations))
+        stall_timeout_seconds=stall_timeout,timeout_seconds=timeout,cleanup=cleanup,last_boundary=last_boundary,active_operations=list(operations),sample_errors=sample_errors)
 
 def self_test():
     with tempfile.TemporaryDirectory() as tmp:
@@ -195,6 +201,13 @@ def self_test():
         waits=execute([sys.executable,"-u","-c","import time\nfor i in range(8):\n print(f'METAL_BOUNDARY {i} enter device.poll:case');time.sleep(.04);print(f'METAL_BOUNDARY {i} exit device.poll:case')"],
             os.environ.copy(),root/"waits.log",root/"waits.jsonl",3,.2,.05,False,operation_timeout=1)
         assert waits["exit"]==0 and not waits["active_operations"]
-    return dict(clean="PASS",negative_controls=12,actual_Metal="NOT_RUN")
+        calls=[]
+        def sample_failure(pid,operation):
+            calls.append((pid,operation));raise RuntimeError("sample unavailable")
+        sampled_result=execute([sys.executable,"-u","-c","import time;print('METAL_BOUNDARY 1 enter device.poll:stuck');time.sleep(5)"],
+            os.environ.copy(),root/"sample.log",root/"sample.jsonl",3,2,.05,False,operation_timeout=.3,sampler=sample_failure,sample_after=.05)
+        assert len(calls)==1 and calls[0][1]=="device.poll:stuck"
+        assert sampled_result["reason"]=="operation-timeout" and sampled_result["sample_errors"]==["sample unavailable"]
+    return dict(clean="PASS",negative_controls=13,actual_Metal="NOT_RUN")
 
 if __name__=="__main__":print(json.dumps(self_test()))
