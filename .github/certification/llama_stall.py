@@ -29,6 +29,10 @@ def main():
         model_sha256=job["model_sha256"],limits=dict(max_abs=.1,rms=.03),
         reference_precision=job["reference_precision"],per_operation_timeout_seconds=180,wall_timeout_seconds=600)
     try:
+        compute=json.loads((root.parent/"compute.json").read_text())
+        assert compute["compute"]=="PASS" and compute["selected"]["backend"]=="Metal"
+        assert compute["selected"]["device_type"]!="Cpu"
+        result["metal_compute"]=compute
         model=model_path(job["model_sha256"],HERE.parents[1]/"cert-work/test-models")
         env={k:v for k,v in os.environ.items() if not k.startswith(("AIRFRAME_","SHIMMY_","WGPU_","MESA_"))}
         env.update(WGPU_BACKEND="metal",SHIMMY_KV_CACHE_DTYPE="f32",SHIMMY_MAX_CTX="512",
@@ -41,6 +45,7 @@ def main():
         if record["exit"]:
             result.update(status="BLOCKED",reason=record["reason"] or "process failed")
             raise RuntimeError("minimal Llama did not complete; inspect last_boundary/active_operations")
+        assert "backend=Metal" in (root/"diagnostic.log").read_text(),"inference did not select Metal"
         capture=json.loads((root/"capture.json").read_text())
         import struct
         assert capture["complete"] and capture["model_sha256_at_load"]==job["model_sha256"]
