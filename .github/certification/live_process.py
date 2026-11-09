@@ -133,9 +133,22 @@ def execute(command,env,log_path,progress_path,timeout,stall_timeout=1200,heartb
 def self_test():
     with tempfile.TemporaryDirectory() as tmp:
         root=pathlib.Path(tmp)
-        def run(name,code,timeout=3,stall=.4):
+        from unittest import mock
+        def run(name,code,timeout=6,stall=2):
             return execute([sys.executable,"-u","-c",code],os.environ.copy(),root/(name+".log"),
                 root/(name+".jsonl"),timeout,stall,.05,False)
+        def event_clock_run(name,code,timeout=3,stall=.2,operation_timeout=0):
+            clock=[0.0];messages=queue.Queue();real_get=messages.get
+            def timed_get(*args,**kwargs):
+                item=real_get(*args,**kwargs)
+                if item is not None:clock[0]+=.08
+                return item
+            with mock.patch.object(queue,"Queue",return_value=messages), \
+                 mock.patch.object(messages,"get",side_effect=timed_get), \
+                 mock.patch.object(time,"monotonic",side_effect=lambda:clock[0]):
+                return execute([sys.executable,"-u","-c",code],os.environ.copy(),
+                    root/(name+".log"),root/(name+".jsonl"),timeout,stall,.05,False,
+                    operation_timeout=operation_timeout)
         good=run("good","import time;print('[PREFILL] chunk=0 tokens=1 current_pos=0 seq_len=1');time.sleep(.1);print('[PREFILL] chunk=0 complete');print('REQUEST_COMPLETED off')")
         assert good["exit"]==0 and good["completed_chunks"]==1 and good["completed_modes"]==["off"]
         stalled=run("stalled","import time;time.sleep(5)")
@@ -144,7 +157,7 @@ def self_test():
         assert chatter["exit"]==124 and chatter["completed_chunks"]==0
         start_only=run("start-only","import time;print('[PREFILL] chunk=0 tokens=1 current_pos=0 seq_len=1');time.sleep(5)")
         assert start_only["exit"]==124
-        wall=run("wall","import time\nfor i in range(100):\n print(f'[PREFILL] chunk={i} tokens=1 current_pos={i} seq_len={i+1}');print(f'[PREFILL] chunk={i} complete');time.sleep(.05)",timeout=.3)
+        wall=event_clock_run("wall","for i in range(8):\n print(f'[PREFILL] chunk={i} tokens=1 current_pos={i} seq_len={i+1}');print(f'[PREFILL] chunk={i} complete')",timeout=.3,stall=2)
         assert wall["exit"]==124 and wall["reason"]=="wall-timeout" and wall["completed_chunks"]>0
         try:run("bad-progress","print('[PREFILL] chunk=0 complete')")
         except AssertionError:pass
@@ -156,11 +169,18 @@ def self_test():
         assert not status or status.startswith("Z"),"live descendant survived timeout"
         orphan=run("orphan","import subprocess,sys;p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(30)']);print('DESCENDANT',p.pid,flush=True)",timeout=5,stall=4)
         assert orphan["exit"]==1 and orphan["reason"]=="orphaned-output-process"
-        timer=threading.Timer(.1,lambda:os.kill(os.getpid(),signal.SIGTERM));timer.start()
-        cancelled=run("cancelled","import time;time.sleep(30)")
-        timer.join();assert cancelled["exit"]==130 and cancelled["reason"]=="cancelled"
+        timers=[];real_signal=signal.signal
+        def registered_then_cancel(sig,handler):
+            previous=real_signal(sig,handler)
+            if sig==signal.SIGTERM and callable(handler) and not timers:
+                timer=threading.Timer(.1,lambda:os.kill(os.getpid(),signal.SIGTERM))
+                timers.append(timer);timer.start()
+            return previous
+        with mock.patch.object(signal,"signal",side_effect=registered_then_cancel):
+            cancelled=run("cancelled","import time;time.sleep(30)")
+        for timer in timers:timer.join()
+        assert cancelled["exit"]==130 and cancelled["reason"]=="cancelled"
         assert all(any(json.loads(line)["event"].endswith("timeout") for line in (root/(name+".jsonl")).read_text().splitlines()) for name in ("stalled","chatter","start-only","wall","descendant"))
-        from unittest import mock
         real_killpg=os.killpg
         # Reproduce EPERM without permitting a long-lived process to leak.
         with mock.patch.object(os,"killpg",side_effect=PermissionError(1,"simulated driver denial")):
@@ -176,7 +196,7 @@ def self_test():
             return child
         try:
             with mock.patch.object(subprocess,"Popen",side_effect=wrapped):
-                unreaped=run("unreapable","import time;print('preserved',flush=True);time.sleep(30)",stall=.2)
+                unreaped=run("unreapable","import time;print('preserved',flush=True);time.sleep(30)",stall=2)
             assert unreaped["exit"]==124 and unreaped["reason"]=="no-GPU-progress-timeout"
             assert any(x.get("operation")=="wait" for x in unreaped["cleanup"])
             assert "preserved" in (root/"unreapable.log").read_text()
@@ -194,15 +214,20 @@ def self_test():
         assert operation["exit"]==124 and operation["reason"]=="operation-timeout"
         assert operation["active_operations"]==["queue.submit:first"]
         assert operation["last_boundary"]["edge"]=="enter"
-        completed=execute([sys.executable,"-u","-c","print('METAL_BOUNDARY 123 enter queue.submit:first');print('METAL_BOUNDARY 124 exit queue.submit:first')"],
-            os.environ.copy(),root/"operation-good.log",root/"operation-good.jsonl",3,2,.05,False,operation_timeout=.2)
+        completed=event_clock_run("operation-good","print('METAL_BOUNDARY 123 enter queue.submit:first');print('METAL_BOUNDARY 124 exit queue.submit:first')",stall=2,operation_timeout=.2)
         assert completed["exit"]==0 and not completed["active_operations"]
         point=execute([sys.executable,"-u","-c","import time\nfor i in range(50):\n print(f'METAL_BOUNDARY {i} point alive');time.sleep(.03)"],
             os.environ.copy(),root/"point.log",root/"point.jsonl",3,.2,.05,False,operation_timeout=1)
         assert point["reason"]=="no-GPU-progress-timeout"
-        waits=execute([sys.executable,"-u","-c","import time\nfor i in range(8):\n print(f'METAL_BOUNDARY {i} enter device.poll:case');time.sleep(.04);print(f'METAL_BOUNDARY {i} exit device.poll:case')"],
-            os.environ.copy(),root/"waits.log",root/"waits.jsonl",3,.2,.05,False,operation_timeout=1)
-        assert waits["exit"]==0 and not waits["active_operations"]
+        # Use a virtual event clock: OS process startup/scheduling is not the contract.
+        # Eight completed waits span 1.28s, exceeding the .2s idle deadline.
+        def scheduled_boundaries(name,operation):
+            code="for i in range(8):\n print(f'METAL_BOUNDARY {i} enter "+operation+"');print(f'METAL_BOUNDARY {i} exit "+operation+"')"
+            return event_clock_run(name,code,operation_timeout=1)
+        waits=scheduled_boundaries("waits","device.poll:case")
+        assert waits["exit"]==0 and not waits["active_operations"] and waits["elapsed"]>1
+        non_gpu=scheduled_boundaries("non-gpu","queue.submit:case")
+        assert non_gpu["exit"]==124 and non_gpu["reason"]=="no-GPU-progress-timeout"
         calls=[]
         def sample_failure(pid,operation):
             calls.append((pid,operation));raise RuntimeError("sample unavailable")
@@ -215,6 +240,6 @@ def self_test():
         assert native["exit"]!=0 and native["reason"]=="native-command-error"
         assert "code=3 synthetic" in (root/"native.log").read_text()
         assert native["cleanup"][-1]["reaped"]
-    return dict(clean="PASS",negative_controls=14,actual_Metal="NOT_RUN")
+    return dict(clean="PASS",negative_controls=15,actual_Metal="NOT_RUN")
 
 if __name__=="__main__":print(json.dumps(self_test()))
