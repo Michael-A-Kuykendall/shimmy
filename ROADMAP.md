@@ -20,7 +20,7 @@ design, acceptance evidence and approval. Gemma/MoE/recurrent development does
 not automatically enable an executor in this release.
 
 Both WSL destructor and active-generation device-loss investigations remain
-open. Metal/M4, INT4 and experimental kernels are not certified. No target
+open. Metal/M4 was NOT_RUN for the published 2.6.6 archives; a later, **unreleased** Apple M1 (Virtual) Metal candidate passed 198/198 full-vector numerical comparisons and combined state/HTTP acceptance. Its certified source is not present in the published 2.6.6 crate. See [candidate provenance](docs/releases/apple-metal-m1-2026-11.md). Physical M4, other models, INT4 and experimental kernels are not certified; historical intermittent 8K stall cause and watchdog cleanup remain unresolved. No target
 date, guaranteed feature delivery or paid-service performance comparison is implied. Licensing rights are described in [stack licensing](LICENSING.md).
 
 See [release process](RELEASE_PROCESS.md) and [historical v2 notes](docs/v2-roadmap.md).
