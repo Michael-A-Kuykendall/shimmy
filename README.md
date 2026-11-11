@@ -46,7 +46,7 @@ and GPU driver are required. The fast profile does not provide inference.
 The separately verified [native downloads, Homebrew and Scoop installers](docs/BINARY_INSTALL.md) and [versioned GHCR image](README-DOCKER.md) are now available for 2.6.6. A crates.io upload does not create those channels automatically. Docker latest is unchanged; npm is not included. Verify the exact installed version.
 
 See [quickstart](docs/quickstart.md) for model hashes, listing, requests and
-network access. Unavailable translations are not linked as current guides.
+network access. Simplified and Traditional Chinese guides are linked above; English remains the authoritative technical contract.
 
 ## Correctness and support
 
@@ -60,10 +60,9 @@ tokenizers or quantization is not certification. Gemma2, MoE, MLA, recurrent,
 state-space and multimodal executors are not enabled.
 INT4/TurboShimmy and experimental kernels remain excluded and rejected.
 
-Executed full-logit GPU evidence is NVIDIA through WSL Dozen/Vulkan. **NOT_RUN for full-logit certification:** Metal/M4,
-other unexecuted native GPU platforms, extended-context Llama, alternate
-prefill chunks and unlisted combinations. WSL device-destruction and
-active-generation device-loss investigations remain open.
+**Published Shimmy 2.6.6:** executed full-logit GPU evidence is NVIDIA through WSL Dozen/Vulkan. Its published binary and Airframe 0.4.5 do **not** include the later Metal correction.
+
+**Unreleased Apple Metal candidate:** a separate exact-source Apple M1 (Virtual) / Apple Paravirtual Metal / macOS 15.8.2 qualification passed 198/198 full-logit comparisons, frozen thresholds and the combined state/HTTP gate. See the [candidate evidence and version reconciliation](docs/releases/apple-metal-m1-2026-11.md). This is not evidence that 2.6.6 has already changed. Physical **M4 NOT_RUN**, and Qwen3.5-9B on M4 remains untested. Historical intermittent 8K stall cause and watchdog cleanup remain open. Other unexecuted native GPU platforms, extended-context Llama, alternate prefill chunks and unlisted combinations remain NOT_RUN. WSL device-destruction and active-generation device-loss investigations remain open.
 No universal determinism, startup, multi-GPU, memory or speed guarantee is made.
 
 ## Server contract
