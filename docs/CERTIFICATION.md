@@ -26,8 +26,11 @@ The release retains selected Llama/Qwen fixtures only. Historical broad model
 certification lists are not current support. Structural admission and discovery
 are separate from executed numerical/platform results.
 
-Metal/M4, other unexecuted native GPU platforms, INT4, experimental kernels and
-unlisted combinations remain **NOT_RUN**. WSL destructor/device-loss
+**The published 2.6.6 / Airframe 0.4.5 release** did not contain the later Metal correction; its Metal full-logit certification was NOT_RUN.
+
+**Unreleased Apple M1 (Virtual) Metal candidate:** 198/198 full-vector numerical comparisons PASS across seven shards, with all measured greedy decisions agreeing with the frozen FP32 reference. Worst max absolute 0.0027675629 (limit 0.1); worst RMS 0.0006875207 (limit 0.03). The normal, untraced 8K production path completed the remaining 33 comparisons, with typed over-capacity rejection and short recovery. Combined acceptance included actual HTTP JSON/SSE, usage, stops, state isolation, reset, cancellation and recovery. See [exact candidate identities and evidence](releases/apple-metal-m1-2026-11.md). The earlier intermittently stalled 8K run remains preserved as a historical failure; its cause is unknown. Watchdog cleanup remains an independent open defect.
+
+**Physical M4**, other unexecuted native GPU platforms, INT4, experimental kernels and unlisted combinations remain **NOT_RUN**. WSL destructor/device-loss
 investigations remain open. No universal determinism, throughput or stability
 guarantee is inferred from successful comparisons.
 
