@@ -17,11 +17,10 @@ Published Shimmy 2.6.6 resolves Airframe 0.4.5 via Cargo. The later private Meta
 
 ## Exact qualified implementation and evidence
 
-- Engine source: [`68091da8c55a2f96bc4309b46ece92630c996f71`](https://github.com/Michael-A-Kuykendall/airframe-private/commit/68091da8c55a2f96bc4309b46ece92630c996f71)
-- Engine tree recorded by qualification: `8f03c1130e2c6ecd0b157128a36c6e339bcfcce4`
-- Combined evidence: [private `fd6c1261a9de7619c3b7f2f91cee0340c641b626`](https://github.com/Michael-A-Kuykendall/shimmy-private/commit/fd6c1261a9de7619c3b7f2f91cee0340c641b626)
+- Engine source and tree identities: recorded in the maintainer's private qualification ledger; release integration must independently verify source equivalence.
+- Combined acceptance result: seven numerical shards, 198/198 PASS, separately recorded in the maintainer's private ledger.
 - Final 8K execution: [GitHub Actions run 42920826693](https://github.com/Michael-A-Kuykendall/shimmy/actions/runs/42920826693)
-- Uploaded 8K artifact SHA-256: `bf6a4aea17cf0f1d326454bd6d4199c6605aac9d583d4a34e591a2aa8d73d6ff`.
+- Public [8K numerical test artifact](https://github.com/Michael-A-Kuykendall/shimmy/actions/runs/42920826693/artifacts/13820410710) includes the archived verification record.
 - Tested environment: **Apple M1 (Virtual)**, Apple Paravirtual Metal GPU, macOS **15.8.2**.
 - Comparisons: **198/198 PASS** across seven numerical shards; these are comparison rows and repeated generated positions, **not 198 independent prompts**.
 - Frozen FP32 full-logit limits: max absolute **0.1**, RMS **0.03**; worst observed max absolute **0.0027675629**, RMS **0.0006875207**; all tested greedy decisions match.
