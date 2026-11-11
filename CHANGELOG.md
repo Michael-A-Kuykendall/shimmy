@@ -53,6 +53,15 @@ minor-version increment.
 
 ## [Unreleased]
 
+### Apple M1 Metal correctness candidate — NOT YET RELEASED (2026-11-11)
+
+- Preserve the published 2.6.6 archive and its historical support limits; this candidate will require a new Shimmy release consuming an independently verified, published Airframe correction.
+- Certify 198/198 full-vector numerical comparisons (seven shards) on Apple M1 (Virtual), Apple Paravirtual Metal, macOS 15.8.2; frozen FP32 thresholds (max absolute 0.1, RMS 0.03) unchanged; all measured greedy decisions match.
+- Confirm integrated JSON/SSE, usage, stop reasons, state/reset/cancellation, recovery, and capacity rejection against the qualified candidate.
+- Preserve full evidence and bounded scope in [candidate release ledger](docs/releases/apple-metal-m1-2026-11.md). Physical M4, Qwen3.5-9B M4, other unexecuted configurations remain NOT_RUN.
+- Historical intermittent 8K stall cause, macOS watchdog cleanup (`airframe-jeg`), WSL device issues, and unrelated experimental features remain open. No new Shimmy binary or crate is published by this changelog entry.
+
+
 Historical entries below preserve earlier release descriptions; they do not define the current 2.6.6 distribution or certification contract.
 
 ## [2.6.5] — 2026-10-18 — Airframe 0.4.4
