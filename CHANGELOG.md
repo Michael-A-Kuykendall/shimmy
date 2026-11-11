@@ -53,7 +53,7 @@ minor-version increment.
 
 ## [Unreleased]
 
-### [2.6.7] Apple M1 Metal correctness candidate — NOT YET RELEASED (2026-11-11)
+## [2.6.7] Apple M1 Metal correctness candidate — NOT YET RELEASED (2026-11-11)
 
 - Propose Airframe 0.4.6 as the engine dependency; no other supporting crate version bump is needed for documentation-only changes.
 
