@@ -35,7 +35,9 @@ remain NOT_RUN. The release validation record identifies the exact binary used.
 
 ## Excluded or unexecuted configurations
 
-Metal/M4 and other unavailable native GPU platforms: **NOT_RUN**.
+**Published 2.6.6 / Airframe 0.4.5:** Metal full-logit certification was NOT_RUN. **Unreleased subsequent Apple M1 (Virtual) Metal candidate:** exact-source 198/198 numerical comparisons PASS across the specified seven shards on Apple Paravirtual Metal / macOS 15.8.2; original thresholds and frozen FP32 references unchanged, with all tested greedy decisions matching. This does **not** upgrade the published archives. See [candidate evidence](releases/apple-metal-m1-2026-11.md).
+
+**Physical M4 and Qwen3.5-9B on M4: NOT_RUN**; other unavailable native GPU platforms: NOT_RUN. The historical intermittent 8K stall cause and separate watchdog cleanup warning remain unresolved.
 INT4 KV and experimental kernels: **NOT_RUN**, disabled for this candidate.
 Gemma2 and other new architecture executors: not enabled by this dense foundation.
 MoE, MLA, hybrid recurrent/Gated DeltaNet, state-space and multimodal execution:
