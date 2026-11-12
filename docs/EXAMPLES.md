@@ -1,4 +1,4 @@
-# Examples — Shimmy 2.6.6
+# Examples — Shimmy 2.6.7
 
 Install and select a verified fixture using the [quickstart](quickstart.md).
 Use returned/discovered model IDs rather than assuming filenames are aliases.
