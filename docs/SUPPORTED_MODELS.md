@@ -1,4 +1,4 @@
-# Supported models — Shimmy 2.6.6 / Airframe 0.4.5
+# Supported models — Shimmy 2.6.7 / Airframe 0.4.6
 
 This release is scoped to the validated dense Llama and Qwen3 execution plans.
 Model discovery, structural admission and numerical certification are distinct.
@@ -21,11 +21,7 @@ These are bounded fixtures, not certification of every prompt, model revision or
 combination of settings. The 198 measured comparisons include repeated positions
 and modes; they are not 198 independent prompts.
 
-Executed GPU environment: NVIDIA RTX 4070 Laptop through WSL Dozen/Vulkan,
-FP32 accumulation, F32 KV, reference kernels. Numerical correctness on this
-environment does not establish native Linux, Windows or Apple GPU correctness.
-WSL device destruction and active-generation device-loss investigations remain
-open. A successful run does not establish that those failures are fixed.
+Executed reference environments include NVIDIA RTX 4070 Laptop through WSL Dozen/Vulkan and, separately, **Apple M1 (Virtual), Apple Paravirtual Metal GPU, macOS 15.8.2**, with FP32 reference comparisons, F32 KV and reference kernels. The Apple Metal 198/198 comparison record pertains to the **released 2.6.7 / 0.4.6 source**, not the prior 2.6.6 release. Neither proves physical M4, general native GPU correctness nor WSL driver stability. WSL device destruction and active-generation device-loss investigations remain open.
 
 Actual server coverage includes JSON/SSE, usage/finish reasons, state isolation,
 reset/cancellation, typed errors and recovery on selected Qwen3/Llama fixtures.
@@ -35,10 +31,10 @@ remain NOT_RUN. The release validation record identifies the exact binary used.
 
 ## Excluded or unexecuted configurations
 
-**Published 2.6.6 / Airframe 0.4.5:** Metal full-logit certification was NOT_RUN. **Unreleased subsequent Apple M1 (Virtual) Metal candidate:** exact-source 198/198 numerical comparisons PASS across the specified seven shards on Apple Paravirtual Metal / macOS 15.8.2; original thresholds and frozen FP32 references unchanged, with all tested greedy decisions matching. This does **not** upgrade the published archives. See [candidate evidence](releases/apple-metal-m1-2026-11.md).
+**Released 2.6.7 / Airframe 0.4.6:** the Apple M1 (Virtual) Metal production path passed **198/198 full-vector numerical comparisons** across seven shards on Apple Paravirtual Metal / macOS 15.8.2, with unchanged frozen FP32 tolerances and matching greedy decisions. Prior 2.6.6 / 0.4.5 archives did not include the Metal correction. See [release certification evidence](releases/apple-metal-m1-2026-11.md).
 
 **Physical M4 and Qwen3.5-9B on M4: NOT_RUN**; other unavailable native GPU platforms: NOT_RUN. The historical intermittent 8K stall cause and separate watchdog cleanup warning remain unresolved.
-INT4 KV and experimental kernels: **NOT_RUN**, disabled for this candidate.
+INT4 KV and experimental kernels: **NOT_RUN**, excluded from the validated release.
 Gemma2 and other new architecture executors: not enabled by this dense foundation.
 MoE, MLA, hybrid recurrent/Gated DeltaNet, state-space and multimodal execution:
 unsupported by the validated dense plan and must reject explicitly.
