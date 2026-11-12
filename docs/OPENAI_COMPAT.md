@@ -1,4 +1,4 @@
-# OpenAI compatibility — Shimmy 2.6.6
+# OpenAI compatibility — Shimmy 2.6.7
 
 This is a selected protocol surface. It is not a promise of all OpenAI SDK,
 endpoint, tool, image, audio or structured-output features.
