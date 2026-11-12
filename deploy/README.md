@@ -1,7 +1,6 @@
-# Deployment scope — Shimmy 2.6.6
+# Deployment scope — Shimmy 2.6.7
 
-This release is crates.io-only. No new hosted deployment, image, native binary,
-Homebrew, Scoop or npm package is produced by publishing those crates.
+This release provides verified crates.io packages, native release bundles, versioned GHCR 2.6.7 images, Homebrew and Scoop installation. GitHub's historical cloud deployment templates are not automatically tested or deployed by publishing these artifacts. The GHCR `latest` tag and npm remain unchanged.
 
 The tracked cloud and Compose files, and files produced by shimmy init, are
 **historical scaffolds, not current deployment instructions**. They retain
