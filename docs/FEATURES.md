@@ -14,7 +14,6 @@ Discovery and parser support do not certify an arbitrary model.
 Management/tool placeholder routes are not a complete model service.
 
 Not enabled/certified: Gemma2, MoE, MLA, recurrent/SSM/multimodal executors,
-INT4 and experimental kernels. Physical M4 and other unexecuted native platforms
-are NOT_RUN; WSL device-loss issues remain open.
+INT4 and experimental kernels. The released Airframe 0.4.6 passed 198/198 full-logit comparisons on Apple M1 (Virtual) / Paravirtual Metal for exact tested fixtures; **physical M4 and other unexecuted native GPU platforms remain NOT_RUN**. WSL device-loss issues remain open.
 The fast profile is non-inference, and compatibility flags do not restore
 removed engines. The released 2.6.7 distribution includes verified native bundles, versioned GHCR, Homebrew and Scoop; `latest` and npm were unchanged.
