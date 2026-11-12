@@ -14,8 +14,7 @@ Chat JSON is default; chat SSE is explicit and text-completion streaming rejects
 Prompt preparation preserves exact IDs; usage/finish/stop metadata comes from
 generation instead of text-length estimates.
 
-Use `cargo install shimmy --version 2.6.7 --locked`. The 2.6.7 release also includes verified native binaries and versioned Docker
-images or package-manager distributions. Review [quickstart](quickstart.md),
+Use `cargo install shimmy --version 2.6.7 --locked`. The 2.6.7 release also includes verified native binaries, versioned Docker images, Homebrew and Scoop installers. GHCR `latest` and npm remain unchanged. Review [quickstart](quickstart.md),
 [configuration](CONFIGURATION.md), [API](API.md) and
 [2.6.7 changes](../CHANGELOG.md).
 
