@@ -2,8 +2,8 @@
 
 | Component | Version | Current applicable terms |
 |---|---|---|
-| shimmy | 2.6.6 | Apache-2.0 |
-| airframe | 0.4.5 | MIT |
+| shimmy | 2.6.7 | Apache-2.0 |
+| airframe | 0.4.6 | MIT |
 | shimmytok | 0.8.5 | MIT OR Apache-2.0 |
 | libfse | 0.1.4 | Apache-2.0 additional grant |
 | airframe-observe | 0.1.4 | MIT |
@@ -18,8 +18,8 @@ Retain the [complete Apache-2.0 text](https://github.com/Michael-A-Kuykendall/ai
 
 ## Component sources and packages
 
-- [Shimmy 2.6.6](https://crates.io/crates/shimmy/2.6.6): [source/license](https://github.com/Michael-A-Kuykendall/shimmy/tree/v2.6.6).
-- [Airframe 0.4.5](https://crates.io/crates/airframe/0.4.5): [source/license](https://github.com/Michael-A-Kuykendall/airframe/tree/v0.4.5).
+- [Shimmy 2.6.7](https://crates.io/crates/shimmy/2.6.7): [source/license](https://github.com/Michael-A-Kuykendall/shimmy/tree/v2.6.7).
+- [Airframe 0.4.6](https://crates.io/crates/airframe/0.4.6): [source/license](https://github.com/Michael-A-Kuykendall/airframe/tree/v0.4.6).
 - [ShimmyTok 0.8.5](https://crates.io/crates/shimmytok/0.8.5): [source/licenses](https://github.com/Michael-A-Kuykendall/shimmytok/tree/v0.8.5).
 - [libfse 0.1.4](https://crates.io/crates/libfse/0.1.4): [original source](https://github.com/Michael-A-Kuykendall/airframe/tree/libfse-v0.1.4/crates/libfse), plus the additional grant above.
 - [airframe-observe 0.1.4](https://crates.io/crates/airframe-observe/0.1.4): [source/license](https://github.com/Michael-A-Kuykendall/airframe/tree/airframe-observe-v0.1.4/crates/airframe_observe).
