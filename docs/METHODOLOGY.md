@@ -1,4 +1,4 @@
-# Verification methodology — Shimmy 2.6.6
+# Verification methodology — Shimmy 2.6.7
 
 Certification is scoped to immutable model/source/reference/configuration
 identities, not a count of supported families.
