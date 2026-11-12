@@ -1,12 +1,11 @@
-# Coordinated release process — Shimmy 2.6.6
+# Coordinated release process — current Shimmy release workflow
 
 Publication is a **human approval** decision on exact source, package bytes,
 checksums, metadata and support claims. This document does not authorize it.
 
 ## Required candidate
 
-Prepare shimmytok 0.8.5, libfse 0.1.4, airframe-observe 0.1.4, Airframe 0.4.5 and
-Shimmy 2.6.6 in dependency order. The private authorization packet identifies
+For the published November 12, 2026 release, ShimmyTok 0.8.5, libfse 0.1.4 and airframe-observe 0.1.4 were reused unchanged. Airframe 0.4.6 was published before Shimmy 2.6.7 in dependency order. Future releases must establish their own exact versions and approved artifact identities. The private authorization packet identifies
 exact public parents, clean source commits, tags, .crate archives/checksums,
 registry request bodies, dependency/security/license results and rollback limits.
 
