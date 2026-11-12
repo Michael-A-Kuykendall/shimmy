@@ -1,27 +1,27 @@
-# Apple M1 Metal certification — unreleased candidate reconciliation
+# Apple M1 Metal certification — released in Shimmy 2.6.7 / Airframe 0.4.6
 
-**Status:** Certified source candidate; **NOT a published Shimmy or Airframe release**. Prepared 2026-11-11.
+**Status:** Exact-source certification PASS and published November 12, 2026 in [Shimmy v2.6.7](https://github.com/Michael-A-Kuykendall/shimmy/releases/tag/v2.6.7) and [Airframe v0.4.6](https://github.com/Michael-A-Kuykendall/airframe/releases/tag/v0.4.6). Physical M4 remains NOT_RUN.
 
-## Proposed integration versions
+## Published integration versions
 
-Shimmy **2.6.7** consumes Airframe **0.4.6**. These versions are proposed and unpublished; the other four components retain their existing published versions. New source/archive identities and distribution acceptance must be verified before independent audit and human GO. No existing tag or archive is moved.
+Shimmy **2.6.7** consumes published Airframe **0.4.6**. Only these two crates required new versions; ShimmyTok 0.8.5, libfse 0.1.4, airframe-observe 0.1.4 and shimmyjinja 0.5.0 remain unchanged. [Native installation and hashes](../BINARY_INSTALL.md) · [Versioned Docker image](../../README-DOCKER.md). No prior tag or archive was moved.
 
-## Publication baseline
+## Previous publication baseline (historical)
 
 | Crate | Published version | Repository | Disposition |
 | --- | --- | --- | --- |
-| shimmy | 2.6.6 | Michael-A-Kuykendall/shimmy | Downstream new release needed to consume corrected engine |
-| airframe | 0.4.5 | Michael-A-Kuykendall/airframe | New engine release needed |
+| shimmy | 2.6.6 | Michael-A-Kuykendall/shimmy | Historical: replaced by released 2.6.7 |
+| airframe | 0.4.5 | Michael-A-Kuykendall/airframe | Historical: replaced by released 0.4.6 |
 | shimmytok | 0.8.5 | Michael-A-Kuykendall/shimmytok | Keep version; no demonstrated new tokenizer change |
 | libfse | 0.1.4 | airframe/crates/libfse | Keep version; Apache-2.0 additional grant applies |
 | airframe-observe | 0.1.4 | airframe/crates/airframe_observe | Keep version unless integration proves otherwise |
 | shimmyjinja | 0.5.0 | Michael-A-Kuykendall/shimmyjinja | Keep version; no demonstrated new templating change |
 
-Published Shimmy 2.6.6 resolves Airframe 0.4.5 via Cargo. The later private Metal correction is **not incorporated by Cargo version alone**. Never rewrite an old tag, archived crate, or its historical certification claim.
+Historical Shimmy 2.6.6 resolves Airframe 0.4.5 via Cargo and does **not** contain the Metal correction. Published Shimmy 2.6.7 resolves Airframe 0.4.6 and includes the qualified correction. Historical archives and certification remain unchanged.
 
 ## Exact qualified implementation and evidence
 
-- Engine source and tree identities: recorded in the maintainer's private qualification ledger; release integration must independently verify source equivalence.
+- Engine certification and source equivalence were independently accepted before publication; exact internal qualification identities are recorded in the maintainer's private evidence ledger.
 - Combined acceptance result: seven numerical shards, 198/198 PASS, separately recorded in the maintainer's private ledger.
 - Final 8K execution: [GitHub Actions run 42920826693](https://github.com/Michael-A-Kuykendall/shimmy/actions/runs/42920826693)
 - Public [8K numerical test artifact](https://github.com/Michael-A-Kuykendall/shimmy/actions/runs/42920826693/artifacts/13820410710) includes the archived verification record.
@@ -32,7 +32,7 @@ Published Shimmy 2.6.6 resolves Airframe 0.4.5 via Cargo. The later private Meta
 - Final untraced 8K ordinary production path completed; original 8K stall is historical and still lacks established cause.
 - **Physical M4: NOT_RUN**. Qwen3.5-9B on M4: NOT_RUN. Intel/AMD/other GPU families are not certified by this run.
 
-## Production changes isolated in the candidate
+## Production corrections included in the release
 
 1. Metal queue completion after large model initialization and before output-head allocation: addresses all-zero Qwen3-1.7B embeddings.
 2. macOS outer dense prefill bound to 64 tokens: passes 12 tested Llama full-logit comparisons after native Metal timeout.
@@ -47,14 +47,10 @@ Neither change expands supported architectures or changes frozen numerical gates
 - macOS Paste tool maintenance warning, experimental kernels, INT4 KV, extended-context Llama, M4 physical hardware, other Qwen3.5 combinations remain unverified.
 - Shimmy #218 M4 Max original reproduction must **not** be closed solely on this M1 run.
 - Shimmy #214 binding-limit fix is recorded in 2.6.3, but reported INT4/Qwen3.5 configuration still needs separate confirmation.
-- No new crate, binary, GitHub release, Docker image, package-manager formula, or installer has been published by this document.
+- Shimmy 2.6.7 and Airframe 0.4.6 crates, GitHub Releases, versioned GHCR 2.6.7, Homebrew and Scoop were published and verified. The document is an evidence record; it does not itself perform those operations.
 
-## Release handoff / mandatory checks
+## Completed publication verification
 
-1. Transfer and reconcile the **exact qualified engine tree** into public Airframe, with independent diff and artifact verification.
-2. Choose and publish an available new Airframe version, then update Shimmy's dependency and lockfile.
-3. Rebuild actual platform artifacts and run release-install/real inference smoke checks on the precise distributables.
-4. Synchronize accurate English/Chinese documentation, version histories, package notices and issue updates.
-5. Publish only after independent package/source provenance acceptance. Preserve M4 as NOT_RUN.
+The accepted source-to-package equivalence, four native distribution targets, actual installed CLI, container and package-manager gates, and release artifacts were verified before publication. Physical M4 and other unexecuted hardware remain explicitly NOT_RUN. No additional model or numerical certification is claimed.
 
 Source of truth for model/fixture names and existing published guarantees: [SUPPORTED_MODELS](../SUPPORTED_MODELS.md) and [CERTIFICATION](../CERTIFICATION.md).
