@@ -1,4 +1,4 @@
-# OpenAPI and interactive docs — Shimmy 2.6.6
+# OpenAPI and interactive docs — Shimmy 2.6.7
 
 A running server provides GET /openapi.json and GET /docs. Configured credentials
 protect these routes just like inference; browser Origin checks also apply.
