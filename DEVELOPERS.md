@@ -1,4 +1,4 @@
-# Developer guide — Shimmy 2.6.6
+# Developer guide — Shimmy 2.6.7
 
 Read [architecture](docs/ARCHITECTURE.md), [configuration](docs/CONFIGURATION.md),
 [API](docs/API.md) and [contribution policy](CONTRIBUTING.md) first.
@@ -13,7 +13,7 @@ cargo test --locked --no-default-features --features fast --lib -- --test-thread
 cargo build --locked --release
 ```
 
-Default features compile Airframe 0.4.5. The fast profile excludes inference;
+Default features compile Airframe 0.4.6. The fast profile excludes inference;
 legacy feature names are compatibility stubs. Use locked official dependencies
 for release verification. Temporary source patches are development aids, not
 proof that public registry consumers resolve the approved packages.
