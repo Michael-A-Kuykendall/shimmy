@@ -1,4 +1,4 @@
-# Performance scope — Shimmy 2.6.6
+# Performance scope — Shimmy 2.6.7
 
 This is a dense-text correctness and dependency/documentation release.
 It establishes no universal throughput, startup, binary-size, RAM, VRAM, power,
