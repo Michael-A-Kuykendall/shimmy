@@ -1,4 +1,4 @@
-# Troubleshooting — Shimmy 2.6.6
+# Troubleshooting — Shimmy 2.6.7
 
 Start with the installed version, exact model SHA-256, command, backend/adapter,
 context/chunk/precision and sanitized error. Never publish keys, prompt data or
@@ -6,7 +6,7 @@ large captures inadvertently.
 
 | Symptom | Check |
 |---|---|
-| Missing executable | cargo install shimmy --version 2.6.6 --locked; inspect PATH |
+| Missing executable | cargo install shimmy --version 2.6.7 --locked; inspect PATH |
 | Unknown model | GET /v1/models or shimmy list; use the exact registered ID |
 | Invalid command | Commands include serve/list/discover/probe/bench/generate/gpu-info/init; generate needs positional NAME |
 | Bind rejected | Non-loopback requires SHIMMY_API_KEY; explicit --bind controls listener |
