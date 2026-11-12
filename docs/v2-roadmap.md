@@ -1,6 +1,6 @@
 # Shimmy v2.x Roadmap
 
-> **HISTORICAL DESIGN RECORD — not current release guidance.** Retained statements, commands, planned capabilities and numerical/performance claims below are not verified 2.6.6 support. Use the [current contract](SUPPORTED_MODELS.md) instead. No publication, deployment or platform certification is authorized by this record.
+> **HISTORICAL DESIGN RECORD — not current release guidance.** Retained statements, commands, planned capabilities and numerical/performance claims below are not verified 2.6.7 support. Use the [current contract](SUPPORTED_MODELS.md) instead. No publication, deployment or platform certification is authorized by this record.
 
 **Last Updated:** 2026-08-26  
 **Branch:** `main`  
