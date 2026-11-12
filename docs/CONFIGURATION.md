@@ -1,4 +1,4 @@
-# Configuration — Shimmy 2.6.6
+# Configuration — Shimmy 2.6.7
 
 ## HTTP access policy
 
