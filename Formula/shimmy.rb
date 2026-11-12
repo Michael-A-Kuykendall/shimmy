@@ -1,29 +1,29 @@
 class Shimmy < Formula
   desc "Local model inference server with the default Airframe engine"
   homepage "https://github.com/Michael-A-Kuykendall/shimmy"
-  version "2.6.6"
+  version "2.6.7"
   # Primary components; complete dependency terms are installed under share/shimmy.
   license all_of: ["Apache-2.0", "MIT"]
 
   on_macos do
     depends_on arch: :arm64
-    url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.6/shimmy-macos-arm64.tar.gz"
-    sha256 "eabba8acf94450242f0b8da221a391a935185b3c3877f1350b1ff7ffec2d4a2e"
+    url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.7/shimmy-macos-arm64.tar.gz"
+    sha256 "989acb48fa452fd0f7992c1c968752ab8e22772d47ac1770fcd54dc64fbcd694"
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.6/shimmy-linux-x86_64.tar.gz"
-      sha256 "13c5ea0b7c32e7021542a94ad961347b6b2a86deb834a1652f6e93e0e7204cf9"
+      url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.7/shimmy-linux-x86_64.tar.gz"
+      sha256 "ce23fcb71f56e5d84b5848d2f56a5aded40ad37e0a9b5238ce36da487d39c312"
     end
     on_arm do
-      url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.6/shimmy-linux-arm64.tar.gz"
-      sha256 "9916f1279d1a2d3eced746836fecbbe277f4816d21e06da45ebc6596f22f812e"
+      url "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.7/shimmy-linux-arm64.tar.gz"
+      sha256 "c560fc3214984deb217eb96859e5b0ccd3a96130032a78963642769f208b229d"
     end
   end
 
   def install
-    odie "Shimmy 2.6.6 has no macOS Intel binary." if OS.mac? && Hardware::CPU.intel?
+    odie "Shimmy 2.6.7 has no macOS Intel binary." if OS.mac? && Hardware::CPU.intel?
     bin.install "shimmy"
     (share/"shimmy").install "LICENSES", "THIRD-PARTY-NOTICES.md", "DISTRIBUTION-LICENSE.txt", "native-manifest.json"
   end
@@ -38,7 +38,7 @@ class Shimmy < Formula
   end
 
   test do
-    assert_match "2.6.6", shell_output("#{bin}/shimmy --version")
+    assert_match "2.6.7", shell_output("#{bin}/shimmy --version")
     assert_match "serve", shell_output("#{bin}/shimmy --help")
     assert_path_exists share/"shimmy/LICENSES/libfse-0.1.4/LICENSE-GRANT-0.1.4.md"
     assert_path_exists share/"shimmy/THIRD-PARTY-NOTICES.md"
