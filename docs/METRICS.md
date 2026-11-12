@@ -1,4 +1,4 @@
-# Metrics and observation — Shimmy 2.6.6
+# Metrics and observation — Shimmy 2.6.7
 
 GET /metrics exposes the server's local MetricsCollector output.
 GET /diag exposes diagnostics. Both require credentials when a key is configured.
