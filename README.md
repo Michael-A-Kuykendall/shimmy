@@ -20,34 +20,29 @@
 
 </div>
 
-## Shimmy 2.6.7 — unreleased candidate
+## Shimmy 2.6.7 — released November 12, 2026
 
-The proposed candidate consumes Airframe **0.4.6** and the qualified Apple M1 Metal implementation. It is not available as a published crate, binary, image or package-manager update. The commands and distribution links below install the unchanged **2.6.6 / Airframe 0.4.5 published baseline**, not this candidate. See the [release reconciliation](docs/releases/apple-metal-m1-2026-11.md).
+Shimmy 2.6.7 is published and uses **Airframe 0.4.6**. This release includes the certified Apple M1 (Virtual) Metal corrections, while physical M4, Qwen3.5 and other unexecuted hardware/models remain **NOT_RUN or unsupported**. See [release notes](CHANGELOG.md), [certification](docs/CERTIFICATION.md) and [verified native downloads](docs/BINARY_INSTALL.md).
 
-### Published baseline — Shimmy 2.6.6
-
-Shimmy is a local inference server and CLI; **Airframe 0.4.5 is its engine**.
-This is a coordinated dense-text correctness, dependency-security and
-documentation release, not a new architecture or performance release.
-See [CHANGELOG](CHANGELOG.md).
+Shimmy is a local GGUF inference server and CLI. The previous **Shimmy 2.6.6 / Airframe 0.4.5** release remains available as historical artifacts, not the recommended current installation.
 
 **Default dependency licensing:** Shimmy → Airframe → libfse. Shimmy is Apache-2.0; Airframe and airframe-observe are MIT; ShimmyTok is MIT OR Apache-2.0. The [libfse 0.1.4 additional Apache-2.0 grant](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md) permits commercial use, modification, redistribution and incorporation into products without separate commercial permission. The original crates.io archive and metadata remain unchanged. Preserve component and third-party notices; see [stack licensing](LICENSING.md).
 
 ## Install and run
 
-Verified [native 2.6.6 archives and checksum instructions](docs/BINARY_INSTALL.md) are available separately from crates.io, including the Windows executable and complete licensing bundles.
+Verified [native 2.6.7 archives and checksum instructions](docs/BINARY_INSTALL.md) are available separately from crates.io, including the Windows executable and complete licensing bundles.
 
 Install the versioned crate with a Rust toolchain:
 
 ```bash
-cargo install shimmy --version 2.6.6 --locked
+cargo install shimmy --version 2.6.7 --locked
 shimmy --version
 shimmy --ctx 512 --kv-quant f32 serve --model-path /path/to/model.gguf --bind 127.0.0.1:11435
 ```
 
 Use a verified admitted fixture in place of the path. A working Rust toolchain
 and GPU driver are required. The fast profile does not provide inference.
-The separately verified [native downloads, Homebrew and Scoop installers](docs/BINARY_INSTALL.md) and [versioned GHCR image](README-DOCKER.md) are now available for 2.6.6. A crates.io upload does not create those channels automatically. Docker latest is unchanged; npm is not included. Verify the exact installed version.
+The separately verified [native downloads, Homebrew and Scoop installers](docs/BINARY_INSTALL.md) and [versioned GHCR image](README-DOCKER.md) are available for **2.6.7**. A crates.io upload does not create those channels automatically. Docker latest is unchanged; npm is not included. Verify the exact installed version.
 
 See [quickstart](docs/quickstart.md) for model hashes, listing, requests and
 network access. Simplified and Traditional Chinese guides are linked above; English remains the authoritative technical contract.
@@ -64,9 +59,7 @@ tokenizers or quantization is not certification. Gemma2, MoE, MLA, recurrent,
 state-space and multimodal executors are not enabled.
 INT4/TurboShimmy and experimental kernels remain excluded and rejected.
 
-**Published Shimmy 2.6.6:** executed full-logit GPU evidence is NVIDIA through WSL Dozen/Vulkan. Its published binary and Airframe 0.4.5 do **not** include the later Metal correction.
-
-**Unreleased Apple Metal candidate:** a separate exact-source Apple M1 (Virtual) / Apple Paravirtual Metal / macOS 15.8.2 qualification passed 198/198 full-logit comparisons, frozen thresholds and the combined state/HTTP gate. See the [candidate evidence and version reconciliation](docs/releases/apple-metal-m1-2026-11.md). This is not evidence that 2.6.6 has already changed. Physical **M4 NOT_RUN**, and Qwen3.5-9B on M4 remains untested. Historical intermittent 8K stall cause and watchdog cleanup remain open. Other unexecuted native GPU platforms, extended-context Llama, alternate prefill chunks and unlisted combinations remain NOT_RUN. WSL device-destruction and active-generation device-loss investigations remain open.
+**Released Shimmy 2.6.7 / Airframe 0.4.6:** the qualified Apple M1 (Virtual) / Apple Paravirtual Metal / macOS 15.8.2 path passed **198/198** full-logit comparisons and integrated HTTP/state gates with frozen FP32 tolerances. This correction is included in the released Airframe 0.4.6 engine. See [certification and exact model scope](docs/CERTIFICATION.md) and the [release evidence](docs/releases/apple-metal-m1-2026-11.md). Previous NVIDIA/WSL Vulkan numerical checks remain separate platform evidence. **Physical M4 and Qwen3.5-9B on M4 remain NOT_RUN; Qwen3.5 execution is unsupported.** The historical intermittent 8K stall root cause, watchdog cleanup, WSL device destruction and active-generation device-loss investigations remain open. Untested platforms/models, extended-context Llama and experimental modes remain NOT_RUN.
 No universal determinism, startup, multi-GPU, memory or speed guarantee is made.
 
 ## Server contract
