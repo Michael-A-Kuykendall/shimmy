@@ -1,6 +1,6 @@
-# Release gates — Shimmy 2.6.6
+# Release gates — Shimmy 2.6.7 and future coordinated releases
 
-The release candidate is the exact coordinated five-crate source/archive set,
+The accepted 2.6.7 release is the exact coordinated six-component source/archive set (only Airframe and Shimmy were newly published),
 not a successful generic build or old workflow checklist.
 
 - Default engine and no-default-features fast graphs: locked resolution,
