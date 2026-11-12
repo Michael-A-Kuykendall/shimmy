@@ -1,4 +1,4 @@
-# Integration specification template — Shimmy 2.6.6
+# Integration specification template — Shimmy 2.6.7
 
 Fill in these fields for a proposed integration; this is not a deployed system
 or an execution/certification claim.
