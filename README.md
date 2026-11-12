@@ -86,6 +86,8 @@ before readiness without eliminating it or guaranteeing stability.
 - [Security](SECURITY.md), [release process](RELEASE_PROCESS.md) and [release gates](RELEASE_GATES_CHECKLIST.md)
 - [Developer guide](DEVELOPERS.md), [contribution policy](CONTRIBUTING.md) and [roadmap](ROADMAP.md)
 
+**Wiki notice:** The separate [GitHub Wiki](https://github.com/Michael-A-Kuykendall/shimmy/wiki) contains historical pre-2.6.7 instructions. For current installation, supported models, security policy and feature availability, use the maintained documents linked above; old llama.cpp/MLX/MoE commands and family-wide GPU claims are not the 2.6.7 support contract.
+
 Shimmy source is Apache-2.0. Airframe runtime and Observe are MIT; ShimmyTok is dual-licensed. libfse 0.1.4 is covered by the [additional Apache-2.0 grant](https://github.com/Michael-A-Kuykendall/airframe/blob/8efb1e7a830b0822cfc5ac1b121e149948d5ffe3/crates/libfse/LICENSE-GRANT-0.1.4.md), permitting commercial use without separate permission. Preserve applicable component, dependency and model terms; see [stack licensing](LICENSING.md).
 
 ## Support
