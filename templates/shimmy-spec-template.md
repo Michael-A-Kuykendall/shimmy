@@ -1,4 +1,4 @@
-# Feature specification template — Shimmy 2.6.6
+# Feature specification template — Shimmy 2.6.7
 
 - Concrete artifact/user outcome:
 - Source-grounded approved design:
