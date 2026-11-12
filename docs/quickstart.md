@@ -1,27 +1,25 @@
-# Quickstart — Shimmy 2.6.6
+# Quickstart — Shimmy 2.6.7
 
 ## Verified native downloads
 
-The separately validated [2.6.6 native archive installation guide](BINARY_INSTALL.md) covers Linux x86-64/ARM64, Windows x86-64 and macOS ARM64, with exact checksums and retained component license materials. Native CLI tests and GPU model certification are different gates.
+The separately validated [2.6.7 native archive installation guide](BINARY_INSTALL.md) covers Linux x86-64/ARM64, Windows x86-64 and macOS ARM64, with exact checksums and retained component license materials. Native CLI tests and GPU model certification are different gates.
 
 ## Install the coordinated crate
 
-Install Shimmy 2.6.6 from crates.io:
+Install Shimmy 2.6.7 from crates.io:
 
 ```bash
-cargo install shimmy --version 2.6.6 --locked
+cargo install shimmy --version 2.6.7 --locked
 shimmy --version
 ```
 
-This compiles the default Airframe 0.4.5 engine and needs a Rust toolchain,
+This compiles the default Airframe 0.4.6 engine and needs a Rust toolchain,
 platform build prerequisites and a working wgpu driver. Transitive dependencies
 may also require a native compiler/linker; the application being Rust/WGSL does
 not guarantee a Rust-only dependency build. Do not disable default
 features to obtain inference: the fast profile is a non-inference test build.
 
-**A crates.io-only 2.6.6 release does not create GitHub binary assets, Docker
-images, Homebrew, Scoop or npm packages.** Do not use a `latest` binary/image as
-proof that you installed 2.6.6. Those channels require separate publication and
+**Shimmy 2.6.7 is published on crates.io, GitHub Releases, GHCR, Homebrew and Scoop.** The `latest` container tag is intentionally unchanged and npm is not provided. Verify the explicit version and published checksums; those channels were independently verified after publication. Any further channel requires separate publication and
 verification. Verify the installed executable with shimmy --version.
 
 ## Select and verify a model
@@ -85,5 +83,5 @@ does not remove that work, and resets request state afterward.
 See [warm-up rules](CONFIGURATION.md#startup-warm-up).
 
 The tested numerical path is F32 KV/reference kernels on exact dense fixtures.
-WSL device loss remains open; Metal and other unexecuted platforms are NOT_RUN.
+WSL device-loss stability remains open. Apple M1 (Virtual) / Paravirtual Metal 198/198 full-logit certification passed for the released 2.6.7 / 0.4.6 source; physical M4 and other unexecuted configurations remain NOT_RUN.
 See the [fixture matrix](SUPPORTED_MODELS.md) and [troubleshooting](TROUBLESHOOTING.md).
