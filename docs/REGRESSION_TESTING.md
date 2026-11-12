@@ -1,4 +1,4 @@
-# Regression testing — Shimmy 2.6.6
+# Regression testing — Shimmy 2.6.7
 
 Use the exact integrated sources and locked dependency graph. Keep unit/protocol,
 numerical, state, real HTTP and platform evidence distinct.
