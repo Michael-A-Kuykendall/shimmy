@@ -1,4 +1,4 @@
-# Chat templates — Shimmy 2.6.6
+# Chat templates — Shimmy 2.6.7
 
 A template converts ordered messages into model input before tokenization.
 Correct role/control markers, special-token handling and BOS/EOS policies are
