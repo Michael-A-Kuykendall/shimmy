@@ -17,7 +17,6 @@ removed engines.
 rejected. Use F32 KV/reference kernels; no compression or quality promise is made.
 
 **Does 2.6.7 have native downloads, Docker, Homebrew and Scoop?** Yes. Use the [versioned download guide](BINARY_INSTALL.md) and [GHCR instructions](../README-DOCKER.md). GHCR `latest` and npm are unchanged.
-does not create binaries, images, Homebrew, Scoop or npm updates.
 See [quickstart](quickstart.md).
 
 **Why does first use take longer?** Lazy loading and initial GPU work happen
