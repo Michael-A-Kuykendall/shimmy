@@ -2,15 +2,15 @@
 
 ## [Unreleased]
 
-## [2.6.7] Apple M1 Metal correctness candidate — NOT YET RELEASED (2026-11-11)
+## [2.6.7] — 2026-11-12 — Apple M1 Metal correctness
 
-- Propose Airframe 0.4.6 as the engine dependency; no other supporting crate version bump is needed for documentation-only changes.
+- Consume published Airframe 0.4.6 as the engine; ShimmyTok, libfse, airframe-observe and shimmyjinja retain their existing versions.
 
-- Preserve the published 2.6.6 archive and its historical support limits; this candidate will require a new Shimmy release consuming an independently verified, published Airframe correction.
+- Release the verified Metal correction in Shimmy 2.6.7 while preserving the historical 2.6.6 archive and its original support limits.
 - Certify 198/198 full-vector numerical comparisons (seven shards) on Apple M1 (Virtual), Apple Paravirtual Metal, macOS 15.8.2; frozen FP32 thresholds (max absolute 0.1, RMS 0.03) unchanged; all measured greedy decisions match.
-- Confirm integrated JSON/SSE, usage, stop reasons, state/reset/cancellation, recovery, and capacity rejection against the qualified candidate.
+- Integrated JSON/SSE, usage, stop reasons, state/reset/cancellation, recovery and capacity rejection passed against the qualified production source.
 - Preserve full evidence and bounded scope in [candidate release ledger](docs/releases/apple-metal-m1-2026-11.md). Physical M4, Qwen3.5-9B M4, other unexecuted configurations remain NOT_RUN.
-- Historical intermittent 8K stall cause, macOS watchdog cleanup, WSL device issues, and unrelated experimental features remain open. No new Shimmy binary or crate is published by this changelog entry.
+- Historical intermittent 8K stall cause, macOS watchdog cleanup, WSL device issues, and unrelated experimental features remain open. Shimmy 2.6.7 crate, native binaries, versioned GHCR, Homebrew and Scoop were published/verified November 12, 2026; `latest` and npm were unchanged.
 
 ## 2.6.6 postpublication licensing and distribution — 2026-11-07
 
@@ -1378,7 +1378,7 @@ The systematic engineering discipline established in v1.7.3 creates a **BULLETPR
 ### Free Forever Commitment
 Shimmy is committed to being free forever with no asterisks, no "free for now" periods, and no pivot to paid services. The MIT license ensures this commitment is legally binding.
 
-[Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.6.6...HEAD
+[Unreleased]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.6.7...HEAD
 [2.6.1]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/Michael-A-Kuykendall/shimmy/compare/v2.4.2...v2.5.0
