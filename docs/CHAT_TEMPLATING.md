@@ -1,4 +1,4 @@
-# Prompt preparation architecture — Shimmy 2.6.6
+# Prompt preparation architecture — Shimmy 2.6.7
 
 src/prompt_render.rs centralizes chat/completion rendering. HTTP handlers obtain
 the loaded model's template and special-token extras, render the ordered turns
