@@ -62,9 +62,7 @@ See [licensing](LICENSING.md), [supported fixtures](docs/SUPPORTED_MODELS.md)
 and [security](SECURITY.md). Commercial use is permitted subject to applicable
 component licenses; the original libfse crate metadata is historically unchanged.
 
-The manual-only Docker workflow prepares a checksum-verified licensed release
-archive, builds each architecture natively, tests both images and then publishes
-only versioned tags. It does not run Cargo publication, move product tags, publish
+The manual-only Docker workflow prepares checksum-verified licensed release artifacts and validates both architecture images before publishing only versioned tags. The recorded x86-64 container checks ran on Linux/WSL; ARM64 container runtime validation used QEMU and does not establish native ARM64 GPU inference. It does not run Cargo publication, move product tags, publish
 crates or update `latest`. Local equivalent:
 
 ```bash
