@@ -1,4 +1,4 @@
-# Model admission and expansion — Shimmy 2.6.6
+# Model admission and expansion — Shimmy 2.6.7
 
 Current support is the [fixture matrix](SUPPORTED_MODELS.md), not a family-count
 marketing list. Airframe admits validated dense Llama and Qwen3 plans and rejects
