@@ -1,4 +1,4 @@
-# Certification — Shimmy 2.6.6 / Airframe 0.4.5
+# Certification — Shimmy 2.6.7 / Airframe 0.4.6
 
 The authoritative public scope is the [exact fixture matrix](SUPPORTED_MODELS.md).
 A family label, parsed quantization, model load or matching one greedy token is
@@ -26,9 +26,9 @@ The release retains selected Llama/Qwen fixtures only. Historical broad model
 certification lists are not current support. Structural admission and discovery
 are separate from executed numerical/platform results.
 
-**The published 2.6.6 / Airframe 0.4.5 release** did not contain the later Metal correction; its Metal full-logit certification was NOT_RUN.
+**Historical 2.6.6 / Airframe 0.4.5** did not include the subsequent Metal correction. The **released 2.6.7 / Airframe 0.4.6** includes the qualified source.
 
-**Unreleased Apple M1 (Virtual) Metal candidate:** 198/198 full-vector numerical comparisons PASS across seven shards, with all measured greedy decisions agreeing with the frozen FP32 reference. Worst max absolute 0.0027675629 (limit 0.1); worst RMS 0.0006875207 (limit 0.03). The normal, untraced 8K production path completed the remaining 33 comparisons, with typed over-capacity rejection and short recovery. Combined acceptance included actual HTTP JSON/SSE, usage, stops, state isolation, reset, cancellation and recovery. See [exact candidate identities and evidence](releases/apple-metal-m1-2026-11.md). The earlier intermittently stalled 8K run remains preserved as a historical failure; its cause is unknown. Watchdog cleanup remains an independent open defect.
+**Released Apple M1 (Virtual) Metal qualification:** 198/198 full-vector numerical comparisons PASS across seven shards, with all measured greedy decisions agreeing with the frozen FP32 reference. Worst max absolute 0.0027675629 (limit 0.1); worst RMS 0.0006875207 (limit 0.03). The normal, untraced 8K production path completed the remaining 33 comparisons, with typed over-capacity rejection and short recovery. Combined acceptance included actual HTTP JSON/SSE, usage, stops, state isolation, reset, cancellation and recovery. See [exact candidate identities and evidence](releases/apple-metal-m1-2026-11.md). The earlier intermittently stalled 8K run remains preserved as a historical failure; its cause is unknown. Watchdog cleanup remains an independent open defect.
 
 **Physical M4**, other unexecuted native GPU platforms, INT4, experimental kernels and unlisted combinations remain **NOT_RUN**. WSL destructor/device-loss
 investigations remain open. No universal determinism, throughput or stability
@@ -36,4 +36,4 @@ guarantee is inferred from successful comparisons.
 
 Documentation-only changes preserve numerical evidence only after explicit
 source/dependency equivalence; a changed executable path needs targeted testing.
-Public promotion requires human approval of exact new package/source hashes.
+The 2.6.7 / 0.4.6 source, package and native-artifact identities were verified before their November 12, 2026 publication; later modifications require their own equivalence assessment.
