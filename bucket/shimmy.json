@@ -1,17 +1,17 @@
 {
-    "version": "2.6.6",
-    "description": "Local model inference server with the default Airframe engine",
-    "homepage": "https://github.com/Michael-A-Kuykendall/shimmy",
-    "license": {
-        "identifier": "Apache-2.0",
-        "url": "https://github.com/Michael-A-Kuykendall/shimmy/blob/main/LICENSING.md"
-    },
-    "architecture": {
-        "64bit": {
-            "url": "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.6/shimmy-windows-x86_64.zip",
-            "hash": "6c7b854ba851f54347601827d5948c661283ae0a60f03c9a9f6e0ec7ddfd6dd4"
-        }
-    },
-    "bin": "shimmy.exe",
-    "notes": "Primary Shimmy license: Apache-2.0. Complete component licenses, third-party notices and the libfse 0.1.4 additional Apache-2.0 grant are retained in LICENSES and DISTRIBUTION-LICENSE.txt. Native CLI tests do not certify Windows GPU inference. No separate commercial permission is required."
+  "version": "2.6.7",
+  "description": "Local model inference server with the default Airframe engine",
+  "homepage": "https://github.com/Michael-A-Kuykendall/shimmy",
+  "license": {
+    "identifier": "Apache-2.0",
+    "url": "https://github.com/Michael-A-Kuykendall/shimmy/blob/main/LICENSING.md"
+  },
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/Michael-A-Kuykendall/shimmy/releases/download/v2.6.7/shimmy-windows-x86_64.zip",
+      "hash": "eb1f6b0a67b4988f4d77d60e2b0040156c816a9eb2ad963907ef55fe62a87d7d"
+    }
+  },
+  "bin": "shimmy.exe",
+  "notes": "Primary Shimmy license: Apache-2.0. Complete component licenses, third-party notices and the libfse 0.1.4 additional Apache-2.0 grant are retained in LICENSES and DISTRIBUTION-LICENSE.txt. Native CLI tests do not certify Windows GPU inference. No separate commercial permission is required."
 }
