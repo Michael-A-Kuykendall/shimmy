@@ -1,4 +1,4 @@
-# FAQ — Shimmy 2.6.6
+# FAQ — Shimmy 2.6.7
 
 **Which models work?** Only the exact executed dense fixtures and modes in
 [SUPPORTED_MODELS](SUPPORTED_MODELS.md) have the recorded numerical evidence.
@@ -11,15 +11,12 @@ by this dense foundation. Unsupported graphs must reject.
 profile is for non-inference checks. Compatibility/backend flags do not restore
 removed engines.
 
-**Are Metal, Windows, Linux and WSL all certified?** No. NVIDIA WSL numerical
-evidence does not certify other native platforms; Metal/M4 is NOT_RUN. Both
-WSL device-destruction and active-generation device-loss investigations remain
-open.
+**Are Metal, Windows, Linux and WSL all certified?** No. The released 2.6.7/0.4.6 stack passed 198/198 full-logit comparisons on Apple M1 (Virtual) / Paravirtual Metal and bounded numerical checks on NVIDIA WSL. Native CLI/install validation across Linux, Windows and macOS is **not** general GPU correctness certification. Physical M4 and other unexecuted platforms remain NOT_RUN. Both WSL device-destruction and active-generation device-loss investigations remain open.
 
 **Can I enable INT4 for lower memory?** It is outside the validated contract and
 rejected. Use F32 KV/reference kernels; no compression or quality promise is made.
 
-**Will 2.6.6 update Docker or my package manager?** A crates.io-only publication
+**Does 2.6.7 have native downloads, Docker, Homebrew and Scoop?** Yes. Use the [versioned download guide](BINARY_INSTALL.md) and [GHCR instructions](../README-DOCKER.md). GHCR `latest` and npm are unchanged.
 does not create binaries, images, Homebrew, Scoop or npm updates.
 See [quickstart](quickstart.md).
 
