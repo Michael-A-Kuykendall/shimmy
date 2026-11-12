@@ -1,4 +1,4 @@
-# Architecture — Shimmy 2.6.6 / Airframe 0.4.5
+# Architecture — Shimmy 2.6.7 / Airframe 0.4.6
 
 Shimmy owns discovery, CLI/HTTP protocols, access policy, prompt preparation and
 engine integration. Airframe owns validated dense descriptors and per-layer
