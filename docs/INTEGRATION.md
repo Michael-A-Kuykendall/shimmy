@@ -1,4 +1,4 @@
-# Integration — Shimmy 2.6.6
+# Integration — Shimmy 2.6.7
 
 Start the [authenticated or loopback server](quickstart.md), query /v1/models,
 and use an actual returned model ID. Configure an OpenAI-compatible client's
@@ -26,4 +26,4 @@ licensing requirements.
 
 Generated init templates are historical scaffolds, not certified deployment
 integrations; see [deployment scope](../deploy/README.md). No new Docker,
-Homebrew, Scoop, npm or native binary is delivered by the crates.io-only release.
+The released 2.6.7 installation channels include verified native binaries, versioned GHCR, Homebrew and Scoop; npm is not provided and `latest` is unchanged.
