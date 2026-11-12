@@ -1,6 +1,6 @@
-# Features and boundaries — Shimmy 2.6.6
+# Features and boundaries — Shimmy 2.6.7
 
-- Local CLI/server with default Airframe 0.4.5 dense GPU engine.
+- Local CLI/server with default Airframe 0.4.6 dense GPU engine.
 - Checked GGUF metadata/tensor admission shared with ShimmyTok 0.8.5.
 - Exact supported template/tokenizer preparation and request-isolated state.
 - Selected OpenAI-compatible model listing, JSON chat/text completions and
@@ -14,7 +14,7 @@ Discovery and parser support do not certify an arbitrary model.
 Management/tool placeholder routes are not a complete model service.
 
 Not enabled/certified: Gemma2, MoE, MLA, recurrent/SSM/multimodal executors,
-INT4 and experimental kernels. Metal and other unexecuted native platforms
+INT4 and experimental kernels. Physical M4 and other unexecuted native platforms
 are NOT_RUN; WSL device-loss issues remain open.
 The fast profile is non-inference, and compatibility flags do not restore
-removed engines. A crates.io-only release does not publish other distributions.
+removed engines. The released 2.6.7 distribution includes verified native bundles, versioned GHCR, Homebrew and Scoop; `latest` and npm were unchanged.
