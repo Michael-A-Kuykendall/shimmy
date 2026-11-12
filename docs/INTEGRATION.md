@@ -25,5 +25,5 @@ Model files, templates, prompts and diagnostics retain their own privacy and
 licensing requirements.
 
 Generated init templates are historical scaffolds, not certified deployment
-integrations; see [deployment scope](../deploy/README.md). No new Docker,
+integrations; see [deployment scope](../deploy/README.md).
 The released 2.6.7 installation channels include verified native binaries, versioned GHCR, Homebrew and Scoop; npm is not provided and `latest` is unchanged.
