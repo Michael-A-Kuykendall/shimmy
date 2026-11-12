@@ -1,4 +1,4 @@
-# API — Shimmy 2.6.6
+# API — Shimmy 2.6.7
 
 Shimmy provides a bounded OpenAI-compatible surface, not universal API parity.
 See [parameter compatibility](OPENAI_COMPAT.md), [access policy](CONFIGURATION.md)
