@@ -1,4 +1,4 @@
-# Quantization — Shimmy 2.6.6
+# Quantization — Shimmy 2.6.7
 
 Distinguish **weight quantization**, **KV precision** and **executed model
 certification**. A decoder's existence does not prove correct execution of all
