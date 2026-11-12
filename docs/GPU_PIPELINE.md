@@ -1,4 +1,4 @@
-# GPU pipeline — Airframe 0.4.5 in Shimmy 2.6.6
+# GPU pipeline — Airframe 0.4.6 in Shimmy 2.6.7
 
 The dense engine executes metadata-validated per-layer operations through WGSL
 and wgpu: normalization, projections, Q/K normalization and RoPE, attention,
@@ -20,4 +20,4 @@ Timing and capture work can perturb execution; missing measurements do not
 establish zero overhead. No host/GPU speed claim is made here.
 
 See [certification](CERTIFICATION.md) and [exact fixtures](SUPPORTED_MODELS.md).
-Native GPU/Metal results remain NOT_RUN and both WSL stability issues remain open.
+Apple M1 (Virtual) / Paravirtual Metal numerical and HTTP/state certification passed on the released engine; physical M4 and other unexecuted native GPU paths remain NOT_RUN. Both WSL stability issues remain open.
